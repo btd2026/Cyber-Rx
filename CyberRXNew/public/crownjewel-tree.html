@@ -365,7 +365,10 @@ try{new ResizeObserver(reportHeight).observe(document.body);}catch(_){}
 function reportHeight(){try{var h=Math.max(document.body.scrollHeight,document.documentElement.scrollHeight,320);parent.postMessage({type:'crowntree-height',h:h},'*');}catch(_){}}
 window.addEventListener('message',function(e){var d=(e&&e.data)||{};if(d.type!=='crowntree-data')return;
   if(d.RISKS)RISKS=d.RISKS;if(d.C)C=d.C;if(Array.isArray(d.DATA))DATA=d.DATA;if(d.org)ORG=d.org;
-  try{build();}catch(err){try{console.error(err);}catch(_){}}});
+  try{build();
+    var ft=document.querySelector('footer');
+    if(ft)ft.innerHTML="Live from your Nerion onboarding — business functions, key processes, and crown-jewel applications & infrastructure come from your inventory; each crown jewel's business value is the value of the process it carries, and control maturity comes from your assessments and connected tools. A control at <b>maturity 3 or higher</b> mitigates its slice of the jewel's value (struck through); live $ at risk sums only the slices behind controls below 3 — rolled up jewel → process → function → enterprise. Hover any control for its NIST CSF 2.0 name and description.";
+  }catch(err){try{console.error(err);}catch(_){}}});
 try{parent.postMessage({type:'crowntree-ready'},'*');}catch(_){}
 build();  // render the built-in sample immediately; a host may post real data to override
 </script>

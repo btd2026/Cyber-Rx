@@ -170,6 +170,22 @@ try {
   if (!/sample.:true/.test(sample) || sample.indexOf('Identity infrastructure') < 0) problems.push('[asks] sample ask missing when no live exposure');
   vm.runInContext("['board','ceo','cfo','clo','cro','cio','coo','cpo','audit'].forEach(function(s){c5Asks(s);}); c5SeatViews();", ctx);
 } catch (e) { problems.push(`[asks] ${e.message}`); }
+
+// Crown-jewel tree adapter: build the island contract from a live value chain.
+try {
+  vm.runInContext("if(typeof LIVE==='object'&&LIVE){LIVE.org_name='Acme';LIVE.value_chain={functions:[{name:'Claims',criticality:'Critical',annual_usd:3e9,process_count:1,processes:[{name:'Adjudicate',annual_usd:3e9,assets:[{name:'Claims application',crown_jewel:true,risks:[{title:'Sensitive data breach — PII exposed',severity:'Critical',exposure_usd:34e6}]}]}]}]};}", ctx);
+  const inp = vm.runInContext("var _i=c5CrownTreeInput(); JSON.stringify(_i&&{org:_i.org,fns:_i.DATA.length,risks:Object.keys(_i.RISKS).length,ccodes:Object.keys(_i.C).length,jewel:_i.DATA[0]&&_i.DATA[0].procs[0].jewels[0]})", ctx);
+  if (inp === 'null' || inp === 'false') problems.push('[crown-tree adapter] returned null for a live value chain');
+  else {
+    const o = JSON.parse(inp);
+    if (o.fns < 1 || o.risks < 1 || o.ccodes < 1) problems.push('[crown-tree adapter] empty contract');
+    if (!o.jewel || !(o.jewel.value > 0) || !o.jewel.risks || !o.jewel.risks[0].ctrls.length) problems.push('[crown-tree adapter] jewel missing value/controls');
+    // Every emitted control code must exist in C (island reads C[code]).
+    const bad = vm.runInContext("var i=c5CrownTreeInput(),miss=[];i.DATA.forEach(function(f){f.procs.forEach(function(p){p.jewels.forEach(function(j){j.risks.forEach(function(r){r.ctrls.forEach(function(c){if(!i.C[c[0]])miss.push(c[0]);});});});});});miss.join(',')", ctx);
+    if (bad) problems.push('[crown-tree adapter] control codes missing from C: ' + bad);
+  }
+  vm.runInContext("if(LIVE)delete LIVE.value_chain;", ctx);
+} catch (e) { problems.push(`[crown-tree adapter] ${e.message}`); }
 // Exercise the Documents-reviewed panel: empty state, seeded multi-doc state, and
 // the five-framework crosswalk for an evidenced control.
 try {

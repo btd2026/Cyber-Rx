@@ -3271,20 +3271,76 @@ function c5MountCrownTree(container){
   var note=C5_CJT_INPUT?'':'<div class="c5cjt-note">Illustrative sample data — the crown-jewel value tree reads live once your Crown-Jewel Register, Business Capability Map and control-maturity sources are connected.</div>';
   container.innerHTML=note+'<iframe id="c5cjt-frame" class="c5cjt-frame" title="Crown-jewel value tree" scrolling="no" style="width:100%;border:0;height:640px;display:block;background:#EEF1F6" src="'+c5CjtSrc()+'"></iframe>';
 }
-/* Adapter: Nerion data -> the island's exact input contract (Section 4). Returns
-   null until the raw function->process->jewel->risk->control graph (with per-jewel
-   $ value and per-control maturity) is exposed, so the island falls back to its
-   frozen sample rather than showing fabricated control mappings.
-   TODO(nerion): build {org, RISKS, C, DATA, CATALOG:106} from —
-     DATA[].name/.crit         Business Capability Map / function registry
-     procs[].name              Business Process Inventory
-     jewels[].name/.type       Crown-Jewel Register (asset class -> Application|Infrastructure)
-     jewels[].value ($B)       Financial model (business value / BIA), in billions
-     risks[].id                Risk Register (which R-codes threaten each jewel)
-     ctrls[][0] (CSF code)     Control-library mapping (risk -> CSF subcategories)
-     ctrls[][1] (maturity 0-5) controlCmmi() / maturity source
-   Do NOT pre-compute dollars — the island derives every figure from value + maturity. */
-function c5CrownTreeInput(){return null;}
+/* Bundled NIST CSF 2.0 reference metadata for the control codes the value chain
+   can map a risk to (via CAP_FRAMEWORK). Framework-static — not tenant data. */
+var C5_CSF_META={
+ 'PR.AA-01':{f:'PR',cat:'Identity & Access',name:'Identity & credential management',desc:'Identities and credentials for people, services and hardware are issued, managed and revoked under control.'},
+ 'PR.AA-03':{f:'PR',cat:'Identity & Access',name:'Authentication',desc:'Users, services and hardware are authenticated before access is granted.'},
+ 'PR.AA-05':{f:'PR',cat:'Identity & Access',name:'Least-privilege access',desc:'Access is granted on least privilege and separation of duties, so a compromised account reaches as little as possible.'},
+ 'DE.CM-01':{f:'DE',cat:'Continuous Monitoring',name:'Network monitoring',desc:'Networks and network services are continuously monitored to detect suspicious or malicious activity early.'},
+ 'RS.MI-01':{f:'RS',cat:'Incident Mitigation',name:'Incident containment',desc:'Incidents are contained to limit their spread and impact once detected.'},
+ 'ID.RA-01':{f:'ID',cat:'Risk Assessment',name:'Vulnerabilities identified',desc:'Asset vulnerabilities are identified, validated and recorded so they can be prioritized and remediated.'},
+ 'DE.AE-03':{f:'DE',cat:'Adverse Event Analysis',name:'Event correlation',desc:'Event data are collected and correlated from multiple sources to detect and understand adverse activity.'},
+ 'DE.CM-09':{f:'DE',cat:'Continuous Monitoring',name:'Computing & software monitoring',desc:'Hardware, software, runtime environments and their data are monitored for signs of compromise.'},
+ 'PR.PS-01':{f:'PR',cat:'Platform Security',name:'Configuration management',desc:'Configuration management practices are established and applied to keep platforms in a secure, known state.'},
+ 'PR.DS-11':{f:'PR',cat:'Data Security',name:'Backups',desc:'Backups of data are created, protected, maintained and tested so data can be restored after an incident.'},
+ 'RC.RP-03':{f:'RC',cat:'Incident Recovery',name:'Restored-asset integrity',desc:'The integrity of backups and restored assets is verified before returning them to normal operations.'},
+ 'PR.IR-01':{f:'PR',cat:'Infrastructure Resilience',name:'Infrastructure protection & segmentation',desc:'Networks and environments are protected from unauthorized access and segmented to contain an intruder.'},
+ 'PR.DS-01':{f:'PR',cat:'Data Security',name:'Data-at-rest protection',desc:'Stored data is protected (e.g., encrypted) so it stays confidential and intact even if the storage is reached.'},
+ 'PR.DS-02':{f:'PR',cat:'Data Security',name:'Data-in-transit protection',desc:'Data moving across networks is protected (e.g., encrypted) so it cannot be read or altered on the wire.'},
+ 'PR.AT-01':{f:'PR',cat:'Awareness & Training',name:'Security awareness',desc:'Personnel receive security-awareness training so they recognize and report threats such as phishing.'}
+};
+/* Adapter: live Nerion telemetry -> the island's exact input contract (Section 4).
+   Sources (all from onboarding / live data — nothing hardcoded):
+     functions / processes / crown-jewel assets / risks  ← LIVE.value_chain
+     jewels[].value ($)      ← the supporting process's annual business value, split
+                               across its crown jewels (falls back to summed exposure)
+     jewels[].type           ← Application / Infrastructure, by asset class
+     risks[].id / label      ← the real risk titles (assigned R-codes in order)
+     ctrls[][0] (CSF code)   ← riskCaps() → CAP_FRAMEWORK.csf (risk → control mapping)
+     ctrls[][1] (maturity)   ← controlCmmi() (0–5, from assessment/telemetry)
+   The island derives every dollar from value + maturity — no pre-computed money.
+   Returns null (→ frozen sample) when there is no live value chain yet. */
+function c5CrownTreeInput(){
+  try{
+    var vc=(typeof LIVE!=='undefined'&&LIVE&&LIVE.value_chain)||null;
+    var fnsIn=(vc&&vc.functions)||[];
+    if(!fnsIn.length||typeof riskCaps!=='function'||typeof CAP_FRAMEWORK==='undefined')return null;
+    var cov=(typeof fwDeployedIds==='function')?fwDeployedIds():{};
+    var RISKS={},titleId={},nextR=0;
+    function ridFor(title){var t=String(title||'Risk').trim();if(titleId[t])return titleId[t];nextR++;var id='R'+nextR;titleId[t]=id;RISKS[id]=t;return id;}
+    function isInfra(name){return /firewall|network|identity|active directory|directory|infrastructure|\bserver\b|edge|gateway|\bvpn\b|\bdns\b|domain controller/i.test(String(name||''));}
+    var C={}; // control metadata for every code we emit — populated as we build
+    function ctrlsForRisk(r){
+      var caps=riskCaps(r.title,r.severity)||[],codes={};
+      caps.forEach(function(k){var fw=CAP_FRAMEWORK[k];if(fw&&fw.csf)fw.csf.forEach(function(code){if(C5_CSF_META[code])codes[code]=1;});});
+      return Object.keys(codes).map(function(code){C[code]=C5_CSF_META[code];var cc=(typeof controlCmmi==='function')?controlCmmi(code,cov):{score:0};return [code,Math.max(0,Math.min(5,Math.round((cc&&cc.score)||0)))];});
+    }
+    var DATA=[];
+    fnsIn.forEach(function(f){
+      var procs=[];
+      (f.processes||[]).forEach(function(p){
+        var crown=(p.assets||[]).filter(function(a){return a.crown_jewel;});
+        if(!crown.length)return;
+        var perJewel=(Number(p.annual_usd)||0)/crown.length;
+        var jewels=[];
+        crown.forEach(function(a){
+          var risks=[];
+          (a.risks||[]).forEach(function(r){var ctrls=ctrlsForRisk(r);if(ctrls.length)risks.push({id:ridFor(r.title),ctrls:ctrls});});
+          if(!risks.length)return;
+          var val=perJewel>0?perJewel:(a.risks||[]).reduce(function(s,r){return s+(Number(r.exposure_usd)||0);},0);
+          if(!(val>0))return;
+          jewels.push({name:a.name||'Crown jewel',type:isInfra(a.name)?'Infrastructure':'Application',value:val/1e9,risks:risks});
+        });
+        if(jewels.length)procs.push({name:p.name||'Process',jewels:jewels});
+      });
+      if(procs.length)DATA.push({name:f.name||'Function',crit:f.criticality||f.crit||'Critical',procs:procs});
+    });
+    if(!DATA.length)return null;
+    var org=(LIVE&&(LIVE.org_name||LIVE.client_name||LIVE.name))||'Your organization';
+    return {org:org,RISKS:RISKS,C:C,DATA:DATA,CATALOG:106};
+  }catch(e){try{console.warn('crown-tree adapter',e&&e.message);}catch(_){}return null;}
+}
 /* Program Health dispatcher — renders the tab strip, then the active panel.
    Lazy-mounts: the island is only built while "Nerion's View" is active. */
 function c5Frameworks(){
