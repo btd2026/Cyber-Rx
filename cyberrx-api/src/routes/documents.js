@@ -289,6 +289,69 @@ const CONTROL_MAP = {
       ]},
     ],
   },
+  // AI governance documents (uploaded from the onboarding AI risk & governance section).
+  // Reviewed exactly like any other policy — control-by-control against the AI frameworks.
+  d17: {
+    framework: 'NIST AI RMF 1.0',
+    controls: [
+      { id: 'GOVERN-1', family: 'GV', name: 'AI governance & accountability', attrs: [
+        { tag: 'P', key: 'policy', pat: 'ai polic|governance|responsible ai|accountab|oversight', label: 'AI governance policy' },
+        { tag: 'P', key: 'roles', pat: 'role|responsib|owner|committee|steward|raci', label: 'Roles & accountability' },
+        { tag: 'R', key: 'riskproc', pat: 'risk management|risk process|assess|tolerance|appetite', label: 'Risk-management process' },
+        { tag: 'M', key: 'inventory', pat: 'inventory|catalog|register|ai.?bom|model registry', label: 'AI inventory / registry' },
+        { tag: 'I', key: 'lifecycle', pat: 'lifecycle|deploy|monitor|retire|decommission', label: 'Lifecycle governance' },
+      ]},
+      { id: 'MAP-1', family: 'MP', name: 'AI risk context & mapping', attrs: [
+        { tag: 'P', key: 'context', pat: 'context|use case|purpose|intended use|deployment', label: 'Use-case context' },
+        { tag: 'P', key: 'categorize', pat: 'categor|classif|risk tier|high.?risk|impact level', label: 'Risk categorization' },
+        { tag: 'R', key: 'impact', pat: 'impact|harm|bias|fairness|safety|discriminat', label: 'Impact & harm analysis' },
+        { tag: 'M', key: 'stakeholder', pat: 'stakeholder|affected|end user|community|subject', label: 'Stakeholder identification' },
+      ]},
+      { id: 'MEASURE-2', family: 'MS', name: 'AI measurement & testing', attrs: [
+        { tag: 'P', key: 'metrics', pat: 'metric|measure|evaluat|benchmark|test', label: 'Evaluation metrics' },
+        { tag: 'R', key: 'redteam', pat: 'red.?team|adversar|robustness|owasp|atlas|penetration', label: 'Adversarial testing' },
+        { tag: 'R', key: 'monitor', pat: 'monitor|drift|performance|accuracy|continuous', label: 'Ongoing monitoring' },
+        { tag: 'M', key: 'validate', pat: 'validat|verif|assur|audit|evidence', label: 'Validation & assurance' },
+      ]},
+      { id: 'MANAGE-4', family: 'MG', name: 'AI risk response & incident mgmt', attrs: [
+        { tag: 'P', key: 'response', pat: 'respon|mitigat|treat|remediat|control', label: 'Risk-response plan' },
+        { tag: 'R', key: 'incident', pat: 'incident|escalat|report|playbook|response plan', label: 'AI incident response' },
+        { tag: 'R', key: 'oversight', pat: 'human.in.the.loop|human oversight|review|approval|kill switch|override', label: 'Human oversight' },
+        { tag: 'I', key: 'improve', pat: 'improv|feedback|update|retrain|lesson', label: 'Continuous improvement' },
+      ]},
+    ],
+  },
+  d18: {
+    framework: 'ISO/IEC 42001:2023 AIMS',
+    controls: [
+      { id: 'A.5', family: 'AIMS', name: 'AI management system & policy', attrs: [
+        { tag: 'P', key: 'policy', pat: 'ai management|aims|policy|objective|scope', label: 'AIMS policy & scope' },
+        { tag: 'P', key: 'leadership', pat: 'leadership|top management|commitment|resource', label: 'Leadership commitment' },
+        { tag: 'R', key: 'planning', pat: 'plan|risk|opportunit|objective|control', label: 'Planning & objectives' },
+        { tag: 'M', key: 'support', pat: 'competence|awareness|communication|document', label: 'Support & documentation' },
+      ]},
+      { id: 'A.6', family: 'AIMS', name: 'AI lifecycle & operation', attrs: [
+        { tag: 'P', key: 'lifecycle', pat: 'lifecycle|design|develop|deploy|operat', label: 'AI system lifecycle' },
+        { tag: 'R', key: 'impact', pat: 'impact assessment|ai.?ia|risk assessment|consequence', label: 'AI impact assessment' },
+        { tag: 'R', key: 'data', pat: 'data|training data|quality|provenance|governance', label: 'Data governance' },
+        { tag: 'M', key: 'performance', pat: 'performance|evaluat|monitor|measure|audit', label: 'Performance evaluation' },
+        { tag: 'I', key: 'improve', pat: 'nonconform|corrective|improv|continual', label: 'Continual improvement' },
+      ]},
+    ],
+  },
+  d19: {
+    framework: 'AI Acceptable-Use Policy',
+    controls: [
+      { id: 'AUP-01', family: 'PR', name: 'Acceptable use of AI', attrs: [
+        { tag: 'P', key: 'scope', pat: 'acceptable use|permitted|prohibited|scope|appl', label: 'Permitted / prohibited use' },
+        { tag: 'P', key: 'approval', pat: 'approv|sanction|authoriz|board|sign.?off', label: 'Approval & authorization' },
+        { tag: 'R', key: 'data', pat: 'confidential|sensitive|pii|phi|do not|prohibit', label: 'Data-handling limits' },
+        { tag: 'R', key: 'tools', pat: 'tool|genai|chatgpt|copilot|assistant|shadow', label: 'Sanctioned tools' },
+        { tag: 'M', key: 'enforce', pat: 'enforc|violation|discipline|consequence|monitor', label: 'Enforcement' },
+        { tag: 'I', key: 'training', pat: 'train|aware|educat|guidance|onboard', label: 'User guidance & training' },
+      ]},
+    ],
+  },
 };
 
 function extractText(buffer, filename) {

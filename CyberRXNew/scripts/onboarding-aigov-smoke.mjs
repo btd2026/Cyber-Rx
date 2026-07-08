@@ -81,7 +81,34 @@ wired('loadAiInv is parameterized', /function loadAiInv\(fileId,msgId\)/.test(ht
 wired('shared doc engine obAnalyzeDocFrom', /function obAnalyzeDocFrom\(/.test(html));
 wired('inline inventory reuses loadAiInv', /loadAiInv\('aiGovInvFile','aiGovInvMsg'\)/.test(html));
 wired('inline docs reuse obAnalyzeDocFrom', /obAnalyzeDocFrom\('aiGovDocFile','aiGovDocType','aiGovDocMsg'\)/.test(html));
-wired('AI doc types cover NIST/ISO/AUP', /d11.*NIST AI RMF/s.test(html) && /d12.*ISO\/IEC 42001/s.test(html) && /d13.*Acceptable-Use/s.test(html));
+wired('AI doc types cover NIST/ISO/AUP', /d17.*NIST AI RMF/s.test(html) && /d18.*ISO\/IEC 42001/s.test(html) && /d19.*Acceptable-Use/s.test(html));
+
+// 8) Cross-file: the AI doc-type keys used in onboarding must exist in the backend
+//    document-review CONTROL_MAP (and legacy keywords) so uploads are reviewed against
+//    the AI frameworks — not silently scored against a colliding control set.
+const apiDir = path.join(__dirname, '..', '..', 'cyberrx-api', 'src', 'routes');
+let backendChecked = false;
+try {
+  const docsSrc = fs.readFileSync(path.join(apiDir, 'documents.js'), 'utf8');
+  const kwSrc = fs.readFileSync(path.join(apiDir, 'documents-legacy-keywords.js'), 'utf8');
+  backendChecked = true;
+  // Onboarding AI doc-type keys (from OB_DOC_TYPES entries labelled "AI ...").
+  const aiKeys = [...html.matchAll(/\{k:'(d\d+)',l:'AI [^']*'\}/g)].map((m) => m[1]);
+  wired('onboarding declares 3 AI doc types', aiKeys.length === 3);
+  aiKeys.forEach((k) => {
+    wired('backend CONTROL_MAP has ' + k, new RegExp('\\b' + k + ':\\s*\\{').test(docsSrc));
+    wired('backend legacy-keywords has ' + k, new RegExp('\\b' + k + ':\\s*\\[').test(kwSrc));
+  });
+  // The AI keys must NOT collide with the pre-existing crypto/privacy/soc2 mappings.
+  ['d11', 'd12', 'd13'].forEach((k) => wired('AI keys avoid collision with ' + k, aiKeys.indexOf(k) < 0));
+  // Backend AI mappings should reference the AI frameworks.
+  wired('backend maps NIST AI RMF', /NIST AI RMF/.test(docsSrc));
+  wired('backend maps ISO/IEC 42001', /ISO\/IEC 42001/.test(docsSrc));
+  wired('backend maps AI Acceptable-Use Policy', /AI Acceptable-Use Policy/.test(docsSrc));
+} catch (e) {
+  // Backend not present in this checkout — skip cross-file checks rather than fail.
+  console.warn('note: backend document routes not found, skipping cross-file checks (' + e.code + ')');
+}
 
 if (fail) { console.error(`\nonboarding-aigov-smoke: ${pass} passed, ${fail} FAILED`); process.exit(1); }
-console.log(`onboarding-aigov-smoke OK — ${pass} checks pass (derivation empty→null / inventory·docs·regions; inline uploaders wired to shared engines).`);
+console.log(`onboarding-aigov-smoke OK — ${pass} checks pass (derivation; inline uploaders; ${backendChecked ? 'AI doc types wired to backend AI-control review' : 'backend not checked'}).`);

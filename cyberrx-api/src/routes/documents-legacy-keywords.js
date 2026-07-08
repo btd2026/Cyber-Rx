@@ -17,4 +17,7 @@ module.exports = {
   d14: ['penetration test', 'pentest', 'vulnerability assessment', 'findings', 'remediation', 'exploit', 'cvss', 'scope'],
   d15: ['security awareness', 'training', 'phishing simulation', 'social engineering', 'completion rate', 'annual training'],
   d16: ['audit log', 'logging', 'monitoring', 'log retention', 'siem', 'event', 'alert', 'tamper', 'centralized logging'],
+  d17: ['ai risk management', 'nist ai rmf', 'govern', 'map', 'measure', 'manage', 'trustworthy ai', 'ai inventory', 'human oversight', 'bias', 'model'],
+  d18: ['iso 42001', 'ai management system', 'aims', 'ai policy', 'ai impact assessment', 'lifecycle', 'continual improvement', 'data governance', 'nonconformity'],
+  d19: ['acceptable use', 'artificial intelligence', 'generative ai', 'prohibited', 'permitted', 'confidential data', 'approval', 'shadow ai', 'copilot', 'enforcement'],
 };
