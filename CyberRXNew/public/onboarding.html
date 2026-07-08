@@ -277,9 +277,9 @@
       <div class="aiup-t">Upload your AI governance documents <span style="color:var(--muted);font-weight:400">— sets framework &amp; acceptable-use policy</span></div>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px">
         <select id="aiGovDocType" style="min-width:230px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:#fff">
-          <option value="d11">AI Governance — NIST AI RMF</option>
-          <option value="d12">AI Governance — ISO/IEC 42001</option>
-          <option value="d13">AI Acceptable-Use Policy</option>
+          <option value="d17">AI Governance — NIST AI RMF</option>
+          <option value="d18">AI Governance — ISO/IEC 42001</option>
+          <option value="d19">AI Acceptable-Use Policy</option>
         </select>
         <input type="file" id="aiGovDocFile" accept=".pdf,.docx,.doc,.txt,.md">
         <button class="conn-go" id="aiGovDocAnalyze" type="button">Analyze document</button>
@@ -930,7 +930,7 @@
   // Writes the same localStorage keys the cockpit Framework tab reads
   // (cyberrx_doc_scores + cyberrx_docs), so document review is captured here at
   // onboarding instead of inside the cockpit.
-  var OB_DOC_TYPES=[{k:'d1',l:'Information Security Policy'},{k:'d2',l:'Risk Assessment / Register'},{k:'d3',l:'Third-Party / Supply-Chain Policy'},{k:'d4',l:'Access Control Policy'},{k:'d5',l:'Identity & Authentication Policy'},{k:'d6',l:'Incident Response Plan'},{k:'d7',l:'Business Continuity / DR Plan'},{k:'d8',l:'Change Management Policy'},{k:'d9',l:'Configuration Management Policy'},{k:'d10',l:'Data Protection Policy'},{k:'d11',l:'AI Governance — NIST AI RMF'},{k:'d12',l:'AI Governance — ISO/IEC 42001'},{k:'d13',l:'AI Acceptable-Use Policy'}];
+  var OB_DOC_TYPES=[{k:'d1',l:'Information Security Policy'},{k:'d2',l:'Risk Assessment / Register'},{k:'d3',l:'Third-Party / Supply-Chain Policy'},{k:'d4',l:'Access Control Policy'},{k:'d5',l:'Identity & Authentication Policy'},{k:'d6',l:'Incident Response Plan'},{k:'d7',l:'Business Continuity / DR Plan'},{k:'d8',l:'Change Management Policy'},{k:'d9',l:'Configuration Management Policy'},{k:'d10',l:'Data Protection Policy'},{k:'d17',l:'AI Governance — NIST AI RMF'},{k:'d18',l:'AI Governance — ISO/IEC 42001'},{k:'d19',l:'AI Acceptable-Use Policy'}];
   var CMMI_LBL={0:'None',1:'Initial',2:'Managed',3:'Defined',4:'Quant. Managed',5:'Optimizing'};
   function obDocScores(){try{return JSON.parse(localStorage.getItem('cyberrx_doc_scores')||'{}')||{};}catch(_){return {};}}
   function obSaveDocScore(id,o){var m=obDocScores();m[id]=o;try{localStorage.setItem('cyberrx_doc_scores',JSON.stringify(m));}catch(_){}}
