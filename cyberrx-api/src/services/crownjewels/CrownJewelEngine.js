@@ -293,6 +293,7 @@ async function run(orgId) {
       capabilities: setup.capabilities || [],
       initiatives: setup.initiatives || [],
       seatNames: setup.seatNames || {},
+      seatEmails: setup.seatEmails || {},
       growth,
       stress,
       portfolio,

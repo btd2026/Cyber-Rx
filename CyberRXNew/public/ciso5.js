@@ -3258,7 +3258,12 @@ document.addEventListener('click',function(e){
    Frameworks tab. */
 var C5_SEAT_META={board:{label:'Board',role:'Board / Audit Committee'},ceo:{label:'CEO',role:'Chief Executive'},cfo:{label:'CFO',role:'Chief Financial Officer'},clo:{label:'General Counsel',role:'Legal / CLO'},cro:{label:'CRO',role:'Chief Risk Officer'},cio:{label:'CIO / CTO',role:'Technology'},coo:{label:'COO',role:'Operations'},cpo:{label:'CPO',role:'Product'},audit:{label:'Internal Audit',role:'Audit'}};
 function c5SeatNameOf(seat){try{return (typeof SEAT_NAMES!=='undefined'&&SEAT_NAMES&&SEAT_NAMES[seat])||'';}catch(_){return '';}}
-function c5SeatEmails(){try{return JSON.parse(localStorage.getItem('cyberrx_seat_emails')||'{}')||{};}catch(_){return {};}}
+function c5SeatEmails(){var m={};
+  // Seed from the emails captured at onboarding (persisted to LIVE), then overlay
+  // any addresses the CISO has entered/edited in the cockpit (localStorage wins).
+  try{var live=(typeof LIVE!=='undefined'&&LIVE&&LIVE.seatEmails)||{};for(var k in live)if(live[k])m[k]=live[k];}catch(_){}
+  try{var ls=JSON.parse(localStorage.getItem('cyberrx_seat_emails')||'{}')||{};for(var k2 in ls)if(ls[k2])m[k2]=ls[k2];}catch(_){}
+  return m;}
 function c5SeatEmailSave(seat,e){var m=c5SeatEmails();m[seat]=e;try{localStorage.setItem('cyberrx_seat_emails',JSON.stringify(m));}catch(_){}}
 function c5OrgName(){try{return (typeof LIVE!=='undefined'&&LIVE&&(LIVE.org_name||LIVE.client_name||LIVE.name))||'the organization';}catch(_){return 'the organization';}}
 function c5CisoName(){var n=c5SeatNameOf('ciso');return n?(n+' (CISO)'):'the CISO';}
