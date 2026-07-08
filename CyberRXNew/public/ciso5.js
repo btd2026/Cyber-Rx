@@ -3320,16 +3320,20 @@ function c5DecProj(){
   var levers=c5Levers();
   var mineStore;try{mineStore=JSON.parse(localStorage.getItem('cyberrx_ciso_decisions')||'{}')||{};}catch(_){mineStore={};}
   var mine=levers.slice(0,6).map(function(l){
-    var st=mineStore[l.k];
-    var state=l.inflight?'flight':(st==='Committed'?'committed':st==='Deferred'?'deferred':'open');
+    // Normalize the stored decision: legacy string, or {status,ts,by,until}.
+    var raw=mineStore[l.k],dec=(raw&&typeof raw==='object')?raw:(raw?{status:raw}:null);
+    var status=dec&&dec.status;
+    var state=l.inflight?'flight':(status==='Committed'?'committed':status==='Deferred'?'deferred':'open');
     var pill=l.inflight?('<span class="c5dp-pill blue">◒ In flight'+(l.inflight.ticket?(' · '+c5esc(l.inflight.ticket)):'')+'</span>'):
-      (st?('<span class="c5dp-pill '+(st==='Committed'?'good':'muted')+'">'+(st==='Committed'?'✓ Committed &amp; funded':'Deferred')+'</span>'):'<span class="c5dp-pill warn">Awaiting your call</span>');
-    var acts=(st||l.inflight)?'':'<button class="c5dp-btn primary" data-cisodec="'+l.k+'" data-cisoval="Committed">Commit &amp; fund</button><button class="c5dp-btn ghost" data-cisodec="'+l.k+'" data-cisoval="Deferred">Defer</button>';
+      (status?('<span class="c5dp-pill '+(status==='Committed'?'good':'muted')+'">'+(status==='Committed'?'✓ Committed &amp; funded':'⏸ Deferred'+(dec.until?(' to '+c5esc(dec.until)):''))+'</span>'):'<span class="c5dp-pill warn">Awaiting your call</span>');
+    // Audit trail — who recorded it and when — shown under the pill.
+    var meta=status?('<div class="c5dp-when">'+(status==='Committed'?'Funded':'Deferred')+' by <b>'+c5esc(dec.by||c5CisoName())+'</b>'+(dec.ts?(' · '+c5dpWhen(dec.ts)):'')+' <button class="c5dp-linkbtn" data-cisoundo="'+l.k+'">Change</button></div>'):'';
+    var acts=(status||l.inflight)?'':'<button class="c5dp-btn primary" data-cisodec="'+l.k+'" data-cisoval="Committed">Commit &amp; fund</button><button class="c5dp-btn ghost" data-cisodec="'+l.k+'" data-cisoval="Deferred">Defer</button>';
     var top=l.proj.slice(0).sort(function(a,b){return (b.to-b.from)-(a.to-a.from);})[0];
     var impact=top?('<div class="c5dp-impact">Lifts <b>'+top.id+'</b> '+c5dpMini(top.from,top.to)+'<span class="c5dp-chip">+'+l.gain+' CMMI · '+l.proj.length+' control'+(l.proj.length>1?'s':'')+'</span></div>'):'';
     return '<div class="c5dp-card '+state+'"><div class="c5dp-card-main"><div class="c5dp-t">Fund — '+c5esc(l.name)+'</div>'+
       '<div class="c5dp-sub">'+c5esc(l.need)+'</div>'+impact+'</div>'+
-      '<div class="c5dp-card-side">'+pill+(acts?('<div class="c5dp-acts2">'+acts+'</div>'):'')+'</div></div>';
+      '<div class="c5dp-card-side">'+pill+(acts?('<div class="c5dp-acts2">'+acts+'</div>'):'')+meta+'</div></div>';
   }).join('');
   if(levers.length)mine='<div class="c5dp-cards">'+mine+'</div>';
   else mine='<div class="c5dp-empty">Connect your security tools and upload your policies, and the funded decisions that move your posture appear here — each with the exact controls it improves.</div>';
@@ -3342,7 +3346,8 @@ function c5DecProj(){
       if(a.sample)return; // skip pre-connect placeholders
       var st=store[a.id],who=c5SeatNameOf(seat),meta=C5_SEAT_META[seat]||{label:seat,role:''};
       var statusHtml,acted=!!(st&&st.status);
-      if(acted){decided++;statusHtml='<span class="c5dp-pill good">✓ '+c5esc(st.status)+'</span>';}
+      if(acted){decided++;statusHtml='<div class="c5dp-lstat"><span class="c5dp-pill good">✓ '+c5esc(st.status)+'</span>'+
+        '<span class="c5dp-when2">by '+c5esc(who||meta.label)+(st.ts?(' · '+c5dpWhen(st.ts)):'')+'</span></div>';}
       else{pending++;statusHtml='<span class="c5dp-pill warn">Pending</span>';}
       rowsB.push('<div class="c5dp-lrow" data-seat="'+seat+'"><div class="c5dp-avatar '+(acted?'done':'wait')+'">'+c5dpInitials(meta.label,who)+'</div>'+
         '<div class="c5dp-lmain"><div class="c5dp-t">'+c5esc(who||meta.label)+' <span class="c5dp-role">'+c5esc(meta.label)+'</span></div>'+
@@ -3415,6 +3420,12 @@ function c5dpMini(from,to){return '<span class="c5dp-mini">'+c5dpBadge(from)+'<s
 /* A stat tile: big value, label, accent color. */
 function c5dpStat(val,label,accent){return '<div class="c5dp-stat"><div class="c5dp-stat-v '+(accent||'')+'">'+val+'</div><div class="c5dp-stat-l">'+label+'</div></div>';}
 function c5dpInitials(label,who){var s=String(who||label||'?').trim().split(/\s+/);return ((s[0]||'?')[0]+(s.length>1?s[s.length-1][0]:'')).toUpperCase();}
+/* Human date for a decision's audit trail, e.g. "8 Jul 2026, 2:14 PM". */
+function c5dpWhen(ts){try{if(!ts)return '';var d=new Date(Number(ts)),mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var h=d.getHours(),ap=h>=12?'PM':'AM',h12=(h%12)||12,mm=String(d.getMinutes()).padStart(2,'0');
+  return d.getDate()+' '+mo[d.getMonth()]+' '+d.getFullYear()+', '+h12+':'+mm+' '+ap;}catch(_){return '';}}
+/* The next review horizon a deferral runs to — the next calendar quarter, e.g. "Q3 2026". */
+function c5NextReview(ts){try{var d=new Date(Number(ts)||undefined),q=Math.floor(d.getMonth()/3)+2,y=d.getFullYear();if(q>4){q-=4;y++;}return 'Q'+q+' '+y;}catch(_){return 'next quarter';}}
 
 /* ---- reminder email modal (LLM draft + send piping) ---- */
 function c5RemindOpen(seat){
@@ -3477,7 +3488,10 @@ document.addEventListener('click',function(e){
   var rm=e.target.closest('[data-remind]');if(rm){c5RemindOpen(rm.getAttribute('data-remind'));return;}
   if(e.target.closest('[data-remindclose]')){c5RemindCloseFn();return;}
   var scrim=document.getElementById('c5remind');if(scrim&&e.target===scrim){c5RemindCloseFn();return;}
-  var cd=e.target.closest('[data-cisodec]');if(cd){var k=cd.getAttribute('data-cisodec'),v=cd.getAttribute('data-cisoval');var st;try{st=JSON.parse(localStorage.getItem('cyberrx_ciso_decisions')||'{}')||{};}catch(_){st={};}st[k]=v;try{localStorage.setItem('cyberrx_ciso_decisions',JSON.stringify(st));}catch(_){}c5DecProj();return;}
+  var cd=e.target.closest('[data-cisodec]');if(cd){var k=cd.getAttribute('data-cisodec'),v=cd.getAttribute('data-cisoval');var st;try{st=JSON.parse(localStorage.getItem('cyberrx_ciso_decisions')||'{}')||{};}catch(_){st={};}
+    var now=Date.now();st[k]={status:v,ts:now,by:(c5SeatNameOf('ciso')||'CISO'),until:(v==='Deferred'?c5NextReview(now):null)};
+    try{localStorage.setItem('cyberrx_ciso_decisions',JSON.stringify(st));}catch(_){}c5DecProj();return;}
+  var cu=e.target.closest('[data-cisoundo]');if(cu){var uk=cu.getAttribute('data-cisoundo');var s2;try{s2=JSON.parse(localStorage.getItem('cyberrx_ciso_decisions')||'{}')||{};}catch(_){s2={};}delete s2[uk];try{localStorage.setItem('cyberrx_ciso_decisions',JSON.stringify(s2));}catch(_){}c5DecProj();return;}
 });
 
 /* ---------- Program Health ▸ two inner tabs (Nerion's View / Classic View) ----------
