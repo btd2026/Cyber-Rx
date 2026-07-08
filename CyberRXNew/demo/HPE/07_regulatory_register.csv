@@ -1,0 +1,9 @@
+regulation,obligation,status,exposure
+SEC Reg S-K Item 106,Cyber governance & material-incident disclosure,Compliant,$50M
+EU GDPR,Data protection & 72-hour breach notification,Compliant,$120M
+EU NIS2 Directive,Network & information security risk management,In progress,$40M
+PCI DSS 4.0,Cardholder data protection (GreenLake billing),Compliant,$30M
+EU AI Act,High-risk AI system obligations,In progress,$25M
+California CCPA / CPRA,Consumer privacy rights,Compliant,$20M
+US Sarbanes-Oxley (SOX),IT general controls over financial reporting,Compliant,$15M
+UK DPA 2018,Data protection,Compliant,$18M

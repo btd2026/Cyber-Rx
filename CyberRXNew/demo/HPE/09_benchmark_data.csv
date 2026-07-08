@@ -1,0 +1,8 @@
+metric,our_value,benchmark
+Security spend as % of IT budget,8.5,6.2
+Mean time to detect (hours),6,12
+Phishing-prone rate (%),3.2,8.5
+Critical vuln remediation (days),9,18
+Framework maturity (CMMI),3.6,3.0
+MFA coverage of privileged accounts (%),96,82
+Third-party assessments current (%),88,65

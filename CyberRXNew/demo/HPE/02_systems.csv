@@ -1,0 +1,11 @@
+name,hosting,data,vendor,eol,recovery,transactions_per_day,value_per_day,value_per_year
+GreenLake Central Platform,internet-facing cloud,"Customer PII, PCI, Financial",HPE / AWS,no,2,2400000,$18.6M,$6.8B
+SAP S/4HANA ERP,application on-prem,"Financial, PII",SAP,no,6,180000,$37M,$13.5B
+Salesforce CRM (Quote-to-Order),vendor SaaS,"Customer PII, Financial",Salesforce,no,4,120000,$24.7M,$9.0B
+Aruba Central (cloud NMS),internet-facing cloud,"Customer PII, Config",HPE Aruba,no,4,300000,$14M,$5.1B
+HPC Order & Config (Cray),application on-prem,"IP, Design, Financial",HPE Cray,no,8,12000,$11M,$4.0B
+HPEFS Leasing Platform,application on-prem,"Financial, PII, Credit",HPE Financial Services,no,8,40000,$9.3M,$3.4B
+Manufacturing Execution System (MES),OT network,"Operational, Supplier",Rockwell,yes,12,60000,$6.8M,$2.5B
+Global Data Warehouse,cloud data,"Customer PII, Financial, IP",Snowflake,no,24,,,
+Okta Identity Platform,cloud identity,Credentials,Okta,no,2,,,
+Active Directory / Entra ID,cloud identity,Credentials,Microsoft,no,4,,,

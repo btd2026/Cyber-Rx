@@ -1,0 +1,8 @@
+name,owner,cost,roi,status,engagement
+Zero Trust identity rollout,CISO,$12M,22x,in progress,design
+GreenLake CSPM & cloud posture management,CISO,$8M,15x,in progress,gate
+OT security segmentation (manufacturing),CISO,$6M,9x,planned,design
+AI security & guardrails program,CISO,$5M,12x,in progress,design
+Third-party risk automation,CRO,$3M,7x,in progress,gate
+Post-quantum cryptography readiness,CISO,$4M,6x,planned,design
+SOC modernization & XDR,CISO,$9M,11x,in progress,gate

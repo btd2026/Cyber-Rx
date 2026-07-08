@@ -1,0 +1,29 @@
+name,type,sensitivity,customer_facing
+GreenLake AIOps engine,ai_system,High,yes
+Aruba AI network insights,ai_system,Medium,yes
+HPE Ezmeral ML platform,ai_system,High,no
+Sales forecasting model,ai_system,High,no
+HPEFS fraud detection model,ai_system,High,yes
+Supply-chain demand model,ai_system,Medium,no
+Predictive support (InfoSight),ai_system,Medium,yes
+Customer support chatbot,genai_app,Medium,yes
+GitHub Copilot (engineering),genai_app,High,no
+Microsoft 365 Copilot,genai_app,Medium,no
+Marketing content assistant,genai_app,Low,no
+HR policy assistant,genai_app,Medium,no
+GreenLake API service account,machine_identity,High,no
+SAP integration service account,machine_identity,High,no
+Salesforce API token,machine_identity,High,no
+CI/CD pipeline service account,machine_identity,High,no
+Backup automation service account,machine_identity,Medium,no
+Monitoring agent identity,machine_identity,Medium,no
+Aruba Central API token,machine_identity,Medium,no
+Snowflake ETL service account,machine_identity,High,no
+Data warehouse service principal,machine_identity,High,no
+Kubernetes workload identity,machine_identity,Medium,no
+GreenLake TLS certificate,crypto_asset,High,no
+ERP signing key,crypto_asset,High,no
+Code-signing certificate,crypto_asset,High,no
+API gateway TLS certificate,crypto_asset,Medium,no
+Database encryption key (KMS),crypto_asset,High,no
+VPN certificate,crypto_asset,Medium,no

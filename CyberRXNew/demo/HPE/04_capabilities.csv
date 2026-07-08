@@ -1,0 +1,9 @@
+capability,exposure,grc_status,control_gaps,open_risk
+Identity & Access Management,$150M,Gap,4,3
+Cloud Security Posture (GreenLake),$180M,Watch,3,2
+Data Protection & Encryption,$120M,Adequate,1,1
+Third-Party / Supply-Chain Risk,$95M,Watch,3,2
+Vulnerability & Patch Management,$75M,Watch,2,2
+Endpoint & Threat Detection,$60M,Adequate,1,1
+OT / Manufacturing Security,$30M,Gap,3,1
+Application & Product Security,$52M,Watch,2,2

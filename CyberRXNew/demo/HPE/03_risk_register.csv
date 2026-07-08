@@ -1,0 +1,13 @@
+title,severity,asset,exposure,status
+Ransomware encryption of ERP and manufacturing,Critical,SAP S/4HANA ERP,$220M,open
+GreenLake customer data exposure (multi-tenant isolation),Critical,GreenLake Central Platform,$180M,open
+Privileged credential compromise (Active Directory),Critical,Active Directory / Entra ID,$150M,open
+Data protection & encryption gap on customer data,High,Global Data Warehouse,$120M,open
+Software supply-chain / dependency compromise,High,GreenLake Central Platform,$95M,open
+Insider IP theft — HPC and chip designs,High,HPC Order & Config (Cray),$80M,open
+Vulnerability & patch management backlog (internet-facing),High,GreenLake Central Platform,$75M,open
+Cloud misconfiguration & public exposure,High,Aruba Central (cloud NMS),$60M,open
+Phishing / business email compromise,High,Okta Identity Platform,$45M,open
+Payment fraud / PCI breach (billing),High,GreenLake Central Platform,$40M,open
+OT / manufacturing disruption,Medium,Manufacturing Execution System (MES),$30M,open
+Third-party / vendor breach (tier-1 supplier),High,Salesforce CRM (Quote-to-Order),$52M,open

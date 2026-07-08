@@ -1,0 +1,9 @@
+name,revenue,rto,data,criticality,transactions_per_day,downtime_tolerance,function
+GreenLake cloud consumption & billing,$6.8B,2,"Customer PII, PCI, Financial",Critical,2400000,$8M,Hybrid Cloud
+Server order-to-cash (ProLiant / Compute),$13.5B,6,"Financial, PII",Critical,180000,$6M,Server
+Storage & data services delivery,$4.3B,4,"Customer Data, Financial",Critical,90000,$4M,Hybrid Cloud
+Aruba networking & edge subscriptions,$5.1B,4,"Customer PII, Config",High,300000,$3M,Intelligent Edge
+HPC & AI systems delivery (Cray),$4.0B,8,"IP, Design, Financial",High,12000,$3M,HPC & AI
+HPE Financial Services (leasing),$3.4B,8,"Financial, PII, Credit",High,40000,$2M,Financial Services
+Global supply chain & manufacturing,$2.5B,12,"Operational, Supplier",High,60000,$2M,Server
+Support & professional services (Pointnext),$2.2B,8,"Customer PII, Config",Medium,150000,$1M,Hybrid Cloud
