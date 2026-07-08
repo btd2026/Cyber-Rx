@@ -318,11 +318,11 @@ function c5get(id){
         displayValue:conn?(topc?(topc.name+(topc.exposure>0?(' · '+usd(topc.exposure)):'')):(caps2.length+' capabilities mapped')):'—',
         label:'computed',color:conn?((topc&&topc.exposure>0)?'warn':'good'):'muted',
         formula:'exposure = (open control-gaps + open risk) × capability-tier weight; ranked exposure-desc',
-        method:'Capabilities come from your Business Capability Map, joined to GRC control-coverage / gaps and open-risk. Control-gap and open-risk counts read from GRC (illustrative until GRC is connected); the tier weight is Critical 1.0 · High 0.75 · Medium 0.5 · Low 0.25.',
-        inputs:rowsC.slice(0,6).map(function(c){return {name:c.name+(c.grc?(' · '+c.grc):''),value:(c.exposure>0?usd(c.exposure):'mapped')+'  ·  gaps '+(c.gaps!=null?c.gaps:'—')+' · open-risk '+(c.open_risk!=null?c.open_risk:'—'),color:(c.exposure>0?'warn':'good'),source:'Capability Map × GRC · (gaps+open_risk)×tier_weight'};}),
-        sources:[{tool:'Business Capability Map',connector:'capmap',field:'capabilities',lastRefresh:c5ago()},{tool:'GRC',connector:'grc',field:'control_coverage · gaps · open_risk'}],
-        note:topc?('Your most exposed capability is '+topc.name+'.'):'Which business capabilities carry the most cyber exposure.',
-        connectTool:'your Business Capability Map + GRC (added at onboarding)'});}
+        method:'For each business capability this needs four fields: its GRC control-coverage status (Adequate / Watch / Gap), its count of open control gaps, its count of open risks, and its business exposure ($). Capability names come from your Business Capability Map; the three GRC fields come from your GRC platform (Archer / ServiceNow GRC / LeanIX) — or, if you have no GRC tool, from an Excel/CSV you upload at onboarding (columns: capability · exposure · grc_status · control_gaps · open_risk). Exposure is then ranked as (open gaps + open risks) × capability-tier weight (Critical 1.0 · High 0.75 · Medium 0.5 · Low 0.25).',
+        inputs:rowsC.slice(0,6).map(function(c){return {name:c.name+(c.grc?(' · GRC '+c.grc):''),value:(c.exposure>0?usd(c.exposure):'mapped')+'  ·  '+(c.gaps!=null?c.gaps:'—')+' gaps · '+(c.open_risk!=null?c.open_risk:'—')+' open risks',color:(c.exposure>0?'warn':'good'),source:'Capability Map + GRC (or Excel)'};}),
+        sources:[{tool:'Business Capability Map',connector:'capmap',field:'capability · tier · exposure',lastRefresh:c5ago()},{tool:'GRC (Archer / ServiceNow GRC / LeanIX) — or Excel/CSV upload',connector:'grc',field:'control_coverage (Adequate/Watch/Gap) · control_gaps · open_risk'}],
+        note:topc?('Your most exposed capability is '+topc.name+'.'):'Which business capabilities carry the most cyber exposure. No GRC tool? Upload an Excel with control_coverage, control_gaps and open_risk per capability.',
+        connectTool:'your Business Capability Map + GRC (or an Excel upload) at onboarding'});}
     case 'er_scenarios':{var stz=(typeof LIVE!=='undefined'&&LIVE&&LIVE.stress)||{};var conn=!!(stz&&stz.scenario);
       // Spec: PULL Threat Intel → MAP to MITRE ATT&CK techniques matching your stack →
       //       JOIN BIA target impact. priority = technique_likelihood × business_impact.

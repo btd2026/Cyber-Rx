@@ -203,7 +203,11 @@ router.post('/ingest', optionalJWT, async (req, res) => {
     // Enterprise-Risk tile "business capabilities with highest exposure".
     const capabilities = Array.isArray(b.capabilities)
       ? b.capabilities.filter((c) => c && c.name).slice(0, 40)
-          .map((c) => ({ name: String(c.name).slice(0, 140), exposure_usd: money(c.exposure_usd), grc_status: c.grc_status ? String(c.grc_status).slice(0, 20) : null }))
+          .map((c) => {
+            const gaps = Number(c.control_gaps); const risk = Number(c.open_risk);
+            return { name: String(c.name).slice(0, 140), exposure_usd: money(c.exposure_usd), grc_status: c.grc_status ? String(c.grc_status).slice(0, 20) : null,
+              control_gaps: Number.isFinite(gaps) ? gaps : null, open_risk: Number.isFinite(risk) ? risk : null };
+          })
       : [];
 
     // CISO registers (documents) — Crown Jewel Register, BIA, SBOM. Normalized to a
