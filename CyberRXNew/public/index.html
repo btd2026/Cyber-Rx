@@ -539,7 +539,7 @@
     else if(e.data && e.data.type==="cyberrx-speak-cancel"){
       try{window.speechSynthesis.cancel();}catch(_){}
     }
-    else if(e.data && e.data.type==="cyberrx-goto-onboarding"){ show("intake"); }
+    else if(e.data && e.data.type==="cyberrx-goto-onboarding"){ show("intake"); try{var _fi=document.getElementById("fIntake");if(_fi&&_fi.contentWindow&&e.data.tool)setTimeout(function(){_fi.contentWindow.postMessage({type:"cyberrx-onboarding-focus",tool:e.data.tool},"*");},120);}catch(_){} }
     else if(e.data && e.data.type==="cyberrx-restore-view"){ if(e.data.view) show(e.data.view); }
     else if(e.data==="cyberrx-signout"){
       document.getElementById("switcher").classList.remove("show");
