@@ -18,7 +18,7 @@ function dataSensitivity(classes) {
   for (const d of arr) {
     const u = String(d).toUpperCase();
     let v = 0.2;
-    if (/PHI|PCI|CLASSIFIED|CUI|SECRET/.test(u)) v = 1;
+    if (/PHI|PCI|CLASSIFIED|CUI|SECRET|CREDENTIAL|IDENTITY/.test(u)) v = 1;
     else if (/FINANCIAL|PII|CARDHOLDER|REGULATED/.test(u)) v = 0.7;
     else if (/CONFIDENTIAL|IP|PROPRIETARY/.test(u)) v = 0.5;
     else if (/INTERNAL/.test(u)) v = 0.2;

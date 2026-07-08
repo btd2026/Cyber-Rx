@@ -1107,25 +1107,38 @@
   function critWeight(cl){return cl==='h'?1:cl==='m'?0.6:0.3;}
   var DATASENS={PHI:'Critical',PII:'High',PCI:'Critical',FINANCIAL:'High',IDENTITY:'Critical',IP:'High',CUI:'Critical',CLASSIFIED:'Critical',INTERNAL:'Low',PUBLIC:'Low'};
   function sensLabel(data){var t=mtok(data)[0]||'';return DATASENS[t]||'Medium';}
-  // Build the graph model {procs, apps} with preview crown-jewel scoring.
+  // Build the graph model {procs, apps} with crown-jewel scoring that MIRRORS the
+  // authoritative backend engine (CriticalityService): a 0–1 criticality score from
+  // five weighted factors, crown jewel when it clears the threshold. Same weights,
+  // same normalization, same 0.70 cut — so this preview and the go-live value tree
+  // crown the same set (no more "2 here, 6 there"). Everything derives from the
+  // columns you uploaded; nothing is hardcoded.
+  var CRIT_PROC={critical:1,high:0.75,medium:0.5,low:0.25};
+  function critVal(c){var k=String(c||'').toLowerCase();return CRIT_PROC[k]!=null?CRIT_PROC[k]:0.5;}
+  function dataSens01(data){var best=0;String(data||'').split(/[,;/]+/).forEach(function(d){var u=d.trim().toUpperCase();if(!u)return;var v=0.2;if(/PHI|PCI|CLASSIFIED|CUI|SECRET|CREDENTIAL|IDENTITY/.test(u))v=1;else if(/FINANCIAL|PII|CARDHOLDER|REGULATED/.test(u))v=0.7;else if(/CONFIDENTIAL|\bIP\b|PROPRIETARY/.test(u))v=0.5;else if(/INTERNAL/.test(u))v=0.2;else if(/PUBLIC/.test(u))v=0;if(v>best)best=v;});return best;}
+  function expo01(host){var e=String(host||'').toLowerCase();if(e.indexOf('internet')>=0)return 1;if(e.indexOf('internal')>=0)return 0.3;if(/internet|public|saas|cloud|aws|azure|gcp|api|portal|web|external/.test(e))return 1;if(/on-?prem|datacenter|lan|legacy|mainframe/.test(e))return 0.3;return 0.5;}
+  var CRIT_W={proc:0.35,conc:0.15,data:0.25,expo:0.15,spof:0.10},CRIT_THRESH=0.70,CONC_CAP=4;
   function buildGraph(){
-    var procs=PROC.map(function(p,i){return {id:'P'+(i+1),n:p.name,cl:procCritClass(p),data:p.data||'Process',rev:p.revenue||''};});
-    var nameToId={};procs.forEach(function(p){nameToId[p.n.toLowerCase()]=p.id;});
+    var procs=PROC.map(function(p,i){return {id:'P'+(i+1),n:p.name,cl:procCritClass(p),pc:critVal(p.criticality),data:p.data||'Process',rev:p.revenue||''};});
+    var nameToId={},procById={};procs.forEach(function(p){nameToId[p.n.toLowerCase()]=p.id;procById[p.id]=p;});
+    APP.forEach(function(a){if(!Array.isArray(a.processes))a.processes=autoMap(a);});
+    // How many apps run each process — an app that is the SOLE runner of any process
+    // it supports is a single point of failure.
+    var appsByPid={};APP.forEach(function(a){a.processes.forEach(function(n){var id=nameToId[String(n).toLowerCase()];if(id)(appsByPid[id]=appsByPid[id]||[]).push(1);});});
     var apps=APP.map(function(a,i){
-      if(!Array.isArray(a.processes))a.processes=autoMap(a);
       var pids=a.processes.map(function(n){return nameToId[String(n).toLowerCase()];}).filter(Boolean);
-      var e=exposureOf(a.host),dr=dataRank(a.data);
-      var maxPC=pids.length?Math.max.apply(null,pids.map(function(id){var p=procs.filter(function(x){return x.id===id;})[0];return critWeight(p?p.cl:'l');})):0.3;
-      var core=/claim|billing|payment|erp|identity|sso|okta|active.?dir|portal|member|patient|enroll|ehr|core|ledger/i.test(a.name)?8:0;
-      var multi=pids.length>1?Math.min(pids.length*3,12):0;
-      var score=Math.round((dr/3)*30+e.x*20+maxPC*20+multi+core);
-      var lp=procs.filter(function(x){return x.id===pids[0];})[0];
-      var why=[];if(dr>=2)why.push('Holds '+a.data);why.push(e.l);if(pids.length>1)why.push('supports '+pids.length+' processes');else if(lp)why.push('runs '+lp.n);
-      return {id:'A'+(i+1),n:a.name,host:a.host||'—',data:a.data||'—',pids:pids,score:score,why:why.join(' · '),cj:false};
+      var mapped=pids.map(function(id){return procById[id];}).filter(Boolean);
+      var maxPC=mapped.length?Math.max.apply(null,mapped.map(function(p){return p.pc;})):0.5;
+      var critCount=mapped.filter(function(p){return p.pc>=0.75;}).length;
+      var conc=Math.min(1,critCount/CONC_CAP);
+      var data=dataSens01(a.data),ex=expo01(a.host);
+      var spof=pids.some(function(id){return (appsByPid[id]||[]).length<=1;})?1:0;
+      var crit=CRIT_W.proc*maxPC+CRIT_W.conc*conc+CRIT_W.data*data+CRIT_W.expo*ex+CRIT_W.spof*spof;
+      var score=Math.round(crit*100); // 0–100 criticality, same scale as the engine's rationale
+      var lp=mapped[0];
+      var why=[];if(data>=0.7)why.push('Holds '+a.data);why.push(ex>=1?'internet-facing':(ex<=0.3?'on-prem':'internal'));if(pids.length>1)why.push('supports '+pids.length+' processes');else if(lp)why.push('runs '+lp.n);if(spof)why.push('single point of failure');
+      return {id:'A'+(i+1),n:a.name,host:a.host||'—',data:a.data||'—',pids:pids,score:score,crit:crit,why:why.join(' · '),cj:crit>=CRIT_THRESH};
     });
-    var sorted=apps.slice().sort(function(x,y){return y.score-x.score;});
-    var cjN=Math.min(apps.length,12,Math.max(2,Math.ceil(apps.length*0.15)));
-    sorted.forEach(function(a,i){a.cj=i<cjN&&a.score>0;});
     return {procs:procs,apps:apps};
   }
   function renderMap(){
