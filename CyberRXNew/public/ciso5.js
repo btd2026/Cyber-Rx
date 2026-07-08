@@ -3004,19 +3004,28 @@ function c5Frameworks(){
     return '<div class="c5fw-g"><div class="c5fw-grow" data-c5fwexp="'+g.id+'"><span class="c5fw-tw">'+(open?'▾':'▸')+'</span><span class="c5fw-dot" style="background:var(--'+gc+')"></span><span class="c5fw-id">'+g.id+'</span><span class="c5fw-nm">'+g.name+'</span><span class="c5fw-lvl">'+c5fwLvl(g.score)+'</span><span class="c5fw-sc" style="color:var(--'+gc+')">'+g.score.toFixed(1)+'</span></div>'+inner+'</div>';
   }).join('')+'</div>';
   var xnote=(typeof FW_XNOTE!=='undefined'&&FW_XNOTE[sel])?('<div class="c5note" style="margin-top:12px">🔗 '+FW_XNOTE[sel]+'</div>'):'';
+  // Small opt-in box in the maturity summary area (opens the full benchmark on click).
+  var pOpt=(typeof peerOptin==='function')&&peerOptin();
+  var peerBox='<div id="c5fwPeerBox" style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;padding:11px 15px;border:1px solid var(--line);border-radius:12px;background:var(--surface-2);cursor:pointer;transition:border-color .15s,background .15s"'+
+    ' onmouseover="this.style.borderColor=\'var(--blue)\'" onmouseout="this.style.borderColor=\'var(--line)\'">'+
+    '<div style="display:flex;align-items:center;gap:11px;min-width:0">'+
+      '<span style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:9px;flex:none;background:var(--surface);color:var(--blue)">'+c5icon('scale')+'</span>'+
+      '<div style="min-width:0"><div style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--blue)">'+(pOpt?'Peer benchmark · view comparison':'Opt-in for peer benchmark')+'</div>'+
+      '<div style="font-size:12px;color:var(--ink-2);margin-top:1px">See how your '+((typeof FW_NAMES!=='undefined'&&FW_NAMES[sel])||'framework')+' maturity compares to the DTNKShield community — anonymously.</div></div>'+
+    '</div><span class="peer-badge">DTNKShield ›</span></div>';
   host.innerHTML=c5header()+
     c5shell('Frameworks &amp; compliance · continuous, auditor-grade assessment','Assessed against every framework you care about — refreshed on your cadence.',null,'Every control scored on the CMMI 0–5 scale from your live telemetry and analyzed policies, rolled up to category, function and family — with auditor-grade findings you can hand to an assessor. Public standards quote control text; CIS and SOC 2 are referenced by number/criterion and mapping only.')+
     cadCtrl+
     '<div class="c5fw-refresh">Refreshed <b>'+cad+'</b> · last assessed <b>'+fmt(now)+'</b> · next refresh <b>'+fmt(nextD)+'</b></div>'+
     pills+
     cards+
+    peerBox+
     xnote+
     '<div class="c5fw-wrap"><div class="c5fw-left" id="c5fw-detail">'+c5fwFinding(sel,selNode)+'</div><div class="c5fw-right">'+tree+'</div></div>'+
-    '<div class="c5foot">CMMI 0 None · 1 Initial · 2 Managed · 3 Defined · 4 Quant. Managed · 5 Optimizing. Meets target ≥ '+C5FW_TARGET.toFixed(1)+' (green) · Observation ≥ '+C5FW_FLOOR+' (amber) · Deficiency &lt; '+C5FW_FLOOR+' (red). Documented to AICPA rigor; continuous management self-assessment, not an independent audit opinion. CIS by number/title/mapping only; SOC 2 by criterion ID.</div>'+
-    '<div id="c5fwPeer" style="margin-top:24px"></div>';
+    '<div class="c5foot">CMMI 0 None · 1 Initial · 2 Managed · 3 Defined · 4 Quant. Managed · 5 Optimizing. Meets target ≥ '+C5FW_TARGET.toFixed(1)+' (green) · Observation ≥ '+C5FW_FLOOR+' (amber) · Deficiency &lt; '+C5FW_FLOOR+' (red). Documented to AICPA rigor; continuous management self-assessment, not an independent audit opinion. CIS by number/title/mapping only; SOC 2 by criterion ID.</div>';
   // record cadence snapshot
   if(typeof fwRecord==='function'){try{fwRecord(T.overall);}catch(_){}}
-  try{c5fwPeerRender();}catch(_){}
+  var _pb=document.getElementById('c5fwPeerBox');if(_pb)_pb.onclick=function(){c5fwPeerOpen();};
   // wiring
   host.querySelectorAll('[data-c5fwsel]').forEach(function(b){b.onclick=function(){window.FW_SEL=b.getAttribute('data-c5fwsel');C5FW_EXP=null;C5FW_CTRL=null;c5Frameworks();};});
   host.querySelectorAll('[data-c5fwcad]').forEach(function(b){b.onclick=function(){try{localStorage.setItem('cyberrx_audit_cadence',b.getAttribute('data-c5fwcad'));}catch(_){}c5Frameworks();};});
@@ -3162,6 +3171,13 @@ function c5fwPeerFetch(){
     .then(function(r){return r.json();})
     .then(function(d){C5FW_PEER=d||{sufficient:false};C5FW_PEER_BUSY=false;c5fwPeerRender();})
     .catch(function(){C5FW_PEER={error:true};C5FW_PEER_BUSY=false;c5fwPeerRender();});
+}
+/* Open the full community benchmark (preview → verify → compare) in the drill
+   panel, triggered by the small opt-in box in the Frameworks maturity summary. */
+function c5fwPeerOpen(){
+  if(typeof openDrill!=='function')return;
+  openDrill('Community benchmark · how do we compare?','<div id="c5fwPeer"></div>');
+  try{c5fwPeerRender();}catch(_){}
 }
 function c5fwPeerRender(){
   var host=document.getElementById('c5fwPeer');if(!host)return;
