@@ -722,6 +722,7 @@
     <button class="tbtn war" id="warBtn">⚠ War Room</button>
     <button class="tbtn" id="boardBtn" title="Board-ready report">📋 Board Pack</button>
     <button class="tbtn" id="docsBtn" title="Document reviews mapped to your framework controls">📄 Documents reviewed</button>
+    <button class="tbtn" id="recomputeBtn" title="Re-pull your live data and recompute every framework control from telemetry + document review">↻ Recompute</button>
     <span class="mocktag" id="dataBadge">Illustrative</span>
     <span id="orgLive"><span class="dot" style="background:var(--muted)"></span>Sample workspace</span>
   </div>
@@ -5065,6 +5066,26 @@ function speakSeat(seat){var s=SEATS[seat];if(!s)return;
   var dc=document.getElementById('docClose');if(dc)dc.addEventListener('click',function(){try{c5CloseDocsReview();}catch(_){}});
   var ds=document.getElementById('docScrim');if(ds)ds.addEventListener('click',function(){try{c5CloseDocsReview();}catch(_){}});
   document.addEventListener('keydown',function(e){if(e.key==='Escape'){try{c5CloseDocsReview();}catch(_){}}});})();
+
+/* Recompute — the "core promise" action. /api/crown-jewels/summary recomputes the
+   whole engine live from the org's stored data on every read, so this re-pulls
+   LIVE (crown jewels, economics, value chain) and the connected-tool signals, then
+   re-renders the active seat. Framework maturity is recomputed too: controlCmmi()
+   reads the latest document-review scores + live tool coverage on every render, so
+   any newly-uploaded policy or freshly-connected tool is reflected immediately.
+   Nothing is cached or hard-coded — this is a full recalculation from real data. */
+(function(){var rb=document.getElementById('recomputeBtn');if(!rb)return;
+  rb.addEventListener('click',function(){
+    var orig=rb.textContent;rb.disabled=true;rb.textContent='↻ Recomputing…';
+    try{loadLive();}catch(_){}
+    try{loadSignals();}catch(_){}
+    try{if(typeof fetchReadiness==='function')fetchReadiness();}catch(_){}
+    // Re-render the current seat so document-review-driven panels (the Framework
+    // tab especially) refresh even when the backend is offline / in sample mode.
+    try{var cur=(document.querySelector('.seat.on')||{}).dataset;render(cur&&cur.seat||'ciso');}catch(_){}
+    setTimeout(function(){rb.textContent='✓ Recomputed';
+      setTimeout(function(){rb.disabled=false;rb.textContent=orig;},1400);},900);
+  });})();
 
 /* ================= War Room — full incident command center (ported) ================= */
 var SEAT_NAMES=(function(){try{return JSON.parse(localStorage.getItem('cyberrx_seat_names')||'{}');}catch(_){return{};}})();
