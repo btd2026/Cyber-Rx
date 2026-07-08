@@ -3543,7 +3543,7 @@ document.addEventListener('click',function(e){
    crown-jewel value tree (an isolated iframe island — see crownjewel-tree.html —
    ported verbatim from the frozen reference, data injected via postMessage).
    "Classic View" is the existing framework-maturity content, relocated as-is. */
-var C5_PH_DEFAULT='nerion'; // flip to 'classic' to change the default tab in one line
+var C5_PH_DEFAULT='classic'; // flip to 'nerion' to change the default tab in one line
 var C5_PH_TAB=C5_PH_DEFAULT;
 function c5CjtSrc(){try{return new URL('crownjewel-tree.html',location.href).href;}catch(_){return 'crownjewel-tree.html';}}
 var C5_CJT_INPUT=null,C5_CJT_WIRED=false;
@@ -3636,11 +3636,11 @@ function c5CrownTreeInput(){
    Lazy-mounts: the island is only built while "Nerion's View" is active. */
 function c5Frameworks(){
   var host=document.getElementById('c5-frameworks');if(!host)return;
-  var tab=(C5_PH_TAB==='classic')?'classic':'nerion';
+  var tab=(C5_PH_TAB==='nerion')?'nerion':'classic';
   host.innerHTML=c5header()+
     '<div class="subwrap c5phwrap"><div class="subtabs">'+
-      '<button class="subtab'+(tab==='nerion'?' on':'')+'" data-phtab="nerion">Nerion’s View</button>'+
       '<button class="subtab'+(tab==='classic'?' on':'')+'" data-phtab="classic">Classic View</button>'+
+      '<button class="subtab'+(tab==='nerion'?' on':'')+'" data-phtab="nerion">Nerion’s View</button>'+
     '</div></div><div id="c5ph-body"></div>';
   host.querySelectorAll('[data-phtab]').forEach(function(b){b.onclick=function(){C5_PH_TAB=b.getAttribute('data-phtab');c5Frameworks();};});
   var body=document.getElementById('c5ph-body');
