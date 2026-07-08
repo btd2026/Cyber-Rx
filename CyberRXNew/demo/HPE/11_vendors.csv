@@ -1,0 +1,13 @@
+name,tier,domain,criticality
+Amazon Web Services,1,aws.amazon.com,Critical
+Microsoft,1,microsoft.com,Critical
+SAP,1,sap.com,Critical
+Salesforce,1,salesforce.com,Critical
+Okta,1,okta.com,Critical
+Snowflake,2,snowflake.com,High
+ServiceNow,2,servicenow.com,High
+Foxconn,1,foxconn.com,Critical
+GitHub,2,github.com,High
+Palo Alto Networks,2,paloaltonetworks.com,High
+CrowdStrike,2,crowdstrike.com,High
+Accenture,2,accenture.com,Medium
