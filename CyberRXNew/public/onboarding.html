@@ -270,37 +270,19 @@
 
   <!-- 1c2 · AI & Software Supply-Chain Security (CISO tab) -->
   <div class="sec" id="secAiSupply">
-    <div class="sh"><div class="sn">✦</div><div><div class="st">AI &amp; Software Supply-Chain Security <span style="color:var(--muted)">(for the CISO)</span></div><div class="sd">The AI systems you run, the AI your people use, the code and pipeline that ship it, your machine identities and your post-quantum readiness. Powers the CISO <b>AI &amp; supply chain</b> tab — self-reported here, replaced by live tool data once connected. All optional.</div></div><div class="badge" id="bas">recommended</div></div>
-    <div class="row c3">
-      <div class="field"><label>AI/ML data sensitivity</label><select id="asDataSens"><option value="">Select…</option><option>High</option><option>Medium</option><option>Low</option></select></div>
-      <div class="field"><label>AI-SPM posture tool</label><select id="asAiSpm"><option value="">Select…</option><option>Connected</option><option>Not connected</option></select></div>
-      <div class="field"><label>Sanctioned GenAI apps</label><input type="number" step="1" min="0" id="asGenaiSanct" placeholder="0"></div>
+    <div class="sh"><div class="sn">✦</div><div><div class="st">AI &amp; Software Supply-Chain Security <span style="color:var(--muted)">(for the CISO)</span></div><div class="sd">Powers the CISO <b>AI &amp; supply chain</b> tab. Nothing to self-assess — the counts come from your inventory and the posture comes from the security tools you connect below. Two automated inputs.</div></div><div class="badge" id="bas">automated</div></div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <select id="aiInvSource" style="min-width:210px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:#fff">
+        <option value="">Inventory source…</option>
+        <option>ServiceNow CMDB</option><option>Device42</option><option>Axonius</option><option>AI asset inventory / model registry</option><option>CSV / Excel export</option>
+      </select>
+      <input type="file" id="aiInvFile" accept=".csv,.tsv,.txt">
+      <button class="conn-go" id="aiInvParse" type="button">Load inventory</button>
+      <span id="aiInvMsg" class="sd" style="margin:0"></span>
     </div>
-    <div class="row c3" style="margin-top:14px">
-      <div class="field"><label>Shadow-AI monitoring (CASB/SSE)</label><select id="asShadow"><option value="">Select…</option><option>Yes</option><option>Partially</option><option>No</option></select></div>
-      <div class="field"><label>DLP inspects data sent to AI?</label><select id="asDlpAi"><option value="">Select…</option><option>Yes</option><option>No</option></select></div>
-      <div class="field"><label>AI coding assistants in use</label><input id="asCodeTools" placeholder="e.g. Claude Code, GitHub Copilot"></div>
-    </div>
-    <div class="row c3" style="margin-top:14px">
-      <div class="field"><label>AI-coding policy scope</label><select id="asCodePolicy"><option value="">Select…</option><option>Enforced</option><option>Drafted</option><option>None</option></select></div>
-      <div class="field"><label>Code scanning (SAST/SCA/secrets)</label><select id="asCodeScan"><option value="">Select…</option><option>Yes</option><option>Partial</option><option>No</option></select></div>
-      <div class="field"><label>CI/CD pipeline security scanning</label><select id="asPipeScan"><option value="">Select…</option><option>Yes</option><option>No</option></select></div>
-    </div>
-    <div class="row c3" style="margin-top:14px">
-      <div class="field"><label>Artifact signing</label><select id="asArtSign"><option value="">Select…</option><option>Yes</option><option>No</option></select></div>
-      <div class="field"><label>Build provenance (SLSA level)</label><select id="asSlsa"><option value="">Select…</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
-      <div class="field"><label>Machine identities (approx.)</label><input type="number" step="1" min="0" id="asMachineId" placeholder="0"></div>
-    </div>
-    <div class="row c3" style="margin-top:14px">
-      <div class="field"><label>Secrets management</label><select id="asSecrets"><option value="">Select…</option><option>Vaulted</option><option>Partial</option><option>None</option></select></div>
-      <div class="field"><label>Non-human identity / ITDR monitoring</label><select id="asNhi"><option value="">Select…</option><option>Yes</option><option>No</option></select></div>
-      <div class="field"><label>Cryptographic inventory (CBOM)</label><select id="asCbom"><option value="">Select…</option><option>Complete</option><option>Partial</option><option>None</option></select></div>
-    </div>
-    <div class="row c3" style="margin-top:14px">
-      <div class="field"><label>Quantum-vulnerable data (RSA/ECC on long-lived data)?</label><select id="asQuantum"><option value="">Select…</option><option>Yes</option><option>Unknown</option><option>No</option></select></div>
-      <div class="field"><label>Post-quantum migration plan?</label><select id="asPqc"><option value="">Select…</option><option>Yes</option><option>No</option></select></div>
-      <div class="field"></div>
-    </div>
+    <div class="sd" style="margin-top:6px">One row per asset. A <b>type</b> column classifies each as <b>ai_system</b>, <b>genai_app</b>, <b>machine_identity</b> or <b>crypto_asset</b> (optional <b>sensitivity</b> column: high / medium / low). Export from your CMDB or model registry — Nerion counts them, so you never type “how many”.</div>
+    <div id="aiInvSummary" style="margin-top:12px"></div>
+    <div class="sd" style="margin-top:12px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface,#fafafa)">Posture — AI-SPM, shadow-AI (CASB/SSE), CI/CD scanning, machine-identity (NHI/ITDR) and cryptography discovery (CBOM) — reads live from the tools you connect in <b>Connect your systems</b>. <a href="#secTools" id="aiGotoConn" style="color:#2563eb;font-weight:600;text-decoration:none">Go to connectors →</a></div>
   </div>
 
   <!-- 1d · Strategic initiatives (CEO per-initiative safety check) -->
@@ -558,7 +540,41 @@
   ['govCommittee','govCadence','govErm','govIrTested','govRetainer','govRansom'].forEach(function(id){var e=document.getElementById(id);if(e)e.addEventListener('change',function(){var any=['govCommittee','govCadence','govErm','govIrTested'].some(function(k){var el=document.getElementById(k);return el&&el.value;});var b=document.getElementById('bgov');if(b&&any){b.textContent='✓ provided';b.classList.add('done');}});});
   // AI risk & governance section badge
   ['aiSystems','aiDecisioning','aiFramework','aiPolicy','aiEuAct','aiInventory'].forEach(function(id){var e=document.getElementById(id);if(e)e.addEventListener('change',function(){var b=document.getElementById('bai');if(b){b.textContent='✓ provided';b.classList.add('done');}});});
-  ['asDataSens','asAiSpm','asGenaiSanct','asShadow','asDlpAi','asCodeTools','asCodePolicy','asCodeScan','asPipeScan','asArtSign','asSlsa','asMachineId','asSecrets','asNhi','asCbom','asQuantum','asPqc'].forEach(function(id){var e=document.getElementById(id);if(e)['change','input'].forEach(function(ev){e.addEventListener(ev,function(){var b=document.getElementById('bas');if(b){b.textContent='✓ provided';b.classList.add('done');}});});});
+  // AI & supply-chain inventory — counts pulled from an uploaded/connected inventory
+  // instead of hand-typed. Classifies each row by its `type` column and tallies.
+  var AI_INV={};
+  function renderAiInv(){
+    var s=document.getElementById('aiInvSummary');if(!s)return;
+    if(!AI_INV._loaded){s.innerHTML='';return;}
+    var cards=[['ai_system','AI / ML systems'],['genai_app','Sanctioned GenAI apps'],['machine_identity','Machine identities'],['crypto_asset','Crypto assets (CBOM)']]
+      .map(function(p){var n=AI_INV[p[0]]||0;return '<div style="flex:1;min-width:140px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:#fff"><div style="font-size:22px;font-weight:700;color:#111">'+n.toLocaleString()+'</div><div class="sd" style="margin:2px 0 0">'+p[1]+'</div></div>';}).join('');
+    s.innerHTML='<div style="display:flex;gap:10px;flex-wrap:wrap">'+cards+'</div>'+(AI_INV.sensitivity?('<div class="sd" style="margin-top:8px">Highest data sensitivity in scope: <b>'+AI_INV.sensitivity+'</b></div>'):'');
+  }
+  function loadAiInv(){
+    var f=document.getElementById('aiInvFile'),msg=document.getElementById('aiInvMsg');
+    if(!f||!f.files||!f.files[0]){if(msg)msg.textContent='Choose a CSV/TSV inventory export first.';return;}
+    var r=new FileReader();
+    r.onload=function(){
+      var pd=parseDelim(String(r.result||''));var rows=pd.rows||[],h=pd.headers;
+      if(!rows.length){if(msg)msg.textContent='No rows found.';return;}
+      function col(names){if(!h)return -1;for(var i=0;i<h.length;i++){var hl=String(h[i]||'').toLowerCase();for(var j=0;j<names.length;j++){if(hl.indexOf(names[j])>=0)return i;}}return -1;}
+      var tc=col(['type','category','class','kind']),sc=col(['sensitivity','data_sens','classification']);
+      var tally={ai_system:0,genai_app:0,machine_identity:0,crypto_asset:0},sensRank={high:3,medium:2,low:1},topSens=0,topSensL='';
+      rows.forEach(function(row){
+        var raw=(tc>=0?String(row[tc]||''):'').toLowerCase();
+        var key=/genai|gen-ai|llm app|chatbot|copilot|assistant/.test(raw)?'genai_app':/machine|service account|non.?human|nhi|token|secret|api key|workload/.test(raw)?'machine_identity':/crypto|cert|key|tls|cbom|algorithm/.test(raw)?'crypto_asset':/ai|ml|model/.test(raw)?'ai_system':'ai_system';
+        tally[key]=(tally[key]||0)+1;
+        if(sc>=0){var sv=String(row[sc]||'').toLowerCase();for(var k in sensRank){if(sv.indexOf(k)>=0&&sensRank[k]>topSens){topSens=sensRank[k];topSensL=k.charAt(0).toUpperCase()+k.slice(1);}}}
+      });
+      AI_INV={ai_system:tally.ai_system,genai_app:tally.genai_app,machine_identity:tally.machine_identity,crypto_asset:tally.crypto_asset,sensitivity:topSensL,_loaded:true};
+      renderAiInv();
+      if(msg)msg.textContent='✓ '+rows.length+' assets classified.';
+      var b=document.getElementById('bas');if(b){b.textContent='✓ '+rows.length+' assets';b.classList.add('done');}
+    };
+    r.readAsText(f.files[0]);
+  }
+  (function(){var b=document.getElementById('aiInvParse');if(b)b.addEventListener('click',loadAiInv);
+    var g=document.getElementById('aiGotoConn');if(g)g.addEventListener('click',function(ev){ev.preventDefault();var el=document.getElementById('secTools');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});});})();
   // When the cockpit sends the user here to connect a tool, scroll to and highlight
   // the section that captures it.
   window.addEventListener('message',function(e){
@@ -569,7 +585,7 @@
     else if(/threat intel|recorded future|mandiant|mitre/.test(t))id='secTools';
     else if(/crown jewel|inventory|\bvm\b|vulnerability|\bedr\b|cmdb/.test(t))id='secProc';
     else if(/document review|policy|document evidence|reviewed document/.test(t))id='secDocReview';
-    else if(/cbom|crypto|quantum|pqc|ai-spm|aispm|genai|casb|sse|coding|copilot|claude code|ci\/cd|pipeline|slsa|nhi|machine identit|non-human|secrets|artifact|sbom/.test(t))id='secAiSupply';
+    else if(/cbom|crypto|quantum|pqc|ai-spm|aispm|genai|casb|sse|coding|copilot|claude code|ci\/cd|pipeline|slsa|nhi|machine identit|non-human|secrets|artifact|sbom|ai supply|supply.?chain|ai.?ml|ai inventory/.test(t))id='secAiSupply';
     var el=id&&document.getElementById(id);if(!el)return;
     try{el.scrollIntoView({behavior:'smooth',block:'start'});}catch(_){el.scrollIntoView();}
     el.style.transition='box-shadow .3s';el.style.boxShadow='0 0 0 2px #2563eb';
@@ -1066,7 +1082,12 @@
     {key:'legal_matter',ic:'⚖',cat:'Legal matter management',w:6,sig:40,vendors:['Onit','SimpleLegal','Legal Tracker','HighQ'],pulls:'Open cyber/privacy matters, disclosure status, litigation exposure.',ans:'CLO litigation & liability · Board disclosure status.'},
     {key:'contract_lifecycle',ic:'📝',cat:'Contract lifecycle (CLM)',w:6,sig:30,vendors:['Ironclad','DocuSign CLM','Icertis','Agiloft'],pulls:'Contracts with cyber/SLA clauses at risk of breach.',ans:'CLO contractual & SLA cyber obligations.'},
     {key:'data_classification',ic:'🏷',cat:'Data classification',w:6,sig:40,vendors:['Microsoft Purview','BigID','Varonis','Collibra'],pulls:'Regulated data types (PHI/PII/PCI), classification coverage.',ans:'CLO breach-notification scoping by regulated data.'},
-    {key:'internal_audit',ic:'🔎',cat:'Internal audit management',w:6,sig:40,vendors:['AuditBoard','Workiva','TeamMate+','ServiceNow Audit'],pulls:'Open & overdue cyber-related audit findings and ratings.',ans:'Board independent assurance on cyber.'}
+    {key:'internal_audit',ic:'🔎',cat:'Internal audit management',w:6,sig:40,vendors:['AuditBoard','Workiva','TeamMate+','ServiceNow Audit'],pulls:'Open & overdue cyber-related audit findings and ratings.',ans:'Board independent assurance on cyber.'},
+    {key:'aispm',ic:'🤖',cat:'AI security posture (AI-SPM)',w:6,sig:50,vendors:['Wiz AI-SPM','Prisma AIRS','Protect AI','HiddenLayer','Robust Intelligence'],pulls:'AI/ML system posture — prompt-injection exposure, data-leakage paths, model access and guardrail gaps.',ans:'CISO AI & supply chain: AI/ML systems the business runs.'},
+    {key:'casb',ic:'🛰',cat:'Shadow-AI / GenAI gateway (CASB/SSE)',w:6,sig:50,vendors:['Netskope','Zscaler','Palo Alto Prisma Access','Microsoft Defender for Cloud Apps','Cloudflare One'],pulls:'Sanctioned vs shadow GenAI usage by app and user, and sensitive-data submissions to AI (DLP in path).',ans:'CISO AI & supply chain: enterprise GenAI & shadow-AI leakage.'},
+    {key:'cicd',ic:'🔧',cat:'CI/CD & build supply chain',w:8,sig:60,vendors:['GitLab Security','Snyk','Cycode','Legit Security','Chainguard','Sigstore'],pulls:'Pipeline misconfigurations, unsigned artifacts, SLSA provenance, exposed pipeline secrets and SBOM.',ans:'CISO AI & supply chain: CI/CD pipeline & build supply chain integrity.'},
+    {key:'nhi',ic:'🔑',cat:'Machine identity (NHI / ITDR)',w:6,sig:50,vendors:['Astrix Security','Oasis Security','Entro','Token Security','GitGuardian'],pulls:'Non-human identities — service accounts, tokens and keys flagged stale, over-privileged or exposed.',ans:'CISO AI & supply chain: non-human & machine-identity exposure.'},
+    {key:'cbom',ic:'🔐',cat:'Cryptography discovery (CBOM)',w:6,sig:40,vendors:['SandboxAQ','InfoSec Global','Quantum Xchange','IBM Quantum Safe','Keyfactor'],pulls:'Cryptographic bill of materials — algorithms and key sizes, quantum-vulnerable (RSA/ECC) on long-lived data.',ans:'CISO AI & supply chain: post-quantum cryptography readiness.'}
   ];
   var TOTAL_SIG=TOOLS.reduce(function(s,t){return s+t.sig;},0);
   var SELTOOLS={};
@@ -1147,12 +1168,13 @@
         policy:v('aiPolicy'),euAiAct:v('aiEuAct'),inventory:v('aiInventory')
       },
       aiSupplyChain:{
-        aiDataSensitivity:v('asDataSens'),aiSpm:v('asAiSpm'),genaiSanctioned:v('asGenaiSanct'),
-        shadowAiMonitored:v('asShadow'),dlpToAi:v('asDlpAi'),aiCodingTools:v('asCodeTools'),
-        aiCodePolicy:v('asCodePolicy'),codeScanning:v('asCodeScan'),pipelineScanning:v('asPipeScan'),
-        artifactSigning:v('asArtSign'),slsaLevel:v('asSlsa'),machineIdentities:v('asMachineId'),
-        secretsMgmt:v('asSecrets'),nhiMonitored:v('asNhi'),cbomStatus:v('asCbom'),
-        quantumVulnerable:v('asQuantum'),pqcPlan:v('asPqc')
+        // Counts come from the uploaded / connected inventory — never hand-typed.
+        aimlSystems:AI_INV.ai_system||0,genaiSanctioned:AI_INV.genai_app||0,
+        machineIdentities:AI_INV.machine_identity||0,cbomAssets:AI_INV.crypto_asset||0,
+        aiDataSensitivity:AI_INV.sensitivity||'',inventorySource:v('aiInvSource'),
+        inventoryLoaded:!!AI_INV._loaded
+        // Posture (aiSpm · shadowAiMonitored · pipelineScanning · nhiMonitored · cbomStatus …)
+        // is read live from the connected security tools, not self-reported here.
       },
       strategicInitiatives:collectStrategic(),
       objectives:collectObjectives(),
