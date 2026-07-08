@@ -44,6 +44,8 @@
     '.c5aic-t{font-size:13.5px;font-weight:650;color:var(--ink);line-height:1.25}',
     '.c5aic-v{font-size:12px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;margin-top:3px}',
     '.c5aic-s{font-size:12.5px;color:var(--ink-2);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+    '.c5aic-alarm{border-color:var(--crit);animation:c5aicpulse 1.1s infinite}',
+    '@keyframes c5aicpulse{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--crit) 42%,transparent)}50%{box-shadow:0 0 0 5px color-mix(in srgb,var(--crit) 0%,transparent)}}',
     '.c5sqrow{display:flex;gap:4px;margin-top:11px;flex-wrap:wrap}',
     '.c5sq{width:13px;height:13px;border-radius:3px;background:var(--line)}',
     '.c5sq.g{background:var(--good)}.c5sq.a{background:var(--warn)}.c5sq.b{background:var(--blue)}.c5sq.r{background:var(--crit)}.c5sq.n{background:var(--line)}',
@@ -1807,12 +1809,11 @@ function c5Health(){
     return c5tile(mid,p.c,p.t,sub,'',icon);
   }
   var anyRisk=['er_crown','er_capability','er_scenarios','er_thirdparty'].some(function(id){var m=c5get(id);return m.connected&&(m.color==='warn'||m.color==='crit');});
-  var tiles='<div class="c5tiles">'+
-    tileFor('er_crown','Register × CMDB × VM × EDR','checklist','crown jewel inventory','Crown Jewel inventory · VM · EDR')+
-    tileFor('er_capability','Capability Map × GRC gaps','store','business capability map','Business Capability Map')+
-    tileFor('er_scenarios','Threat Intel × MITRE × BIA','trend','threat intelligence','Threat Intelligence')+
-    tileFor('er_thirdparty','TPRM × ratings × SBOM','store','vendor risk','Vendor Risk / TPRM')+
-    '</div>';
+  var tiles=c5RingGrid([
+    {id:'er_crown',ic:'checklist',onb:'crown jewel inventory'},
+    {id:'er_capability',ic:'store',onb:'business capability map'},
+    {id:'er_scenarios',ic:'trend',onb:'threat intelligence'},
+    {id:'er_thirdparty',ic:'store',onb:'vendor risk'}]);
   // Bottom line — synthesized from the four reads, pointing to the single most
   // exposed thing (the top-ranked crown jewel), so it stays consistent with tile 1.
   var CJRk=(typeof LIVE!=='undefined'&&LIVE&&LIVE.crown_jewel_risk)||null;var topCj=(CJRk&&CJRk.items&&CJRk.items.length)?CJRk.items[0]:null;
@@ -1833,6 +1834,28 @@ function c5Health(){
     '<div class="c5foot">Each tile traces to its exact sources. Figures shown are illustrative until the sources are connected.</div>';
 }
 
+/* Reusable graphical status-ring tile grid (the AI & supply-chain look): a
+   completion ring + one-word verdict + the metric's real read, drilling to the
+   full inspector. defs = [{id, ic, onb}] — `onb` is the onboarding keyword the
+   "connect →" link deep-links to when a read isn't wired yet. opts.alarm makes a
+   connected+critical tile pulse (used by the War Room / Cyber Operations tab). */
+var C5RING_VERDICT={crit:'At risk',warn:'Watch',good:'Healthy',blue:'Monitoring',muted:'—',ink:'—'};
+var C5RING_COL={crit:'crit',warn:'warn',good:'good',blue:'blue',muted:'muted',ink:'muted'};
+function c5RingGrid(defs,opts){
+  opts=opts||{};
+  var pct=function(m){return m.connected?(m.color==='good'||m.color==='blue'?100:m.color==='warn'?55:m.color==='crit'?22:0):0;};
+  var ring=function(m,col,ic){var p=pct(m);var C=2*Math.PI*20;var off=C*(1-p/100);
+    return '<svg viewBox="0 0 48 48" width="52" height="52" style="flex:none"><circle cx="24" cy="24" r="20" fill="none" stroke="var(--line)" stroke-width="4.5"/>'+(m.connected?('<circle cx="24" cy="24" r="20" fill="none" stroke="var(--'+col+')" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="'+C.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)+'" transform="rotate(-90 24 24)"/>'):'')+'<g transform="translate(16 16) scale(0.66)" stroke="var(--'+(m.connected?col:'muted')+')">'+(C5ICON[ic]||C5ICON.shield)+'</g></svg>';};
+  return '<div class="c5aigrid">'+defs.map(function(d){var m=c5get(d.id);
+    var col=m.connected?(C5RING_COL[m.color]||'good'):'muted';
+    var verdict=m.connected?(C5RING_VERDICT[m.color]||'Healthy'):'Not connected';
+    var sub=m.connected?c5esc(String(m.displayValue)):'<span data-c5onb="'+c5esc(d.onb||'')+'" style="color:var(--blue);cursor:pointer;font-weight:600">connect →</span>';
+    var alarm=(opts.alarm&&m.connected&&m.color==='crit')?' c5aic-alarm':'';
+    return '<div class="c5aic'+alarm+'" data-c5m="'+d.id+'" style="--ac:var(--'+col+')" title="'+c5tip(m)+'">'+ring(m,col,d.ic)+
+      '<div style="min-width:0;flex:1"><div class="c5aic-t">'+m.name+'</div><div class="c5aic-v" style="color:var(--'+col+')">'+verdict+'</div><div class="c5aic-s">'+sub+'</div></div></div>';
+  }).join('')+'</div>';
+}
+
 /* ---------- CISO tab — AI & Software Supply-Chain Security ---------- */
 /* Six enterprise-risk reads, Program-Health design (tile grid + bottom line).
    Each tile is a provenance metric; posture is self-reported from onboarding
@@ -1842,20 +1865,11 @@ function c5AiSupply(){
   // Graphical, low-text tiles: a status ring + one-word verdict per read, drilling
   // to the full detail. No paragraph of "connect X …" on the surface — just a
   // subtle connect link that jumps to the right onboarding section.
-  var defs=[{id:'ais_aiml',ic:'cpu'},{id:'ais_genai',ic:'store'},{id:'ais_aicode',ic:'file'},{id:'ais_pipeline',ic:'box'},{id:'ais_nhi',ic:'key'},{id:'ais_pqc',ic:'lock'}];
+  var defs=[{id:'ais_aiml',ic:'cpu',onb:'ai supply chain'},{id:'ais_genai',ic:'store',onb:'ai supply chain'},{id:'ais_aicode',ic:'file',onb:'ai supply chain'},{id:'ais_pipeline',ic:'box',onb:'ai supply chain'},{id:'ais_nhi',ic:'key',onb:'ai supply chain'},{id:'ais_pqc',ic:'lock',onb:'ai supply chain'}];
   var ms=defs.map(function(d){return c5get(d.id);});
   var anyRisk=ms.some(function(m){return m.connected&&(m.color==='warn'||m.color==='crit');});
   var worst=null,worstR=0;ms.forEach(function(m){var r=(m.color==='crit'?2:m.color==='warn'?1:0);if(m.connected&&r>worstR){worst=m;worstR=r;}});
-  var pct=function(m){return m.connected?(m.color==='good'?100:m.color==='warn'?55:m.color==='crit'?22:0):0;};
-  var ring=function(m,col){var p=pct(m);var C=2*Math.PI*20;var off=C*(1-p/100);
-    return '<svg viewBox="0 0 48 48" width="52" height="52" style="flex:none"><circle cx="24" cy="24" r="20" fill="none" stroke="var(--line)" stroke-width="4.5"/>'+(m.connected?('<circle cx="24" cy="24" r="20" fill="none" stroke="var(--'+col+')" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="'+C.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)+'" transform="rotate(-90 24 24)"/>'):'')+'<g transform="translate(16 16) scale(0.66)" stroke="var(--'+(m.connected?col:'muted')+')">'+(C5ICON[m._ic]||C5ICON.shield)+'</g></svg>';};
-  var tiles='<div class="c5aigrid">'+defs.map(function(d){var m=ms[defs.indexOf(d)];m._ic=d.ic;
-    var col=m.connected?(m.color==='crit'?'crit':m.color==='warn'?'warn':m.color==='good'?'good':'muted'):'muted';
-    var verdict=m.connected?(m.color==='crit'?'At risk':m.color==='warn'?'Watch':'Healthy'):'Not connected';
-    var sub=m.connected?c5esc(String(m.displayValue)):'<span data-c5onb="ai supply chain" style="color:var(--blue);cursor:pointer;font-weight:600">connect →</span>';
-    return '<div class="c5aic" data-c5m="'+d.id+'" style="--ac:var(--'+col+')" title="'+c5tip(m)+'">'+ring(m,col)+
-      '<div style="min-width:0;flex:1"><div class="c5aic-t">'+m.name+'</div><div class="c5aic-v" style="color:var(--'+col+')">'+verdict+'</div><div class="c5aic-s">'+sub+'</div></div></div>';
-  }).join('')+'</div>';
+  var tiles=c5RingGrid(defs);
   var blHead,blPara,blMid,blBtn;
   if(worst){blMid=worst.id;blHead='Close your highest AI & supply-chain exposure first.';
     blPara='Across the six reads, your most exposed area is <b>'+c5esc(worst.name)+'</b> — '+worst.displayValue+'. '+(worst.note||'');
@@ -2021,16 +2035,11 @@ function c5WarAlarm(){
    ("How it's computed"), never on the surface. A quiet SOC reads green. */
 function c5Effect(){
   var host=document.getElementById('c5-effect');if(!host)return;
-  var defs=[{id:'cops_incidents',ic:'alert'},{id:'cops_services',ic:'pulse'},{id:'cops_thirdparty',ic:'store'},{id:'cops_emerging',ic:'target'}];
+  var defs=[{id:'cops_incidents',ic:'alert',onb:'siem'},{id:'cops_services',ic:'pulse',onb:'siem'},{id:'cops_thirdparty',ic:'store',onb:'vendor risk'},{id:'cops_emerging',ic:'target',onb:'threat intelligence'}];
   var ms=defs.map(function(d){return {d:d,m:c5get(d.id)};});
   var active=ms.filter(function(x){return x.m.connected&&(x.m.color==='crit'||x.m.color==='warn');}).length;
   var anyConn=ms.some(function(x){return x.m.connected;});
-  var cards=ms.map(function(x){var m=x.m;var col=m.connected?(m.color==='crit'?'crit':m.color==='warn'?'warn':'good'):'muted';
-    var alarm=(m.connected&&m.color==='crit')?' alarm':'';
-    return '<div class="c5opc'+alarm+'" data-c5m="'+m.id+'" style="--ac:var(--'+col+')" title="'+c5tip(m)+'"><span class="c5opc-go">details ›</span><div class="c5opc-h"><span class="c5opc-ic">'+c5icon(x.d.ic)+'</span><span class="c5opc-t">'+m.name+'</span></div>'+
-      '<div class="c5opc-v" style="color:var(--'+col+')">'+(m.connected?m.displayValue:'—')+'</div>'+
-      '<div class="c5opc-s">'+(m.note||'')+'</div></div>';
-  }).join('');
+  var cards=c5RingGrid(defs,{alarm:true});
   // War Room — a live incident (a crit incident front) makes it blink + beep to
   // draw the CISO to click in. wrOpen() is the existing War Room modal.
   var incident=ms.filter(function(x){return x.m.connected&&x.m.color==='crit';}).length>0;
@@ -2056,7 +2065,7 @@ function c5Effect(){
   var body=c5header()+
     c5shell('Cyber operations · what needs command attention right now?',verdict,active>0?'warn':null,intro)+
     warbar+
-    '<div class="c5opgrid">'+cards+'</div>';
+    cards;
   if(top){
     body+=c5bl('Bottom line',
       top.m.name+' is your live front — '+top.m.displayValue+'.',
