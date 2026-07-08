@@ -324,19 +324,29 @@
 
   <!-- 2b · Enterprise risk portfolio (CRO) -->
   <div class="sec">
-    <div class="sh"><div class="sn">✦</div><div><div class="st">Enterprise risk portfolio <span style="color:var(--muted)">(for the CRO)</span></div><div class="sd">Your other principal risks in dollars, so cyber sits on one scale beside them. From your ERM / risk register — leave blank to keep the CRO comparison illustrative.</div></div><div class="badge" id="berm">optional</div></div>
-    <div class="row c4">
+    <div class="sh"><div class="sn">✦</div><div><div class="st">Enterprise risk portfolio <span style="color:var(--muted)">(for the CRO)</span></div><div class="sd">Your other principal risks in dollars, so cyber sits on one scale beside them. Pull them from your ERM / GRC platform, or enter manually — leave blank to keep the CRO comparison illustrative.</div></div><div class="badge" id="berm">optional</div></div>
+    <div class="srcchoice"><div class="srcopt sel" data-choice="erm" data-mode="upload"><div class="so-h">✎ Enter manually</div><div class="so-d">from your ERM / risk register</div></div><div class="srcopt" data-choice="erm" data-mode="connect"><div class="so-h">⚡ Pull from ERM / GRC</div><div class="so-d">Archer / ServiceNow GRC / SAP GRC / LogicManager — live</div></div></div>
+    <div id="ermConnect" style="display:none">
+      <div class="conn-row"><div class="field" style="min-width:200px"><label>ERM / GRC platform</label><select id="ermSys"><option>RSA Archer</option><option>ServiceNow GRC (IRM)</option><option>SAP GRC</option><option>LogicManager</option><option>MetricStream</option><option>AuditBoard</option></select></div><div class="field" style="flex:1;min-width:220px"><label>Instance URL / API token</label><input id="ermCred" placeholder="https://yourorg.archer.com · token"></div><button class="conn-go" data-conn="erm">Connect &amp; pull</button></div>
+      <div class="conn-msg" id="ermConnMsg"></div>
+    </div>
+    <div id="ermUpload"><div class="row c4">
       <div class="field"><label>Credit / market risk</label><div class="moneyf"><span class="cur mcur">$</span><input type="number" step="any" class="mnum money" id="ermCredit" placeholder="210"><select class="munit" id="ermCredit_u"><option value="1000000000">B</option><option value="1000000" selected>M</option><option value="1000">K</option></select></div><div class="money-eq" id="ermCredit_eq"></div></div>
       <div class="field"><label>Operational risk</label><div class="moneyf"><span class="cur mcur">$</span><input type="number" step="any" class="mnum money" id="ermOps" placeholder="140"><select class="munit" id="ermOps_u"><option value="1000000000">B</option><option value="1000000" selected>M</option><option value="1000">K</option></select></div><div class="money-eq" id="ermOps_eq"></div></div>
       <div class="field"><label>Third-party risk</label><div class="moneyf"><span class="cur mcur">$</span><input type="number" step="any" class="mnum money" id="ermTP" placeholder="54"><select class="munit" id="ermTP_u"><option value="1000000000">B</option><option value="1000000" selected>M</option><option value="1000">K</option></select></div><div class="money-eq" id="ermTP_eq"></div></div>
       <div class="field"><label>Compliance / legal risk</label><div class="moneyf"><span class="cur mcur">$</span><input type="number" step="any" class="mnum money" id="ermComp" placeholder="30"><select class="munit" id="ermComp_u"><option value="1000000000">B</option><option value="1000000" selected>M</option><option value="1000">K</option></select></div><div class="money-eq" id="ermComp_eq"></div></div>
-    </div>
+    </div></div>
   </div>
 
   <!-- 2c · Security as a growth engine (CISO revenue-enablement) -->
   <div class="sec">
-    <div class="sh"><div class="sn">✦</div><div><div class="st">Security as a growth engine <span style="color:var(--muted)">(for the CISO)</span></div><div class="sd">The revenue your security program unlocks — pipeline in security review, how fast you clear deals, and the certifications that are the price of admission. Powers the CISO growth view. Leave blank to keep it illustrative.</div></div><div class="badge" id="bgrowth">optional</div></div>
-    <div class="row c3">
+    <div class="sh"><div class="sn">✦</div><div><div class="st">Security as a growth engine <span style="color:var(--muted)">(for the CISO)</span></div><div class="sd">The revenue your security program unlocks — pipeline in security review, how fast you clear deals, and the certifications that are the price of admission. Pull it from your CRM &amp; compliance-automation platforms, or enter manually. Powers the CISO growth view — leave blank to keep it illustrative.</div></div><div class="badge" id="bgrowth">optional</div></div>
+    <div class="srcchoice"><div class="srcopt sel" data-choice="growth" data-mode="upload"><div class="so-h">✎ Enter manually</div><div class="so-d">pipeline · review time · deals · certs</div></div><div class="srcopt" data-choice="growth" data-mode="connect"><div class="so-h">⚡ Pull from CRM / compliance</div><div class="so-d">Salesforce / HubSpot + Vanta / Drata / SecureFrame — live</div></div></div>
+    <div id="growthConnect" style="display:none">
+      <div class="conn-row"><div class="field" style="min-width:200px"><label>CRM / compliance platform</label><select id="growthSys"><option>Salesforce + Vanta</option><option>HubSpot + Drata</option><option>Salesforce + SecureFrame</option><option>Salesforce + OneTrust</option><option>HubSpot + Vanta</option></select></div><div class="field" style="flex:1;min-width:220px"><label>Instance URL / API token</label><input id="growthCred" placeholder="https://yourorg.my.salesforce.com · token"></div><button class="conn-go" data-conn="growth">Connect &amp; pull</button></div>
+      <div class="conn-msg" id="growthConnMsg"></div>
+    </div>
+    <div id="growthUpload"><div class="row c3">
       <div class="field"><label>Pipeline in security review</label><div class="moneyf"><span class="cur mcur">$</span><input type="number" step="any" class="mnum money" id="growthPipeline" placeholder="48"><select class="munit" id="growthPipeline_u"><option value="1000000000">B</option><option value="1000000" selected>M</option><option value="1000">K</option></select></div><div class="money-eq" id="growthPipeline_eq"></div></div>
       <div class="field"><label>Security-review time — before <span style="color:var(--muted)">(weeks)</span></label><div class="moneyf"><span class="cur">wk</span><input type="number" step="any" class="mnum" id="growthBefore" placeholder="6"></div></div>
       <div class="field"><label>Security-review time — now <span style="color:var(--muted)">(weeks)</span></label><div class="moneyf"><span class="cur">wk</span><input type="number" step="any" class="mnum" id="growthNow" placeholder="2"></div></div>
@@ -352,7 +362,7 @@
         <label class="ckchip"><input type="checkbox" value="HIPAA attestation"> HIPAA attestation</label>
         <label class="ckchip"><input type="checkbox" value="FedRAMP"> FedRAMP</label>
       </div></div>
-    </div>
+    </div></div>
   </div>
 
   <!-- 3 · Insurance -->
@@ -1102,10 +1112,43 @@
     energy:{sys:['SCADA / Control System|OT network|Operational|GE|yes|4','Billing Platform|application on-prem|PII, Financial|Oracle|no|8','Field-Ops System|cloud service|Operational, PII|Vendor|no|12','Trading Platform|application on-prem|Financial|Trading Vendor|no|4','Enterprise Data Warehouse|on-prem data|Operational, Financial|Snowflake|no|24','Identity Provider|cloud identity|Credentials|Okta|no|8'],proc:['Grid operations|$2.2B|4|Operational|Critical','Billing & metering|$900M|8|PII, Financial|High','Energy trading|$600M|4|Financial|High']}
   };
   function invKey(){var i=String(v('industry')||'').toLowerCase();if(/health/.test(i))return 'health';if(/tech|saas|software/.test(i))return 'tech';if(/financ|bank|insur/.test(i))return 'fin';if(/retail|commerce/.test(i))return 'retail';if(/gov|public/.test(i))return 'gov';if(/manufactur/.test(i))return 'mfg';if(/energy|utilit/.test(i))return 'energy';return 'tech';}
+  // Representative ERM principal-risk portfolio ($M) by industry — the live Archer /
+  // ServiceNow GRC API replaces these with the client's real register on go-live.
+  var ERM_PULL={
+    health:{credit:180,ops:160,tp:60,comp:90}, tech:{credit:210,ops:140,tp:54,comp:30},
+    fin:{credit:520,ops:240,tp:90,comp:120}, retail:{credit:160,ops:120,tp:70,comp:40},
+    gov:{credit:90,ops:130,tp:50,comp:80}, mfg:{credit:240,ops:180,tp:110,comp:40},
+    energy:{credit:300,ops:220,tp:90,comp:70}
+  };
+  // Representative security-as-growth signals by industry — pipeline ($M) from the CRM,
+  // review-cycle & deals from the CRM, trust-reviews & certs from the compliance-automation
+  // platform (Vanta / Drata). Live APIs replace these on go-live.
+  var GROWTH_PULL={
+    health:{pipeline:40,before:8,now:3,deals:9,trust:28,certs:['SOC 2 Type II','HITRUST CSF','HIPAA attestation']},
+    tech:{pipeline:48,before:6,now:2,deals:11,trust:34,certs:['SOC 2 Type II','ISO 27001']},
+    fin:{pipeline:120,before:8,now:3,deals:14,trust:40,certs:['SOC 2 Type II','ISO 27001','PCI DSS']},
+    retail:{pipeline:60,before:6,now:3,deals:12,trust:30,certs:['SOC 2 Type II','PCI DSS']},
+    gov:{pipeline:30,before:12,now:6,deals:6,trust:20,certs:['FedRAMP','ISO 27001']},
+    mfg:{pipeline:45,before:8,now:4,deals:8,trust:22,certs:['ISO 27001','SOC 2 Type II']},
+    energy:{pipeline:50,before:6,now:4,deals:7,trust:24,certs:['ISO 27001','SOC 2 Type II']}
+  };
+  function setNum(id,val){var e=document.getElementById(id);if(e){e.value=val;if(typeof updateEq==='function')updateEq(id);}}
   document.querySelectorAll('[data-conn]').forEach(function(b){b.addEventListener('click',function(){
     var k=b.dataset.conn,sys=v(k+'Sys'),cred=v(k+'Cred'),msg=document.getElementById(k+'ConnMsg');
     if(!cred){msg.textContent='Enter the instance URL / token.';msg.style.color='var(--warn)';return;}
     CMDB[k]={system:sys,cred:cred};b.textContent='⟳ Pulling…';
+    if(k==='erm'){var em=ERM_PULL[invKey()]||ERM_PULL.tech;
+      // Fields are in $M; the unit selectors already default to M, so set the raw number.
+      setNum('ermCredit',em.credit);setNum('ermOps',em.ops);setNum('ermTP',em.tp);setNum('ermComp',em.comp);
+      var be=document.getElementById('berm');if(be){be.textContent='✓ pulled';be.classList.add('done');}
+      b.textContent='✓ Pulled';b.classList.add('done');
+      msg.innerHTML='✓ Pulled your principal-risk portfolio from <b>'+sys+'</b> <span style="color:var(--muted)">(representative — the live '+sys+' API syncs your real ERM register on go-live)</span>. Edit any value, or switch to manual entry.';msg.style.color='var(--good)';updateSummary();return;}
+    if(k==='growth'){var gp=GROWTH_PULL[invKey()]||GROWTH_PULL.tech;
+      setNum('growthPipeline',gp.pipeline);setNum('growthBefore',gp.before);setNum('growthNow',gp.now);setNum('growthDeals',gp.deals);setNum('growthTrust',gp.trust);
+      document.querySelectorAll('#growthCerts input[type=checkbox]').forEach(function(c){c.checked=gp.certs.indexOf(c.value)>=0;});
+      var bg=document.getElementById('bgrowth');if(bg){bg.textContent='✓ pulled';bg.classList.add('done');}
+      b.textContent='✓ Pulled';b.classList.add('done');
+      msg.innerHTML='✓ Pulled pipeline, review-cycle and certifications from <b>'+sys+'</b> <span style="color:var(--muted)">(representative — the live APIs sync your real CRM &amp; compliance data on go-live)</span>. Edit any value, or switch to manual entry.';msg.style.color='var(--good)';updateSummary();return;}
     var inv=IND_INV[invKey()]||IND_INV.tech;
     if(k==='app'){APP=inv.sys.map(function(r){var c=r.split('|');return {name:c[0],host:c[1],data:c[2],vendor:c[3],eol:c[4],recovery:c[5]};});
       showRows(document.getElementById('resApp'),APP,function(x){return '<div class="xrow"><span class="nm">'+x.name+'</span><span class="mt">'+(x.host||'')+(x.vendor?(' · '+x.vendor):'')+'</span></div>';});
