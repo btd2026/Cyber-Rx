@@ -269,7 +269,7 @@
   </div>
 
   <!-- 1c2 · AI & Software Supply-Chain Security (CISO tab) -->
-  <div class="sec">
+  <div class="sec" id="secAiSupply">
     <div class="sh"><div class="sn">✦</div><div><div class="st">AI &amp; Software Supply-Chain Security <span style="color:var(--muted)">(for the CISO)</span></div><div class="sd">The AI systems you run, the AI your people use, the code and pipeline that ship it, your machine identities and your post-quantum readiness. Powers the CISO <b>AI &amp; supply chain</b> tab — self-reported here, replaced by live tool data once connected. All optional.</div></div><div class="badge" id="bas">recommended</div></div>
     <div class="row c3">
       <div class="field"><label>AI/ML data sensitivity</label><select id="asDataSens"><option value="">Select…</option><option>High</option><option>Medium</option><option>Low</option></select></div>
@@ -559,6 +559,17 @@
   // AI risk & governance section badge
   ['aiSystems','aiDecisioning','aiFramework','aiPolicy','aiEuAct','aiInventory'].forEach(function(id){var e=document.getElementById(id);if(e)e.addEventListener('change',function(){var b=document.getElementById('bai');if(b){b.textContent='✓ provided';b.classList.add('done');}});});
   ['asDataSens','asAiSpm','asGenaiSanct','asShadow','asDlpAi','asCodeTools','asCodePolicy','asCodeScan','asPipeScan','asArtSign','asSlsa','asMachineId','asSecrets','asNhi','asCbom','asQuantum','asPqc'].forEach(function(id){var e=document.getElementById(id);if(e)['change','input'].forEach(function(ev){e.addEventListener(ev,function(){var b=document.getElementById('bas');if(b){b.textContent='✓ provided';b.classList.add('done');}});});});
+  // When the cockpit sends the user here to connect a tool, scroll to and highlight
+  // the section that captures it.
+  window.addEventListener('message',function(e){
+    if(!(e.data&&e.data.type==='cyberrx-onboarding-focus'))return;
+    var t=String(e.data.tool||'').toLowerCase(),id=null;
+    if(/cbom|crypto|quantum|pqc|ai-spm|aispm|genai|casb|sse|coding|copilot|claude code|ci\/cd|pipeline|slsa|nhi|machine identit|non-human|secrets|artifact|sbom/.test(t))id='secAiSupply';
+    var el=id&&document.getElementById(id);if(!el)return;
+    try{el.scrollIntoView({behavior:'smooth',block:'start'});}catch(_){el.scrollIntoView();}
+    el.style.transition='box-shadow .3s';el.style.boxShadow='0 0 0 2px #2563eb';
+    setTimeout(function(){el.style.boxShadow='';},2400);
+  });
 
   // ---- CSV/TSV parsing ----
   function parseDelim(text){

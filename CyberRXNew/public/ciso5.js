@@ -1446,7 +1446,15 @@ function c5InspectObj(m){
   }
   if(typeof openDrill==='function')openDrill(m.name,h);
 }
-function c5Connect(tool){if(typeof openDrill==='function')openDrill('Connect '+tool,'<div class="drill-p">Add <b>'+tool+'</b> in onboarding → Connect tools. Once connected, this metric switches from the gray not-connected state to a live, evidenced value — with its formula, inputs and source shown here.</div>');}
+/* Take the user back to onboarding to connect the named tool. In the shell the
+   cockpit runs in an iframe — ask the shell to switch to the intake view and
+   focus the relevant section; standalone, navigate directly. */
+function c5Connect(tool){
+  var msg={type:'cyberrx-goto-onboarding',tool:String(tool||'')};
+  try{if(window.parent&&window.parent!==window){window.parent.postMessage(msg,'*');return;}}catch(_){}
+  try{window.postMessage(msg,'*');}catch(_){}
+  try{window.location.href='onboarding.html';}catch(_){}
+}
 document.addEventListener('click',function(e){var el=e.target.closest('[data-c5m]');if(el&&el.getAttribute('data-c5m'))c5Inspect(el.getAttribute('data-c5m'));});
 /* Protection summary-card detail inspector — opens the list behind each count. */
 document.addEventListener('click',function(e){var el=e.target.closest('[data-c5pc]');if(el&&el.getAttribute('data-c5pc'))c5protInspect(el.getAttribute('data-c5pc'));});
