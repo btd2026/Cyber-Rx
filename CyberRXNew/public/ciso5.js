@@ -1349,10 +1349,16 @@ function c5tacticMetric(t){
   var caps=(typeof TACTIC_CAPS!=='undefined'&&TACTIC_CAPS[t])||[];var cov=(typeof threatCoverage==='function')?threatCoverage(caps):null;var conn=cov!=null;
   var state=cov==null?'limited':cov>=80?'covered':cov>=50?'partial':'limited';var color=cov==null?'muted':cov>=80?'good':cov>=50?'warn':'crit';
   return c5obj({id:'tac_'+t,name:t,connected:conn,displayValue:conn?(cov+'% defended'):'not connected',label:'computed',color:color,state:state,
-    formula:'tactic coverage = mean deployment of the controls mapped to this MITRE ATT&CK tactic',
-    inputs:caps.map(function(k){var c=CAP_BY_KEY[k];var p=capDeploy(c);return {name:c?c.name.replace(/ *\(.*\)/,''):k,value:p!=null?p+'%':'not connected',color:capColor(p),source:c?c.tool:k};}),
+    formula:'tactic coverage = mean live deployment/coverage of the controls MITRE ATT&CK maps to this tactic',
+    method:'Each control’s % is the live deployment or coverage figure its own tool reports — telemetry, not a manual entry: Qualys/Tenable report patch coverage (patch_pct), KnowBe4/Proofpoint report training completion (training_pct), Splunk/Sentinel report log-source coverage (siem_coverage_pct), your IdP reports MFA enrollment (mfa_pct), and so on. Tactic coverage is the mean of those. A control with no connected tool reads "not connected" and is left out of the mean. Figures are illustrative in the sample workspace and become live the moment each tool is connected.',
+    inputs:caps.map(function(k){var c=CAP_BY_KEY[k];var p=capDeploy(c);var s=(typeof capSource==='function')?capSource(c):null;
+      var sk=(typeof CAP_SIGKEY!=='undefined'&&CAP_SIGKEY[k])||null;
+      var vend=(s&&s.vendor)||(c?c.tool:k);
+      var srcTxt=vend+(sk?(' · '+sk):'')+(p!=null?(s&&s.connected?(s.demo?' (demo telemetry)':' (live telemetry)'):' (sample telemetry)'):' (no telemetry)');
+      return {name:c?c.name.replace(/ *\(.*\)/,''):k,value:p!=null?(p+'% deployed'):'not connected',color:capColor(p),source:srcTxt};
+    }).concat([{name:'= Tactic coverage',value:(cov!=null?(cov+'% defended'):'—'),color:color,source:'mean of the controls above (live deployment %)'}]),
     sources:caps.map(function(k){return c5capSrc(k);}),
-    note:'Your detection & prevention coverage for the '+t+' tactic, mapped from MITRE ATT&CK to your controls.',connectTool:'the controls for this tactic'});
+    note:'Your detection & prevention coverage for the '+t+' tactic, mapped from MITRE ATT&CK to your controls — each % is the live deployment its tool reports.',connectTool:'the controls for this tactic'});
 }
 var C5_DOM={asset:{label:'Asset & risk visibility',pre:['ID.AM','ID.RA'],fn:'Identify'},iam:{label:'Identity & access',pre:['PR.AA'],fn:'Protect'},edp:{label:'Endpoint & data protection',pre:['PR.DS','PR.PS','PR.IR'],fn:'Protect'},detect:{label:'Threat detection',pre:['DE.'],fn:'Detect'},ir:{label:'Incident response',pre:['RS.','RC.'],fn:'Respond'},tpr:{label:'Third-party risk',pre:['GV.SC'],fn:'Govern'}};
 function c5domainMetric(k){
