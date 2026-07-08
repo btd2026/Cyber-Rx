@@ -91,6 +91,7 @@ var SEATS = {
    +sec('04','Cyber operations','','<div id="c5-effect"></div>')
    +sec('05','Threats','','<div id="c5-threats"></div>')
    +sec('06','AI &amp; supply chain','','<div id="c5-aisupply"></div>')
+   +sec('07','Decisions &amp; projections','','<div id="c5-decproj"></div>')
   );}
  },
 
