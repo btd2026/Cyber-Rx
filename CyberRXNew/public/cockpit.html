@@ -253,6 +253,24 @@
   .c5dp-linkbtn:hover{text-decoration:underline}
   .c5dp-lstat{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
   .c5dp-when2{font-size:10.5px;color:var(--muted);white-space:nowrap}
+  /* expandable decision cards */
+  .c5dp-cardrow{display:flex;gap:14px;align-items:flex-start;justify-content:space-between;cursor:pointer}
+  .c5dp-caret{color:var(--muted);font-size:11px;margin-right:2px}
+  .c5dp-card.exp{background:var(--surface)}
+  .c5dp-cdetail{margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+  .c5dp-cdh{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:6px}
+  .c5dp-capnote{font-size:11.5px;color:var(--ink-2);line-height:1.5;margin-top:8px;padding:8px 11px;background:color-mix(in srgb,var(--warn) 7%,var(--surface));border:1px solid color-mix(in srgb,var(--warn) 20%,transparent);border-radius:8px}
+  .c5dp-cap{font-size:10px;font-weight:700;color:var(--warn);white-space:nowrap;margin-left:2px}
+  /* expandable leader rows */
+  .c5dp-litem{border-radius:9px;overflow:hidden}
+  .c5dp-litem.exp{background:var(--surface-2,#fafbfc);box-shadow:inset 0 0 0 1px var(--line)}
+  .c5dp-litem .c5dp-lrow{cursor:pointer}
+  .c5dp-ldetail{padding:4px 16px 16px 65px;display:flex;flex-direction:column;gap:8px}
+  .c5dp-ldp{font-size:12.5px;color:var(--ink);line-height:1.5;display:flex;gap:10px}
+  .c5dp-ldk{flex:none;width:60px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding-top:2px}
+  .c5dp-optpill{display:inline-block;font-size:11px;font-weight:600;color:var(--ink-2);background:var(--surface);border:1px solid var(--line-2);border-radius:99px;padding:2px 9px;margin:0 2px 2px 0}
+  .c5dp-ldacts{display:flex;gap:8px;margin-top:4px}
+  .c5dp-optceil{font-size:10.5px;font-weight:700;color:var(--good);margin-left:4px}
   /* Panel A — decision cards */
   .c5dp-cards{display:flex;flex-direction:column;gap:10px}
   .c5dp-card{display:flex;gap:14px;align-items:flex-start;justify-content:space-between;padding:14px 16px;border:1px solid var(--line);border-left:3px solid var(--muted);border-radius:11px;background:var(--surface-2,#fafbfc)}
@@ -1673,14 +1691,26 @@ function docList(){try{return JSON.parse(localStorage.getItem('cyberrx_docs')||'
 function saveDocList(a){try{localStorage.setItem('cyberrx_docs',JSON.stringify(a.slice(0,20)));}catch(_){}}
 function pctToCmmi(p){return p==null?null:p>=90?5:p>=75?4:p>=50?3:p>=25?2:p>0?1:0;}
 function cmmiColor(s){return s>=4?'good':s>=3?'blue':s>=2?'serious':s>=1?'crit':'muted';}
-/* Blended CMMI for a control: best of document-review score and live tool score. */
+/* The maturity ceiling a control's DEPLOYMENT alone can evidence, by how automated
+   the enforcing control is: a fully-automated, continuously-enforced control can reach
+   Optimizing (5); a semi-automated (human-in-the-loop) control tops out at
+   Quantitatively Managed (4); a manual / process control at Defined (3). Coverage %
+   never implies a higher maturity than the control's automation supports — reaching a
+   higher tier needs documented continuous-improvement evidence (the document-review
+   path), not just tool coverage. This applies to EVERY framework, because controlCmmi
+   is the single scoring function all of them roll up from. */
+function capAutoCeil(c){var a=c&&c.auto;return a==='manual'?3:a==='semi'?4:5;}
+var CMMI_CEIL_NOTE={5:'automated · can reach Optimizing',4:'semi-automated · caps at Quantitatively Managed (4)',3:'manual · caps at Defined (3)'};
+/* Blended CMMI for a control: best of document-review score and (automation-capped)
+   live tool score. */
 function controlCmmi(id,cov){
   var ds=docScores()[id],docS=ds?Number(ds.cmmi):null;
-  var toolPct=(cov&&cov[id]!=null)?cov[id]:null,toolS=pctToCmmi(toolPct);
+  var toolPct=(cov&&cov[id]!=null)?cov[id]:null,toolS=pctToCmmi(toolPct),ceil=null;
+  if(toolS!=null){var tc=fwControlTool(id);ceil=(tc&&tc.cap)?capAutoCeil(tc.cap):null;if(ceil!=null&&toolS>ceil)toolS=ceil;}
   var best=Math.max(docS!=null?docS:-1,toolS!=null?toolS:-1);
-  if(best<0)return {score:0,src:'none',toolPct:null,doc:null};
+  if(best<0)return {score:0,src:'none',toolPct:null,doc:null,ceil:ceil};
   var src=(docS!=null&&docS>=(toolS!=null?toolS:-1))?'document':'system';
-  return {score:best,src:src,toolPct:toolPct,doc:ds};
+  return {score:best,src:src,toolPct:toolPct,doc:ds,ceil:ceil};
 }
 function cmmiBadge(s){return '<span class="cmmi-badge cmmi'+s+'">'+s+'</span>';}
 function fwProvIcon(src){return src==='document'?'<span class="fwprov" title="from document review">📄 doc</span>':src==='system'?'<span class="fwprov" title="from connected tool">🔌 system</span>':'<span class="fwprov" title="not yet evidenced">— none</span>';}
@@ -3711,16 +3741,16 @@ var ATTCK_TACTICS=['Reconnaissance','Resource Development','Initial Access','Exe
 /* The 10 capabilities we score. `proj` matches an in-flight project (a cockpit
    decision or a ticket imported from Jira/ServiceNow) that is moving the score. */
 var CAPS=[
-  {k:'edr',name:'Endpoint Detection & Response (EDR)',tool:'CrowdStrike / Defender',proj:/edr|endpoint|crowdstrike|defender|sentinel ?one|containment/i,need:'push agents to the remaining uncovered endpoints and turn on automated containment.',connect:'connect your EDR (CrowdStrike, Defender, SentinelOne).'},
-  {k:'mfa',name:'Multi-Factor Authentication (MFA)',tool:'Okta / Entra ID',proj:/mfa|multi-?factor|identity|okta|entra|single ?sign|\bsso\b/i,need:'enforce MFA on legacy, service and VPN accounts.',connect:'connect your identity provider (Okta, Entra ID).'},
-  {k:'pam',name:'Privileged Access Management (PAM)',tool:'CyberArk / BeyondTrust',proj:/\bpam\b|privileged|cyberark|beyondtrust|delinea|vault|just-?in-?time/i,need:'vault the remaining privileged accounts and switch to just-in-time access.',connect:'connect your PAM (CyberArk, BeyondTrust, Delinea).'},
-  {k:'vuln',name:'Vulnerability & Patch Management',tool:'Qualys / Tenable',proj:/patch|vuln|qualys|tenable|remediat|exposure manage/i,need:'shorten the critical-vuln remediation SLA on internet-facing assets.',connect:'connect your VM scanner (Qualys, Tenable).'},
-  {k:'aware',name:'Security Awareness & Anti-Phishing',tool:'KnowBe4 / Proofpoint',proj:/aware|phish|training|knowbe4|proofpoint/i,need:'run targeted simulations for the highest-click departments.',connect:'connect your awareness platform (KnowBe4, Proofpoint).'},
-  {k:'siem',name:'SIEM / Detection & Response',tool:'Splunk / Sentinel',proj:/siem|splunk|sentinel|\bsoc\b|\bmdr\b|log coverage|correlation|detection engineer/i,need:'expand log coverage and tune correlation rules to cut MTTD.',connect:'connect your SIEM (Splunk, Microsoft Sentinel).'},
-  {k:'dlp',name:'Data Loss Prevention (DLP)',tool:'Purview / Forcepoint',proj:/\bdlp\b|data loss|data protection|purview|forcepoint|egress/i,need:'deploy DLP across email, web and endpoint egress channels.',connect:'connect a DLP tool to measure coverage.'},
-  {k:'seg',name:'Network Segmentation / Zero-Trust',tool:'Illumio / firewall',proj:/segment|micro-?segment|zero.?trust|illumio|isolation|east-?west/i,need:'segment crown-jewel systems and enforce east-west controls.',connect:'connect your segmentation / NAC tooling.'},
-  {k:'backup',name:'Backup & Recovery Resilience',tool:'Rubrik / Veeam',proj:/backup|recover|immutable|rubrik|veeam|disaster|resilien|\bdr\b/i,need:'verify immutable backups and test restore for every crown jewel.',connect:'connect your backup platform (Rubrik, Veeam).'},
-  {k:'cspm',name:'Cloud Security Posture (CSPM)',tool:'Wiz / Prisma',proj:/cspm|cloud security|posture|misconfig|\bwiz\b|prisma|\borca\b/i,need:'baseline cloud misconfigurations and remediate public exposure.',connect:'connect a CSPM tool (Wiz, Prisma, Orca).'}
+  {k:'edr',auto:'auto',name:'Endpoint Detection & Response (EDR)',tool:'CrowdStrike / Defender',proj:/edr|endpoint|crowdstrike|defender|sentinel ?one|containment/i,need:'push agents to the remaining uncovered endpoints and turn on automated containment.',connect:'connect your EDR (CrowdStrike, Defender, SentinelOne).'},
+  {k:'mfa',auto:'auto',name:'Multi-Factor Authentication (MFA)',tool:'Okta / Entra ID',proj:/mfa|multi-?factor|identity|okta|entra|single ?sign|\bsso\b/i,need:'enforce MFA on legacy, service and VPN accounts.',connect:'connect your identity provider (Okta, Entra ID).'},
+  {k:'pam',auto:'auto',name:'Privileged Access Management (PAM)',tool:'CyberArk / BeyondTrust',proj:/\bpam\b|privileged|cyberark|beyondtrust|delinea|vault|just-?in-?time/i,need:'vault the remaining privileged accounts and switch to just-in-time access.',connect:'connect your PAM (CyberArk, BeyondTrust, Delinea).'},
+  {k:'vuln',auto:'semi',name:'Vulnerability & Patch Management',tool:'Qualys / Tenable',proj:/patch|vuln|qualys|tenable|remediat|exposure manage/i,need:'shorten the critical-vuln remediation SLA on internet-facing assets.',connect:'connect your VM scanner (Qualys, Tenable).'},
+  {k:'aware',auto:'manual',name:'Security Awareness & Anti-Phishing',tool:'KnowBe4 / Proofpoint',proj:/aware|phish|training|knowbe4|proofpoint/i,need:'run targeted simulations for the highest-click departments.',connect:'connect your awareness platform (KnowBe4, Proofpoint).'},
+  {k:'siem',auto:'semi',name:'SIEM / Detection & Response',tool:'Splunk / Sentinel',proj:/siem|splunk|sentinel|\bsoc\b|\bmdr\b|log coverage|correlation|detection engineer/i,need:'expand log coverage and tune correlation rules to cut MTTD.',connect:'connect your SIEM (Splunk, Microsoft Sentinel).'},
+  {k:'dlp',auto:'semi',name:'Data Loss Prevention (DLP)',tool:'Purview / Forcepoint',proj:/\bdlp\b|data loss|data protection|purview|forcepoint|egress/i,need:'deploy DLP across email, web and endpoint egress channels.',connect:'connect a DLP tool to measure coverage.'},
+  {k:'seg',auto:'semi',name:'Network Segmentation / Zero-Trust',tool:'Illumio / firewall',proj:/segment|micro-?segment|zero.?trust|illumio|isolation|east-?west/i,need:'segment crown-jewel systems and enforce east-west controls.',connect:'connect your segmentation / NAC tooling.'},
+  {k:'backup',auto:'auto',name:'Backup & Recovery Resilience',tool:'Rubrik / Veeam',proj:/backup|recover|immutable|rubrik|veeam|disaster|resilien|\bdr\b/i,need:'verify immutable backups and test restore for every crown jewel.',connect:'connect your backup platform (Rubrik, Veeam).'},
+  {k:'cspm',auto:'auto',name:'Cloud Security Posture (CSPM)',tool:'Wiz / Prisma',proj:/cspm|cloud security|posture|misconfig|\bwiz\b|prisma|\borca\b/i,need:'baseline cloud misconfigurations and remediate public exposure.',connect:'connect a CSPM tool (Wiz, Prisma, Orca).'}
 ];
 var CAP_BY_KEY={};CAPS.forEach(function(c){CAP_BY_KEY[c.k]=c;});
 /* The live signal that scores each capability + the connector keys that produce it —

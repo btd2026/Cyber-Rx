@@ -3275,13 +3275,20 @@ function c5CtrlScore(id,cov){try{return (typeof controlCmmi==='function')?(contr
    sub-categories it covers that would improve, and by how much. */
 function c5ProjectCap(capKey,targetPct){
   var fw=(typeof CAP_FRAMEWORK!=='undefined'&&CAP_FRAMEWORK[capKey])||null;if(!fw)return [];
+  var cap=(typeof CAP_BY_KEY!=='undefined'&&CAP_BY_KEY[capKey])||null;
+  // The projected maturity is capped by how automated THIS capability is: deploying a
+  // semi-automated tool tops a control out at 4, a manual/process one at 3 — only a
+  // fully-automated control can be projected to Optimizing (5). No blind 5s.
+  var ceil=(typeof capAutoCeil==='function'&&cap)?capAutoCeil(cap):5;
   var cov=c5ProjCov(),out=[];
+  var ds=(typeof docScores==='function')?docScores():{};
   (fw.csf||[]).forEach(function(id){
     var meta=(typeof C5_CSF_META!=='undefined'&&C5_CSF_META[id])||null;
     var from=c5CtrlScore(id,cov);
-    var projCov={};for(var k in cov)projCov[k]=cov[k];projCov[id]=Math.max(projCov[id]||0,targetPct);
-    var to=c5CtrlScore(id,projCov);
-    if(to>from)out.push({id:id,name:meta?meta.name:'',from:from,to:to});
+    var toolProj=Math.min(((typeof pctToCmmi==='function'?pctToCmmi(targetPct):5)||0),ceil);
+    var dv=(ds[id]&&ds[id].cmmi!=null)?Number(ds[id].cmmi):-1; // documented evidence can exceed deployment
+    var to=Math.max(from,toolProj,dv);
+    if(to>from)out.push({id:id,name:meta?meta.name:'',from:from,to:to,ceil:ceil,auto:cap?cap.auto:null});
   });
   return out;
 }
@@ -3307,12 +3314,14 @@ function c5ControlLevers(id){
   var caps=(typeof CAPS!=='undefined'&&CAPS)||[],out=[];
   caps.forEach(function(c){var fw=(typeof CAP_FRAMEWORK!=='undefined'&&CAP_FRAMEWORK[c.k])||null;if(!fw)return;
     if((fw.csf||[]).indexOf(id)<0)return;var dep=null;try{dep=capDeploy(c);}catch(_){}
-    out.push({name:c.name,need:c.need,deploy:dep});});
+    out.push({name:c.name,need:c.need,deploy:dep,auto:c.auto,ceil:(typeof capAutoCeil==='function'?capAutoCeil(c):5)});});
   return out;
 }
 
 var C5_DECPROJ_SEL='';   // selected lever key for the simulator
 var C5_DECPROJ_TARGET='';// selected control id for the reverse tool
+var C5_DP_OPENDEC={};    // which decision cards are expanded (lever key → true)
+var C5_DP_OPENASK={};    // which awaiting-leader rows are expanded (ask id → true)
 function c5DecProj(){
   var host=document.getElementById('c5-decproj');if(!host)return;
   var cov=c5ProjCov();
@@ -3326,63 +3335,56 @@ function c5DecProj(){
     var state=l.inflight?'flight':(status==='Committed'?'committed':status==='Deferred'?'deferred':'open');
     var pill=l.inflight?('<span class="c5dp-pill blue">◒ In flight'+(l.inflight.ticket?(' · '+c5esc(l.inflight.ticket)):'')+'</span>'):
       (status?('<span class="c5dp-pill '+(status==='Committed'?'good':'muted')+'">'+(status==='Committed'?'✓ Committed &amp; funded':'⏸ Deferred'+(dec.until?(' to '+c5esc(dec.until)):''))+'</span>'):'<span class="c5dp-pill warn">Awaiting your call</span>');
-    // Audit trail — who recorded it and when — shown under the pill.
     var meta=status?('<div class="c5dp-when">'+(status==='Committed'?'Funded':'Deferred')+' by <b>'+c5esc(dec.by||c5CisoName())+'</b>'+(dec.ts?(' · '+c5dpWhen(dec.ts)):'')+' <button class="c5dp-linkbtn" data-cisoundo="'+l.k+'">Change</button></div>'):'';
     var acts=(status||l.inflight)?'':'<button class="c5dp-btn primary" data-cisodec="'+l.k+'" data-cisoval="Committed">Commit &amp; fund</button><button class="c5dp-btn ghost" data-cisodec="'+l.k+'" data-cisoval="Deferred">Defer</button>';
     var top=l.proj.slice(0).sort(function(a,b){return (b.to-b.from)-(a.to-a.from);})[0];
     var impact=top?('<div class="c5dp-impact">Lifts <b>'+top.id+'</b> '+c5dpMini(top.from,top.to)+'<span class="c5dp-chip">+'+l.gain+' CMMI · '+l.proj.length+' control'+(l.proj.length>1?'s':'')+'</span></div>'):'';
-    return '<div class="c5dp-card '+state+'"><div class="c5dp-card-main"><div class="c5dp-t">Fund — '+c5esc(l.name)+'</div>'+
+    // Expandable: the full per-decision projection (every control it moves) lives here.
+    var open=!!C5_DP_OPENDEC[l.k];
+    var autoLbl=top&&top.auto==='manual'?'manual':top&&top.auto==='semi'?'semi-automated':'fully-automated';
+    var detail=open?('<div class="c5dp-cdetail"><div class="c5dp-cdh">Projected control movement'+(l.deploy!=null?(' · '+l.deploy+'% deployed today'):'')+'</div>'+
+      l.proj.map(c5dpMeterRow).join('')+
+      '<div class="c5dp-capnote">Maturity is capped by automation — '+c5esc(l.name)+' is a <b>'+autoLbl+'</b> control, so tool coverage alone tops out at CMMI '+(top?top.ceil:5)+'.</div></div>'):'';
+    return '<div class="c5dp-card '+state+(open?' exp':'')+'"><div class="c5dp-cardrow" data-decexp="'+l.k+'"><div class="c5dp-card-main">'+
+      '<div class="c5dp-t"><span class="c5dp-caret">'+(open?'▾':'▸')+'</span> Fund — '+c5esc(l.name)+'</div>'+
       '<div class="c5dp-sub">'+c5esc(l.need)+'</div>'+impact+'</div>'+
-      '<div class="c5dp-card-side">'+pill+(acts?('<div class="c5dp-acts2">'+acts+'</div>'):'')+meta+'</div></div>';
+      '<div class="c5dp-card-side">'+pill+(acts?('<div class="c5dp-acts2">'+acts+'</div>'):'')+meta+'</div></div>'+detail+'</div>';
   }).join('');
   if(levers.length)mine='<div class="c5dp-cards">'+mine+'</div>';
   else mine='<div class="c5dp-empty">Connect your security tools and upload your policies, and the funded decisions that move your posture appear here — each with the exact controls it improves.</div>';
 
-  /* ---- Panel B: awaiting other leaders ---- */
+  /* ---- Panel B: awaiting other leaders (expandable → detail + jump to their seat) ---- */
   var store=c5AskStore(),seats=['board','ceo','cfo','clo','cro','cio','coo','cpo','audit'],pending=0,decided=0,rowsB=[];
   seats.forEach(function(seat){
     var asks=[];try{asks=c5AskModel(seat)||[];}catch(_){}
     asks.forEach(function(a){
       if(a.sample)return; // skip pre-connect placeholders
-      var st=store[a.id],who=c5SeatNameOf(seat),meta=C5_SEAT_META[seat]||{label:seat,role:''};
-      var statusHtml,acted=!!(st&&st.status);
-      if(acted){decided++;statusHtml='<div class="c5dp-lstat"><span class="c5dp-pill good">✓ '+c5esc(st.status)+'</span>'+
-        '<span class="c5dp-when2">by '+c5esc(who||meta.label)+(st.ts?(' · '+c5dpWhen(st.ts)):'')+'</span></div>';}
-      else{pending++;statusHtml='<span class="c5dp-pill warn">Pending</span>';}
-      rowsB.push('<div class="c5dp-lrow" data-seat="'+seat+'"><div class="c5dp-avatar '+(acted?'done':'wait')+'">'+c5dpInitials(meta.label,who)+'</div>'+
-        '<div class="c5dp-lmain"><div class="c5dp-t">'+c5esc(who||meta.label)+' <span class="c5dp-role">'+c5esc(meta.label)+'</span></div>'+
+      var st=store[a.id],who=c5SeatNameOf(seat),meta=C5_SEAT_META[seat]||{label:seat,role:''},first=(who||meta.label).split(/\s+/)[0];
+      var acted=!!(st&&st.status);if(acted)decided++;else pending++;
+      var statusHtml=acted?('<div class="c5dp-lstat"><span class="c5dp-pill good">✓ '+c5esc(st.status)+'</span><span class="c5dp-when2">by '+c5esc(who||meta.label)+(st.ts?(' · '+c5dpWhen(st.ts)):'')+'</span></div>'):'<span class="c5dp-pill warn">Pending</span>';
+      var open=!!C5_DP_OPENASK[a.id];
+      var detail=open?('<div class="c5dp-ldetail">'+
+        (a.why?('<div class="c5dp-ldp"><span class="c5dp-ldk">Why</span><span>'+c5esc(a.why)+'</span></div>'):'')+
+        '<div class="c5dp-ldp"><span class="c5dp-ldk">The ask</span><span>'+c5esc(a.ask)+'</span></div>'+
+        (a.opts&&a.opts.length?('<div class="c5dp-ldp"><span class="c5dp-ldk">Options</span><span>'+a.opts.map(function(o){return '<span class="c5dp-optpill">'+c5esc(o)+'</span>';}).join(' ')+'</span></div>'):'')+
+        '<div class="c5dp-ldp"><span class="c5dp-ldk">Status</span><span>'+(acted?('Recorded — <b>'+c5esc(st.status)+'</b> by '+c5esc(who||meta.label)+(st.ts?(' on '+c5dpWhen(st.ts)):'')):'Awaiting a decision from '+c5esc(who||meta.label))+'</span></div>'+
+        '<div class="c5dp-ldacts"><button class="c5dp-btn primary" data-goseat="'+seat+'">Open in '+c5esc(first)+'’s cockpit →</button>'+(acted?'':'<button class="c5dp-btn" data-remind="'+seat+'">✉ Draft a reminder</button>')+'</div>'+
+        '</div>'):'';
+      rowsB.push('<div class="c5dp-litem'+(open?' exp':'')+'"><div class="c5dp-lrow" data-askexp="'+a.id+'"><div class="c5dp-avatar '+(acted?'done':'wait')+'">'+c5dpInitials(meta.label,who)+'</div>'+
+        '<div class="c5dp-lmain"><div class="c5dp-t"><span class="c5dp-caret">'+(open?'▾':'▸')+'</span> '+c5esc(who||meta.label)+' <span class="c5dp-role">'+c5esc(meta.label)+'</span></div>'+
         '<div class="c5dp-sub">'+c5esc(a.title)+'</div></div>'+
-        '<div class="c5dp-lside">'+statusHtml+(acted?'':'<button class="c5dp-btn" data-remind="'+seat+'">✉ Remind</button>')+'</div></div>');
+        '<div class="c5dp-lside">'+statusHtml+(acted?'':'<button class="c5dp-btn" data-remind="'+seat+'">✉ Remind</button>')+'</div></div>'+detail+'</div>');
     });
   });
   var panelB=rowsB.length?(
     '<div class="c5dp-stats c5dp-stats-2">'+c5dpStat(String(pending),'Awaiting a decision','warn')+c5dpStat(String(decided),'Recorded','good')+'</div>'+
     '<div class="c5dp-lrows">'+rowsB.join('')+'</div>'+
-    '<div class="c5dp-foot">Send a reminder and Nerion drafts the email for you — from your inventory of who owes what.</div>'
+    '<div class="c5dp-foot">Click any leader for the decision detail and to jump straight to their cockpit; or send a reminder Nerion drafts for you.</div>'
   ):'<div class="c5dp-empty">Once you route risk acceptances and attestations to each leader, their outstanding decisions and status appear here.</div>';
 
-  /* ---- Panel C: what-if projection simulator ---- */
-  if(!C5_DECPROJ_SEL&&levers.length)C5_DECPROJ_SEL=levers[0].k;
-  var sel=levers.filter(function(l){return l.k===C5_DECPROJ_SEL;})[0]||levers[0]||null;
-  var opts=levers.map(function(l){return '<option value="'+l.k+'"'+(sel&&l.k===sel.k?' selected':'')+'>'+c5esc(l.name)+'  (+'+l.gain+' CMMI · '+l.proj.length+')</option>';}).join('');
-  var sim='';
-  if(sel){
-    var fromAvg=sel.proj.reduce(function(s,p){return s+p.from;},0)/sel.proj.length,toAvg=sel.proj.reduce(function(s,p){return s+p.to;},0)/sel.proj.length;
-    var delta=(toAvg-fromAvg);
-    sim='<div class="c5dp-do">To complete this: <b>'+c5esc(sel.need)+'</b></div>'+
-      '<div class="c5dp-stats">'+
-        c5dpStat(fromAvg.toFixed(1)+'<span class="c5dp-arrow">→</span>'+toAvg.toFixed(1),'Average maturity (CMMI)',delta>=1?'good':'blue')+
-        c5dpStat(String(sel.proj.length),'Sub-categories lifted','blue')+
-        c5dpStat(sel.deploy!=null?(sel.deploy+'%'):'—','Deployed today','muted')+
-      '</div>'+
-      '<div class="c5dp-meters">'+sel.proj.map(function(p){
-        return '<div class="c5dp-mrow"><div class="c5dp-mlabel"><b>'+p.id+'</b><span>'+c5esc(p.name||'')+'</span></div>'+
-          '<div class="c5dp-mviz">'+c5dpMeter(p.from,p.to)+'<span class="c5dp-mnum">'+p.from+'<span class="c5dp-arrow">→</span>'+p.to+'</span></div></div>';
-      }).join('')+'</div>';
-  } else sim='<div class="c5dp-empty">Connect a security tool or upload a policy and the simulator shows exactly which controls each recommendation moves, and from what score to what.</div>';
-
-  /* reverse tool: controls currently below 5, pick one → what gets it to 5 */
-  var allCtrls={};levers.forEach(function(l){l.proj.forEach(function(p){allCtrls[p.id]={id:p.id,name:p.name,score:p.from};});});
+  /* ---- Panel C: raise a control to its ceiling (the reverse tool; the forward
+     projection now lives inside each expandable decision above) ---- */
+  var allCtrls={};levers.forEach(function(l){l.proj.forEach(function(p){if(!allCtrls[p.id]||p.from<allCtrls[p.id].score)allCtrls[p.id]={id:p.id,name:p.name,score:p.from};});});
   var ctrlList=Object.keys(allCtrls).map(function(k){return allCtrls[k];}).sort(function(a,b){return a.score-b.score||(a.id<b.id?-1:1);});
   if((!C5_DECPROJ_TARGET||!allCtrls[C5_DECPROJ_TARGET])&&ctrlList.length)C5_DECPROJ_TARGET=ctrlList[0].id;
   var tOpts=ctrlList.map(function(c){return '<option value="'+c.id+'"'+(c.id===C5_DECPROJ_TARGET?' selected':'')+'>'+c.id+' — '+c5esc(c.name||'')+'  (now '+c.score+')</option>';}).join('');
@@ -3390,26 +3392,35 @@ function c5DecProj(){
   if(C5_DECPROJ_TARGET&&allCtrls[C5_DECPROJ_TARGET]){
     var cur=allCtrls[C5_DECPROJ_TARGET],fam=String(C5_DECPROJ_TARGET).split(/[.\-]/)[0],doc=C5_FAM_DOC[fam]||'the relevant policy';
     var lv=c5ControlLevers(C5_DECPROJ_TARGET);
-    rev='<div class="c5dp-do">To move <b>'+C5_DECPROJ_TARGET+'</b> from '+c5dpMini(cur.score,5)+' — take either path (the cockpit scores the higher of the two):</div>'+
+    var toolCeil=lv.reduce(function(m,x){return Math.max(m,x.ceil||5);},0)||5;   // best tool ceiling
+    var reachable=Math.max(toolCeil,5); // the document path can evidence up to Optimizing (5)
+    rev='<div class="c5dp-do">To move <b>'+C5_DECPROJ_TARGET+'</b> from '+c5dpMini(cur.score,reachable)+' — take either path (the cockpit scores the higher of the two):</div>'+
       '<div class="c5dp-play">'+
-      lv.map(function(x){return '<div class="c5dp-opt"><div class="c5dp-opt-ic tool">🔌</div><div class="c5dp-opt-b"><div class="c5dp-opt-t">Deploy '+c5esc(x.name)+' to 90%+</div><div class="c5dp-opt-d">'+(x.deploy!=null?('<b>'+x.deploy+'% today</b> · '):'<b>Not yet connected</b> · ')+c5esc(x.need)+'</div></div></div>';}).join('')+
-      '<div class="c5dp-opt"><div class="c5dp-opt-ic doc">📄</div><div class="c5dp-opt-b"><div class="c5dp-opt-t">Strengthen your '+c5esc(doc)+'</div><div class="c5dp-opt-d">The document-review engine scores this sub-category from the policy language — a fuller, board-approved policy raises it directly.</div></div></div>'+
+      lv.map(function(x){var cl=x.ceil||5;return '<div class="c5dp-opt"><div class="c5dp-opt-ic tool">🔌</div><div class="c5dp-opt-b"><div class="c5dp-opt-t">Deploy '+c5esc(x.name)+' to 90%+ <span class="c5dp-optceil">→ up to CMMI '+cl+'</span></div><div class="c5dp-opt-d">'+(x.deploy!=null?('<b>'+x.deploy+'% today</b> · '):'<b>Not yet connected</b> · ')+c5esc(x.need)+(cl<5?(' <span style="color:var(--warn)">This is a '+(x.auto==='manual'?'manual':'semi-automated')+' control — deployment alone tops out at CMMI '+cl+'.</span>'):'')+'</div></div></div>';}).join('')+
+      '<div class="c5dp-opt"><div class="c5dp-opt-ic doc">📄</div><div class="c5dp-opt-b"><div class="c5dp-opt-t">Strengthen your '+c5esc(doc)+' <span class="c5dp-optceil">→ up to CMMI 5</span></div><div class="c5dp-opt-d">The document-review engine scores this sub-category from the policy language — a fuller, board-approved policy that evidences continuous improvement can reach Optimizing.</div></div></div>'+
       '</div>';
-  }
+  } else rev='<div class="c5dp-empty">Connect a security tool or upload a policy and this shows exactly what raises each sub-category, and how far it can realistically go.</div>';
 
   host.innerHTML=
     '<div class="c5dp-wrap">'+
-    '<div class="c5dp-sec"><div class="c5dp-h">Decisions I owe</div><div class="c5dp-hd">The funded moves waiting on your sign-off — each shows the controls it improves.</div>'+mine+'</div>'+
-    '<div class="c5dp-sec"><div class="c5dp-h">Awaiting other leaders</div><div class="c5dp-hd">Risk acceptances &amp; attestations you routed to each partner, and where each stands.</div>'+panelB+'</div>'+
-    '<div class="c5dp-sec c5dp-hero"><div class="c5dp-h">What-if projection</div><div class="c5dp-hd">Model a recommendation against your live control scores — which NIST CSF 2.0 sub-categories move, and from what maturity to what.</div>'+
-      '<div class="c5dp-selrow"><span class="c5dp-selk">Recommendation</span><div class="c5dp-select"><select id="c5dp-sel">'+(opts||'<option>—</option>')+'</select></div></div>'+sim+
-      '<div class="c5dp-divider"></div>'+
-      '<div class="c5dp-h2">What moves a sub-category from 3 to 5?</div>'+
+    '<div class="c5dp-sec"><div class="c5dp-h">Decisions I owe</div><div class="c5dp-hd">The funded moves waiting on your sign-off — click any card to see every control it moves and how far.</div>'+mine+'</div>'+
+    '<div class="c5dp-sec"><div class="c5dp-h">Awaiting other leaders</div><div class="c5dp-hd">Risk acceptances &amp; attestations you routed to each partner. Click a leader for the detail and to jump to their cockpit.</div>'+panelB+'</div>'+
+    '<div class="c5dp-sec c5dp-hero"><div class="c5dp-h">Raise a control to its ceiling</div><div class="c5dp-hd">Pick a NIST CSF 2.0 sub-category to see what raises it — and how far it can realistically go. Maturity is capped by how automated the control is: <b>Automated → 5</b> · <b>Semi-automated → 4</b> · <b>Manual → 3</b>. Reaching a higher tier takes documented continuous-improvement evidence, not just tool coverage — and this cap applies across every framework.</div>'+
       '<div class="c5dp-selrow"><span class="c5dp-selk">Sub-category</span><div class="c5dp-select"><select id="c5dp-target">'+(tOpts||'<option>—</option>')+'</select></div></div>'+rev+
     '</div>'+
     '</div>';
-  var s1=document.getElementById('c5dp-sel');if(s1)s1.addEventListener('change',function(){C5_DECPROJ_SEL=s1.value;c5DecProj();});
   var s2=document.getElementById('c5dp-target');if(s2)s2.addEventListener('change',function(){C5_DECPROJ_TARGET=s2.value;c5DecProj();});
+}
+/* One control's projected movement, with a note when its automation caps it below 5. */
+function c5dpMeterRow(p){
+  var cap=(p.ceil!=null&&p.to>=p.ceil&&p.ceil<5)?('<span class="c5dp-cap">'+(p.auto==='manual'?'manual · caps at 3':'semi-automated · caps at 4')+'</span>'):'';
+  return '<div class="c5dp-mrow"><div class="c5dp-mlabel"><b>'+p.id+'</b><span>'+c5esc(p.name||'')+'</span></div>'+
+    '<div class="c5dp-mviz">'+c5dpMeter(p.from,p.to)+'<span class="c5dp-mnum">'+p.from+'<span class="c5dp-arrow">→</span>'+p.to+'</span>'+cap+'</div></div>';
+}
+/* Navigate to a leader's cockpit and open their "What I need from you" tab. */
+function c5GoSeat(seat){
+  try{if(typeof selectSeat==='function'){selectSeat(seat);
+    var t=document.querySelector('#secTabs .sectab[data-sec="1"]');if(t)t.click();window.scrollTo({top:0});}}catch(_){}
 }
 function c5dpBadge(s){var col=s>=4?'good':s>=3?'blue':s>=2?'warn':'crit';return '<span class="c5dp-cmmi" style="background:var(--'+col+')">'+s+'</span>';}
 /* A 5-segment maturity meter: solid up to the current score, a highlighted "gain"
@@ -3492,6 +3503,9 @@ document.addEventListener('click',function(e){
     var now=Date.now();st[k]={status:v,ts:now,by:(c5SeatNameOf('ciso')||'CISO'),until:(v==='Deferred'?c5NextReview(now):null)};
     try{localStorage.setItem('cyberrx_ciso_decisions',JSON.stringify(st));}catch(_){}c5DecProj();return;}
   var cu=e.target.closest('[data-cisoundo]');if(cu){var uk=cu.getAttribute('data-cisoundo');var s2;try{s2=JSON.parse(localStorage.getItem('cyberrx_ciso_decisions')||'{}')||{};}catch(_){s2={};}delete s2[uk];try{localStorage.setItem('cyberrx_ciso_decisions',JSON.stringify(s2));}catch(_){}c5DecProj();return;}
+  var gs=e.target.closest('[data-goseat]');if(gs){c5GoSeat(gs.getAttribute('data-goseat'));return;}
+  var de=e.target.closest('[data-decexp]');if(de){var dk=de.getAttribute('data-decexp');C5_DP_OPENDEC[dk]=!C5_DP_OPENDEC[dk];c5DecProj();return;}
+  var ae=e.target.closest('[data-askexp]');if(ae){var ak=ae.getAttribute('data-askexp');C5_DP_OPENASK[ak]=!C5_DP_OPENASK[ak];c5DecProj();return;}
 });
 
 /* ---------- Program Health ▸ two inner tabs (Nerion's View / Classic View) ----------
