@@ -268,6 +268,7 @@
           <option>ServiceNow CMDB</option><option>Device42</option><option>Axonius</option><option>AI asset inventory / model registry</option><option>CSV / Excel export</option>
         </select>
         <input type="file" id="aiGovInvFile" accept=".csv,.tsv,.txt">
+        <input id="aiGovInvCred" placeholder="https://yourorg.service-now.com · API token" style="display:none;flex:1;min-width:230px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:#fff">
         <button class="conn-go" id="aiGovInvLoad" type="button">Load inventory</button>
         <span id="aiGovInvMsg" class="sd" style="margin:0"></span>
       </div>
@@ -301,6 +302,7 @@
         <option>ServiceNow CMDB</option><option>Device42</option><option>Axonius</option><option>AI asset inventory / model registry</option><option>CSV / Excel export</option>
       </select>
       <input type="file" id="aiInvFile" accept=".csv,.tsv,.txt">
+      <input id="aiInvCred" placeholder="https://yourorg.service-now.com · API token" style="display:none;flex:1;min-width:230px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:#fff">
       <button class="conn-go" id="aiInvParse" type="button">Load inventory</button>
       <span id="aiInvMsg" class="sd" style="margin:0"></span>
     </div>
@@ -619,27 +621,30 @@
   function computeAiGov(){
     var host=document.getElementById('aiGovDerived');if(!host)return;
     var m=aiGovModel();
-    function chip(val,label,src,dashNote){
+    // One compact row per derived field — same list style as the analyzed-documents
+    // list: field name on the left, its value + source (or an honest "not yet
+    // provided" + how to source it) on the right.
+    function row(val,label,src,dashNote){
       var has=(val!==''&&val!=null);
-      return '<div style="flex:1;min-width:180px;padding:12px 14px;border:1px solid '+(has?'var(--line)':'#e6d9b8')+';border-radius:10px;background:'+(has?'#fff':'#fffdf3')+'">'
-        +'<div class="sd" style="margin:0 0 4px">'+label+'</div>'
-        +'<div style="font-size:16px;font-weight:700;color:'+(has?'#111':'#9a7b1f')+'">'+(has?val:'— not yet provided')+'</div>'
-        +'<div class="sd" style="margin:4px 0 0;font-size:11px;color:var(--muted)">'+(has?('from '+src):(dashNote||('connect '+src)))+'</div></div>';
+      var right=has
+        ? ('<b style="color:var(--ink,#111)">'+val+'</b> · from '+src)
+        : ('<span style="color:#9a7b1f">— not yet provided</span> · '+(dashNote||('connect '+src)));
+      return '<div class="xrow"><span class="nm">'+label+'</span><span class="mt">'+right+'</span></div>';
     }
     var rows=[
-      chip(m.systems!=null?m.systems.toLocaleString():'',(m.systems===1?'AI / ML system in production':'AI / ML systems in production'),'AI inventory','load your AI inventory'),
-      chip(m.decisioning,'Customer-facing / automated decisioning','AI inventory (customer-facing column)','add a customer-facing column to your inventory'),
-      chip(m.framework,'AI governance framework','uploaded governance documents','upload a NIST AI RMF or ISO 42001 document'),
-      chip(m.policy,'AI acceptable-use policy','uploaded acceptable-use policy','upload your AI acceptable-use policy'),
-      chip(m.euAiAct,'EU AI Act scope','operating regions + inventory','select operating regions'),
-      chip(m.inventory,'AI systems inventoried &amp; monitored','AI inventory','load your AI inventory')
+      row(m.systems!=null?m.systems.toLocaleString():'',(m.systems===1?'AI / ML system in production':'AI / ML systems in production'),'AI inventory','load your AI inventory'),
+      row(m.decisioning,'Customer-facing / automated decisioning','AI inventory (customer-facing column)','add a customer_facing column to your inventory'),
+      row(m.framework,'AI governance framework','uploaded governance documents','upload a NIST AI RMF or ISO 42001 document'),
+      row(m.policy,'AI acceptable-use policy','uploaded acceptable-use policy','upload your AI acceptable-use policy'),
+      row(m.euAiAct,'EU AI Act scope','operating regions + inventory','select operating regions'),
+      row(m.inventory,'AI systems inventoried &amp; monitored','AI inventory','load your AI inventory')
     ].join('');
     // Board-approval attestation appears only once an acceptable-use policy has been uploaded —
     // the sole permitted self-attestation (no document states its own board-approval status).
     var attest=m._aup?('<label class="sd" style="display:flex;align-items:center;gap:8px;margin-top:10px;cursor:pointer">'
       +'<input type="checkbox" id="aiPolicyBoardApproved"'+(window.__aiPolicyBoardApproved?' checked':'')+'> '
       +'The uploaded AI acceptable-use policy (<b>'+m._aup.name+'</b>) is <b>board-approved</b>.</label>'):'';
-    host.innerHTML='<div style="display:flex;gap:10px;flex-wrap:wrap">'+rows+'</div>'+attest;
+    host.innerHTML='<div style="border:1px solid var(--line);border-radius:10px;overflow:hidden">'+rows+'</div>'+attest;
     var cb=document.getElementById('aiPolicyBoardApproved');
     if(cb)cb.addEventListener('change',function(){window.__aiPolicyBoardApproved=cb.checked;computeAiGov();});
     // Badge reflects how many of the six are now sourced.
@@ -671,11 +676,57 @@
     };
     r.readAsText(f.files[0]);
   }
-  (function(){var b=document.getElementById('aiInvParse');if(b)b.addEventListener('click',function(){loadAiInv();});
+  // A source is a live connector (needs an API token) when it isn't a file export.
+  function aiInvIsConnector(src){return !!src && !/csv|excel|export/i.test(src);}
+  // Representative AI-asset inventory by industry — pulled when the user connects a
+  // CMDB / model registry instead of uploading a file. The live API replaces these
+  // with the real inventory on go-live (same representative-until-go-live pattern as
+  // the process/app CMDB pull).
+  var AIINV_PULL={
+    health:{ai_system:8,genai_app:12,machine_identity:340,crypto_asset:210,sensitivity:'High',customerFacing:true},
+    tech:{ai_system:14,genai_app:20,machine_identity:520,crypto_asset:300,sensitivity:'High',customerFacing:true},
+    fin:{ai_system:11,genai_app:16,machine_identity:480,crypto_asset:360,sensitivity:'High',customerFacing:true},
+    retail:{ai_system:9,genai_app:14,machine_identity:300,crypto_asset:180,sensitivity:'Medium',customerFacing:true},
+    gov:{ai_system:6,genai_app:8,machine_identity:260,crypto_asset:240,sensitivity:'High',customerFacing:false},
+    mfg:{ai_system:7,genai_app:10,machine_identity:280,crypto_asset:160,sensitivity:'Medium',customerFacing:false},
+    energy:{ai_system:8,genai_app:9,machine_identity:300,crypto_asset:220,sensitivity:'High',customerFacing:false}
+  };
+  function pullAiInv(sourceName,msgId){
+    var p=AIINV_PULL[(typeof invKey==='function'?invKey():'tech')]||AIINV_PULL.tech;
+    // The connected system's asset records carry a customer-facing flag, so the column
+    // is considered present (drives the decisioning read).
+    AI_INV={ai_system:p.ai_system,genai_app:p.genai_app,machine_identity:p.machine_identity,crypto_asset:p.crypto_asset,sensitivity:p.sensitivity,customerFacing:p.customerFacing,customerFacingCol:true,_loaded:true};
+    renderAiInv();if(typeof computeAiGov==='function')computeAiGov();
+    var total=p.ai_system+p.genai_app+p.machine_identity+p.crypto_asset;
+    var msg=document.getElementById(msgId);
+    if(msg){msg.innerHTML='✓ Pulled <b>'+total.toLocaleString()+'</b> assets from <b>'+sourceName+'</b> <span style="color:var(--muted)">(representative — the live '+sourceName+' API syncs your real inventory on go-live)</span>.';msg.style.color='var(--good)';}
+    var b=document.getElementById('bas');if(b){b.textContent='✓ '+total.toLocaleString()+' assets';b.classList.add('done');}
+  }
+  // Toggle file-upload vs connector-token UI for an AI-inventory loader as the source
+  // changes: connectors ask for an instance URL / API token and "Connect & pull";
+  // a CSV / Excel export keeps the file picker and "Load inventory".
+  function wireAiInvSource(selId,fileId,credId,btnId){
+    var sel=document.getElementById(selId);if(!sel)return;
+    function upd(){var conn=aiInvIsConnector(sel.value),f=document.getElementById(fileId),c=document.getElementById(credId),b=document.getElementById(btnId);
+      if(f)f.style.display=conn?'none':'';if(c)c.style.display=conn?'':'none';if(b)b.textContent=conn?'Connect & pull':'Load inventory';}
+    sel.addEventListener('change',upd);upd();
+  }
+  // A loader button either pulls from a connected system (with a token) or parses an
+  // uploaded file, depending on the chosen source.
+  function runAiInvLoad(selId,fileId,credId,msgId){
+    var src=(typeof v==='function')?v(selId):'';
+    if(aiInvIsConnector(src)){var cred=(typeof v==='function')?v(credId):'';var msg=document.getElementById(msgId);
+      if(!cred){if(msg){msg.textContent='Enter the instance URL / API token.';msg.style.color='var(--warn)';}return;}
+      pullAiInv(src,msgId);
+    } else { loadAiInv(fileId,msgId); }
+  }
+  (function(){var b=document.getElementById('aiInvParse');if(b)b.addEventListener('click',function(){runAiInvLoad('aiInvSource','aiInvFile','aiInvCred','aiInvMsg');});
+    wireAiInvSource('aiInvSource','aiInvFile','aiInvCred','aiInvParse');
     var g=document.getElementById('aiGotoConn');if(g)g.addEventListener('click',function(ev){ev.preventDefault();var el=document.getElementById('secTools');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});});
     // Inline AI-governance loaders (in the AI risk & governance section) reuse the same
     // engines so the user acts right where the derived tiles are, not elsewhere.
-    var gi=document.getElementById('aiGovInvLoad');if(gi)gi.addEventListener('click',function(){loadAiInv('aiGovInvFile','aiGovInvMsg');});
+    var gi=document.getElementById('aiGovInvLoad');if(gi)gi.addEventListener('click',function(){runAiInvLoad('aiGovInvSource','aiGovInvFile','aiGovInvCred','aiGovInvMsg');});
+    wireAiInvSource('aiGovInvSource','aiGovInvFile','aiGovInvCred','aiGovInvLoad');
     var gd=document.getElementById('aiGovDocAnalyze');if(gd)gd.addEventListener('click',function(){obAnalyzeDocFrom('aiGovDocFile','aiGovDocType','aiGovDocMsg');});})();
   // When the cockpit sends the user here to connect a tool, scroll to and highlight
   // the section that captures it.

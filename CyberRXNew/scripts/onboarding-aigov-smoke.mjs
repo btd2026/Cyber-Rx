@@ -79,8 +79,14 @@ wired('inline AI doc file input', html.includes('id="aiGovDocFile"'));
 wired('inline AI doc analyze button', html.includes('id="aiGovDocAnalyze"'));
 wired('loadAiInv is parameterized', /function loadAiInv\(fileId,msgId\)/.test(html));
 wired('shared doc engine obAnalyzeDocFrom', /function obAnalyzeDocFrom\(/.test(html));
-wired('inline inventory reuses loadAiInv', /loadAiInv\('aiGovInvFile','aiGovInvMsg'\)/.test(html));
+wired('inline inventory loader wired', /runAiInvLoad\('aiGovInvSource','aiGovInvFile','aiGovInvCred','aiGovInvMsg'\)/.test(html));
 wired('inline docs reuse obAnalyzeDocFrom', /obAnalyzeDocFrom\('aiGovDocFile','aiGovDocType','aiGovDocMsg'\)/.test(html));
+// CMDB/connector sources ask for an API token (not just a file) on both loaders.
+wired('inline loader has token field', html.includes('id="aiGovInvCred"'));
+wired('supply loader has token field', html.includes('id="aiInvCred"'));
+wired('connector detection helper', /function aiInvIsConnector\(/.test(html));
+wired('source toggle wired for both loaders', /wireAiInvSource\('aiGovInvSource'/.test(html) && /wireAiInvSource\('aiInvSource'/.test(html));
+wired('representative pull by industry', /var AIINV_PULL=\{/.test(html) && /function pullAiInv\(/.test(html));
 wired('AI doc types cover NIST/ISO/AUP', /d17.*NIST AI RMF/s.test(html) && /d18.*ISO\/IEC 42001/s.test(html) && /d19.*Acceptable-Use/s.test(html));
 
 // 8) Cross-file: the AI doc-type keys used in onboarding must exist in the backend
