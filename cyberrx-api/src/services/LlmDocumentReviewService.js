@@ -204,6 +204,17 @@ function reconcile(parsed, mapping, clipped, meta) {
     let cmmi = covCmmi;
     const mc = Number(v.cmmi);
     if (Number.isFinite(mc) && mc >= 1 && mc <= 5 && Math.abs(mc - covCmmi) <= 1) cmmi = Math.round(mc);
+    // Tag-aware maturity ceiling (same doctrine as the keyword engine's
+    // docControlCMMI): a document can prove a control is Defined (3); only
+    // measurement evidence (M attrs) lifts it to 4, and only measurement +
+    // continuous-improvement evidence (M + I attrs) lifts it to 5. Prevents the
+    // assessor model from over-claiming maturity a document can't demonstrate.
+    if (ctrlMatched > 0) {
+      const hasM = attrResults.some((a) => a.tag === 'M' && a.found);
+      const hasI = attrResults.some((a) => a.tag === 'I' && a.found);
+      const ceil = hasM && hasI ? 5 : hasM ? 4 : 3;
+      if (cmmi > ceil) cmmi = ceil;
+    } else { cmmi = 1; }
     controls.push({
       id: ctrl.id, family: ctrl.family, name: ctrl.name,
       cmmi, cmmiLabel: CMMI_LABEL[cmmi], matched: ctrlMatched, total: ctrl.attrs.length,

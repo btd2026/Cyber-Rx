@@ -354,6 +354,382 @@ const CONTROL_MAP = {
   },
 };
 
+// ---------------------------------------------------------------------------
+// Full NIST CSF 2.0 sub-category coverage (additive).
+//
+// The hand-tuned CONTROL_MAP above scores one representative control per family.
+// But the cockpit's framework tab renders the ENTIRE CSF 2.0 catalog (106
+// sub-categories), so a perfect Access-Control Policy used to light only
+// PR.AA-01 and leave PR.AA-02..06 stuck at "Non-existent". That was a coverage
+// gap in the analyzer, not a gap in the customer's documents.
+//
+// CSF_DOC_COVERAGE maps every remaining sub-category to the ONE policy document
+// that authoritatively evidences it, with attribute patterns drawn from the
+// control's actual intent. It is merged into CONTROL_MAP at load. Scoring is the
+// SAME proportion-based engine (keyword fallback) / semantic LLM path — a family
+// a policy genuinely covers scores high, one it barely addresses scores low. No
+// score is hard-coded; a control the uploaded doc doesn't discuss still lands at
+// Initial (1), which is the honest reading of "policy exists, ad hoc here."
+//
+// Detection controls that are fundamentally operational telemetry (DE.CM-*,
+// PR.IR-01 network access) are intentionally NOT document-mapped — they are
+// evidenced by connected tools (SIEM/EDR/segmentation) in the cockpit, so the
+// two evidence sources together cover the full catalog with no overlap.
+const CSF_DOC_COVERAGE = {
+  // d1 Information Security Policy → the governance backbone (GV.OC/RR/PO/OV) + PR.AT
+  d1: [
+    { id: 'GV.OC-03', family: 'GV', name: 'Legal, regulatory & contractual requirements', attrs: [
+      { tag: 'P', key: 'legal', pat: 'legal|regulator|statut|\\blaw\\b|compliance obligation', label: 'Legal & regulatory obligations' },
+      { tag: 'P', key: 'contract', pat: 'contract|obligation|shareholder|nyse|customer', label: 'Contractual obligations' },
+      { tag: 'M', key: 'manage', pat: 'understood|managed|align|maintain|obligation', label: 'Requirements understood & managed' },
+    ]},
+    { id: 'GV.OC-04', family: 'GV', name: 'Critical objectives, capabilities & services', attrs: [
+      { tag: 'P', key: 'mission', pat: 'mission|business strateg|objective|critical', label: 'Critical objectives understood' },
+      { tag: 'P', key: 'services', pat: 'platform|portfolio|service|capabilit|operation', label: 'Key capabilities & services identified' },
+    ]},
+    { id: 'GV.OC-05', family: 'GV', name: 'Dependencies & required outcomes', attrs: [
+      { tag: 'P', key: 'depend', pat: 'depend|underpin|support|reli|infrastructure', label: 'Dependencies understood' },
+      { tag: 'P', key: 'cia', pat: 'confidential|integrity|availab', label: 'Required outcomes (CIA)' },
+    ]},
+    { id: 'GV.RR-01', family: 'GV', name: 'Leadership accountable for cyber risk', attrs: [
+      { tag: 'P', key: 'board', pat: 'board|audit committee|leadership|executive', label: 'Board / leadership oversight' },
+      { tag: 'P', key: 'accountable', pat: 'accountab|oversight|ultimate|steering committee', label: 'Leadership accountability' },
+    ]},
+    { id: 'GV.RR-02', family: 'GV', name: 'Roles, responsibilities & authorities enforced', attrs: [
+      { tag: 'P', key: 'roles', pat: 'role|responsib|ciso|owner', label: 'Roles & responsibilities defined' },
+      { tag: 'R', key: 'enforce', pat: 'enforce|mandatory|comply|complian|shared', label: 'Established & enforced' },
+    ]},
+    { id: 'GV.RR-03', family: 'GV', name: 'Resources allocated to risk strategy', attrs: [
+      { tag: 'R', key: 'resource', pat: 'resource|budget|fund|staffing|fte', label: 'Adequate resources allocated' },
+    ]},
+    { id: 'GV.RR-04', family: 'GV', name: 'Cybersecurity in human-resources practices', attrs: [
+      { tag: 'R', key: 'hr', pat: 'human resource|\\bhr\\b|onboard|training', label: 'HR integration' },
+      { tag: 'R', key: 'disciplin', pat: 'disciplin|termination|sanction|conduct', label: 'HR consequences' },
+    ]},
+    { id: 'GV.PO-01', family: 'GV', name: 'Policy for managing cyber risk established', attrs: [
+      { tag: 'P', key: 'policy', pat: 'policy|establish|program|framework', label: 'Policy established' },
+      { tag: 'P', key: 'approve', pat: 'approv|authoriz|endorse|sign', label: 'Approved & authorized' },
+    ]},
+    { id: 'GV.PO-02', family: 'GV', name: 'Policy reviewed, updated, communicated & enforced', attrs: [
+      { tag: 'M', key: 'review', pat: 'review|annual|update cycle|periodic', label: 'Reviewed & updated' },
+      { tag: 'R', key: 'comm', pat: 'communicat|disseminat|publish|distribut|intranet', label: 'Communicated' },
+      { tag: 'R', key: 'enforce', pat: 'enforce|violation|disciplin|mandatory', label: 'Enforced' },
+    ]},
+    { id: 'GV.OV-01', family: 'GV', name: 'Risk strategy outcomes reviewed', attrs: [
+      { tag: 'M', key: 'outcome', pat: 'outcome|effectiveness|kpi|metric|review', label: 'Outcomes reviewed' },
+      { tag: 'I', key: 'inform', pat: 'inform|adjust|improve|strateg|decision', label: 'Used to inform strategy' },
+    ]},
+    { id: 'GV.OV-02', family: 'GV', name: 'Risk strategy reviewed to cover requirements', attrs: [
+      { tag: 'M', key: 'cover', pat: 'review|cover|requirement|benchmark|gap|assessment', label: 'Coverage reviewed' },
+    ]},
+    { id: 'GV.OV-03', family: 'GV', name: 'Risk management performance evaluated', attrs: [
+      { tag: 'M', key: 'perf', pat: 'performance|metric|measure|evaluat|report|indicator', label: 'Performance evaluated' },
+    ]},
+    { id: 'PR.AT-01', family: 'PR', name: 'Personnel awareness & training', attrs: [
+      { tag: 'P', key: 'program', pat: 'awareness|training|educat', label: 'Awareness program' },
+      { tag: 'P', key: 'freq', pat: 'annual|onboard|refresher|periodic|mandatory', label: 'Delivered on a cadence' },
+      { tag: 'R', key: 'phish', pat: 'phishing|simulation|campaign|culture', label: 'Reinforcement' },
+    ]},
+    { id: 'PR.AT-02', family: 'PR', name: 'Role-based training for specialized roles', attrs: [
+      { tag: 'I', key: 'role', pat: 'role.based|specialized|tailored|privileged|developer', label: 'Role-based content' },
+    ]},
+  ],
+  // d2 Risk Assessment / Register → GV.RM (risk strategy) + ID.RA (assessment) + ID.IM-01
+  d2: [
+    { id: 'GV.RM-01', family: 'GV', name: 'Risk management objectives established', attrs: [
+      { tag: 'P', key: 'obj', pat: 'risk management|objective|methodolog|framework', label: 'Objectives established' },
+      { tag: 'P', key: 'agree', pat: 'approved|board|agreed|defensible|consistent', label: 'Agreed by stakeholders' },
+    ]},
+    { id: 'GV.RM-02', family: 'GV', name: 'Risk appetite & tolerance established', attrs: [
+      { tag: 'P', key: 'appetite', pat: 'appetite|tolerance|threshold', label: 'Appetite & tolerance defined' },
+      { tag: 'R', key: 'accept', pat: 'accept|within.{0,12}tolerance|band|sign.off', label: 'Acceptance rules' },
+    ]},
+    { id: 'GV.RM-03', family: 'GV', name: 'Cyber risk included in enterprise risk management', attrs: [
+      { tag: 'P', key: 'erm', pat: 'enterprise risk|\\berm\\b|business objective|corporate risk|council', label: 'Integrated with ERM' },
+    ]},
+    { id: 'GV.RM-04', family: 'GV', name: 'Strategic direction for risk response established', attrs: [
+      { tag: 'P', key: 'direction', pat: 'treat|mitigat|transfer|avoid|response|remediat', label: 'Response direction set' },
+    ]},
+    { id: 'GV.RM-05', family: 'GV', name: 'Lines of communication for cyber risk established', attrs: [
+      { tag: 'R', key: 'comm', pat: 'report|council|committee|leadership|communicat|escalat', label: 'Communication lines' },
+    ]},
+    { id: 'GV.RM-06', family: 'GV', name: 'Standardized method to calculate & prioritize risk', attrs: [
+      { tag: 'M', key: 'method', pat: 'scor|likelihood|impact|prioriti|rating|scale', label: 'Standardized scoring' },
+      { tag: 'M', key: 'inherent', pat: 'inherent|gross|residual|net', label: 'Inherent vs residual' },
+    ]},
+    { id: 'GV.RM-07', family: 'GV', name: 'Strategic opportunities (positive risk) characterized', attrs: [
+      { tag: 'I', key: 'opp', pat: 'opportunit|positive risk|risk.based decision|business objective', label: 'Opportunities characterized' },
+    ]},
+    { id: 'ID.RA-03', family: 'ID', name: 'Internal & external threats identified & recorded', attrs: [
+      { tag: 'P', key: 'threat', pat: 'threat|adversar|attack|ttp|mitre', label: 'Threats identified' },
+      { tag: 'R', key: 'record', pat: 'register|record|catalog|document', label: 'Threats recorded' },
+    ]},
+    { id: 'ID.RA-04', family: 'ID', name: 'Impacts & likelihoods of threats identified', attrs: [
+      { tag: 'M', key: 'like', pat: 'likelihood|probability|frequenc', label: 'Likelihood assessed' },
+      { tag: 'M', key: 'impact', pat: 'impact|consequence|severity|magnitude', label: 'Impact assessed' },
+    ]},
+    { id: 'ID.RA-05', family: 'ID', name: 'Threats, vulns, likelihoods & impacts inform risk', attrs: [
+      { tag: 'M', key: 'inherent', pat: 'inherent|gross|residual|net|risk rating', label: 'Risk determination' },
+      { tag: 'M', key: 'inform', pat: 'inform|determine|derive|prioriti', label: 'Used to prioritize' },
+    ]},
+    { id: 'ID.RA-06', family: 'ID', name: 'Risk responses chosen, prioritized & tracked', attrs: [
+      { tag: 'R', key: 'treat', pat: 'treat|mitigat|transfer|accept|avoid', label: 'Responses chosen' },
+      { tag: 'M', key: 'track', pat: 'track|closure|remediation|status|target', label: 'Tracked to closure' },
+    ]},
+    { id: 'ID.RA-07', family: 'ID', name: 'Changes & exceptions managed & tracked', attrs: [
+      { tag: 'R', key: 'except', pat: 'exception|waiver|off.cycle|material change|re.assess', label: 'Changes & exceptions managed' },
+    ]},
+    { id: 'ID.IM-01', family: 'ID', name: 'Improvements identified from evaluations', attrs: [
+      { tag: 'I', key: 'eval', pat: 'audit|assessment|evaluat|finding|gap|lesson|re.validat', label: 'Improvements from evaluations' },
+    ]},
+  ],
+  // d3 Third-Party / Supply-Chain Policy → GV.SC (whole family) + ID.RA-09/10 (supplier integrity)
+  d3: [
+    { id: 'GV.SC-02', family: 'GV', name: 'Cyber roles for suppliers & partners established', attrs: [
+      { tag: 'P', key: 'roles', pat: 'role|responsib|business owner|relationship manager|flow.down|committee', label: 'Supplier roles established' },
+    ]},
+    { id: 'GV.SC-03', family: 'GV', name: 'C-SCRM integrated into cyber & enterprise risk', attrs: [
+      { tag: 'P', key: 'integrate', pat: 'integrat|enterprise|escalat|report|committee|board', label: 'Integrated into risk mgmt' },
+    ]},
+    { id: 'GV.SC-04', family: 'GV', name: 'Suppliers known & prioritized by criticality', attrs: [
+      { tag: 'P', key: 'inventory', pat: 'inventory|catalog|register|identif', label: 'Supplier inventory' },
+      { tag: 'P', key: 'tier', pat: 'tier|criticalit|prioriti|classif', label: 'Prioritized by criticality' },
+    ]},
+    { id: 'GV.SC-05', family: 'GV', name: 'Supply-chain requirements integrated into contracts', attrs: [
+      { tag: 'R', key: 'contract', pat: 'contract|clause|\\bsla\\b|agreement|right.{0,6}audit', label: 'Requirements in contracts' },
+    ]},
+    { id: 'GV.SC-06', family: 'GV', name: 'Due diligence before supplier relationships', attrs: [
+      { tag: 'R', key: 'dd', pat: 'due diligence|questionnaire|assessment|before contract|prior to', label: 'Pre-engagement due diligence' },
+    ]},
+    { id: 'GV.SC-07', family: 'GV', name: 'Supplier risks assessed, recorded & monitored', attrs: [
+      { tag: 'R', key: 'assess', pat: 'assess|risk.rat|classif|finding', label: 'Risks assessed' },
+      { tag: 'M', key: 'monitor', pat: 'monitor|reassess|ongoing|continuous|periodic', label: 'Ongoing monitoring' },
+    ]},
+    { id: 'DE.CM-06', family: 'DE', name: 'External service-provider activities are monitored', attrs: [
+      { tag: 'M', key: 'monitor', pat: 'continuous monitor|ongoing monitor|security.{0,4}rating|reassess|breach alert|sla performance|external.{0,12}monitor', label: 'External provider monitoring' },
+    ]},
+    { id: 'GV.SC-08', family: 'GV', name: 'Suppliers included in incident planning & recovery', attrs: [
+      { tag: 'R', key: 'incident', pat: 'incident|contingency|breach.{0,6}notif|business.{0,4}continuit|resilience', label: 'Supplier incident planning' },
+    ]},
+    { id: 'GV.SC-09', family: 'GV', name: 'Supply-chain security integrated across the lifecycle', attrs: [
+      { tag: 'P', key: 'lifecycle', pat: 'lifecycle|onboard|offboard|provenance|integrity|counterfeit', label: 'Lifecycle security' },
+    ]},
+    { id: 'GV.SC-10', family: 'GV', name: 'C-SCRM plans cover post-partnership activities', attrs: [
+      { tag: 'I', key: 'exit', pat: 'exit|terminat|offboard|transition|destruction|return', label: 'Exit & offboarding' },
+    ]},
+    { id: 'ID.RA-09', family: 'ID', name: 'Authenticity & integrity of hardware/software assessed', attrs: [
+      { tag: 'R', key: 'integrity', pat: 'provenance|counterfeit|integrity|authentic|hardware|firmware', label: 'Hw/sw integrity assessed' },
+    ]},
+    { id: 'ID.RA-10', family: 'ID', name: 'Critical suppliers assessed prior to acquisition', attrs: [
+      { tag: 'R', key: 'preacq', pat: 'due diligence|prior to|before|tier 1|critical supplier|onboard', label: 'Pre-acquisition assessment' },
+    ]},
+  ],
+  // d4 Access Control Policy → PR.AA-05 (least privilege / SoD), PR.AA-06 (physical)
+  d4: [
+    { id: 'PR.AA-05', family: 'PR', name: 'Access enforces least privilege & separation of duties', attrs: [
+      { tag: 'P', key: 'leastpriv', pat: 'least privilege|minimum necessary|need.to.know', label: 'Least privilege' },
+      { tag: 'R', key: 'sod', pat: 'separation of duties|\\bsod\\b|segregat|rbac|role.based', label: 'Separation of duties / RBAC' },
+      { tag: 'R', key: 'review', pat: 'access review|recertif|attestation|periodic review', label: 'Access review & recertification' },
+    ]},
+    { id: 'PR.AA-06', family: 'PR', name: 'Physical access to assets managed & monitored', attrs: [
+      { tag: 'P', key: 'physical', pat: 'physical access|facilit|badge|premises|data center access|visitor', label: 'Physical access managed' },
+      { tag: 'M', key: 'monitor', pat: 'monitor|cctv|surveillance|log|escort', label: 'Physical access monitored' },
+    ]},
+    { id: 'DE.CM-03', family: 'DE', name: 'Personnel activity & technology usage are monitored', attrs: [
+      { tag: 'M', key: 'monitor', pat: 'monitor|anomal|alert|siem|impossible.travel|behavior|audit trail', label: 'User & usage monitoring' },
+    ]},
+  ],
+  // d5 Identity & Authentication Policy → PR.AA-02/03/04
+  d5: [
+    { id: 'PR.AA-02', family: 'PR', name: 'Identities proofed & bound to credentials', attrs: [
+      { tag: 'P', key: 'proof', pat: 'identity|proof|verif|onboard|provision|joiner|binding', label: 'Identity proofing & binding' },
+      { tag: 'R', key: 'lifecycle', pat: 'lifecycle|joiner|mover|leaver|deprovision', label: 'Lifecycle managed' },
+    ]},
+    { id: 'PR.AA-03', family: 'PR', name: 'Users, services & hardware are authenticated', attrs: [
+      { tag: 'P', key: 'mfa', pat: 'multi.factor|\\bmfa\\b|2fa|two.factor|authenticat', label: 'MFA enforced' },
+      { tag: 'R', key: 'strong', pat: 'password|passphrase|credential|certificate|biometric|fido|webauthn', label: 'Strong authenticators' },
+    ]},
+    { id: 'PR.AA-04', family: 'PR', name: 'Identity assertions are protected & verified', attrs: [
+      { tag: 'M', key: 'sso', pat: 'sso|single sign|saml|oidc|openid|federation|token|assertion', label: 'Federated assertions protected' },
+    ]},
+  ],
+  // d6 Incident Response Plan → DE.AE (analysis) + RS.MA/AN/CO/MI + ID.IM-02/03/04
+  d6: [
+    { id: 'DE.AE-02', family: 'DE', name: 'Potentially adverse events are analyzed', attrs: [
+      { tag: 'R', key: 'analyze', pat: 'triage|validat|analy|scoping|detect', label: 'Events analyzed' },
+    ]},
+    { id: 'DE.AE-03', family: 'DE', name: 'Information is correlated from multiple sources', attrs: [
+      { tag: 'R', key: 'correlate', pat: 'siem|correlat|multiple|feed|telemetry|edr|xdr', label: 'Multi-source correlation' },
+    ]},
+    { id: 'DE.AE-04', family: 'DE', name: 'Impact & scope of adverse events are understood', attrs: [
+      { tag: 'M', key: 'scope', pat: 'scope|impact|blast radius|asset criticalit|business impact', label: 'Impact & scope understood' },
+    ]},
+    { id: 'DE.AE-06', family: 'DE', name: 'Event information is provided to authorized staff', attrs: [
+      { tag: 'R', key: 'notify', pat: 'escalat|notif|\\bsoc\\b|csirt|report|call tree', label: 'Escalated to staff' },
+    ]},
+    { id: 'DE.AE-07', family: 'DE', name: 'Threat intelligence is integrated into analysis', attrs: [
+      { tag: 'R', key: 'ti', pat: 'threat intel|intelligence|feed|ioc|mitre|att.ck', label: 'Threat intel integrated' },
+    ]},
+    { id: 'DE.AE-08', family: 'DE', name: 'Incidents are declared when criteria are met', attrs: [
+      { tag: 'P', key: 'declare', pat: 'classif|severity|sev.1|criteria|declar|confirmed incident', label: 'Declaration criteria' },
+    ]},
+    { id: 'RS.MA-02', family: 'RS', name: 'Incident reports are triaged & validated', attrs: [
+      { tag: 'R', key: 'triage', pat: 'triage|validat|alert|confirm', label: 'Triaged & validated' },
+    ]},
+    { id: 'RS.MA-03', family: 'RS', name: 'Incidents are categorized & prioritized', attrs: [
+      { tag: 'P', key: 'prioritize', pat: 'classif|severity|priority|categor', label: 'Categorized & prioritized' },
+    ]},
+    { id: 'RS.MA-04', family: 'RS', name: 'Incidents are escalated or elevated as needed', attrs: [
+      { tag: 'R', key: 'escalate', pat: 'escalat|elevat|call tree|chain|notif', label: 'Escalation path' },
+    ]},
+    { id: 'RS.MA-05', family: 'RS', name: 'Criteria for initiating recovery are applied', attrs: [
+      { tag: 'P', key: 'recover', pat: 'recover|restor|resume|closing|normal operation', label: 'Recovery initiation criteria' },
+    ]},
+    { id: 'RS.AN-03', family: 'RS', name: 'Root cause & sequence of events are established', attrs: [
+      { tag: 'M', key: 'rca', pat: 'root cause|sequence|timeline|post.mortem|after.action', label: 'Root-cause analysis' },
+    ]},
+    { id: 'RS.AN-06', family: 'RS', name: 'Investigation actions are recorded with integrity', attrs: [
+      { tag: 'R', key: 'record', pat: 'record|log|case management|document|integrity|hash', label: 'Actions recorded' },
+    ]},
+    { id: 'RS.AN-07', family: 'RS', name: 'Incident data & metadata are preserved', attrs: [
+      { tag: 'R', key: 'preserve', pat: 'preserv|evidence|chain of custody|imaging|hash|locker', label: 'Evidence preserved' },
+    ]},
+    { id: 'RS.AN-08', family: 'RS', name: 'An incident magnitude is estimated & validated', attrs: [
+      { tag: 'M', key: 'magnitude', pat: 'magnitude|scope|impact|estimat|extent|blast', label: 'Magnitude estimated' },
+    ]},
+    { id: 'RS.CO-02', family: 'RS', name: 'Stakeholders are notified of incidents', attrs: [
+      { tag: 'R', key: 'notify', pat: 'notif|report|regulat|72.hour|customer|disclos', label: 'Stakeholder notification' },
+    ]},
+    { id: 'RS.CO-03', family: 'RS', name: 'Information is shared with designated stakeholders', attrs: [
+      { tag: 'R', key: 'share', pat: 'communicat|share|stakeholder|liaison|status|bridge', label: 'Information sharing' },
+    ]},
+    { id: 'RS.MI-01', family: 'RS', name: 'Incidents are contained', attrs: [
+      { tag: 'R', key: 'contain', pat: 'contain|isolat|quarantine|block|disabl', label: 'Containment' },
+    ]},
+    { id: 'RS.MI-02', family: 'RS', name: 'Incidents are eradicated', attrs: [
+      { tag: 'R', key: 'eradicate', pat: 'eradicat|remov|rebuild|rotat|clos', label: 'Eradication' },
+    ]},
+    { id: 'ID.IM-02', family: 'ID', name: 'Improvements identified from tests & exercises', attrs: [
+      { tag: 'I', key: 'exercise', pat: 'exercise|drill|tabletop|simulation|test|red.team', label: 'Exercise program' },
+    ]},
+    { id: 'ID.IM-03', family: 'ID', name: 'Improvements identified from operations', attrs: [
+      { tag: 'I', key: 'ops', pat: 'lesson|post.mortem|after.action|retrospect|remediation', label: 'Operational learning' },
+    ]},
+    { id: 'ID.IM-04', family: 'ID', name: 'Incident response & other plans maintained & improved', attrs: [
+      { tag: 'I', key: 'maintain', pat: 'review|update|annual|maintain|revision', label: 'Plans maintained' },
+    ]},
+  ],
+  // d7 Business Continuity / DR Plan → PR.DS-11, PR.IR-02/03/04, RC.RP-02..06, RC.CO-03/04
+  d7: [
+    { id: 'PR.DS-11', family: 'PR', name: 'Backups are created, protected & tested', attrs: [
+      { tag: 'P', key: 'backup', pat: 'backup|snapshot|replicat|immutable', label: 'Backups created & protected' },
+      { tag: 'M', key: 'test', pat: 'restore|test|rehearsal|verif|validat', label: 'Backups tested' },
+    ]},
+    { id: 'PR.IR-02', family: 'PR', name: 'Assets protected from environmental threats', attrs: [
+      { tag: 'P', key: 'env', pat: 'data center|facilit|environmental|carrier|power|colocation', label: 'Environmental protection' },
+    ]},
+    { id: 'DE.CM-02', family: 'DE', name: 'The physical environment is monitored', attrs: [
+      { tag: 'M', key: 'physmon', pat: 'physical.{0,20}monitor|environmental.{0,12}monitor|data center.{0,20}monitor|facility.{0,12}monitor|surveillance|cctv|sensor', label: 'Physical-environment monitoring' },
+    ]},
+    { id: 'PR.IR-03', family: 'PR', name: 'Mechanisms achieve resilience requirements', attrs: [
+      { tag: 'P', key: 'resil', pat: 'redundan|failover|hot.site|warm.site|resilien|alternate', label: 'Resilience mechanisms' },
+    ]},
+    { id: 'PR.IR-04', family: 'PR', name: 'Adequate resource capacity is maintained', attrs: [
+      { tag: 'M', key: 'capacity', pat: 'capacity|scal|load|provision|resource', label: 'Capacity maintained' },
+    ]},
+    { id: 'RC.RP-02', family: 'RC', name: 'Recovery actions are selected, scoped & performed', attrs: [
+      { tag: 'R', key: 'scope', pat: 'recover|failover|runbook|restore|activate|cutover', label: 'Recovery actions scoped' },
+    ]},
+    { id: 'RC.RP-03', family: 'RC', name: 'Integrity of backups verified before restoration', attrs: [
+      { tag: 'M', key: 'verify', pat: 'restore.{0,12}verif|integrity|validat|rehearsal|3.2.1', label: 'Backup integrity verified' },
+    ]},
+    { id: 'RC.RP-04', family: 'RC', name: 'Post-incident operational norms established', attrs: [
+      { tag: 'P', key: 'norms', pat: 'normal operation|resume|production|post.incident|business.as.usual', label: 'Operational norms restored' },
+    ]},
+    { id: 'RC.RP-05', family: 'RC', name: 'Integrity of restored assets is verified', attrs: [
+      { tag: 'M', key: 'restored', pat: 'confirm|verif|integrity|monitor|validate recovery|reinfection', label: 'Restored integrity verified' },
+    ]},
+    { id: 'RC.RP-06', family: 'RC', name: 'End of recovery is declared & documented', attrs: [
+      { tag: 'P', key: 'declare', pat: 'declar|closing|after.action|certif|complete|report', label: 'Recovery closed & documented' },
+    ]},
+    { id: 'RC.CO-03', family: 'RC', name: 'Recovery progress communicated to stakeholders', attrs: [
+      { tag: 'R', key: 'comm', pat: 'communicat|status page|notif|stakeholder|update', label: 'Progress communicated' },
+    ]},
+    { id: 'RC.CO-04', family: 'RC', name: 'Public updates shared via approved methods', attrs: [
+      { tag: 'R', key: 'public', pat: 'public|customer|status page|holding statement|channel', label: 'Public updates' },
+    ]},
+  ],
+  // d8 Change Management Policy → PR.PS-06 (secure software delivery / SDLC gate)
+  d8: [
+    { id: 'PR.PS-06', family: 'PR', name: 'Secure software development practices integrated', attrs: [
+      { tag: 'P', key: 'sdlc', pat: 'software|develop|deploy|change|pipeline|release', label: 'Managed software delivery' },
+      { tag: 'R', key: 'test', pat: 'test|validat|qa|staging|verify', label: 'Pre-deployment testing gate' },
+      { tag: 'R', key: 'rollback', pat: 'rollback|back.out|revert|approv', label: 'Controlled promotion' },
+    ]},
+  ],
+  // d9 Configuration & Vulnerability Management → ID.AM (inventory) + PR.PS (platform) + ID.RA-08
+  d9: [
+    { id: 'ID.AM-01', family: 'ID', name: 'Hardware inventories are maintained', attrs: [
+      { tag: 'P', key: 'hw', pat: 'hardware|asset|inventory|cmdb|endpoint|device|network device', label: 'Hardware inventory' },
+    ]},
+    { id: 'ID.AM-02', family: 'ID', name: 'Software, services & systems inventories maintained', attrs: [
+      { tag: 'P', key: 'sw', pat: 'software|application|package|container|image|system', label: 'Software inventory' },
+    ]},
+    { id: 'ID.AM-03', family: 'ID', name: 'Network communication & data flows maintained', attrs: [
+      { tag: 'P', key: 'flow', pat: 'network|data flow|topology|communicat|boundary|segment', label: 'Network & data flows' },
+    ]},
+    { id: 'ID.AM-04', family: 'ID', name: 'Inventories of supplier-provided services maintained', attrs: [
+      { tag: 'P', key: 'supplier', pat: 'cloud|third.party|supplier|external|saas|hybrid', label: 'Supplier services inventory' },
+    ]},
+    { id: 'ID.AM-08', family: 'ID', name: 'Assets are managed throughout their lifecycle', attrs: [
+      { tag: 'P', key: 'lifecycle', pat: 'lifecycle|provision|decommission|maintain|retire|build|golden image', label: 'Lifecycle management' },
+    ]},
+    { id: 'PR.PS-01', family: 'PR', name: 'Configuration management practices are applied', attrs: [
+      { tag: 'P', key: 'baseline', pat: 'baseline|golden image|standard build|harden', label: 'Secure baseline' },
+      { tag: 'P', key: 'benchmark', pat: 'cis|stig|benchmark|800.53', label: 'Industry benchmarks' },
+      { tag: 'R', key: 'drift', pat: 'drift|deviation|variance|exception', label: 'Drift handling' },
+    ]},
+    { id: 'PR.PS-02', family: 'PR', name: 'Software is maintained, replaced & removed by risk', attrs: [
+      { tag: 'R', key: 'patch', pat: 'patch|update|hotfix|remediat|version', label: 'Patch management' },
+    ]},
+    { id: 'PR.PS-03', family: 'PR', name: 'Hardware is maintained, replaced & removed by risk', attrs: [
+      { tag: 'R', key: 'hw', pat: 'firmware|hardware|maintain|replace|decommission|end.of.life', label: 'Hardware maintenance' },
+    ]},
+    { id: 'PR.PS-04', family: 'PR', name: 'Log records are generated for monitoring', attrs: [
+      { tag: 'R', key: 'log', pat: 'log|audit|record|monitor|scan|dashboard', label: 'Log generation' },
+    ]},
+    { id: 'PR.PS-05', family: 'PR', name: 'Unauthorized software execution is prevented', attrs: [
+      { tag: 'R', key: 'exec', pat: 'unauthorized|allowlist|prohibit|prevent|signed|approved baseline', label: 'Execution control' },
+    ]},
+    { id: 'ID.RA-08', family: 'ID', name: 'Vulnerability disclosure & remediation processes', attrs: [
+      { tag: 'R', key: 'vuln', pat: 'vulnerabilit|cvss|disclos|triage|remediat|scan', label: 'Vulnerability handling' },
+    ]},
+  ],
+  // d10 Data Protection & Classification → ID.AM-05/07 + PR.DS-02/10
+  d10: [
+    { id: 'ID.AM-05', family: 'ID', name: 'Assets prioritized by classification & criticality', attrs: [
+      { tag: 'P', key: 'classify', pat: 'classif|categor|criticalit|sensitiv|tier|label', label: 'Classification & criticality' },
+    ]},
+    { id: 'ID.AM-07', family: 'ID', name: 'Inventories of data & metadata are maintained', attrs: [
+      { tag: 'P', key: 'datainv', pat: 'data|inventory|catalog|label|metadata|record', label: 'Data inventory' },
+    ]},
+    { id: 'PR.DS-02', family: 'PR', name: 'Data-in-transit is protected', attrs: [
+      { tag: 'P', key: 'transit', pat: 'transit|tls|encrypt|https|channel', label: 'Encryption in transit' },
+    ]},
+    { id: 'PR.DS-10', family: 'PR', name: 'Data-in-use is protected', attrs: [
+      { tag: 'P', key: 'inuse', pat: 'least privilege|need.to.know|access control|tokeniz|mask|truncat', label: 'Data-in-use protection' },
+    ]},
+  ],
+};
+
+// Merge the full-catalog coverage into CONTROL_MAP additively — never overwrite a
+// hand-tuned control that already exists for that document type.
+for (const dt of Object.keys(CSF_DOC_COVERAGE)) {
+  if (!CONTROL_MAP[dt]) continue;
+  const have = new Set(CONTROL_MAP[dt].controls.map((c) => c.id));
+  CSF_DOC_COVERAGE[dt].forEach((c) => { if (!have.has(c.id)) CONTROL_MAP[dt].controls.push(c); });
+}
+
 function extractText(buffer, filename) {
   const ext = (filename || '').split('.').pop().toLowerCase();
   if (['txt', 'csv', 'md'].includes(ext)) {
@@ -376,6 +752,30 @@ function scoreCMMI(matched, total) {
   if (pct >= 0.55) return 3;
   if (pct >= 0.35) return 2;
   return 1;
+}
+
+// Tag-aware document maturity — the same "don't over-claim" doctrine the cockpit
+// applies to tool telemetry (capAutoCeil), now applied to document review.
+// A policy that merely DEFINES a control (policy + procedure language) can be at
+// most Defined (3): you can't prove a control is measured or optimizing just by
+// having a document. Evidence of measurement (M attrs — metrics, KPIs, review
+// cadence) lifts the ceiling to Quantitatively Managed (4); evidence of
+// continuous improvement (I attrs — lessons learned, gap remediation, maturation)
+// lifts it to Optimizing (5). So the score is min(coverage tier, evidence ceiling)
+// — this is what stops "every control is a 5" and produces a defensible spread.
+// `attrResults` is the array of { tag, found } already computed for the control.
+function docControlCMMI(attrResults) {
+  const total = attrResults.length;
+  if (!total) return 1;
+  const matched = attrResults.filter((a) => a.found).length;
+  if (matched === 0) return 1;                         // doc reviewed, control ad hoc
+  const base = scoreCMMI(matched, total);              // coverage tier 1..5
+  const hasM = attrResults.some((a) => a.tag === 'M' && a.found);
+  const hasI = attrResults.some((a) => a.tag === 'I' && a.found);
+  let ceil = 3;                                        // documented → Defined
+  if (hasM) ceil = 4;                                  // + measured → Quant. Managed
+  if (hasM && hasI) ceil = 5;                          // + improving → Optimizing
+  return Math.min(base, ceil);
 }
 
 function analyzeDeep(text, docType) {
@@ -404,7 +804,7 @@ function analyzeDeep(text, docType) {
       if (found) totalMatched++;
     }
 
-    const cmmi = scoreCMMI(ctrlMatched, ctrl.attrs.length);
+    const cmmi = docControlCMMI(attrResults);
     controls.push({
       id: ctrl.id,
       family: ctrl.family,
@@ -443,10 +843,12 @@ function analyzeDeep(text, docType) {
     if (missing.length === 0) continue;
 
     const highestImpact = missing[0];
-    const potentialCMMI = scoreCMMI(ctrl.matched + 1, ctrl.total);
+    // Project uplift through the SAME tag-aware ceiling, so a recommendation can't
+    // promise a jump to 5 that a document could never evidence.
+    const potentialCMMI = docControlCMMI(ctrl.attrs.map(a => ({ tag: a.tag, found: a.found || a.key === highestImpact.key })));
     const familyControls = controls.filter(c => c.family === ctrl.family);
     const currentFamilyAvg = familyControls.reduce((s, c) => s + c.cmmi, 0) / familyControls.length;
-    const newCtrlCMMI = scoreCMMI(ctrl.matched + missing.length, ctrl.total);
+    const newCtrlCMMI = docControlCMMI(ctrl.attrs.map(a => ({ tag: a.tag, found: true })));
     const newFamilyAvg = familyControls.reduce((s, c) => s + (c.id === ctrl.id ? newCtrlCMMI : c.cmmi), 0) / familyControls.length;
 
     recommendations.push({
