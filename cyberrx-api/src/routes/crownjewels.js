@@ -158,13 +158,17 @@ router.post('/ingest', optionalJWT, async (req, res) => {
     // optional. Empty strings normalize to null so the cockpit gates honestly.
     const asc = b.aiSupplyChain || {};
     const nn = (v) => { const s = v == null ? '' : String(v).trim(); return s ? s.slice(0, 120) : null; };
+    const ni = (v) => { const n = Number(v); return isFinite(n) && n >= 0 ? Math.round(n) : 0; };
     const aiSupplyChain = {
-      aiDataSensitivity: nn(asc.aiDataSensitivity), aiSpm: nn(asc.aiSpm), genaiSanctioned: nn(asc.genaiSanctioned),
-      shadowAiMonitored: nn(asc.shadowAiMonitored), dlpToAi: nn(asc.dlpToAi), aiCodingTools: nn(asc.aiCodingTools),
-      aiCodePolicy: nn(asc.aiCodePolicy), codeScanning: nn(asc.codeScanning), pipelineScanning: nn(asc.pipelineScanning),
-      artifactSigning: nn(asc.artifactSigning), slsaLevel: nn(asc.slsaLevel), machineIdentities: nn(asc.machineIdentities),
+      // Counts come from the uploaded / connected AI & machine-identity inventory.
+      aimlSystems: ni(asc.aimlSystems), genaiSanctioned: ni(asc.genaiSanctioned),
+      machineIdentities: ni(asc.machineIdentities), cbomAssets: ni(asc.cbomAssets),
+      aiDataSensitivity: nn(asc.aiDataSensitivity), inventorySource: nn(asc.inventorySource),
+      inventoryLoaded: asc.inventoryLoaded === true || asc.inventoryLoaded === 'true',
+      // Legacy self-report fields (posture now reads live from connected tools).
+      aiSpm: nn(asc.aiSpm), shadowAiMonitored: nn(asc.shadowAiMonitored), dlpToAi: nn(asc.dlpToAi),
+      codeScanning: nn(asc.codeScanning), pipelineScanning: nn(asc.pipelineScanning),
       secretsMgmt: nn(asc.secretsMgmt), nhiMonitored: nn(asc.nhiMonitored), cbomStatus: nn(asc.cbomStatus),
-      quantumVulnerable: nn(asc.quantumVulnerable), pqcPlan: nn(asc.pqcPlan),
     };
 
     // Strategic initiatives (CEO per-initiative go/no-go safety check + decision brief).

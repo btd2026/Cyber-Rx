@@ -146,6 +146,13 @@ catch (e) { problems.push(`[vendor risk] ${e.message}`); }
 // Exercise the sub-tab toggle mechanism.
 try { vm.runInContext("typeof subtabs==='function' && subtabs([{key:'a',label:'A',on:true,html:'x'},{key:'b',label:'B',html:'y'}]);", ctx); }
 catch (e) { problems.push(`[subtabs] ${e.message}`); }
+// Exercise the AI & software supply-chain tab + its six graphical reads, in both
+// inventory-only and tool-connected states, and drill each ais_* metric.
+try {
+  vm.runInContext("if(typeof LIVE==='object'&&LIVE){LIVE.aiSupplyChain={aimlSystems:6,genaiSanctioned:4,machineIdentities:1840,cbomAssets:220,aiDataSensitivity:'High',inventoryLoaded:true};} typeof c5AiSupply==='function'&&c5AiSupply(); ['ais_aiml','ais_genai','ais_aicode','ais_pipeline','ais_nhi','ais_pqc'].forEach(function(m){c5get(m);c5Inspect(m);});", ctx);
+  // Now with the posture tools connected — tiles should light without self-report.
+  vm.runInContext("localStorage.setItem('cyberrx_tools',JSON.stringify({aispm:{on:true},casb:{on:true},cicd:{on:true},github:{on:true},nhi:{on:true},cbom:{on:true}})); typeof c5AiSupply==='function'&&c5AiSupply(); ['ais_aiml','ais_genai','ais_aicode','ais_pipeline','ais_nhi','ais_pqc'].forEach(function(m){c5get(m);c5Inspect(m);}); localStorage.removeItem('cyberrx_tools');", ctx);
+} catch (e) { problems.push(`[ai supply-chain] ${e.message}`); }
 // Exercise evidence panel for every EV key.
 try {
   const keys = vm.runInContext('Object.keys(EV)', ctx);
