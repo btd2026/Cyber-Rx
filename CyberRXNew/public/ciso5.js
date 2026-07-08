@@ -44,6 +44,23 @@
     '.c5aic-t{font-size:13.5px;font-weight:650;color:var(--ink);line-height:1.25}',
     '.c5aic-v{font-size:12px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;margin-top:3px}',
     '.c5aic-s{font-size:12.5px;color:var(--ink-2);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+    '.c5briefhead{border:1px solid var(--line);border-left:3px solid var(--blue);background:var(--surface-2);border-radius:12px;padding:14px 16px;margin:6px 0 18px}',
+    '.c5briefhead .k{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--blue)}',
+    '.c5briefhead .t{font-size:13.5px;color:var(--ink-2);line-height:1.6;margin-top:5px}',
+    '.c5asks-intro{font-size:13px;color:var(--ink-2);line-height:1.55;margin:2px 0 14px}',
+    '.c5asks-empty{font-size:13px;color:var(--muted);border:1px dashed var(--line);border-radius:12px;padding:16px;text-align:center}',
+    '.c5ask-card{border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:14px;background:var(--surface);position:relative;overflow:hidden}',
+    '.c5ask-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--ac,var(--blue));opacity:.9}',
+    '.c5ask-card[data-kind="accept"]{--ac:var(--warn)}.c5ask-card[data-kind="fund"]{--ac:var(--good)}.c5ask-card[data-kind="attest"]{--ac:var(--blue)}',
+    '.c5ask-k{font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ac,var(--blue))}',
+    '.c5ask-t{font-size:15px;font-weight:650;color:var(--ink);margin-top:3px}',
+    '.c5ask-why{font-size:12.5px;color:var(--ink-2);line-height:1.55;margin-top:7px}',
+    '.c5ask-ask{font-size:12.5px;color:var(--ink);line-height:1.55;margin-top:8px}',
+    '.c5ask-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}',
+    '.c5ask-btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:12.5px;font-weight:600;padding:7px 14px;border-radius:9px;cursor:pointer;transition:border-color .12s,background .12s}',
+    '.c5ask-btn:hover{border-color:var(--blue)}',
+    '.c5ask-btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}',
+    '.c5ask-done{font-size:13px;font-weight:600;color:var(--good)}.c5ask-done .c5ask-when{font-weight:400;color:var(--muted);font-size:11.5px}',
     '.c5phwrap{margin-top:2px}',
     '.c5cjt-note{font-size:12px;color:var(--ink-2);background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:9px 13px;margin:10px 0}',
     '.c5cjt-frame{border-radius:12px;overflow:hidden;box-shadow:0 1px 2px rgba(16,24,40,.05)}',
@@ -3116,6 +3133,88 @@ function c5fwDownload(path,fname,body){
 function c5fwExport(){var P=c5fwPayload();if(!P)return;c5fwDownload('/api/ciso/auditor-pack.pptx','nerion-auditor-pack-'+P.sel+'.pptx',P.payload);}
 /* Excel control scorecard + POA&M. */
 function c5fwExportXlsx(){var P=c5fwPayload();if(!P)return;c5fwDownload('/api/ciso/control-scorecard.xlsx','nerion-control-scorecard-'+P.sel+'.xlsx',P.payload);}
+/* ============================================================================
+   Executive partner seats — "the CISO's brief to each partner".
+   Every non-CISO seat is two tabs: (1) "Your cyber picture" — the CISO's read
+   for that exec in their language, de-duplicated to what is uniquely theirs;
+   (2) "What I need from you" — the partnership actions the CISO routes to them
+   (approve a risk acceptance for their area, fund a control, attest, sign off).
+   The brief header reuses the seat's own plain-language CISO summary. */
+function c5briefHead(brief){
+  if(!brief)return '';
+  return '<div class="c5briefhead"><div class="k">Your CISO’s read</div><div class="t">'+brief+'</div></div>';
+}
+/* The single most-exposed crown jewel, from live data — grounds the risk-
+   acceptance ask so it names a real asset and figure, not a placeholder. */
+function c5TopExposure(){
+  var CJ=(typeof LIVE!=='undefined'&&LIVE&&LIVE.crown_jewel_risk)||null;
+  if(CJ&&CJ.items&&CJ.items.length){var t=CJ.items[0];return {name:t.asset||'your top crown jewel',usd:Number(t.exposure_usd)||null};}
+  return null;
+}
+function c5AskMoney(v){if(v==null)return '';var n=Number(v);if(!isFinite(n)||n<=0)return '';if(n>=1e9)return '$'+(n/1e9).toFixed(1)+'B';if(n>=1e6)return '$'+(n/1e6).toFixed(0)+'M';if(n>=1e3)return '$'+(n/1e3).toFixed(0)+'K';return '$'+n.toFixed(0);}
+/* The activities the CISO asks of each seat — grounded in live exposure where it
+   can be, plus the governance attestations each role owns. */
+function c5AskModel(seat){
+  var top=c5TopExposure(),asks=[];
+  var exp=top?(top.usd?(' ('+c5AskMoney(top.usd)+' modeled exposure)'):''):'';
+  if(top&&['cro','cfo','coo','cio','ceo'].indexOf(seat)>=0)
+    asks.push({id:seat+'_accept_top',kind:'accept',title:'Risk acceptance — '+top.name,
+      why:'This is the most exposed crown jewel'+exp+'. Remediation is scoped but not yet funded.',
+      ask:'Approve accepting the residual risk until the fix is funded next cycle, or decline and fund it now.',
+      opts:['Approve acceptance','Decline — fund now','Defer']});
+  if(seat==='cfo')
+    asks.push({id:'cfo_fund_best',kind:'fund',title:'Fund the highest-return control',
+      why:'Your best dollar closes the identity gap — the most risk removed per dollar, and it trims the insurance tail where you are thin.',
+      ask:'Approve the funding, decline, or defer to the next cycle.',opts:['Approve funding','Decline','Defer']});
+  if(seat==='board')
+    asks.push({id:'board_attest_materiality',kind:'attest',title:'Attest — materiality process (SEC Item 106)',
+      why:'The board confirms the cyber materiality-determination process is sound and every above-appetite risk has a named owner.',
+      ask:'Confirm the process is sound as presented, or request changes.',opts:['Attest','Request changes']});
+  if(seat==='clo')
+    asks.push({id:'clo_confirm_disclosure',kind:'attest',title:'Confirm — disclosure posture',
+      why:'Nothing currently crosses the disclosure threshold; notification readiness depends on forensic evidence staying current.',
+      ask:'Confirm the disclosure posture, or flag an obligation to review.',opts:['Confirm','Flag for review']});
+  if(seat==='cpo')
+    asks.push({id:'cpo_prioritize_identity',kind:'accept',title:'Prioritize the identity fix in the backlog',
+      why:'The identity & access model is a security gap, a source of user friction and a recurring release blocker — one fix returns all three.',
+      ask:'Commit it to the top of the product backlog, or defer.',opts:['Prioritize','Defer']});
+  if(seat==='audit')
+    asks.push({id:'audit_escalate_identity',kind:'attest',title:'Escalate — identity for follow-up',
+      why:'Identity & access is your overdue review, outstanding test, repeat finding and evidence gap at once.',
+      ask:'Escalate identity for audit-committee follow-up, or note it as tracked.',opts:['Escalate','Note as tracked']});
+  return asks;
+}
+function c5AskStore(){try{return JSON.parse(localStorage.getItem('cyberrx_asks')||'{}')||{};}catch(_){return {};}}
+function c5AskSave(id,o){var m=c5AskStore();m[id]=o;try{localStorage.setItem('cyberrx_asks',JSON.stringify(m));}catch(_){}}
+function c5AskEditable(st){try{return st&&st.ts&&(Date.now()-st.ts)<86400000;}catch(_){return false;}}
+/* Render the "What I need from you" panel for a seat. */
+function c5Asks(seat){
+  var host=document.getElementById(seat+'-asks');if(!host)return;
+  var asks=c5AskModel(seat),store=c5AskStore();
+  var intro='<div class="c5asks-intro">Your CISO needs these from you — each is scoped to your area, and your decision is recorded (change within 24 hours).</div>';
+  if(!asks.length){host.innerHTML=intro+'<div class="c5asks-empty">Nothing needs your sign-off right now.</div>';return;}
+  var KIND={accept:'Risk acceptance',attest:'Attestation',fund:'Funding'};
+  host.innerHTML=intro+asks.map(function(a){
+    var st=store[a.id],acts;
+    if(st&&st.status){acts='<div class="c5ask-done">✓ '+c5esc(st.status)+'<span class="c5ask-when"> · recorded'+(c5AskEditable(st)?' · change within 24h':'')+'</span>'+(c5AskEditable(st)?' <button class="c5ask-btn" data-askreset="'+a.id+'" style="margin-left:8px;padding:4px 10px;font-size:11.5px">Change</button>':'')+'</div>';}
+    else{acts=a.opts.map(function(o,i){return '<button class="c5ask-btn'+(i===0?' primary':'')+'" data-ask="'+a.id+'" data-askval="'+c5esc(o)+'">'+c5esc(o)+'</button>';}).join('');}
+    return '<div class="c5ask-card" data-kind="'+a.kind+'"><div class="c5ask-k">'+(KIND[a.kind]||'Action')+'</div>'+
+      '<div class="c5ask-t">'+c5esc(a.title)+'</div>'+
+      '<div class="c5ask-why">'+c5esc(a.why)+'</div>'+
+      '<div class="c5ask-ask"><b>The ask:</b> '+c5esc(a.ask)+'</div>'+
+      '<div class="c5ask-acts">'+acts+'</div></div>';
+  }).join('');
+}
+/* Render both tabs for every non-CISO seat (the brief header is added in the
+   seat body; the curated panels are filled by their existing renderers). */
+function c5SeatViews(){['board','ceo','cfo','clo','cro','cio','coo','cpo','audit'].forEach(function(s){try{c5Asks(s);}catch(_){}});}
+document.addEventListener('click',function(e){
+  var r=e.target.closest('[data-askreset]');if(r){var id=r.getAttribute('data-askreset');var m=c5AskStore();delete m[id];try{localStorage.setItem('cyberrx_asks',JSON.stringify(m));}catch(_){}if(typeof CUR!=='undefined'&&CUR)c5Asks(CUR);return;}
+  var b=e.target.closest('[data-ask]');if(!b||!b.getAttribute('data-askval'))return;
+  c5AskSave(b.getAttribute('data-ask'),{status:b.getAttribute('data-askval'),ts:Date.now()});
+  if(typeof CUR!=='undefined'&&CUR)c5Asks(CUR);
+});
+
 /* ---------- Program Health ▸ two inner tabs (Nerion's View / Classic View) ----------
    The subtab strip uses the app's own .subtabs chrome. "Nerion's View" is the new
    crown-jewel value tree (an isolated iframe island — see crownjewel-tree.html —
