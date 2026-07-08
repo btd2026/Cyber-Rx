@@ -640,13 +640,31 @@ function c5get(id){
         inputs:[{name:'Active compromise',value:oi2!=null?(oi2>0?oi2:'none'):'—',source:'active_compromise'}],
         sources:[{tool:'Nerion engine',connector:'nerion',field:'business_health',lastRefresh:c5ago()}],
         note:'No active compromise and the program improving — the health line for the board.',connectTool:'your SIEM'});}
-    case 'ceo_objectives':{var O=c5Objectives();
+    case 'ceo_objectives':{var O=c5Objectives();var Mo=c5expModel();
+      var depName={identity:'Identity & access',product:'Secure-by-design (product)',cost:'Cloud / cost efficiency',vendor:'Third-party estate',workforce:'Security culture'};
+      var driverUsd=function(key){var du=0;Mo.drivers.forEach(function(d){if(d.id==='exp_'+key)du=d.usd||0;});return du;};
+      // Materiality threshold: a driver is material when it exceeds an even split of
+      // the board appetite across drivers (falls back to >$0 if no appetite set).
+      var appet=(typeof LIVE!=='undefined'&&LIVE&&LIVE.economics&&LIVE.economics.appetite&&Number(LIVE.economics.appetite.appetite))||0;
+      var matThresh=(appet>0&&Mo.drivers.length)?(appet/Mo.drivers.length):0;
+      var cols=['Objective','Cyber dependency','What threatens it','Modeled exposure','Material?','Verdict'];
+      var rows=O.objs.map(function(o){
+        var dep=depName[o.map]||'no cyber dependency';
+        var uv=o.map?driverUsd(o.map):0;
+        var material=(o.status==='at risk');
+        var threat=(o.status==='at risk')?(o.sub||'material exposure driver'):(o.status==='watch'?(o.sub||'under monitoring'):'no material driver');
+        var vcol=(o.status==='at risk')?'warn':(o.status==='watch'?'blue':'good');
+        var vtxt=(o.status==='at risk')?'At risk':(o.status==='watch'?'Watch':'Safe');
+        return [{text:o.name,bold:true},dep,threat,{text:(uv>0?usd(uv):'—'),color:(uv>0?'warn':null)},{text:material?('yes'+(matThresh>0?(' (> '+usd(matThresh)+' bar)'):'')):'no',color:(material?'warn':'good')},{text:vtxt,color:vcol,bold:true}];
+      });
+      rows.push([{text:'= Protected',bold:true},'','',{text:''},{text:''},{text:O.protected+' of '+O.total+(O.atRisk>0?(' · '+O.atRisk+' at risk'):' · all safe'),color:(O.atRisk>0?'warn':'good'),bold:true}]);
       return c5obj({id:id,name:'Objectives protected',connected:true,displayValue:O.protected+' of '+O.total,label:'computed',color:O.atRisk>0?'warn':'good',
-        formula:'objectives protected = total strategic objectives − those carrying a material cyber exposure',
-        method:'An objective is flagged at-risk when a material exposure driver maps to it (e.g. the identity gap → the customer platform).',
-        inputs:O.objs.map(function(o){return {name:o.name,value:o.status,color:(o.status==='At risk'?'warn':o.status==='Watch'?'blue':'good'),source:o.map?('exposure driver: '+o.map):'no material driver'};}).concat([{name:'= Protected',value:O.protected+' of '+O.total+' cyber-safe ('+O.atRisk+' at risk)',source:'total − at-risk'}]),
-        sources:[{tool:O.fromInput?'Onboarding · strategy':'Sector default (labeled)',connector:'strategy',field:'objectives',lastRefresh:c5ago()}],
-        note:'Cyber mapped to the strategy — how many objectives are cyber-safe, and which one needs attention.',connectTool:'your strategic objectives (onboarding)'});}
+        why:'Answers "is cyber a blocker to the strategy?" — how many of the board\'s strategic objectives are free of a material cyber exposure. It matters because it translates the whole security posture into the language the CEO and board actually own: the objectives they are accountable for.',
+        formula:'objectives protected = total strategic objectives − objectives whose cyber dependency carries a MATERIAL modeled exposure (driver > appetite ÷ drivers)',
+        method:'Not a judgement. Each objective is tagged (at your strategy intake) to the cyber capability it depends on. Nerion then checks whether that capability carries a material modeled exposure — a dollar figure computed from live control telemetry (deployment gaps × framework weight), tested against the board-appetite materiality bar. "At risk" means the dependency is real AND the exposure clears the bar; "safe" means no dependency, or the exposure is below it. The table shows the dependency, what threatens it, and the modeled dollars behind each verdict.',
+        table:{cols:cols,rows:rows},
+        sources:[{tool:(O.fromInput?'Strategy intake (onboarding)':'Sector default (labeled)'),connector:'strategy',field:'objective → capability',lastRefresh:c5ago()},{tool:'Exposure model',connector:'nerion',field:'driver_usd (from control telemetry)'},{tool:'Risk appetite',connector:'erm',field:'materiality bar'}],
+        note:'Cyber mapped to the strategy. '+(O.atRisk>0?('The at-risk objective depends on a capability with a material modeled exposure — the funded fix on the bottom line protects it.'):'Every objective is clear of a material cyber exposure this quarter.'),connectTool:'your strategic objectives (onboarding)'});}
     case 'ceo_cust_incidents':{var oi3=sig('open_incidents');var conn=oi3!=null;
       return c5obj({id:id,name:'Customer-impacting incidents',connected:conn,displayValue:conn?String(oi3):'—',label:'live',color:conn?(oi3>0?'crit':'good'):'muted',
         formula:'customer-impacting incidents = open incidents affecting a customer-facing service',
@@ -1411,7 +1429,15 @@ function c5InspectObj(m){
     // 3) How it's computed · 4) the numbers behind it · 5) sources.
     h+='<div class="ev-sec">How it’s computed</div><div class="formula">'+(m.formula||'—')+'</div>';
     if(m.method)h+='<div class="drill-p" style="color:var(--muted)">'+m.method+'</div>';
-    if(m.inputs&&m.inputs.length)h+='<div class="ev-sec">The numbers behind it</div><table class="itbl"><thead><tr><th>Item</th><th>Value</th><th>Source</th></tr></thead><tbody>'+m.inputs.map(function(i){
+    // A metric may supply a richer multi-column table (m.table) showing the full
+    // reasoning chain, where "Item / Value / Source" can't show HOW a verdict was
+    // reached. A cell is a string or {text,color,bold}.
+    if(m.table&&m.table.cols&&m.table.rows&&m.table.rows.length){
+      var tcell=function(cell,cls){var t=(cell&&cell.text!=null)?cell.text:(cell==null?'':cell);var sty=(cell&&(cell.color||cell.bold))?(' style="'+(cell.color?('color:var(--'+cell.color+')'):'')+(cell.bold?';font-weight:600':'')+'"'):'';return '<td class="'+cls+'"'+sty+'>'+t+'</td>';};
+      h+='<div class="ev-sec">How each row is judged</div><div style="overflow-x:auto"><table class="itbl"><thead><tr>'+m.table.cols.map(function(c){return '<th>'+c+'</th>';}).join('')+'</tr></thead><tbody>'+
+        m.table.rows.map(function(r){return '<tr>'+r.map(function(cell,ci){return tcell(cell,ci===0?'':'src');}).join('')+'</tr>';}).join('')+
+      '</tbody></table></div>';
+    } else if(m.inputs&&m.inputs.length)h+='<div class="ev-sec">The numbers behind it</div><table class="itbl"><thead><tr><th>Item</th><th>Value</th><th>Source</th></tr></thead><tbody>'+m.inputs.map(function(i){
       var dot=i.color?('<span class="c5sq '+c5sqClass(i.color)+'" style="display:inline-block;width:9px;height:9px;margin-right:7px;vertical-align:middle"></span>'):'';
       return '<tr><td>'+dot+i.name+'</td><td class="v">'+i.value+'</td><td class="src">'+i.source+'</td></tr>';
     }).join('')+'</tbody></table>';
