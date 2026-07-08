@@ -1,0 +1,117 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+2 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+3 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R] /Count 2 >>
+endobj
+4 0 obj
+<< /Length 4288 >>
+stream
+BT /F2 17 Tf 54 730.0 Td (Identity & Authentication Policy) Tj ET
+BT /F1 10 Tf 54 703.0 Td (Hewlett Packard Enterprise \(HPE\)) Tj ET
+BT /F1 10 Tf 54 689.0 Td (Document ID: HPE-SEC-D5 | Version 3.2 | Effective Date: 2026-07-08) Tj ET
+BT /F1 10 Tf 54 675.0 Td (Owner: Office of the Chief Information Security Officer \(CISO\)) Tj ET
+BT /F1 10 Tf 54 661.0 Td (Classification: Internal Use) Tj ET
+BT /F1 10 Tf 54 641.0 Td (---) Tj ET
+BT /F2 13 Tf 54 615.0 Td (1. Purpose and Scope) Tj ET
+BT /F1 10 Tf 54 592.0 Td (This Identity & Authentication Policy establishes the mandatory requirements governing how digital) Tj ET
+BT /F1 10 Tf 54 578.0 Td (identities are provisioned, verified, and retired across Hewlett Packard Enterprise. It applies to) Tj ET
+BT /F1 10 Tf 54 564.0 Td (all employees, contractors, service accounts, and third-party partners who access HPE systems,) Tj ET
+BT /F1 10 Tf 54 550.0 Td (applications, and data-whether hosted on-premises, in HPE GreenLake, or in third-party cloud) Tj ET
+BT /F1 10 Tf 54 536.0 Td (environments. Adherence to this policy is required to protect corporate assets, customer data, and) Tj ET
+BT /F1 10 Tf 54 522.0 Td (HPE's global operations from unauthorized access and credential-based attack.) Tj ET
+BT /F2 13 Tf 54 496.0 Td (2. Identity Federation and Single Sign-On) Tj ET
+BT /F1 10 Tf 54 473.0 Td (HPE standardizes on a federated identity model built on Okta as the primary Single Sign-On \(SSO\)) Tj ET
+BT /F1 10 Tf 54 459.0 Td (broker, integrated with Microsoft Entra ID as an authoritative identity provider for Microsoft 365) Tj ET
+BT /F1 10 Tf 54 445.0 Td (and Azure-based workloads. All new applications MUST integrate with the corporate SSO platform using) Tj ET
+BT /F1 10 Tf 54 431.0 Td (modern federation protocols-SAML 2.0 or OpenID Connect \(OIDC\)-in preference to local authentication) Tj ET
+BT /F1 10 Tf 54 417.0 Td (stores. Federation reduces password sprawl, centralizes access enforcement, and ensures that) Tj ET
+BT /F1 10 Tf 54 403.0 Td (de-provisioning is immediate and comprehensive. Legacy applications that cannot support SAML or OIDC) Tj ET
+BT /F1 10 Tf 54 389.0 Td (must be documented as exceptions, remediated on a defined roadmap, and protected by compensating) Tj ET
+BT /F1 10 Tf 54 375.0 Td (controls. Direct LDAP or basic authentication to production systems is prohibited unless explicitly) Tj ET
+BT /F1 10 Tf 54 361.0 Td (approved by the Identity Governance team.) Tj ET
+BT /F2 13 Tf 54 335.0 Td (3. Multi-Factor Authentication) Tj ET
+BT /F1 10 Tf 54 312.0 Td (Multi-factor authentication \(MFA\) is mandatory for all interactive access to HPE resources;) Tj ET
+BT /F1 10 Tf 54 298.0 Td (single-factor sign-in is never sufficient for corporate, administrative, or remote access. HPE's) Tj ET
+BT /F1 10 Tf 54 284.0 Td (two-factor \(2FA\) posture is phishing-resistant by design:) Tj ET
+BT /F1 10 Tf 54 264.0 Td (- Primary authenticator: FIDO2 / WebAuthn security keys, delivered as company-issued YubiKeys,) Tj ET
+BT /F1 10 Tf 54 250.0 Td (  are the required strong authenticator for privileged, administrative, and high-risk roles.) Tj ET
+BT /F1 10 Tf 54 236.0 Td (  Hardware keys bind authentication to physical possession and defeat credential-replay and) Tj ET
+BT /F1 10 Tf 54 222.0 Td (  adversary-in-the-middle attacks.) Tj ET
+BT /F1 10 Tf 54 208.0 Td (- Biometric verification: Platform authenticators \(Windows Hello for Business, Touch ID\) using) Tj ET
+BT /F1 10 Tf 54 194.0 Td (  biometric factors are approved for workstation-bound WebAuthn flows.) Tj ET
+BT /F1 10 Tf 54 180.0 Td (- Fallback factors: Okta Verify push with number matching is permitted for standard users. SMS) Tj ET
+BT /F1 10 Tf 54 166.0 Td (  and voice one-time passcodes are deprecated and disallowed for any privileged context.) Tj ET
+BT /F1 10 Tf 54 146.0 Td (Step-up MFA is enforced adaptively by Okta and Entra ID Conditional Access based on device posture,) Tj ET
+BT /F1 10 Tf 54 132.0 Td (network location, and risk signals.) Tj ET
+BT /F2 13 Tf 54 106.0 Td (4. Password and Passphrase Standards) Tj ET
+BT /F1 10 Tf 54 83.0 Td (Where a password or passphrase is still required-for account recovery, non-federated systems, or the) Tj ET
+BT /F1 10 Tf 54 69.0 Td (primary identity store-the following standards apply:) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 3 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 3425 >>
+stream
+BT /F1 10 Tf 54 738.0 Td (- Length: A minimum passphrase length of 14 characters for standard accounts and 16 characters) Tj ET
+BT /F1 10 Tf 54 724.0 Td (  for privileged accounts. Length is prioritized over arbitrary complexity.) Tj ET
+BT /F1 10 Tf 54 710.0 Td (- Complexity: Passwords must not appear in known-breach corpora; HPE screens all new and changed) Tj ET
+BT /F1 10 Tf 54 696.0 Td (  passwords against a compromised-credential dictionary. Composition rules encourage passphrases) Tj ET
+BT /F1 10 Tf 54 682.0 Td (  over cryptic strings.) Tj ET
+BT /F1 10 Tf 54 668.0 Td (- Expiry: In alignment with NIST SP 800-63B guidance, time-based password expiry is eliminated) Tj ET
+BT /F1 10 Tf 54 654.0 Td (  for accounts protected by phishing-resistant MFA. Credentials are rotated on evidence of) Tj ET
+BT /F1 10 Tf 54 640.0 Td (  compromise rather than on a fixed calendar. Service account secrets retain a maximum 90-day) Tj ET
+BT /F1 10 Tf 54 626.0 Td (  rotation.) Tj ET
+BT /F1 10 Tf 54 612.0 Td (- Password reuse across corporate and personal accounts is strictly prohibited, and account) Tj ET
+BT /F1 10 Tf 54 598.0 Td (  lockout thresholds throttle brute-force attempts.) Tj ET
+BT /F2 13 Tf 54 572.0 Td (5. Credential, Secret, and Key Management) Tj ET
+BT /F1 10 Tf 54 549.0 Td (All non-interactive credentials-including API tokens, secrets, signing keys, and X.509) Tj ET
+BT /F1 10 Tf 54 535.0 Td (certificates-must be stored in an approved enterprise secrets vault \(HashiCorp Vault or the) Tj ET
+BT /F1 10 Tf 54 521.0 Td (cloud-native key management service\) and never embedded in source code, configuration files, or) Tj ET
+BT /F1 10 Tf 54 507.0 Td (container images. Each credential MUST have a defined owner, a documented rotation interval, and) Tj ET
+BT /F1 10 Tf 54 493.0 Td (automated expiry. TLS and code-signing certificates are managed through the corporate PKI with) Tj ET
+BT /F1 10 Tf 54 479.0 Td (monitored lifecycles to prevent outages and mis-issuance. Cryptographic key material is generated,) Tj ET
+BT /F1 10 Tf 54 465.0 Td (stored, and retired in accordance with HPE's key management standard, using hardware security) Tj ET
+BT /F1 10 Tf 54 451.0 Td (modules for root and intermediate keys. Automated scanning detects leaked secrets and tokens in) Tj ET
+BT /F1 10 Tf 54 437.0 Td (repositories and pipelines, triggering immediate revocation.) Tj ET
+BT /F2 13 Tf 54 411.0 Td (6. Lifecycle, Governance, and Enforcement) Tj ET
+BT /F1 10 Tf 54 388.0 Td (Identity lifecycle events-joiner, mover, leaver-are automated through Entra ID and Okta provisioning) Tj ET
+BT /F1 10 Tf 54 374.0 Td (connectors driven by the authoritative HR system. Access is granted on least-privilege and) Tj ET
+BT /F1 10 Tf 54 360.0 Td (role-based principles, reviewed quarterly through access certification campaigns. Privileged) Tj ET
+BT /F1 10 Tf 54 346.0 Td (accounts require just-in-time elevation and are subject to session recording. Violations of this) Tj ET
+BT /F1 10 Tf 54 332.0 Td (policy may result in disciplinary action up to and including termination and, where applicable,) Tj ET
+BT /F1 10 Tf 54 318.0 Td (legal referral.) Tj ET
+BT /F2 13 Tf 54 292.0 Td (7. Review) Tj ET
+BT /F1 10 Tf 54 269.0 Td (This policy is reviewed at least annually by the CISO organization and updated in response to) Tj ET
+BT /F1 10 Tf 54 255.0 Td (material changes in threat landscape, technology, or regulatory obligation.) Tj ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 3 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Type /Catalog /Pages 3 0 R >>
+endobj
+xref
+0 9
+0000000000 65535 f 
+0000000015 00000 n 
+0000000112 00000 n 
+0000000214 00000 n 
+0000000277 00000 n 
+0000004616 00000 n 
+0000004752 00000 n 
+0000008228 00000 n 
+0000008364 00000 n 
+trailer
+<< /Size 9 /Root 8 0 R /Info << /Title (d5_identity_authentication_policy) >> >>
+startxref
+8413
+%%EOF

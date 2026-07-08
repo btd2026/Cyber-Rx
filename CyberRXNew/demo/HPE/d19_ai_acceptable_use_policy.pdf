@@ -1,0 +1,124 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+2 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+3 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R] /Count 2 >>
+endobj
+4 0 obj
+<< /Length 4191 >>
+stream
+BT /F2 17 Tf 54 730.0 Td (Artificial Intelligence Acceptable-Use Policy) Tj ET
+BT /F1 10 Tf 54 703.0 Td (Hewlett Packard Enterprise \(HPE\)) Tj ET
+BT /F1 10 Tf 54 683.0 Td (Document Owner: Chief Information Security Officer \(CISO\), in partnership with the Office of the) Tj ET
+BT /F1 10 Tf 54 669.0 Td (General Counsel and the Chief Digital & Technology Office) Tj ET
+BT /F1 10 Tf 54 655.0 Td (Status: Board-Approved | Version 3.0) Tj ET
+BT /F1 10 Tf 54 641.0 Td (Effective Date: 8 July 2026 | Next Review: July 2027) Tj ET
+BT /F1 10 Tf 54 621.0 Td (---) Tj ET
+BT /F2 13 Tf 54 595.0 Td (1. Purpose and Board Approval) Tj ET
+BT /F1 10 Tf 54 572.0 Td (Generative AI \(GenAI\) tools offer meaningful productivity, engineering, and innovation benefits to) Tj ET
+BT /F1 10 Tf 54 558.0 Td (Hewlett Packard Enterprise. This Acceptable-Use Policy establishes the guardrails that allow HPE) Tj ET
+BT /F1 10 Tf 54 544.0 Td (team members to adopt these tools responsibly while protecting our data, our customers, our) Tj ET
+BT /F1 10 Tf 54 530.0 Td (intellectual property, and our reputation.) Tj ET
+BT /F1 10 Tf 54 510.0 Td (This policy was reviewed and approved by the HPE Board of Directors upon the recommendation of the) Tj ET
+BT /F1 10 Tf 54 496.0 Td (Audit Committee and the Executive AI Governance Council. Board approval reflects the strategic) Tj ET
+BT /F1 10 Tf 54 482.0 Td (importance of trustworthy AI at HPE and gives this policy authority across the enterprise. It will) Tj ET
+BT /F1 10 Tf 54 468.0 Td (remain in force until superseded by a subsequent board-approved revision.) Tj ET
+BT /F2 13 Tf 54 442.0 Td (2. Scope and Applicability) Tj ET
+BT /F1 10 Tf 54 419.0 Td (This policy applies to all HPE employees, contractors, consultants, interns, and third parties) Tj ET
+BT /F1 10 Tf 54 405.0 Td (\(collectively, "team members"\) who access HPE systems, data, or networks. Its scope covers the use) Tj ET
+BT /F1 10 Tf 54 391.0 Td (of all public, commercial, and internally hosted GenAI assistants and large-language-model services) Tj ET
+BT /F1 10 Tf 54 377.0 Td (in the course of HPE business, whether accessed on HPE-managed devices, personal devices, or through) Tj ET
+BT /F1 10 Tf 54 363.0 Td (cloud services. It applies globally across all business units, functions, and geographies, and) Tj ET
+BT /F1 10 Tf 54 349.0 Td (supplements-rather than replaces-HPE's Standards of Business Conduct, Information Security Policy,) Tj ET
+BT /F1 10 Tf 54 335.0 Td (Data Classification Standard, and Privacy Policy.) Tj ET
+BT /F2 13 Tf 54 309.0 Td (3. Sanctioned Tools and Authorization) Tj ET
+BT /F1 10 Tf 54 286.0 Td (Only GenAI tools that have received formal authorization and sign-off through HPE's AI intake and) Tj ET
+BT /F1 10 Tf 54 272.0 Td (review process may be used for company work. Sanctioning requires security, privacy, and legal) Tj ET
+BT /F1 10 Tf 54 258.0 Td (assessment, and enterprise agreements that protect HPE data \(for example, contractual assurances) Tj ET
+BT /F1 10 Tf 54 244.0 Td (that inputs are not used to train public models\).) Tj ET
+BT /F1 10 Tf 54 224.0 Td (The following tools are currently sanctioned for the uses described in their onboarding guidance:) Tj ET
+BT /F1 10 Tf 54 204.0 Td (- Microsoft 365 Copilot - for drafting, summarizing, and analysis within HPE's licensed M365) Tj ET
+BT /F1 10 Tf 54 190.0 Td (  tenant.) Tj ET
+BT /F1 10 Tf 54 176.0 Td (- GitHub Copilot - for approved software engineering teams, subject to secure-coding and IP) Tj ET
+BT /F1 10 Tf 54 162.0 Td (  review controls.) Tj ET
+BT /F1 10 Tf 54 148.0 Td (- ChatGPT Enterprise - for general-purpose assistance under HPE's enterprise agreement.) Tj ET
+BT /F1 10 Tf 54 128.0 Td (Free or personal-tier versions of ChatGPT, Copilot, or any other public assistant are not authorized) Tj ET
+BT /F1 10 Tf 54 114.0 Td (for HPE business. Introducing any unapproved GenAI tool, browser extension, or model API constitutes) Tj ET
+BT /F1 10 Tf 54 100.0 Td (shadow AI and is prohibited. Requests for new tools must be submitted to the AI Governance Council) Tj ET
+BT /F1 10 Tf 54 86.0 Td (for approval before use; procurement or expensing of AI services also requires this sign-off.) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 3 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 4211 >>
+stream
+BT /F2 13 Tf 54 732.0 Td (4. Acceptable and Permitted Use) Tj ET
+BT /F1 10 Tf 54 709.0 Td (Sanctioned GenAI may be used to draft and refine documents and code, summarize non-sensitive) Tj ET
+BT /F1 10 Tf 54 695.0 Td (material, brainstorm ideas, generate test data, translate content, and accelerate research. Team) Tj ET
+BT /F1 10 Tf 54 681.0 Td (members remain fully accountable for all AI-assisted output. You must review, fact-check, and) Tj ET
+BT /F1 10 Tf 54 667.0 Td (validate generated content before relying on or publishing it, as GenAI can produce inaccurate,) Tj ET
+BT /F1 10 Tf 54 653.0 Td (biased, or fabricated \("hallucinated"\) results. AI-generated code must pass standard security,) Tj ET
+BT /F1 10 Tf 54 639.0 Td (license-scanning, and quality reviews before merge.) Tj ET
+BT /F2 13 Tf 54 613.0 Td (5. Prohibited Use and Data Handling) Tj ET
+BT /F1 10 Tf 54 590.0 Td (The following are prohibited:) Tj ET
+BT /F1 10 Tf 54 570.0 Td (- Entering confidential, sensitive, proprietary, or export-controlled information into any GenAI) Tj ET
+BT /F1 10 Tf 54 556.0 Td (  tool not explicitly approved for that data classification. Do not input HPE trade secrets,) Tj ET
+BT /F1 10 Tf 54 542.0 Td (  unreleased financials, source code, or security details into public assistants.) Tj ET
+BT /F1 10 Tf 54 528.0 Td (- Entering personal data, PII, PHI, customer data, or employee records into any tool lacking the) Tj ET
+BT /F1 10 Tf 54 514.0 Td (  requisite privacy and contractual safeguards. Such inputs are prohibited unless the specific) Tj ET
+BT /F1 10 Tf 54 500.0 Td (  tool and use case have been sanctioned for that data.) Tj ET
+BT /F1 10 Tf 54 486.0 Td (- Using GenAI output to make consequential decisions about individuals \(hiring, credit,) Tj ET
+BT /F1 10 Tf 54 472.0 Td (  discipline\) without human review.) Tj ET
+BT /F1 10 Tf 54 458.0 Td (- Generating unlawful, harassing, discriminatory, or infringing content, or attempting to bypass) Tj ET
+BT /F1 10 Tf 54 444.0 Td (  \("jailbreak"\) tool safety controls.) Tj ET
+BT /F1 10 Tf 54 430.0 Td (- Uploading third-party confidential information received under NDA.) Tj ET
+BT /F1 10 Tf 54 410.0 Td (When in doubt about whether data may be entered, treat it as prohibited and consult your manager or) Tj ET
+BT /F1 10 Tf 54 396.0 Td (the Privacy Office.) Tj ET
+BT /F2 13 Tf 54 370.0 Td (6. Training, Awareness, and Guidance) Tj ET
+BT /F1 10 Tf 54 347.0 Td (All team members must complete HPE's mandatory AI acceptable-use training before being granted) Tj ET
+BT /F1 10 Tf 54 333.0 Td (access to sanctioned tools, and refresher awareness education annually. Role-specific guidance is) Tj ET
+BT /F1 10 Tf 54 319.0 Td (provided during onboarding for engineering, legal, HR, and customer-facing teams. HPE maintains a) Tj ET
+BT /F1 10 Tf 54 305.0 Td (Responsible AI resource hub with practical examples, prompt-safety tips, and an escalation path.) Tj ET
+BT /F1 10 Tf 54 291.0 Td (Ongoing education and awareness campaigns reinforce safe habits and communicate updates to the) Tj ET
+BT /F1 10 Tf 54 277.0 Td (sanctioned-tool list.) Tj ET
+BT /F2 13 Tf 54 251.0 Td (7. Monitoring, Enforcement, and Violations) Tj ET
+BT /F1 10 Tf 54 228.0 Td (HPE reserves the right to monitor the use of AI tools and network traffic to detect shadow AI and) Tj ET
+BT /F1 10 Tf 54 214.0 Td (confirm compliance, consistent with applicable law and local works-council agreements. Violations of) Tj ET
+BT /F1 10 Tf 54 200.0 Td (this policy may result in disciplinary action up to and including termination of employment or) Tj ET
+BT /F1 10 Tf 54 186.0 Td (contract, and may carry legal consequences. Suspected data exposure or misuse must be reported) Tj ET
+BT /F1 10 Tf 54 172.0 Td (immediately to the Security Operations Center. Enforcement is administered by management in) Tj ET
+BT /F1 10 Tf 54 158.0 Td (coordination with Human Resources, Security, and Legal.) Tj ET
+BT /F2 13 Tf 54 132.0 Td (8. Governance and Contact) Tj ET
+BT /F1 10 Tf 54 109.0 Td (Questions may be directed to airesponsible@hpe.com or the CISO's office. This board-approved policy) Tj ET
+BT /F1 10 Tf 54 95.0 Td (is reviewed at least annually, or sooner as regulation and technology evolve.) Tj ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 3 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Type /Catalog /Pages 3 0 R >>
+endobj
+xref
+0 9
+0000000000 65535 f 
+0000000015 00000 n 
+0000000112 00000 n 
+0000000214 00000 n 
+0000000277 00000 n 
+0000004519 00000 n 
+0000004655 00000 n 
+0000008917 00000 n 
+0000009053 00000 n 
+trailer
+<< /Size 9 /Root 8 0 R /Info << /Title (d19_ai_acceptable_use_policy) >> >>
+startxref
+9102
+%%EOF

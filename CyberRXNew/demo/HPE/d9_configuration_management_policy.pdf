@@ -1,0 +1,115 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+2 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+3 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R] /Count 2 >>
+endobj
+4 0 obj
+<< /Length 4442 >>
+stream
+BT /F2 17 Tf 54 730.0 Td (Configuration & Vulnerability Management Policy) Tj ET
+BT /F2 13 Tf 54 697.0 Td (1. Purpose and Scope) Tj ET
+BT /F1 10 Tf 54 674.0 Td (This policy establishes Hewlett Packard Enterprise's \(HPE\) requirements for securely configuring,) Tj ET
+BT /F1 10 Tf 54 660.0 Td (maintaining, and continuously assessing all information systems, endpoints, network devices,) Tj ET
+BT /F1 10 Tf 54 646.0 Td (container images, and cloud workloads across the enterprise. It applies to every asset owned,) Tj ET
+BT /F1 10 Tf 54 632.0 Td (operated, or managed by HPE, including on-premises data centers, hybrid environments, and) Tj ET
+BT /F1 10 Tf 54 618.0 Td (third-party cloud platforms. The objective is to ensure that systems are provisioned from a) Tj ET
+BT /F1 10 Tf 54 604.0 Td (known-secure state, kept current against emerging threats, and continuously validated against) Tj ET
+BT /F1 10 Tf 54 590.0 Td (recognized industry standards.) Tj ET
+BT /F2 13 Tf 54 564.0 Td (2. Secure Baseline and Hardening Configurations) Tj ET
+BT /F1 10 Tf 54 541.0 Td (Every system class deployed at HPE must be built from an approved standard build derived from a) Tj ET
+BT /F1 10 Tf 54 527.0 Td (documented golden image. These baseline configurations define the authoritative hardened state for) Tj ET
+BT /F1 10 Tf 54 513.0 Td (operating systems, middleware, databases, and container base images. Hardening requirements are) Tj ET
+BT /F1 10 Tf 54 499.0 Td (aligned to CIS Benchmarks as the primary reference. Where systems support regulated or government) Tj ET
+BT /F1 10 Tf 54 485.0 Td (workloads, the applicable DISA STIG guidance is layered on top of the CIS baseline to satisfy) Tj ET
+BT /F1 10 Tf 54 471.0 Td (stricter federal requirements. Additional industry standards, including NIST SP 800-53 and vendor) Tj ET
+BT /F1 10 Tf 54 457.0 Td (security guides, are incorporated where they address gaps not covered by CIS or STIG.) Tj ET
+BT /F1 10 Tf 54 437.0 Td (Golden images are version-controlled, cryptographically signed, and stored in a centrally governed) Tj ET
+BT /F1 10 Tf 54 423.0 Td (artifact repository. Baselines are reviewed at least annually and whenever a benchmark revision,) Tj ET
+BT /F1 10 Tf 54 409.0 Td (major OS release, or significant threat change occurs. Manual, one-off system builds outside the) Tj ET
+BT /F1 10 Tf 54 395.0 Td (approved baseline are prohibited.) Tj ET
+BT /F2 13 Tf 54 369.0 Td (3. Infrastructure-as-Code and Automation) Tj ET
+BT /F1 10 Tf 54 346.0 Td (HPE provisions and configures infrastructure primarily through infrastructure-as-code \(IaC\). All) Tj ET
+BT /F1 10 Tf 54 332.0 Td (hardening controls, package versions, and security settings are codified in declarative templates) Tj ET
+BT /F1 10 Tf 54 318.0 Td (\(Terraform, Ansible, and Kubernetes manifests\) and delivered through automated CI/CD pipelines. This) Tj ET
+BT /F1 10 Tf 54 304.0 Td (orchestration-driven approach guarantees that the hardened baseline is applied consistently and) Tj ET
+BT /F1 10 Tf 54 290.0 Td (repeatably at every deployment, eliminating human error inherent in manual configuration.) Tj ET
+BT /F1 10 Tf 54 270.0 Td (Security controls are embedded directly into the pipeline: IaC templates are statically scanned for) Tj ET
+BT /F1 10 Tf 54 256.0 Td (misconfigurations before merge, and no build may promote to production without passing automated) Tj ET
+BT /F1 10 Tf 54 242.0 Td (policy gates. Automation enforces that the running state of an asset always matches its codified) Tj ET
+BT /F1 10 Tf 54 228.0 Td (definition, and pipelines re-apply the golden configuration on every release to prevent silent) Tj ET
+BT /F1 10 Tf 54 214.0 Td (divergence.) Tj ET
+BT /F2 13 Tf 54 188.0 Td (4. Patch and Vulnerability Management) Tj ET
+BT /F1 10 Tf 54 165.0 Td (HPE maintains a continuous patch management program covering operating systems, applications,) Tj ET
+BT /F1 10 Tf 54 151.0 Td (firmware, and container images. Security updates, hotfixes, and vendor patches are evaluated against) Tj ET
+BT /F1 10 Tf 54 137.0 Td (risk and deployed according to defined service levels based on severity:) Tj ET
+BT /F1 10 Tf 54 117.0 Td (- Critical vulnerabilities: remediated within 7 days) Tj ET
+BT /F1 10 Tf 54 103.0 Td (- High: remediated within 30 days) Tj ET
+BT /F1 10 Tf 54 89.0 Td (- Medium: remediated within 90 days) Tj ET
+BT /F1 10 Tf 54 75.0 Td (- Low: remediated during the next scheduled maintenance cycle) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 3 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 3294 >>
+stream
+BT /F1 10 Tf 54 738.0 Td (Newly identified vulnerabilities are triaged using CVSS scores enriched with threat intelligence and) Tj ET
+BT /F1 10 Tf 54 724.0 Td (exploitability data. Wherever feasible, remediation is delivered by rebuilding from an updated) Tj ET
+BT /F1 10 Tf 54 710.0 Td (golden image and redeploying through the pipeline rather than patching live systems in place,) Tj ET
+BT /F1 10 Tf 54 696.0 Td (ensuring the fix is durable and reflected in the baseline.) Tj ET
+BT /F2 13 Tf 54 670.0 Td (5. Compliance Scanning and Assessment) Tj ET
+BT /F1 10 Tf 54 647.0 Td (Automated compliance scanning runs continuously across the estate. Authenticated configuration) Tj ET
+BT /F1 10 Tf 54 633.0 Td (checks measure each asset against its assigned CIS Benchmark and STIG baseline, while vulnerability) Tj ET
+BT /F1 10 Tf 54 619.0 Td (scanners perform recurring assessment of exposed weaknesses. Scan results feed a centralized) Tj ET
+BT /F1 10 Tf 54 605.0 Td (dashboard that reports posture by business unit and asset class. Internal and independent audits are) Tj ET
+BT /F1 10 Tf 54 591.0 Td (conducted periodically to validate that scanning coverage, controls, and remediation timelines meet) Tj ET
+BT /F1 10 Tf 54 577.0 Td (policy and regulatory obligations.) Tj ET
+BT /F2 13 Tf 54 551.0 Td (6. Configuration Drift and Deviation Handling) Tj ET
+BT /F1 10 Tf 54 528.0 Td (Any deviation from the approved baseline is treated as a security event. Continuous monitoring) Tj ET
+BT /F1 10 Tf 54 514.0 Td (detects configuration drift by comparing the live state of assets to their codified IaC definitions) Tj ET
+BT /F1 10 Tf 54 500.0 Td (and hardened baselines. When unauthorized variance is identified, automated remediation restores the) Tj ET
+BT /F1 10 Tf 54 486.0 Td (system to its known-good state, or the drift is escalated to the system owner for investigation.) Tj ET
+BT /F1 10 Tf 54 466.0 Td (Legitimate business needs that require departing from a baseline must be documented through the) Tj ET
+BT /F1 10 Tf 54 452.0 Td (formal exceptions and waivers process. Each requested exception must include a business) Tj ET
+BT /F1 10 Tf 54 438.0 Td (justification, risk assessment, compensating controls, and an approved expiration date. Waivers are) Tj ET
+BT /F1 10 Tf 54 424.0 Td (reviewed and reauthorized at defined intervals by the Security Governance team; expired exceptions) Tj ET
+BT /F1 10 Tf 54 410.0 Td (are automatically flagged as non-compliant.) Tj ET
+BT /F2 13 Tf 54 384.0 Td (7. Roles and Enforcement) Tj ET
+BT /F1 10 Tf 54 361.0 Td (The Information Security organization owns this policy, maintains the baseline library, and operates) Tj ET
+BT /F1 10 Tf 54 347.0 Td (scanning and reporting tooling. System and application owners are accountable for remediating) Tj ET
+BT /F1 10 Tf 54 333.0 Td (findings and keeping their assets compliant. Violations of this policy may result in system) Tj ET
+BT /F1 10 Tf 54 319.0 Td (isolation, revocation of deployment privileges, and disciplinary action.) Tj ET
+BT /F2 13 Tf 54 293.0 Td (8. Review) Tj ET
+BT /F1 10 Tf 54 270.0 Td (This policy is reviewed at least annually and updated in response to changes in CIS Benchmarks, STIG) Tj ET
+BT /F1 10 Tf 54 256.0 Td (releases, regulatory requirements, or the HPE threat landscape.) Tj ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 3 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Type /Catalog /Pages 3 0 R >>
+endobj
+xref
+0 9
+0000000000 65535 f 
+0000000015 00000 n 
+0000000112 00000 n 
+0000000214 00000 n 
+0000000277 00000 n 
+0000004770 00000 n 
+0000004906 00000 n 
+0000008251 00000 n 
+0000008387 00000 n 
+trailer
+<< /Size 9 /Root 8 0 R /Info << /Title (d9_configuration_management_policy) >> >>
+startxref
+8436
+%%EOF

@@ -1,0 +1,144 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+2 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+3 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R 9 0 R] /Count 3 >>
+endobj
+4 0 obj
+<< /Length 4102 >>
+stream
+BT /F2 17 Tf 54 730.0 Td (Hewlett Packard Enterprise - Information Security Policy) Tj ET
+BT /F1 10 Tf 54 703.0 Td (Document ID: HPE-ISP-001 | Version: 4.2 | Classification: Internal) Tj ET
+BT /F1 10 Tf 54 689.0 Td (Owner: Office of the Chief Information Security Officer \(CISO\)) Tj ET
+BT /F1 10 Tf 54 675.0 Td (Effective Date: 15 January 2026 | Next Review: 15 January 2027) Tj ET
+BT /F1 10 Tf 54 655.0 Td (---) Tj ET
+BT /F2 13 Tf 54 629.0 Td (1. Purpose and Objective) Tj ET
+BT /F1 10 Tf 54 606.0 Td (The purpose of this Information Security Policy is to establish Hewlett Packard Enterprise's \(HPE\)) Tj ET
+BT /F1 10 Tf 54 592.0 Td (overarching commitment to protecting the confidentiality, integrity, and availability of information) Tj ET
+BT /F1 10 Tf 54 578.0 Td (assets that support our global operations and our customers. Our mission is to safeguard the data,) Tj ET
+BT /F1 10 Tf 54 564.0 Td (systems, and intellectual property underpinning our GreenLake hybrid cloud platform, Aruba) Tj ET
+BT /F1 10 Tf 54 550.0 Td (networking, ProLiant/Compute portfolio, HPC/Cray systems, and our SAP S/4HANA ERP environment. This) Tj ET
+BT /F1 10 Tf 54 536.0 Td (objective aligns security outcomes with HPE's business strategy, regulatory obligations, and) Tj ET
+BT /F1 10 Tf 54 522.0 Td (obligations to shareholders of HPE \(NYSE: HPE\).) Tj ET
+BT /F2 13 Tf 54 496.0 Td (2. Scope and Applicability) Tj ET
+BT /F1 10 Tf 54 473.0 Td (This policy is organization-wide and applies to all employees, contractors, consultants, interns,) Tj ET
+BT /F1 10 Tf 54 459.0 Td (and third parties who access HPE information, systems, or facilities. It covers all information) Tj ET
+BT /F1 10 Tf 54 445.0 Td (assets-whether stored, processed, or transmitted-across every business unit, geography, and) Tj ET
+BT /F1 10 Tf 54 431.0 Td (technology environment, including on-premises data centers, customer-hosted GreenLake instances, and) Tj ET
+BT /F1 10 Tf 54 417.0 Td (cloud services. No individual or organizational unit is exempt from its applicability.) Tj ET
+BT /F2 13 Tf 54 391.0 Td (3. Governance and Program Framework) Tj ET
+BT /F1 10 Tf 54 368.0 Td (HPE maintains a formal information security program aligned to the NIST Cybersecurity Framework) Tj ET
+BT /F1 10 Tf 54 354.0 Td (\(CSF\) and certified against ISO/IEC 27001. Security governance is exercised through a tiered) Tj ET
+BT /F1 10 Tf 54 340.0 Td (oversight structure. The Board of Directors, through its Audit Committee, provides ultimate) Tj ET
+BT /F1 10 Tf 54 326.0 Td (oversight of cyber risk. An executive Security Steering Committee, chaired by the CISO and including) Tj ET
+BT /F1 10 Tf 54 312.0 Td (representatives from Legal, HR, Engineering, and Finance, sets strategic direction, reviews risk) Tj ET
+BT /F1 10 Tf 54 298.0 Td (posture, and approves major initiatives. This governance model ensures accountability flows from the) Tj ET
+BT /F1 10 Tf 54 284.0 Td (board through executive management to operational teams.) Tj ET
+BT /F2 13 Tf 54 258.0 Td (4. Roles and Responsibilities) Tj ET
+BT /F1 10 Tf 54 235.0 Td (- Chief Information Security Officer \(CISO\): Owns this policy, leads the security program, and) Tj ET
+BT /F1 10 Tf 54 221.0 Td (  reports security posture to executive management and the Board.) Tj ET
+BT /F1 10 Tf 54 207.0 Td (- Executive Management: Champions security culture, endorses funding, and integrates risk) Tj ET
+BT /F1 10 Tf 54 193.0 Td (  decisions into business planning.) Tj ET
+BT /F1 10 Tf 54 179.0 Td (- Business and Functional Leaders: Implement controls within their domains and manage) Tj ET
+BT /F1 10 Tf 54 165.0 Td (  remediation of identified gaps.) Tj ET
+BT /F1 10 Tf 54 151.0 Td (- All Employees: Comply with this policy, complete required training, and report suspected) Tj ET
+BT /F1 10 Tf 54 137.0 Td (  incidents promptly.) Tj ET
+BT /F1 10 Tf 54 117.0 Td (Accountability for information security is shared across all stakeholders, with clearly defined) Tj ET
+BT /F1 10 Tf 54 103.0 Td (ownership for each control domain.) Tj ET
+BT /F2 13 Tf 54 77.0 Td (5. Policy Hierarchy and Document Control) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 3 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 4226 >>
+stream
+BT /F1 10 Tf 54 738.0 Td (This document sits at the top of HPE's security documentation hierarchy. It is supported by) Tj ET
+BT /F1 10 Tf 54 724.0 Td (subordinate standards \(mandatory technical requirements\), procedures \(step-by-step operational) Tj ET
+BT /F1 10 Tf 54 710.0 Td (instructions\), and guidelines \(recommended practices\). Version control, revision history, and change) Tj ET
+BT /F1 10 Tf 54 696.0 Td (logs are maintained for all documents under a formal document control process; each revision is) Tj ET
+BT /F1 10 Tf 54 682.0 Td (tracked, dated, and attributed within the change log below.) Tj ET
+BT /F2 13 Tf 54 656.0 Td (6. Awareness, Communication, and Training) Tj ET
+BT /F1 10 Tf 54 633.0 Td (This policy is disseminated and published to the workforce via the HPE corporate intranet and) Tj ET
+BT /F1 10 Tf 54 619.0 Td (remains accessible and available to all personnel at all times. Security awareness and education are) Tj ET
+BT /F1 10 Tf 54 605.0 Td (mandatory: all new hires complete security training during onboarding, and all employees complete) Tj ET
+BT /F1 10 Tf 54 591.0 Td (annual refresher training. Ongoing communication campaigns, phishing simulations, and role-based) Tj ET
+BT /F1 10 Tf 54 577.0 Td (education reinforce a strong security culture and ensure consistent distribution of policy updates.) Tj ET
+BT /F2 13 Tf 54 551.0 Td (7. Resources and Funding) Tj ET
+BT /F1 10 Tf 54 528.0 Td (Executive management commits appropriate resources, budget, and staffing to sustain the security) Tj ET
+BT /F1 10 Tf 54 514.0 Td (program. The CISO organization is funded with dedicated FTEs across security engineering,) Tj ET
+BT /F1 10 Tf 54 500.0 Td (governance, risk, threat intelligence, and incident response functions, with annual budget planning) Tj ET
+BT /F1 10 Tf 54 486.0 Td (aligned to evolving threats and business growth.) Tj ET
+BT /F2 13 Tf 54 460.0 Td (8. Metrics and Reporting) Tj ET
+BT /F1 10 Tf 54 437.0 Td (The effectiveness of the security program is measured through defined key performance indicators) Tj ET
+BT /F1 10 Tf 54 423.0 Td (\(KPIs\) and key risk indicators. Metrics-including control coverage, patch compliance, training) Tj ET
+BT /F1 10 Tf 54 409.0 Td (completion rates, and incident response times-are reported periodically to the Security Steering) Tj ET
+BT /F1 10 Tf 54 395.0 Td (Committee, executive management, and the Board to inform decision-making.) Tj ET
+BT /F2 13 Tf 54 369.0 Td (9. Continuous Improvement) Tj ET
+BT /F1 10 Tf 54 346.0 Td (HPE is committed to continuous improvement. Findings from audits, incidents, assessments, and) Tj ET
+BT /F1 10 Tf 54 332.0 Td (lessons learned are analyzed to identify gaps and drive remediation. The program is periodically) Tj ET
+BT /F1 10 Tf 54 318.0 Td (benchmarked against NIST CSF and ISO 27001 to mature capabilities over time.) Tj ET
+BT /F2 13 Tf 54 292.0 Td (10. Exceptions and Risk Acceptance) Tj ET
+BT /F1 10 Tf 54 269.0 Td (Any deviation from this policy requires a formal exception \(waiver\) request submitted to the CISO) Tj ET
+BT /F1 10 Tf 54 255.0 Td (organization. Each request is evaluated for risk, and any residual risk must be documented and) Tj ET
+BT /F1 10 Tf 54 241.0 Td (formally accepted through risk acceptance by an authorized executive risk owner. Exceptions are) Tj ET
+BT /F1 10 Tf 54 227.0 Td (time-bound and subject to periodic re-review.) Tj ET
+BT /F2 13 Tf 54 201.0 Td (11. Enforcement) Tj ET
+BT /F1 10 Tf 54 178.0 Td (Compliance with this policy is mandatory. Violations may result in disciplinary action, up to and) Tj ET
+BT /F1 10 Tf 54 164.0 Td (including termination of employment or contract, and may carry additional legal or financial) Tj ET
+BT /F1 10 Tf 54 150.0 Td (sanctions. Consequences are administered consistently in coordination with Human Resources and) Tj ET
+BT /F1 10 Tf 54 136.0 Td (Legal, commensurate with the severity of the violation.) Tj ET
+BT /F2 13 Tf 54 110.0 Td (12. Review and Approval) Tj ET
+BT /F1 10 Tf 54 87.0 Td (This policy undergoes annual review and is updated as needed to reflect changes in the threat) Tj ET
+BT /F1 10 Tf 54 73.0 Td (landscape, regulations, and business operations, following a defined review and update cycle. This) Tj ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 3 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Length 982 >>
+stream
+BT /F1 10 Tf 54 738.0 Td (document has been reviewed, approved, and authorized by the CISO with endorsement from executive) Tj ET
+BT /F1 10 Tf 54 724.0 Td (management and the Board Audit Committee.) Tj ET
+BT /F1 10 Tf 54 704.0 Td (---) Tj ET
+BT /F2 11.5 Tf 54 680.0 Td (Revision History \(Change Log\)) Tj ET
+BT /F1 9 Tf 54 658.5 Td (| Version | Date | Author | Summary of Change |) Tj ET
+BT /F1 9 Tf 54 645.5 Td (| --------- | ------ | -------- | ------------------- |) Tj ET
+BT /F1 9 Tf 54 632.5 Td (| 4.0 | 2024-01-15 | CISO Office | Realignment to NIST CSF 2.0 |) Tj ET
+BT /F1 9 Tf 54 619.5 Td (| 4.1 | 2025-01-15 | CISO Office | Updated governance and metrics sections |) Tj ET
+BT /F1 9 Tf 54 606.5 Td (| 4.2 | 2026-01-15 | CISO Office | Annual review; refreshed scope and exception process |) Tj ET
+BT /F1 10 Tf 54 587.5 Td (*Approved and authorized by the Office of the Chief Information Security Officer, Hewlett Packard) Tj ET
+BT /F1 10 Tf 54 573.5 Td (Enterprise.*) Tj ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 3 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 8 0 R >>
+endobj
+10 0 obj
+<< /Type /Catalog /Pages 3 0 R >>
+endobj
+xref
+0 11
+0000000000 65535 f 
+0000000015 00000 n 
+0000000112 00000 n 
+0000000214 00000 n 
+0000000283 00000 n 
+0000004436 00000 n 
+0000004572 00000 n 
+0000008849 00000 n 
+0000008985 00000 n 
+0000010017 00000 n 
+0000010153 00000 n 
+trailer
+<< /Size 11 /Root 10 0 R /Info << /Title (d1_information_security_policy) >> >>
+startxref
+10203
+%%EOF

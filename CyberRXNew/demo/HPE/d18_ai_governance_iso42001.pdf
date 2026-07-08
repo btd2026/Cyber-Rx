@@ -1,0 +1,143 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+2 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+3 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R 9 0 R] /Count 3 >>
+endobj
+4 0 obj
+<< /Length 4230 >>
+stream
+BT /F2 17 Tf 54 730.0 Td (AI Management System \(AIMS\) - ISO/IEC 42001:2023) Tj ET
+BT /F2 13 Tf 54 703.0 Td (Hewlett Packard Enterprise \(HPE\)) Tj ET
+BT /F1 10 Tf 54 680.0 Td (Document ID: HPE-AIMS-D18  Version: 3.1  Owner: Chief AI & Data Governance Office ) Tj ET
+BT /F1 10 Tf 54 666.0 Td (Classification: Internal) Tj ET
+BT /F1 10 Tf 54 646.0 Td (---) Tj ET
+BT /F2 13 Tf 54 620.0 Td (1. Purpose and Scope) Tj ET
+BT /F1 10 Tf 54 597.0 Td (This document defines the AI Management System \(AIMS\) established by Hewlett Packard Enterprise to) Tj ET
+BT /F1 10 Tf 54 583.0 Td (govern the responsible design, development, deployment, and operation of artificial intelligence) Tj ET
+BT /F1 10 Tf 54 569.0 Td (across the enterprise, in conformance with ISO/IEC 42001:2023. The scope of the AIMS covers three) Tj ET
+BT /F1 10 Tf 54 555.0 Td (flagship AI capabilities: GreenLake AIOps \(autonomous infrastructure optimization and anomaly) Tj ET
+BT /F1 10 Tf 54 541.0 Td (detection\), Aruba AI \(network assurance, client fingerprinting, and edge inference\), and HPEFS fraud) Tj ET
+BT /F1 10 Tf 54 527.0 Td (models \(Hewlett Packard Enterprise Financial Services credit and transaction fraud scoring\). The) Tj ET
+BT /F1 10 Tf 54 513.0 Td (AIMS applies to all HPE personnel, contractors, and third-party model providers whose systems fall) Tj ET
+BT /F1 10 Tf 54 499.0 Td (within these product boundaries, including the data pipelines, MLOps platforms, and cloud regions) Tj ET
+BT /F1 10 Tf 54 485.0 Td (that support them.) Tj ET
+BT /F1 10 Tf 54 465.0 Td (Interested parties considered in defining scope include customers, regulators, data subjects,) Tj ET
+BT /F1 10 Tf 54 451.0 Td (channel partners, and internal engineering and risk functions. External and internal issues) Tj ET
+BT /F1 10 Tf 54 437.0 Td (affecting the AIMS - evolving AI regulation, model supply-chain dependencies, and customer trust) Tj ET
+BT /F1 10 Tf 54 423.0 Td (expectations - are reviewed at least annually.) Tj ET
+BT /F2 13 Tf 54 397.0 Td (2. AI Policy and Objectives) Tj ET
+BT /F1 10 Tf 54 374.0 Td (HPE maintains an AI Policy, approved by top management, that commits the organization to) Tj ET
+BT /F1 10 Tf 54 360.0 Td (trustworthy, lawful, transparent, and human-centric AI. The policy establishes principles of) Tj ET
+BT /F1 10 Tf 54 346.0 Td (fairness, accountability, safety, security, privacy, and explainability, and requires that all) Tj ET
+BT /F1 10 Tf 54 332.0 Td (in-scope AI systems undergo impact and risk evaluation before release.) Tj ET
+BT /F1 10 Tf 54 312.0 Td (Measurable AI objectives derived from the policy include: maintaining false-positive rates below) Tj ET
+BT /F1 10 Tf 54 298.0 Td (defined thresholds for HPEFS fraud models; achieving documented AI impact assessment coverage of) Tj ET
+BT /F1 10 Tf 54 284.0 Td (100% for high-consequence systems; sustaining model-drift detection within agreed tolerances for) Tj ET
+BT /F1 10 Tf 54 270.0 Td (GreenLake AIOps; and closing all critical nonconformities within 30 days. Objectives are tracked) Tj ET
+BT /F1 10 Tf 54 256.0 Td (quarterly and reported to the AI Governance Board.) Tj ET
+BT /F2 13 Tf 54 230.0 Td (3. Leadership and Commitment) Tj ET
+BT /F1 10 Tf 54 207.0 Td (Top management commitment is demonstrated through the AI Governance Board, chaired by the Chief AI &) Tj ET
+BT /F1 10 Tf 54 193.0 Td (Data Governance Officer and including representatives from Legal, Security, Privacy, and) Tj ET
+BT /F1 10 Tf 54 179.0 Td (business-unit engineering leadership. Leadership ensures the AI Policy and objectives are) Tj ET
+BT /F1 10 Tf 54 165.0 Td (established, compatible with HPE's strategic direction, and integrated into business processes.) Tj ET
+BT /F1 10 Tf 54 151.0 Td (Management allocates the resources - funding, tooling, platform capacity, and qualified personnel -) Tj ET
+BT /F1 10 Tf 54 137.0 Td (necessary to operate and continually improve the AIMS. Roles, responsibilities, and authorities for) Tj ET
+BT /F1 10 Tf 54 123.0 Td (AI governance are formally assigned, including a designated AIMS owner and accountable system owners) Tj ET
+BT /F1 10 Tf 54 109.0 Td (for each product.) Tj ET
+BT /F2 13 Tf 54 83.0 Td (4. Planning: Risk, Opportunities and Controls) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 3 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 4793 >>
+stream
+BT /F1 10 Tf 54 738.0 Td (The AIMS follows a risk-based planning approach. HPE identifies risks and opportunities that could) Tj ET
+BT /F1 10 Tf 54 724.0 Td (affect the AIMS achieving its intended outcomes, addressing both organizational risk and risk to) Tj ET
+BT /F1 10 Tf 54 710.0 Td (individuals and society. For each in-scope system, a formal risk assessment evaluates likelihood and) Tj ET
+BT /F1 10 Tf 54 696.0 Td (severity of potential harms, and an AI impact assessment \(AIIA\) examines consequences to affected) Tj ET
+BT /F1 10 Tf 54 682.0 Td (persons - for example, wrongful fraud declines by HPEFS models, network access errors from Aruba AI,) Tj ET
+BT /F1 10 Tf 54 668.0 Td (or operational disruption from GreenLake AIOps automation.) Tj ET
+BT /F1 10 Tf 54 648.0 Td (Identified risks drive selection of controls from Annex A of ISO/IEC 42001, documented in a) Tj ET
+BT /F1 10 Tf 54 634.0 Td (Statement of Applicability. Controls span AI system impact assessment, data quality management,) Tj ET
+BT /F1 10 Tf 54 620.0 Td (human oversight, security, and lifecycle documentation. Opportunities - such as improved model) Tj ET
+BT /F1 10 Tf 54 606.0 Td (efficiency or reduced bias - are captured and prioritized alongside risk treatment plans.) Tj ET
+BT /F2 13 Tf 54 580.0 Td (5. Support: Competence, Awareness, Communication, Documentation) Tj ET
+BT /F1 10 Tf 54 557.0 Td (HPE ensures the competence of personnel through role-based training in responsible AI, MLOps, and) Tj ET
+BT /F1 10 Tf 54 543.0 Td (model risk, with competency records maintained for data scientists, ML engineers, and reviewers.) Tj ET
+BT /F1 10 Tf 54 529.0 Td (Awareness programs communicate the AI Policy, individual responsibilities, and the implications of) Tj ET
+BT /F1 10 Tf 54 515.0 Td (nonconformity to all staff interacting with AI systems. Internal and external communication) Tj ET
+BT /F1 10 Tf 54 501.0 Td (protocols define what, when, and to whom AI-related information is disclosed, including) Tj ET
+BT /F1 10 Tf 54 487.0 Td (customer-facing model documentation and incident notifications.) Tj ET
+BT /F1 10 Tf 54 467.0 Td (Documented information required by the AIMS - policies, procedures, risk registers, AIIAs, model) Tj ET
+BT /F1 10 Tf 54 453.0 Td (cards, and audit records - is version-controlled, access-restricted, and retained under HPE's) Tj ET
+BT /F1 10 Tf 54 439.0 Td (records-management standard.) Tj ET
+BT /F2 13 Tf 54 413.0 Td (6. AI System Lifecycle and Data Governance) Tj ET
+BT /F1 10 Tf 54 390.0 Td (HPE governs the full AI system lifecycle: design, development, verification, validation, deployment,) Tj ET
+BT /F1 10 Tf 54 376.0 Td (operation, and retirement. Stage-gate reviews at each phase confirm that objectives, controls, and) Tj ET
+BT /F1 10 Tf 54 362.0 Td (impact assessments are satisfied before progression. Human oversight requirements and rollback) Tj ET
+BT /F1 10 Tf 54 348.0 Td (procedures are defined for automated decisions in GreenLake AIOps and Aruba AI.) Tj ET
+BT /F1 10 Tf 54 328.0 Td (Data governance is central to the AIMS. Standards for training data govern quality,) Tj ET
+BT /F1 10 Tf 54 314.0 Td (representativeness, labeling accuracy, and provenance, ensuring data lineage is traceable from) Tj ET
+BT /F1 10 Tf 54 300.0 Td (source to model. Datasets undergo bias and quality screening; provenance metadata records origin,) Tj ET
+BT /F1 10 Tf 54 286.0 Td (consent basis, and transformation history. HPEFS fraud models apply additional controls for) Tj ET
+BT /F1 10 Tf 54 272.0 Td (sensitive financial data, and data-retention and minimization rules apply across all three product) Tj ET
+BT /F1 10 Tf 54 258.0 Td (lines.) Tj ET
+BT /F2 13 Tf 54 232.0 Td (7. Performance Evaluation) Tj ET
+BT /F1 10 Tf 54 209.0 Td (HPE conducts ongoing performance evaluation through continuous monitoring, measurement, and analysis) Tj ET
+BT /F1 10 Tf 54 195.0 Td (of AI system behavior against defined objectives and thresholds. Production models are instrumented) Tj ET
+BT /F1 10 Tf 54 181.0 Td (for drift, accuracy, fairness, and security metrics, with automated alerts feeding the operations) Tj ET
+BT /F1 10 Tf 54 167.0 Td (and governance functions. Scheduled internal audits assess AIMS conformity to ISO/IEC 42001 and the) Tj ET
+BT /F1 10 Tf 54 153.0 Td (effectiveness of implemented controls, with results reported to top management. Management review is) Tj ET
+BT /F1 10 Tf 54 139.0 Td (performed at planned intervals to evaluate AIMS suitability, adequacy, and effectiveness,) Tj ET
+BT /F1 10 Tf 54 125.0 Td (considering audit findings, performance data, and changing risk.) Tj ET
+BT /F2 13 Tf 54 99.0 Td (8. Improvement) Tj ET
+BT /F1 10 Tf 54 76.0 Td (When a nonconformity is identified - through monitoring, audit, incident, or customer feedback - HPE) Tj ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 3 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Length 755 >>
+stream
+BT /F1 10 Tf 54 738.0 Td (evaluates the need for action to control and correct it and to address its consequences. Corrective) Tj ET
+BT /F1 10 Tf 54 724.0 Td (action eliminates root causes to prevent recurrence, and effectiveness is verified before closure.) Tj ET
+BT /F1 10 Tf 54 710.0 Td (The AIMS drives continual improvement of its suitability, adequacy, and effectiveness, feeding) Tj ET
+BT /F1 10 Tf 54 696.0 Td (lessons from GreenLake AIOps, Aruba AI, and HPEFS fraud model operations back into policy,) Tj ET
+BT /F1 10 Tf 54 682.0 Td (objectives, controls, and lifecycle practices.) Tj ET
+BT /F1 10 Tf 54 662.0 Td (---) Tj ET
+BT /F1 10 Tf 54 642.0 Td (*Reviewed and approved by the HPE AI Governance Board. Next scheduled review: 2027-07.*) Tj ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 3 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 8 0 R >>
+endobj
+10 0 obj
+<< /Type /Catalog /Pages 3 0 R >>
+endobj
+xref
+0 11
+0000000000 65535 f 
+0000000015 00000 n 
+0000000112 00000 n 
+0000000214 00000 n 
+0000000283 00000 n 
+0000004564 00000 n 
+0000004700 00000 n 
+0000009544 00000 n 
+0000009680 00000 n 
+0000010485 00000 n 
+0000010621 00000 n 
+trailer
+<< /Size 11 /Root 10 0 R /Info << /Title (d18_ai_governance_iso42001) >> >>
+startxref
+10671
+%%EOF

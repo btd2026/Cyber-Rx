@@ -1,0 +1,149 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+2 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+3 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R 9 0 R] /Count 3 >>
+endobj
+4 0 obj
+<< /Length 3899 >>
+stream
+BT /F2 17 Tf 54 730.0 Td (Cyber Risk Assessment & Risk Management Policy) Tj ET
+BT /F1 10 Tf 54 703.0 Td (Hewlett Packard Enterprise \(HPE\)) Tj ET
+BT /F1 10 Tf 54 689.0 Td (Document Owner: Global Chief Information Security Officer \(CISO\)) Tj ET
+BT /F1 10 Tf 54 675.0 Td (Classification: HPE Internal) Tj ET
+BT /F1 10 Tf 54 661.0 Td (Version: 4.2 | Effective Date: 2026-01-15 | Next Review: 2027-01-15) Tj ET
+BT /F1 10 Tf 54 641.0 Td (---) Tj ET
+BT /F2 13 Tf 54 615.0 Td (1. Purpose) Tj ET
+BT /F1 10 Tf 54 592.0 Td (This policy establishes the enterprise-wide methodology by which Hewlett Packard Enterprise) Tj ET
+BT /F1 10 Tf 54 578.0 Td (identifies, analyzes, evaluates, and treats cyber risk across its global operations. It ensures that) Tj ET
+BT /F1 10 Tf 54 564.0 Td (risk-based decisions protecting HPE GreenLake edge-to-cloud services, Aruba networking, ProLiant) Tj ET
+BT /F1 10 Tf 54 550.0 Td (compute infrastructure, and the SAP S/4HANA ERP environment are consistent, defensible, and aligned) Tj ET
+BT /F1 10 Tf 54 536.0 Td (with the corporate risk appetite approved by the Board Audit Committee.) Tj ET
+BT /F2 13 Tf 54 510.0 Td (2. Scope) Tj ET
+BT /F1 10 Tf 54 487.0 Td (This policy applies to all HPE business units, subsidiaries, and third-party service providers) Tj ET
+BT /F1 10 Tf 54 473.0 Td (worldwide. The assessment scope encompasses all information assets, production and non-production) Tj ET
+BT /F1 10 Tf 54 459.0 Td (systems, cloud tenancies, and OT/IoT boundaries that store, process, or transmit HPE or customer) Tj ET
+BT /F1 10 Tf 54 445.0 Td (data. Explicit scope boundaries are documented for each assessment engagement, including the) Tj ET
+BT /F1 10 Tf 54 431.0 Td (GreenLake control plane, Aruba Central management infrastructure, ProLiant firmware supply chain,) Tj ET
+BT /F1 10 Tf 54 417.0 Td (and the SAP S/4HANA financial and manufacturing modules. Assets are enumerated from the) Tj ET
+BT /F1 10 Tf 54 403.0 Td (authoritative Configuration Management Database \(CMDB\) prior to each cycle.) Tj ET
+BT /F2 13 Tf 54 377.0 Td (3. Risk Assessment Methodology) Tj ET
+BT /F1 10 Tf 54 354.0 Td (HPE applies a structured risk framework aligned to NIST SP 800-30, NIST CSF 2.0, and ISO/IEC 27005.) Tj ET
+BT /F1 10 Tf 54 340.0 Td (The assessment process follows five phases: \(1\) asset and system characterization, \(2\) threat and) Tj ET
+BT /F1 10 Tf 54 326.0 Td (vulnerability identification, \(3\) inherent risk analysis, \(4\) control evaluation and residual risk) Tj ET
+BT /F1 10 Tf 54 312.0 Td (determination, and \(5\) risk treatment and reporting.) Tj ET
+BT /F2 11.5 Tf 54 288.0 Td (3.1 Risk Scoring) Tj ET
+BT /F1 10 Tf 54 266.5 Td (Each identified risk is scored on two dimensions:) Tj ET
+BT /F1 10 Tf 54 246.5 Td (- Likelihood / Probability - the assessed probability that a given threat will successfully) Tj ET
+BT /F1 10 Tf 54 232.5 Td (  exploit a vulnerability, rated on a 1-5 scale informed by current threat intelligence,) Tj ET
+BT /F1 10 Tf 54 218.5 Td (  historical incident data, and control maturity.) Tj ET
+BT /F1 10 Tf 54 204.5 Td (- Impact / Consequence - the severity and magnitude of harm to HPE should the risk materialize,) Tj ET
+BT /F1 10 Tf 54 190.5 Td (  evaluated across financial, operational, regulatory, safety, and brand-reputation consequence) Tj ET
+BT /F1 10 Tf 54 176.5 Td (  categories, also rated 1-5.) Tj ET
+BT /F1 10 Tf 54 156.5 Td (The product of likelihood and impact yields the inherent \(gross\) risk rating - the exposure) Tj ET
+BT /F1 10 Tf 54 142.5 Td (calculated *before* the application of mitigating controls. After accounting for the design and) Tj ET
+BT /F1 10 Tf 54 128.5 Td (operating effectiveness of existing controls, a residual \(net\) risk rating is derived, representing) Tj ET
+BT /F1 10 Tf 54 114.5 Td (the remaining exposure retained by HPE.) Tj ET
+BT /F2 13 Tf 54 88.5 Td (4. Assessment Cadence) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 3 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 4391 >>
+stream
+BT /F1 10 Tf 54 738.0 Td (Risk assessments are conducted on a defined schedule to maintain currency:) Tj ET
+BT /F1 10 Tf 54 718.0 Td (- Annual enterprise-wide risk assessment covering all in-scope business units and crown-jewel) Tj ET
+BT /F1 10 Tf 54 704.0 Td (  systems.) Tj ET
+BT /F1 10 Tf 54 690.0 Td (- Quarterly assessments for high-criticality environments, including the GreenLake control plane) Tj ET
+BT /F1 10 Tf 54 676.0 Td (  and SAP S/4HANA.) Tj ET
+BT /F1 10 Tf 54 662.0 Td (- Event-driven / periodic assessments triggered by material change - new product launches,) Tj ET
+BT /F1 10 Tf 54 648.0 Td (  mergers and acquisitions, significant architecture changes, or emerging zero-day threats.) Tj ET
+BT /F2 13 Tf 54 622.0 Td (5. Threat Intelligence Integration) Tj ET
+BT /F1 10 Tf 54 599.0 Td (Risk analysis is enriched by HPE's Cyber Threat Intelligence \(CTI\) function, which continuously) Tj ET
+BT /F1 10 Tf 54 585.0 Td (profiles relevant adversary groups, attack campaigns, and tactics, techniques, and procedures \(TTPs\)) Tj ET
+BT /F1 10 Tf 54 571.0 Td (mapped to the MITRE ATT&CK framework. Intelligence is aggregated from multiple sources and feeds,) Tj ET
+BT /F1 10 Tf 54 557.0 Td (including CISA advisories and Known Exploited Vulnerabilities catalog, sector ISAC memberships) Tj ET
+BT /F1 10 Tf 54 543.0 Td (\(IT-ISAC\), commercial vendor intel subscriptions, open-source feeds, and internal telemetry from) Tj ET
+BT /F1 10 Tf 54 529.0 Td (Aruba and GreenLake sensors. This threat intelligence directly informs likelihood scoring and) Tj ET
+BT /F1 10 Tf 54 515.0 Td (ensures that assessments reflect the active adversary landscape targeting the technology sector.) Tj ET
+BT /F2 13 Tf 54 489.0 Td (6. Risk Register) Tj ET
+BT /F1 10 Tf 54 466.0 Td (All identified risks are recorded in the enterprise Risk Register, the authoritative inventory and) Tj ET
+BT /F1 10 Tf 54 452.0 Td (catalog of cyber risk maintained within the HPE GRC platform. Each register entry captures the asset) Tj ET
+BT /F1 10 Tf 54 438.0 Td (affected, threat scenario, inherent and residual scores, assigned controls, treatment decision,) Tj ET
+BT /F1 10 Tf 54 424.0 Td (target remediation date, and status. The Risk Register is reviewed monthly by the Cyber Risk Council) Tj ET
+BT /F1 10 Tf 54 410.0 Td (and reported quarterly to executive leadership.) Tj ET
+BT /F2 13 Tf 54 384.0 Td (7. Risk Appetite and Tolerance) Tj ET
+BT /F1 10 Tf 54 361.0 Td (The Board-approved risk appetite defines the level of cyber risk HPE is willing to accept in pursuit) Tj ET
+BT /F1 10 Tf 54 347.0 Td (of its business objectives. Quantitative risk tolerance thresholds are established per risk tier:) Tj ET
+BT /F1 10 Tf 54 333.0 Td (residual risks scoring within the "Low" band fall inside tolerance and may be formally accepted,) Tj ET
+BT /F1 10 Tf 54 319.0 Td (while risks exceeding defined thresholds require documented treatment plans and executive sign-off.) Tj ET
+BT /F1 10 Tf 54 305.0 Td (Any acceptance of risk above tolerance requires explicit approval from the CISO and the relevant) Tj ET
+BT /F1 10 Tf 54 291.0 Td (Business Unit executive.) Tj ET
+BT /F2 13 Tf 54 265.0 Td (8. Risk Ownership and Accountability) Tj ET
+BT /F1 10 Tf 54 242.0 Td (Every risk in the register is assigned a named Risk Owner - the accountable business or technical) Tj ET
+BT /F1 10 Tf 54 228.0 Td (leader responsible for the affected asset and for driving the treatment decision to completion. The) Tj ET
+BT /F1 10 Tf 54 214.0 Td (CISO organization provides oversight, facilitation, and challenge, but accountability for accepting) Tj ET
+BT /F1 10 Tf 54 200.0 Td (or remediating a risk rests with the designated responsible party. Ownership assignments are) Tj ET
+BT /F1 10 Tf 54 186.0 Td (validated during each assessment cycle.) Tj ET
+BT /F2 13 Tf 54 160.0 Td (9. Risk Treatment) Tj ET
+BT /F1 10 Tf 54 137.0 Td (For each risk exceeding tolerance, the Risk Owner, supported by the security team, selects one or) Tj ET
+BT /F1 10 Tf 54 123.0 Td (more treatment strategies:) Tj ET
+BT /F1 10 Tf 54 103.0 Td (- Mitigate / Remediate - implement or strengthen technical and administrative controls to reduce) Tj ET
+BT /F1 10 Tf 54 89.0 Td (  likelihood or impact \(the default and preferred response\).) Tj ET
+BT /F1 10 Tf 54 75.0 Td (- Transfer - shift financial exposure through cyber insurance or contractual indemnification) Tj ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 3 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Length 1402 >>
+stream
+BT /F1 10 Tf 54 738.0 Td (  with suppliers and partners.) Tj ET
+BT /F1 10 Tf 54 724.0 Td (- Accept - formally retain the residual risk where it is within appetite, with documented) Tj ET
+BT /F1 10 Tf 54 710.0 Td (  rationale and time-bound review.) Tj ET
+BT /F1 10 Tf 54 696.0 Td (- Avoid - eliminate the risk by discontinuing the associated activity, system, or process.) Tj ET
+BT /F1 10 Tf 54 676.0 Td (Treatment progress is tracked to closure in the Risk Register, and the effectiveness of implemented) Tj ET
+BT /F1 10 Tf 54 662.0 Td (controls is re-validated in the subsequent assessment to confirm that residual risk has been reduced) Tj ET
+BT /F1 10 Tf 54 648.0 Td (to an acceptable level.) Tj ET
+BT /F2 13 Tf 54 622.0 Td (10. Governance and Review) Tj ET
+BT /F1 10 Tf 54 599.0 Td (This policy is owned by the Global CISO and reviewed at least annually, or upon significant) Tj ET
+BT /F1 10 Tf 54 585.0 Td (regulatory or business change. Exceptions require formal approval through the HPE Security Exception) Tj ET
+BT /F1 10 Tf 54 571.0 Td (process. Non-compliance may result in disciplinary action consistent with HPE's Standards of) Tj ET
+BT /F1 10 Tf 54 557.0 Td (Business Conduct.) Tj ET
+BT /F1 10 Tf 54 537.0 Td (---) Tj ET
+BT /F1 10 Tf 54 523.0 Td (* Hewlett Packard Enterprise. This document is HPE Internal and subject to controlled) Tj ET
+BT /F1 10 Tf 54 509.0 Td (distribution.*) Tj ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 3 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 8 0 R >>
+endobj
+10 0 obj
+<< /Type /Catalog /Pages 3 0 R >>
+endobj
+xref
+0 11
+0000000000 65535 f 
+0000000015 00000 n 
+0000000112 00000 n 
+0000000214 00000 n 
+0000000283 00000 n 
+0000004233 00000 n 
+0000004369 00000 n 
+0000008811 00000 n 
+0000008947 00000 n 
+0000010400 00000 n 
+0000010536 00000 n 
+trailer
+<< /Size 11 /Root 10 0 R /Info << /Title (d2_risk_assessment) >> >>
+startxref
+10586
+%%EOF

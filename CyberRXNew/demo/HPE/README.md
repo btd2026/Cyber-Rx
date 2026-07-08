@@ -40,19 +40,19 @@ Each is written to score real CMMI maturity control-by-control and appears in th
 
 | Doc type in dropdown | File |
 |---|---|
-| Information Security Policy | `d1_information_security_policy.md` |
-| Risk Assessment / Register | `d2_risk_assessment.md` |
-| Third-Party / Supply-Chain Policy | `d3_third_party_supply_chain_policy.md` |
-| Access Control Policy | `d4_access_control_policy.md` |
-| Identity & Authentication Policy | `d5_identity_authentication_policy.md` |
-| Incident Response Plan | `d6_incident_response_plan.md` |
-| Business Continuity / DR Plan | `d7_business_continuity_dr_plan.md` |
-| Change Management Policy | `d8_change_management_policy.md` |
-| Configuration Management Policy | `d9_configuration_management_policy.md` |
-| Data Protection Policy | `d10_data_protection_policy.md` |
-| AI Governance — NIST AI RMF | `d17_ai_governance_nist_rmf.md` |
-| AI Governance — ISO/IEC 42001 | `d18_ai_governance_iso42001.md` |
-| AI Acceptable-Use Policy | `d19_ai_acceptable_use_policy.md` |
+| Information Security Policy | `d1_information_security_policy.pdf` |
+| Risk Assessment / Register | `d2_risk_assessment.pdf` |
+| Third-Party / Supply-Chain Policy | `d3_third_party_supply_chain_policy.pdf` |
+| Access Control Policy | `d4_access_control_policy.pdf` |
+| Identity & Authentication Policy | `d5_identity_authentication_policy.pdf` |
+| Incident Response Plan | `d6_incident_response_plan.pdf` |
+| Business Continuity / DR Plan | `d7_business_continuity_dr_plan.pdf` |
+| Change Management Policy | `d8_change_management_policy.pdf` |
+| Configuration Management Policy | `d9_configuration_management_policy.pdf` |
+| Data Protection Policy | `d10_data_protection_policy.pdf` |
+| AI Governance — NIST AI RMF | `d17_ai_governance_nist_rmf.pdf` |
+| AI Governance — ISO/IEC 42001 | `d18_ai_governance_iso42001.pdf` |
+| AI Acceptable-Use Policy | `d19_ai_acceptable_use_policy.pdf` |
 
 ## 3. Manual fields (typed in onboarding — no upload for these)
 
@@ -65,10 +65,11 @@ fallback.
 - Operating regions: select **US, EU, UK, APAC, Global** (drives EU AI Act + GDPR/NIS2 clocks)
 - Reporting currency: `USD ($)`
 
-**Executives (§1)** — used to name every decision
+**Executives (§1)** — names stamp every decision; emails let the CISO send reminders from the cockpit (optional — the reminder modal asks once if left blank)
 - CEO: `Antonio Neri` · CFO: `Marie Myers` · CISO / Chief Security Officer: `Bobby Ford`
 - CTO: `Fidelma Russo` · General Counsel (CLO): `Rishi Varma` · COO: `John Schultz`
-- Chief Risk Officer (CRO): `Jon Faust`
+- Chief Risk Officer (CRO): `Jon Faust` · Chief Audit Executive: `Karen Parkhill`
+- Emails: use any address you control for the demo, e.g. `ceo@hpe-demo.com`, `cfo@hpe-demo.com`, … so the CISO “Decisions & projections” tab can send test reminders.
 
 **Board governance & incident readiness (§1b)**
 - Board committee that owns cyber: `Audit Committee (Technology Committee oversight)`
@@ -113,9 +114,13 @@ fallback.
    (Nerion's View), Frameworks (now evidenced by the uploaded policies), each executive seat, and
    the War Room. Nothing should read "illustrative / connect a source".
 
-## 5. Verify the data files parse
+## 5. Verify the samples
 
 ```
-cd demo/HPE && node _verify-parse.mjs
+cd demo/HPE && node _verify-parse.mjs   # data files parse & pull real rows
+node _verify-docs.mjs                    # policy PDFs extract & score CMMI via the real server path
 ```
-Prints row counts and a sample parse for every file; exits non-zero if any file wouldn't pull.
+The policy files are **PDFs** (`d*.pdf`), generated from the `d*.md` sources by `_make-pdfs.mjs`.
+They use literal-ASCII, uncompressed text so the cockpit's PDF text-extractor reads them cleanly —
+`_verify-docs.mjs` confirms every one scores CMMI 5 through the backend's actual extraction path.
+Both scripts exit non-zero if any file wouldn't pull/score.

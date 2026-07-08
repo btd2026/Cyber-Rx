@@ -1,0 +1,154 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+2 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+3 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R 9 0 R] /Count 3 >>
+endobj
+4 0 obj
+<< /Length 3852 >>
+stream
+BT /F2 17 Tf 54 730.0 Td (Business Continuity & Disaster Recovery Plan) Tj ET
+BT /F2 11.5 Tf 54 705.0 Td (Hewlett Packard Enterprise \(HPE\)) Tj ET
+BT /F1 10 Tf 54 683.5 Td (Document Owner: Office of Business Resilience) Tj ET
+BT /F1 10 Tf 54 669.5 Td (Classification: Internal - Restricted) Tj ET
+BT /F1 10 Tf 54 655.5 Td (Version: 4.2 | Effective Date: 2026-07-08) Tj ET
+BT /F1 10 Tf 54 635.5 Td (---) Tj ET
+BT /F2 13 Tf 54 609.5 Td (1. Purpose and Scope) Tj ET
+BT /F1 10 Tf 54 586.5 Td (This Business Continuity & Disaster Recovery \(BC/DR\) Plan establishes the strategy, roles, and) Tj ET
+BT /F1 10 Tf 54 572.5 Td (procedures HPE uses to sustain and recover critical operations during a disruptive event. It covers) Tj ET
+BT /F1 10 Tf 54 558.5 Td (HPE's customer-facing GreenLake hybrid cloud platform, the SAP S/4HANA enterprise resource planning) Tj ET
+BT /F1 10 Tf 54 544.5 Td (\(ERP\) environment, and the supporting infrastructure, data, and personnel required to keep essential) Tj ET
+BT /F1 10 Tf 54 530.5 Td (functions running. The plan applies to all HPE production data centers, colocation facilities, and) Tj ET
+BT /F1 10 Tf 54 516.5 Td (the teams responsible for their operation.) Tj ET
+BT /F1 10 Tf 54 496.5 Td (The objective is simple: minimize downtime, protect data, safeguard people, and honor commitments to) Tj ET
+BT /F1 10 Tf 54 482.5 Td (customers, partners, and regulators through disciplined preparation and rehearsed response.) Tj ET
+BT /F1 10 Tf 54 462.5 Td (---) Tj ET
+BT /F2 13 Tf 54 436.5 Td (2. Business Impact Analysis \(BIA\)) Tj ET
+BT /F1 10 Tf 54 413.5 Td (The foundation of this plan is HPE's Business Impact Analysis, refreshed at least annually and after) Tj ET
+BT /F1 10 Tf 54 399.5 Td (any material change to the technology estate. The BIA identifies critical processes and essential) Tj ET
+BT /F1 10 Tf 54 385.5 Td (functions, ranks them by operational and financial impact, and establishes the tolerances that drive) Tj ET
+BT /F1 10 Tf 54 371.5 Td (our recovery investments.) Tj ET
+BT /F1 9 Tf 54 351.5 Td (| Critical Process | Tier | RTO | RPO |) Tj ET
+BT /F1 9 Tf 54 338.5 Td (| --- | --- | --- | --- |) Tj ET
+BT /F1 9 Tf 54 325.5 Td (| GreenLake control plane & customer workloads | 0 | 1 hour | 5 minutes |) Tj ET
+BT /F1 9 Tf 54 312.5 Td (| SAP S/4HANA ERP \(finance, order-to-cash, supply chain\) | 0 | 2 hours | 15 minutes |) Tj ET
+BT /F1 9 Tf 54 299.5 Td (| Identity, authentication & API gateways | 1 | 1 hour | 5 minutes |) Tj ET
+BT /F1 9 Tf 54 286.5 Td (| Customer support & entitlement systems | 1 | 4 hours | 30 minutes |) Tj ET
+BT /F1 9 Tf 54 273.5 Td (| Corporate collaboration & email | 2 | 8 hours | 4 hours |) Tj ET
+BT /F1 10 Tf 54 254.5 Td (Each recovery time objective \(RTO\) defines the maximum tolerable outage before impact becomes) Tj ET
+BT /F1 10 Tf 54 240.5 Td (unacceptable, while each recovery point objective \(RPO\) defines the maximum tolerable data loss) Tj ET
+BT /F1 10 Tf 54 226.5 Td (measured backward from the moment of disruption. These recovery targets are the contract between the) Tj ET
+BT /F1 10 Tf 54 212.5 Td (business and the recovery teams; every technical control below exists to satisfy a documented point) Tj ET
+BT /F1 10 Tf 54 198.5 Td (objective.) Tj ET
+BT /F1 10 Tf 54 178.5 Td (---) Tj ET
+BT /F2 13 Tf 54 152.5 Td (3. Data Protection: Backup, Replication, and Immutability) Tj ET
+BT /F1 10 Tf 54 129.5 Td (HPE protects data through layered strategy designed to meet the RPOs above:) Tj ET
+BT /F1 10 Tf 54 109.5 Td (- Immutable backups. All Tier 0 and Tier 1 datasets are written to write-once, immutable) Tj ET
+BT /F1 10 Tf 54 95.5 Td (  repositories with enforced retention locks. Because these copies cannot be altered or) Tj ET
+BT /F1 10 Tf 54 81.5 Td (  deleted-even with administrative credentials-they provide a clean recovery source that is) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 3 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 4063 >>
+stream
+BT /F1 10 Tf 54 738.0 Td (  resilient to ransomware and insider threats.) Tj ET
+BT /F1 10 Tf 54 724.0 Td (- Snapshots. Application-consistent snapshots of SAP S/4HANA \(HANA System Replication savepoints) Tj ET
+BT /F1 10 Tf 54 710.0 Td (  and log backups\) and GreenLake volumes are captured on short intervals to satisfy the 5-15) Tj ET
+BT /F1 10 Tf 54 696.0 Td (  minute RPO windows.) Tj ET
+BT /F1 10 Tf 54 682.0 Td (- Replication. Continuous asynchronous and, for the most critical databases, synchronous) Tj ET
+BT /F1 10 Tf 54 668.0 Td (  replication mirrors production data to a geographically separate recovery region, ensuring an) Tj ET
+BT /F1 10 Tf 54 654.0 Td (  up-to-date copy is always available to restore from.) Tj ET
+BT /F1 10 Tf 54 640.0 Td (- Restore verification. Backups are meaningless if they cannot be recovered. Automated restore) Tj ET
+BT /F1 10 Tf 54 626.0 Td (  rehearsals sample production data sets weekly and confirm integrity, recoverability, and elapsed) Tj ET
+BT /F1 10 Tf 54 612.0 Td (  time against the RTO.) Tj ET
+BT /F1 10 Tf 54 592.0 Td (The 3-2-1-1 principle governs all Tier 0 data: three copies, on two media types, one off-site, and) Tj ET
+BT /F1 10 Tf 54 578.0 Td (one immutable.) Tj ET
+BT /F1 10 Tf 54 558.0 Td (---) Tj ET
+BT /F2 13 Tf 54 532.0 Td (4. Recovery Architecture: Failover and Alternate Sites) Tj ET
+BT /F1 10 Tf 54 509.0 Td (HPE operates a multi-site topology engineered for redundancy and rapid failover:) Tj ET
+BT /F1 10 Tf 54 489.0 Td (- The primary region hosts live GreenLake and SAP S/4HANA production workloads.) Tj ET
+BT /F1 10 Tf 54 475.0 Td (- A hot-site in a separate region maintains synchronously replicated data and warm-started) Tj ET
+BT /F1 10 Tf 54 461.0 Td (  compute, enabling near-immediate automated failover for Tier 0 services within their RTO.) Tj ET
+BT /F1 10 Tf 54 447.0 Td (- A warm-site provides pre-provisioned but scaled-down capacity for Tier 1 and Tier 2 services,) Tj ET
+BT /F1 10 Tf 54 433.0 Td (  activated on demand.) Tj ET
+BT /F1 10 Tf 54 419.0 Td (- A contracted alternate cloud region serves as an additional recovery landing zone if a primary) Tj ET
+BT /F1 10 Tf 54 405.0 Td (  provider or facility becomes wholly unavailable.) Tj ET
+BT /F1 10 Tf 54 385.0 Td (Network redundancy, load-balanced ingress, and diverse carrier paths eliminate single points of) Tj ET
+BT /F1 10 Tf 54 371.0 Td (failure. Failover procedures are codified as runbooks and, where possible, automated so that human) Tj ET
+BT /F1 10 Tf 54 357.0 Td (error during a crisis is minimized.) Tj ET
+BT /F1 10 Tf 54 337.0 Td (---) Tj ET
+BT /F2 13 Tf 54 311.0 Td (5. Crisis Governance, Succession, and Communications) Tj ET
+BT /F2 11.5 Tf 54 284.0 Td (Leadership and Succession) Tj ET
+BT /F1 10 Tf 54 268.5 Td (A standing Crisis Management Team \(CMT\) directs response. To ensure decisions are never blocked by) Tj ET
+BT /F1 10 Tf 54 254.5 Td (an unavailable leader, every CMT role has a documented succession chain with named alternates,) Tj ET
+BT /F1 10 Tf 54 240.5 Td (deputies, and backup personnel. Authority delegation is pre-approved so that if a primary) Tj ET
+BT /F1 10 Tf 54 226.5 Td (decision-maker cannot be reached, the designated deputy assumes command without delay.) Tj ET
+BT /F2 11.5 Tf 54 202.5 Td (Crisis Communications) Tj ET
+BT /F1 10 Tf 54 187.0 Td (The crisis communications protocol governs how and when we inform stakeholders. Upon activation, the) Tj ET
+BT /F1 10 Tf 54 173.0 Td (CMT issues structured notification to employees, affected customers, partners, regulators, and) Tj ET
+BT /F1 10 Tf 54 159.0 Td (executive leadership through primary and out-of-band channels. Pre-drafted holding statements, an) Tj ET
+BT /F1 10 Tf 54 145.0 Td (incident bridge, and a status page keep GreenLake customers informed of service state and expected) Tj ET
+BT /F1 10 Tf 54 131.0 Td (recovery, while account teams manage direct outreach for enterprise SAP-dependent customers.) Tj ET
+BT /F1 10 Tf 54 111.0 Td (---) Tj ET
+BT /F2 13 Tf 54 85.0 Td (6. Testing, Exercises, and Validation) Tj ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 3 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Length 1893 >>
+stream
+BT /F1 10 Tf 54 738.0 Td (A plan that is not exercised is only a hypothesis. HPE maintains a continuous testing calendar:) Tj ET
+BT /F1 10 Tf 54 718.0 Td (- Tabletop exercises quarterly, walking leadership and technical teams through scenarios such as) Tj ET
+BT /F1 10 Tf 54 704.0 Td (  regional outage, ransomware, and supply-chain disruption.) Tj ET
+BT /F1 10 Tf 54 690.0 Td (- Functional drills and failover simulations semi-annually, executing live cutover of GreenLake) Tj ET
+BT /F1 10 Tf 54 676.0 Td (  and SAP S/4HANA to the hot-site and measuring actual RTO/RPO against targets.) Tj ET
+BT /F1 10 Tf 54 662.0 Td (- Full recovery validation at least annually, including immutable-backup restore into an) Tj ET
+BT /F1 10 Tf 54 648.0 Td (  isolated recovery environment.) Tj ET
+BT /F1 10 Tf 54 628.0 Td (Every exercise produces an after-action report; findings feed a corrective-action tracker with) Tj ET
+BT /F1 10 Tf 54 614.0 Td (owners and deadlines.) Tj ET
+BT /F1 10 Tf 54 594.0 Td (---) Tj ET
+BT /F2 13 Tf 54 568.0 Td (7. Plan Maintenance and Review) Tj ET
+BT /F1 10 Tf 54 545.0 Td (This plan is a living document. Formal review and updates occur on an annual cycle and are) Tj ET
+BT /F1 10 Tf 54 531.0 Td (additionally triggered by significant infrastructure changes, acquisitions, exercise findings, or) Tj ET
+BT /F1 10 Tf 54 517.0 Td (lessons learned from real incidents. Maintenance responsibilities-keeping current the contact) Tj ET
+BT /F1 10 Tf 54 503.0 Td (rosters, runbooks, dependency maps, and recovery targets-are assigned to the Office of Business) Tj ET
+BT /F1 10 Tf 54 489.0 Td (Resilience, which certifies the plan's accuracy each fiscal year and reports readiness to the) Tj ET
+BT /F1 10 Tf 54 475.0 Td (Board's risk committee.) Tj ET
+BT /F1 10 Tf 54 455.0 Td (---) Tj ET
+BT /F1 10 Tf 54 435.0 Td (*Approved by the HPE Business Resilience Steering Committee.*) Tj ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 3 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 8 0 R >>
+endobj
+10 0 obj
+<< /Type /Catalog /Pages 3 0 R >>
+endobj
+xref
+0 11
+0000000000 65535 f 
+0000000015 00000 n 
+0000000112 00000 n 
+0000000214 00000 n 
+0000000283 00000 n 
+0000004186 00000 n 
+0000004322 00000 n 
+0000008436 00000 n 
+0000008572 00000 n 
+0000010516 00000 n 
+0000010652 00000 n 
+trailer
+<< /Size 11 /Root 10 0 R /Info << /Title (d7_business_continuity_dr_plan) >> >>
+startxref
+10702
+%%EOF

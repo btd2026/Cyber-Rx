@@ -1,0 +1,123 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+2 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+3 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R] /Count 2 >>
+endobj
+4 0 obj
+<< /Length 4317 >>
+stream
+BT /F2 17 Tf 54 730.0 Td (Third-Party & Supply-Chain Risk Management Policy) Tj ET
+BT /F2 13 Tf 54 697.0 Td (1. Purpose and Scope) Tj ET
+BT /F1 10 Tf 54 674.0 Td (Hewlett Packard Enterprise \(HPE\) depends on an extensive ecosystem of third parties - cloud) Tj ET
+BT /F1 10 Tf 54 660.0 Td (providers such as AWS and Microsoft Azure, enterprise software vendors including SAP and Salesforce,) Tj ET
+BT /F1 10 Tf 54 646.0 Td (identity providers like Okta, and hardware manufacturing partners such as Foxconn. This Third-Party) Tj ET
+BT /F1 10 Tf 54 632.0 Td (and Supply-Chain Risk Management Policy establishes the requirements governing how HPE identifies,) Tj ET
+BT /F1 10 Tf 54 618.0 Td (assesses, and oversees every vendor, supplier, service provider, and outsourcing arrangement across) Tj ET
+BT /F1 10 Tf 54 604.0 Td (its supply chain. It applies to all business units, procurement teams, and personnel who engage,) Tj ET
+BT /F1 10 Tf 54 590.0 Td (contract with, or manage external parties on behalf of HPE.) Tj ET
+BT /F1 10 Tf 54 570.0 Td (The objective of this program is to ensure that risks introduced by third parties - including) Tj ET
+BT /F1 10 Tf 54 556.0 Td (cybersecurity, operational, financial, privacy, regulatory, and reputational risks - are managed) Tj ET
+BT /F1 10 Tf 54 542.0 Td (consistently throughout the entire vendor lifecycle, from onboarding through offboarding.) Tj ET
+BT /F2 13 Tf 54 516.0 Td (2. Governance and Ownership) Tj ET
+BT /F1 10 Tf 54 493.0 Td (The Third-Party Risk Management \(TPRM\) function, operating under the Chief Information Security) Tj ET
+BT /F1 10 Tf 54 479.0 Td (Officer and Chief Procurement Officer, owns this policy. Business owners act as relationship) Tj ET
+BT /F1 10 Tf 54 465.0 Td (managers accountable for the day-to-day performance and risk posture of each supplier they sponsor.) Tj ET
+BT /F1 10 Tf 54 451.0 Td (The TPRM Committee reviews escalations, approves exceptions, and reports aggregate supply-chain risk) Tj ET
+BT /F1 10 Tf 54 437.0 Td (to executive leadership and the Board Risk Committee on a quarterly basis.) Tj ET
+BT /F2 13 Tf 54 411.0 Td (3. Vendor Inventory and Identification) Tj ET
+BT /F1 10 Tf 54 388.0 Td (HPE maintains a centralized vendor inventory \(the authoritative supplier catalog\) that records every) Tj ET
+BT /F1 10 Tf 54 374.0 Td (third party with access to HPE systems, data, facilities, or that delivers goods and services) Tj ET
+BT /F1 10 Tf 54 360.0 Td (material to operations. No engagement may proceed until the vendor is formally identified and) Tj ET
+BT /F1 10 Tf 54 346.0 Td (registered on this list. The inventory captures ownership, data classification handled, spend,) Tj ET
+BT /F1 10 Tf 54 332.0 Td (contract dates, and the assigned risk tier. Procurement reconciles the catalog against) Tj ET
+BT /F1 10 Tf 54 318.0 Td (accounts-payable records at least annually to detect unregistered or "shadow" vendors.) Tj ET
+BT /F2 13 Tf 54 292.0 Td (4. Vendor Tiering and Criticality Classification) Tj ET
+BT /F1 10 Tf 54 269.0 Td (Every third party is subject to risk-based tiering. During onboarding, TPRM performs an) Tj ET
+BT /F1 10 Tf 54 255.0 Td (inherent-risk classification that categorizes the supplier by criticality using factors such as data) Tj ET
+BT /F1 10 Tf 54 241.0 Td (sensitivity, system access, business dependency, regulatory exposure, and substitutability. This) Tj ET
+BT /F1 10 Tf 54 227.0 Td (risk-rating produces a tier:) Tj ET
+BT /F1 10 Tf 54 207.0 Td (- Tier 1 - Critical: Vendors whose failure would materially disrupt HPE operations or expose) Tj ET
+BT /F1 10 Tf 54 193.0 Td (  regulated/confidential data \(e.g., AWS, Microsoft, Okta, Foxconn\).) Tj ET
+BT /F1 10 Tf 54 179.0 Td (- Tier 2 - Important: Vendors handling significant but recoverable services \(e.g., SAP,) Tj ET
+BT /F1 10 Tf 54 165.0 Td (  Salesforce\).) Tj ET
+BT /F1 10 Tf 54 151.0 Td (- Tier 3 - Limited: Vendors with minimal access or impact.) Tj ET
+BT /F1 10 Tf 54 131.0 Td (The assigned tier determines the depth of due diligence, contractual rigor, and monitoring frequency) Tj ET
+BT /F1 10 Tf 54 117.0 Td (applied.) Tj ET
+BT /F2 13 Tf 54 91.0 Td (5. Due Diligence and Assessment) Tj ET
+BT /F1 10 Tf 54 68.0 Td (Before contract execution, each vendor undergoes due diligence proportionate to its tier. HPE issues) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 3 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 4375 >>
+stream
+BT /F1 10 Tf 54 738.0 Td (a standardized security and privacy assessment questionnaire \(aligned to ISO 27001, SOC 2, and NIST) Tj ET
+BT /F1 10 Tf 54 724.0 Td (frameworks\) and reviews supporting evidence such as audit reports, penetration-test summaries,) Tj ET
+BT /F1 10 Tf 54 710.0 Td (financial statements, and certifications. Tier 1 suppliers additionally receive an on-site or) Tj ET
+BT /F1 10 Tf 54 696.0 Td (virtual control review and, where applicable, a supply-chain integrity assessment covering hardware) Tj ET
+BT /F1 10 Tf 54 682.0 Td (provenance and counterfeit prevention. Assessment findings must be remediated or formally) Tj ET
+BT /F1 10 Tf 54 668.0 Td (risk-accepted before onboarding is approved.) Tj ET
+BT /F2 13 Tf 54 642.0 Td (6. Contractual Controls) Tj ET
+BT /F1 10 Tf 54 619.0 Td (All third-party relationships must be governed by written contracts and agreements that codify HPE's) Tj ET
+BT /F1 10 Tf 54 605.0 Td (risk requirements. Contracts must include, at minimum: data protection and confidentiality clauses,) Tj ET
+BT /F1 10 Tf 54 591.0 Td (defined service-level agreements \(SLAs\) with performance and availability commitments,) Tj ET
+BT /F1 10 Tf 54 577.0 Td (breach-notification obligations, compliance with applicable laws, a right-to-audit clause enabling) Tj ET
+BT /F1 10 Tf 54 563.0 Td (HPE to verify controls, and clearly documented exit and termination provisions. Legal and TPRM) Tj ET
+BT /F1 10 Tf 54 549.0 Td (jointly approve deviations from standard clauses. SLAs are tracked against measured performance, and) Tj ET
+BT /F1 10 Tf 54 535.0 Td (persistent breaches trigger escalation.) Tj ET
+BT /F2 13 Tf 54 509.0 Td (7. Subcontractor and Fourth-Party Oversight) Tj ET
+BT /F1 10 Tf 54 486.0 Td (Vendors frequently rely on their own subcontractors, creating fourth-party and nth-party) Tj ET
+BT /F1 10 Tf 54 472.0 Td (dependencies that can propagate risk into HPE's supply chain. Contracts must require suppliers to) Tj ET
+BT /F1 10 Tf 54 458.0 Td (disclose material subcontractors, flow down equivalent security and privacy obligations, and obtain) Tj ET
+BT /F1 10 Tf 54 444.0 Td (HPE approval before engaging fourth parties that handle HPE data. TPRM maps concentration risk - for) Tj ET
+BT /F1 10 Tf 54 430.0 Td (example, multiple critical vendors depending on the same underlying cloud infrastructure - and) Tj ET
+BT /F1 10 Tf 54 416.0 Td (factors this exposure into resilience planning.) Tj ET
+BT /F2 13 Tf 54 390.0 Td (8. Ongoing and Continuous Monitoring) Tj ET
+BT /F1 10 Tf 54 367.0 Td (Third-party risk is managed continuously, not only at onboarding. HPE performs periodic reassessment) Tj ET
+BT /F1 10 Tf 54 353.0 Td (of each vendor on a cadence driven by tier - Tier 1 annually, Tier 2 biennially, and Tier 3 on a) Tj ET
+BT /F1 10 Tf 54 339.0 Td (risk-triggered basis. Continuous monitoring includes external security-rating feeds,) Tj ET
+BT /F1 10 Tf 54 325.0 Td (threat-intelligence and breach alerts, SLA performance reviews, and re-issued questionnaires.) Tj ET
+BT /F1 10 Tf 54 311.0 Td (Material changes - a data breach, ownership change, adverse audit finding, or degraded rating -) Tj ET
+BT /F1 10 Tf 54 297.0 Td (trigger an off-cycle review and, where warranted, remediation plans or tier reclassification.) Tj ET
+BT /F2 13 Tf 54 271.0 Td (9. Exit, Termination, and Contingency Strategy) Tj ET
+BT /F1 10 Tf 54 248.0 Td (Every critical engagement must have a documented exit and transition strategy defined before) Tj ET
+BT /F1 10 Tf 54 234.0 Td (onboarding. Offboarding procedures ensure secure return or destruction of HPE data, revocation of) Tj ET
+BT /F1 10 Tf 54 220.0 Td (access, knowledge transfer, and orderly service migration. For Tier 1 suppliers, HPE maintains) Tj ET
+BT /F1 10 Tf 54 206.0 Td (contingency and business-continuity plans - including identified alternate providers or in-sourcing) Tj ET
+BT /F1 10 Tf 54 192.0 Td (options - so that termination, insolvency, or sustained SLA failure does not disrupt operations.) Tj ET
+BT /F2 13 Tf 54 166.0 Td (10. Enforcement and Review) Tj ET
+BT /F1 10 Tf 54 143.0 Td (Non-compliance with this policy may result in engagement suspension and disciplinary action. This) Tj ET
+BT /F1 10 Tf 54 129.0 Td (policy is reviewed at least annually, or upon significant regulatory or business change, by the TPRM) Tj ET
+BT /F1 10 Tf 54 115.0 Td (Committee.) Tj ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 3 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Type /Catalog /Pages 3 0 R >>
+endobj
+xref
+0 9
+0000000000 65535 f 
+0000000015 00000 n 
+0000000112 00000 n 
+0000000214 00000 n 
+0000000277 00000 n 
+0000004645 00000 n 
+0000004781 00000 n 
+0000009207 00000 n 
+0000009343 00000 n 
+trailer
+<< /Size 9 /Root 8 0 R /Info << /Title (d3_third_party_supply_chain_policy) >> >>
+startxref
+9392
+%%EOF
