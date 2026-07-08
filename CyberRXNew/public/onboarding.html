@@ -582,7 +582,7 @@
     var t=String(e.data.tool||'').toLowerCase(),id=null;
     if(/capability map|business capabilit|grc/.test(t))id='secBcap';
     else if(/vendor|tprm|securityscorecard|bitsight|third.?party/.test(t))id='secVendor';
-    else if(/threat intel|recorded future|mandiant|mitre/.test(t))id='secTools';
+    else if(/threat intel|recorded future|mandiant|mitre|\bsiem\b|soar|\bsoc\b|splunk|sentinel/.test(t))id='secTools';
     else if(/crown jewel|inventory|\bvm\b|vulnerability|\bedr\b|cmdb/.test(t))id='secProc';
     else if(/document review|policy|document evidence|reviewed document/.test(t))id='secDocReview';
     else if(/cbom|crypto|quantum|pqc|ai-spm|aispm|genai|casb|sse|coding|copilot|claude code|ci\/cd|pipeline|slsa|nhi|machine identit|non-human|secrets|artifact|sbom|ai supply|supply.?chain|ai.?ml|ai inventory/.test(t))id='secAiSupply';
