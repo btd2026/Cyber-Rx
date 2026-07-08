@@ -3324,6 +3324,9 @@ var C5_DP_OPENDEC={};    // which decision cards are expanded (lever key → tru
 var C5_DP_OPENASK={};    // which awaiting-leader rows are expanded (ask id → true)
 function c5DecProj(){
   var host=document.getElementById('c5-decproj');if(!host)return;
+  // This renderer only runs on the CISO seat — so if a return bar is showing, the
+  // CISO has navigated back; drop it.
+  if(window.__c5Return||document.getElementById('c5retbar')){window.__c5Return=null;c5HideReturnBar();}
   var cov=c5ProjCov();
   /* ---- Panel A: decisions I owe ---- */
   var levers=c5Levers();
@@ -3417,10 +3420,37 @@ function c5dpMeterRow(p){
   return '<div class="c5dp-mrow"><div class="c5dp-mlabel"><b>'+p.id+'</b><span>'+c5esc(p.name||'')+'</span></div>'+
     '<div class="c5dp-mviz">'+c5dpMeter(p.from,p.to)+'<span class="c5dp-mnum">'+p.from+'<span class="c5dp-arrow">→</span>'+p.to+'</span>'+cap+'</div></div>';
 }
-/* Navigate to a leader's cockpit and open their "What I need from you" tab. */
+/* Navigate to a leader's cockpit and open their "What I need from you" tab,
+   remembering where we came from so a return bar can bring the CISO straight back. */
 function c5GoSeat(seat){
-  try{if(typeof selectSeat==='function'){selectSeat(seat);
-    var t=document.querySelector('#secTabs .sectab[data-sec="1"]');if(t)t.click();window.scrollTo({top:0});}}catch(_){}
+  try{
+    var t=document.querySelector('#secTabs .sectab.on');var ti=t?(+t.dataset.sec):0;
+    window.__c5Return={seat:(typeof CUR!=='undefined'?CUR:'ciso'),tab:ti,who:c5SeatNameOf('ciso')||'CISO'};
+    if(typeof selectSeat==='function'){selectSeat(seat);
+      var t2=document.querySelector('#secTabs .sectab[data-sec="1"]');if(t2)t2.click();window.scrollTo({top:0});}
+    c5ShowReturnBar(seat);
+  }catch(_){}
+}
+/* A persistent floating bar shown while the CISO is in a leader's cockpit, with a
+   one-click return to the Decisions & projections tab they came from. Lives on
+   document.body so it survives seat re-renders; c5DecProj() removes it once the CISO
+   is back (that renderer only runs on the CISO seat). */
+function c5ShowReturnBar(seat){
+  var meta=C5_SEAT_META[seat]||{label:seat},who=c5SeatNameOf(seat);
+  var b=document.getElementById('c5retbar');if(!b){b=document.createElement('div');b.id='c5retbar';document.body.appendChild(b);}
+  b.className='c5retbar';
+  b.innerHTML='<span class="c5retbar-t">Viewing <b>'+c5esc(who||meta.label)+'</b>’s cockpit — routed from your Decisions &amp; projections</span>'+
+    '<button class="c5retbar-btn" id="c5retgo">← Return to my decisions</button>'+
+    '<button class="c5retbar-x" id="c5retx" title="Dismiss">✕</button>';
+  var g=document.getElementById('c5retgo');if(g)g.onclick=c5DoReturn;
+  var x=document.getElementById('c5retx');if(x)x.onclick=function(){window.__c5Return=null;c5HideReturnBar();};
+}
+function c5HideReturnBar(){var b=document.getElementById('c5retbar');if(b)b.remove();}
+function c5DoReturn(){
+  var r=window.__c5Return||{seat:'ciso'};window.__c5Return=null;
+  try{if(typeof selectSeat==='function'){selectSeat(r.seat||'ciso');
+    var idx=(r.tab!=null?r.tab:6);var t=document.querySelector('#secTabs .sectab[data-sec="'+idx+'"]');if(t)t.click();window.scrollTo({top:0});}}catch(_){}
+  c5HideReturnBar();
 }
 function c5dpBadge(s){var col=s>=4?'good':s>=3?'blue':s>=2?'warn':'crit';return '<span class="c5dp-cmmi" style="background:var(--'+col+')">'+s+'</span>';}
 /* A 5-segment maturity meter: solid up to the current score, a highlighted "gain"
