@@ -121,6 +121,22 @@ router.post('/auditor-pack.pptx', optionalJWT, express.json({ limit: '4mb' }), a
   } catch (err) { logger.error('CISO auditor-pack error', { error: err.message }); res.status(500).json({ error: 'Failed to build auditor pack', message: err.message }); }
 });
 
+// Excel companion: control-by-control scorecard + POA&M (same assessment payload).
+router.post('/control-scorecard.xlsx', optionalJWT, express.json({ limit: '4mb' }), async (req, res) => {
+  try {
+    const payload = req.body || {};
+    if (!payload || typeof payload !== 'object' || !Array.isArray(payload.register)) {
+      return res.status(400).json({ error: 'assessment payload required (register[])' });
+    }
+    const ControlScorecardBuilder = require('../services/ControlScorecardBuilder');
+    const buf = await ControlScorecardBuilder.buildXlsxBuffer(payload);
+    const fw = String(payload.fw || 'framework').replace(/[^a-z0-9]/gi, '').toLowerCase() || 'framework';
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="nerion-control-scorecard-${fw}.xlsx"`);
+    res.end(Buffer.from(buf));
+  } catch (err) { logger.error('CISO control-scorecard error', { error: err.message }); res.status(500).json({ error: 'Failed to build scorecard', message: err.message }); }
+});
+
 // ---- Executive summary — intake-driven, LLM-generated, human-in-the-loop -----
 // Generate a DRAFT from intake + assessment (stored, not auto-published).
 router.post('/exec-summary/generate', optionalJWT, async (req, res) => {
