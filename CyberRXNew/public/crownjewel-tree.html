@@ -127,7 +127,7 @@
 <header>
   <div class="wrap">
     <div class="head-top">
-      <div class="brand"><span class="dot"></span><div><span id="brandName">Northwind Insurance</span><small>Cyber value tree · illustrative</small></div></div>
+      <div class="brand"><span class="dot"></span><div><span id="brandName">Northwind Insurance</span><small id="brandSub">Cyber value tree · illustrative</small></div></div>
       <div class="toggle" id="toggle"><button data-mode="code" class="on">CSF numbers</button><button data-mode="name">+ names</button></div>
     </div>
     <div class="hero">
@@ -251,8 +251,10 @@ let DATA=[
 
 const MITIGATED=3;
 let ORG='Northwind Insurance';
+let LIVEMODE=false; // flips true once the host posts real inventory
 function build(){
 document.getElementById('brandName').textContent=ORG;
+var _sub=document.getElementById('brandSub');if(_sub)_sub.textContent='Cyber value tree · '+(LIVEMODE?'live from your data':'illustrative');
 let TOTV=0,TOTR=0,TOTM=0; const scope=new Set();
 DATA.forEach(f=>{f.value=0;f.risk=0;f.mit=0;
   f.procs.forEach(p=>{p.value=0;p.risk=0;p.mit=0;
@@ -365,6 +367,7 @@ try{new ResizeObserver(reportHeight).observe(document.body);}catch(_){}
 function reportHeight(){try{var h=Math.max(document.body.scrollHeight,document.documentElement.scrollHeight,320);parent.postMessage({type:'crowntree-height',h:h},'*');}catch(_){}}
 window.addEventListener('message',function(e){var d=(e&&e.data)||{};if(d.type!=='crowntree-data')return;
   if(d.RISKS)RISKS=d.RISKS;if(d.C)C=d.C;if(Array.isArray(d.DATA))DATA=d.DATA;if(d.org)ORG=d.org;
+  LIVEMODE=true; // real inventory posted → no longer illustrative
   try{build();
     var ft=document.querySelector('footer');
     if(ft)ft.innerHTML="Live from your Nerion onboarding — business functions, key processes, and crown-jewel applications & infrastructure come from your inventory; each crown jewel's business value is the value of the process it carries, and control maturity comes from your assessments and connected tools. A control at <b>maturity 3 or higher</b> mitigates its slice of the jewel's value (struck through); live $ at risk sums only the slices behind controls below 3 — rolled up jewel → process → function → enterprise. Hover any control for its NIST CSF 2.0 name and description.";

@@ -1489,6 +1489,59 @@
     ['input','change','click'].forEach(function(ev){document.addEventListener(ev,function(){try{obUpdateProgress();}catch(_){}},false);});
     obShow('org');
   })();
+
+  /* ================= persist onboarding · no re-entry =================
+     Each customer runs their own VM, so the work they've entered should survive a
+     reload. We autosave a snapshot of every field + uploaded list to localStorage
+     and restore it on load. The authoritative copy is still the backend (saved at
+     go-live); this just means the FORM comes back filled instead of blank. */
+  var OB_RESTORING=false;
+  function obCollectState(){
+    var f={};
+    document.querySelectorAll('input[id],select[id],textarea[id]').forEach(function(el){
+      if(el.type==='file')return;
+      f[el.id]=(el.type==='checkbox'||el.type==='radio')?('B:'+(el.checked?1:0)):el.value;
+    });
+    var seatN={},seatE={};
+    document.querySelectorAll('.seatname').forEach(function(i){if(i.dataset.seat)seatN[i.dataset.seat]=i.value;});
+    document.querySelectorAll('.seatemail').forEach(function(i){if(i.dataset.seat)seatE[i.dataset.seat]=i.value;});
+    var certs=Array.prototype.slice.call(document.querySelectorAll('#growthCerts input:checked')).map(function(c){return c.value;});
+    return {v:2,ts:Date.now(),fields:f,seatN:seatN,seatE:seatE,certs:certs,regions:REGIONS,
+      proc:PROC,app:APP,risk:RISK,
+      init:(typeof INIT!=='undefined'?INIT:null),vendors:(typeof VENDORS!=='undefined'?VENDORS:null),
+      aiInv:(typeof AI_INV!=='undefined'?AI_INV:null)};
+  }
+  function obSaveState(){if(OB_RESTORING)return;try{localStorage.setItem('cyberrx_ob_state',JSON.stringify(obCollectState()));}catch(_){}}
+  function obRestoreState(){
+    var raw;try{raw=localStorage.getItem('cyberrx_ob_state');}catch(_){return;}
+    if(!raw)return;var s;try{s=JSON.parse(raw);}catch(_){return;}if(!s||!s.fields)return;
+    OB_RESTORING=true;
+    try{
+      Object.keys(s.fields).forEach(function(id){var el=document.getElementById(id);if(!el||el.type==='file')return;var val=s.fields[id];
+        if((el.type==='checkbox'||el.type==='radio')&&typeof val==='string'&&val.indexOf('B:')===0)el.checked=(val==='B:1');else el.value=val;});
+      if(s.seatN)document.querySelectorAll('.seatname').forEach(function(i){if(s.seatN[i.dataset.seat]!=null)i.value=s.seatN[i.dataset.seat];});
+      if(s.seatE)document.querySelectorAll('.seatemail').forEach(function(i){if(s.seatE[i.dataset.seat]!=null)i.value=s.seatE[i.dataset.seat];});
+      if(Array.isArray(s.certs))document.querySelectorAll('#growthCerts input[type=checkbox]').forEach(function(c){c.checked=s.certs.indexOf(c.value)>=0;});
+      try{var cur=document.getElementById('currency');if(cur&&cur.value){var p=cur.value.split('|');CUR_SYM=p[0]||CUR_SYM;CUR_CODE=p[1]||CUR_CODE;document.querySelectorAll('.mcur').forEach(function(c){c.textContent=CUR_SYM;});}}catch(_){}
+      try{document.querySelectorAll('.money').forEach(function(i){if(typeof updateEq==='function')updateEq(i.id);});}catch(_){}
+      if(Array.isArray(s.regions)){REGIONS=s.regions.slice();document.querySelectorAll('#regions .chip').forEach(function(c){c.classList.toggle('on',REGIONS.indexOf(c.dataset.r)>=0);});var b1=document.getElementById('b1');if(b1&&REGIONS.length){b1.textContent='✓ '+REGIONS.length+' regions';b1.classList.add('done');}}
+      if(Array.isArray(s.proc)&&s.proc.length){PROC=s.proc;showRows(document.getElementById('resProc'),PROC,function(x){return '<div class="xrow"><span class="nm">'+x.name+'</span><span class="mt">'+(x.data||'')+(x.revenue?(' · '+x.revenue):'')+(x.rto?(' · RTO '+x.rto+'h'):'')+'</span></div>';});var b4=document.getElementById('b4');if(b4){b4.dataset.n=PROC.length;badgeDone('b4');}}
+      if(Array.isArray(s.app)&&s.app.length){APP=s.app;showRows(document.getElementById('resApp'),APP,function(x){return '<div class="xrow"><span class="nm">'+x.name+'</span><span class="mt">'+(x.host||'')+(x.vendor?(' · '+x.vendor):'')+'</span></div>';});var b5=document.getElementById('b5');if(b5){b5.dataset.n=APP.length;badgeDone('b5');}}
+      if(Array.isArray(s.risk)&&s.risk.length){RISK=s.risk;showRows(document.getElementById('resRisk'),RISK,function(x){return '<div class="xrow"><span class="nm">'+x.title+'</span><span class="mt">'+(x.asset||'')+(x.exposure?(' · '+x.exposure):'')+' · '+(x.severity||'')+'</span></div>';});var b6=document.getElementById('b6');if(b6){b6.dataset.n=RISK.length;badgeDone('b6');}}
+      if(typeof INIT!=='undefined'&&Array.isArray(s.init)&&s.init.length){INIT=s.init;try{showRows(document.getElementById('resInit'),INIT,function(x){return '<div class="xrow"><span class="nm">'+x.name+'</span><span class="mt">'+(x.owner||'')+(x.cost?(' · '+x.cost):'')+' · '+(x.status||'')+'</span></div>';});var bi=document.getElementById('binit');if(bi){bi.textContent='✓ '+INIT.length+' loaded';bi.classList.add('done');}}catch(_){}}
+      if(typeof VENDORS!=='undefined'&&Array.isArray(s.vendors)&&s.vendors.length){VENDORS=s.vendors;try{vendRows();}catch(_){}}
+      if(s.aiInv&&typeof AI_INV!=='undefined'){AI_INV=s.aiInv;try{renderAiInv();}catch(_){}}
+      try{if(typeof computeAiGov==='function')computeAiGov();}catch(_){}
+      try{updateSummary();}catch(_){}try{renderMap();}catch(_){}
+      try{var sm=document.getElementById('summary');if(sm&&sm.innerHTML.indexOf('Restored')<0)sm.innerHTML='↺ <b>Restored your saved progress</b> · '+sm.innerHTML;}catch(_){}
+    }catch(e){try{console.warn('onboarding restore',e&&e.message);}catch(_){}}
+    OB_RESTORING=false;
+  }
+  var _obSaveT=null;function obSaveSoon(){clearTimeout(_obSaveT);_obSaveT=setTimeout(obSaveState,500);}
+  document.addEventListener('input',obSaveSoon);document.addEventListener('change',obSaveSoon);
+  try{setInterval(obSaveState,6000);}catch(_){}          // backstop for file-upload/connect array changes
+  try{window.addEventListener('beforeunload',obSaveState);}catch(_){}
+  try{obRestoreState();}catch(_){}                        // bring the user's work back on load
 </script>
 </body>
 </html>
