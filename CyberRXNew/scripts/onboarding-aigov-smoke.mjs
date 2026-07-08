@@ -69,5 +69,19 @@ eq('policy.drafted', run({}, [], [{ type: 'AI Acceptable-Use Policy', name: 'aup
 eq('policy.board-approved', run({}, [], [{ type: 'AI Acceptable-Use Policy', name: 'aup.pdf' }], true).policy, 'Board-approved');
 eq('policy.null-no-doc', run({}, [], [], false).policy, null);
 
+// 7) Inline uploaders present in the AI section, wired to the shared engines, so the
+//    user acts right where the derived tiles are (not sent elsewhere).
+const wired = (label, cond) => { if (cond) pass++; else { fail++; console.error('FAIL ' + label); } };
+wired('inline AI inventory file input', html.includes('id="aiGovInvFile"'));
+wired('inline AI inventory load button', html.includes('id="aiGovInvLoad"'));
+wired('inline AI doc-type select', html.includes('id="aiGovDocType"'));
+wired('inline AI doc file input', html.includes('id="aiGovDocFile"'));
+wired('inline AI doc analyze button', html.includes('id="aiGovDocAnalyze"'));
+wired('loadAiInv is parameterized', /function loadAiInv\(fileId,msgId\)/.test(html));
+wired('shared doc engine obAnalyzeDocFrom', /function obAnalyzeDocFrom\(/.test(html));
+wired('inline inventory reuses loadAiInv', /loadAiInv\('aiGovInvFile','aiGovInvMsg'\)/.test(html));
+wired('inline docs reuse obAnalyzeDocFrom', /obAnalyzeDocFrom\('aiGovDocFile','aiGovDocType','aiGovDocMsg'\)/.test(html));
+wired('AI doc types cover NIST/ISO/AUP', /d11.*NIST AI RMF/s.test(html) && /d12.*ISO\/IEC 42001/s.test(html) && /d13.*Acceptable-Use/s.test(html));
+
 if (fail) { console.error(`\nonboarding-aigov-smoke: ${pass} passed, ${fail} FAILED`); process.exit(1); }
-console.log(`onboarding-aigov-smoke OK — ${pass} derivation cases pass (empty→null; inventory/docs/regions→derived).`);
+console.log(`onboarding-aigov-smoke OK — ${pass} checks pass (derivation empty→null / inventory·docs·regions; inline uploaders wired to shared engines).`);
