@@ -449,15 +449,35 @@ function c5get(id){
         sources:[{tool:'Vendor Risk (TPRM)',connector:'tprm',field:'alerts',lastRefresh:c5ago()},{tool:(V.vs?V.vs.vendor:'SecurityScorecard / BitSight'),connector:'ratings',field:'vendor_rating'}],
         note:conn?(n>0?('Your worst-flagged third party is '+((V.worst&&V.worst.name)||'a tier-1 provider')+((V.worst&&V.worst.score!=null)?(' at '+V.worst.score+'/100'):'')+' — exposure you carry through the services it supports.'):'No third-party alert is impacting a business service right now.'):'The third parties with an open alert, joined to the services they support.',
         connectTool:'your vendor-risk monitoring (SecurityScorecard / BitSight)'});}
-    case 'cops_emerging':{var ta=sig('threat_actors_active');var conn=(ta!=null);var n=(ta!=null&&ta>0)?ta:0;
-      var partials=[];try{if(typeof TACTIC_CAPS!=='undefined'){Object.keys(TACTIC_CAPS).forEach(function(t){var mm=c5get('tac_'+t);if(mm&&mm.state==='partial')partials.push(t);});}}catch(_){}
-      return c5obj({id:id,name:'Emerging cybersecurity risks requiring action',connected:conn,
-        displayValue:conn?(n>0?(n+' to action'):'None flagged'):'—',label:'live',color:conn?(n>0?'warn':'good'):'muted',
-        formula:'new threat-intel items filtered against your asset / tech inventory; priority = affected_assets × asset_criticality; ranked priority-desc',
-        method:'From your threat-intel feed: newly published campaigns and vulnerabilities, filtered to those that match your asset and technology inventory. Priority weights the matching assets by their criticality.',
-        inputs:[{name:'Sector actors tracked',value:conn?ta:'—',source:'Threat intel · threat_actors_active'},{name:'Your soft-spot tactics',value:(partials.length?partials.join(', ').toLowerCase():'none'),source:'ATT&CK coverage'}],
-        sources:[{tool:'Threat intelligence',connector:'threat_intel',field:'new_items',lastRefresh:c5ago()},{tool:'Asset / tech inventory',connector:'cmdb',field:'matching_assets'}],
-        note:conn?(n>0?(ta+' sector actor'+(ta>1?'s are':' is')+' tracked against your stack — the emerging risks to get ahead of'+(partials.length?(', concentrated on your '+partials.join(' & ').toLowerCase()+' gap'):'')+'.'):'No emerging risk currently matches your inventory.'):'Newly published threats matched to your inventory, prioritized by what they can reach.',
+    case 'cops_emerging':{var ta=sig('threat_actors_active');var conn=(ta!=null);
+      // Enumerate the ACTUAL emerging risks (the sector actors / campaigns tracked
+      // against the org's stack), each mapped to the controls it targets, our live
+      // coverage on those controls, and the crown-jewel it would reach — so the
+      // drill shows WHAT the risks are and HOW each impacts the business.
+      var acts=(typeof tmActors==='function')?(tmActors().list||[]):[];
+      var topCj=(typeof LIVE!=='undefined'&&LIVE&&LIVE.crown_jewels&&LIVE.crown_jewels[0]&&LIVE.crown_jewels[0].name)||((typeof LIVE!=='undefined'&&LIVE&&LIVE.process_exposure&&LIVE.process_exposure[0]&&LIVE.process_exposure[0].name))||'a crown-jewel system';
+      var rows=[],toAction=0;
+      acts.slice(0,6).forEach(function(a){
+        var keys=(a.caps&&a.caps.length)?a.caps:((typeof actorCaps==='function')?actorCaps(a):[]);
+        var cps=keys.map(function(k){return {k:k,c:(typeof CAP_BY_KEY!=='undefined')?CAP_BY_KEY[k]:null,p:(typeof capDeploy==='function'&&CAP_BY_KEY&&CAP_BY_KEY[k])?capDeploy(CAP_BY_KEY[k]):null};}).filter(function(x){return x.c;});
+        var meas=cps.filter(function(x){return x.p!=null;}).map(function(x){return x.p;});
+        var minP=meas.length?Math.min.apply(null,meas):null; // weakest targeted control = the open door
+        var weak=(minP!=null&&minP<75);if(weak)toAction++;
+        var targets=cps.map(function(x){return x.c.name.replace(/ *\(.*\)/,'');}).join(', ')||'—';
+        var cov=(minP!=null)?(minP+'% (weakest targeted control)'):'not measured';
+        var impact=weak?('open path via '+(cps.filter(function(x){return x.p===minP;})[0]||{c:{name:''}}).c.name.replace(/ *\(.*\)/,'').toLowerCase()+' → '+topCj):('covered — reaches '+topCj+' only if a control lapses');
+        rows.push([{text:a.n,bold:true},(a.m||a.t||''),targets,{text:cov,color:(weak?'crit':'good')},{text:impact,color:(weak?'warn':null)}]);
+      });
+      var nAct=toAction||(acts.length?0:(conn&&ta>0?ta:0));
+      return c5obj({id:id,name:'Emerging cybersecurity risks requiring action',connected:conn||acts.length>0,
+        displayValue:(acts.length?(toAction>0?(toAction+' to action'):(acts.length+' tracked · covered')):((conn&&ta>0)?(ta+' to action'):'None flagged')),
+        label:'live',color:(toAction>0?'warn':(acts.length||conn?'good':'muted')),
+        formula:'sector actors / newly published campaigns filtered to those matching your asset & tech inventory; each mapped to the MITRE tactics it uses → your live coverage on those controls; "to action" = the actor finds a control below the 75% bar',
+        method:'From your threat-intel feed, the campaigns and actors targeting your sector are matched to your stack, then to the controls each relies on (MITRE ATT&CK mitigations). An actor is flagged "to action" when the weakest control it targets is below the 75% coverage bar — i.e. it has an open path. Business impact names the crown-jewel that path would reach.',
+        table:(rows.length?{title:'The emerging risks · what each is and how it reaches the business',cols:['Emerging risk','What it does','Controls it targets','Our coverage','Business impact'],rows:rows}:null),
+        sources:[{tool:'Threat intelligence',connector:'threat_intel',field:'sector_actors · new_items',lastRefresh:c5ago()},{tool:'MITRE ATT&CK',connector:'mitre',field:'actor → tactics → mitigations'},{tool:'Asset / tech inventory',connector:'cmdb',field:'matching_assets · crown_jewels'}],
+        action:(toAction>0?('Close the weakest control each flagged actor targets before it is used — start with the lowest-coverage one, which opens the path to '+topCj+'. Then confirm detection coverage for its tactics in the SIEM.'):'No open path today — keep the tracked actors under watch and hold coverage above the bar.'),
+        note:(acts.length?(toAction>0?(toAction+' of '+acts.length+' tracked actor'+(acts.length>1?'s':'')+' can currently reach a crown jewel through a control gap.'):'All tracked actors are currently blocked by your controls.'):'Newly published threats matched to your inventory, prioritized by what they can reach.'),
         connectTool:'your threat-intel feed'});}
     /* ---- AI & Software Supply-Chain Security (CISO tab) ----
        Self-reported posture from onboarding until the named live tool connects;
