@@ -55,6 +55,10 @@ ok('projection uses the capability automation ceiling', /capAutoCeil\(cap\)/.tes
 ok('decision cards expandable', /data-decexp=/.test(ciso) && /C5_DP_OPENDEC/.test(ciso));
 ok('leader rows expandable', /data-askexp=/.test(ciso) && /C5_DP_OPENASK/.test(ciso));
 ok('jump-to-seat navigation', /data-goseat=/.test(ciso) && /function c5GoSeat\(seat\)/.test(ciso) && /selectSeat\(seat\)/.test(ciso));
+ok('return bar shown when routing into a seat', /function c5ShowReturnBar\(seat\)/.test(ciso) && /__c5Return=/.test(ciso));
+ok('return bar navigates back to origin tab', /function c5DoReturn\(\)/.test(ciso) && /r\.tab/.test(ciso));
+ok('return bar cleared once back on CISO seat', /__c5Return\|\|document\.getElementById\('c5retbar'\)/.test(ciso));
+ok('return bar styled', /\.c5retbar\{position:fixed/.test(cockpit));
 ok('reverse tool shows per-path ceiling', /up to CMMI/.test(ciso));
 
 if (fail) { console.error(`\ndecproj-smoke: ${passed} passed, ${fail} FAILED`); process.exit(1); }
