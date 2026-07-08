@@ -253,19 +253,11 @@
     </div></div></div>
   </div>
 
-  <!-- 1c · AI risk & governance -->
+  <!-- 1c · AI risk & governance (derived — no self-reporting) -->
   <div class="sec">
-    <div class="sh"><div class="sn">✦</div><div><div class="st">AI risk &amp; governance</div><div class="sd">Two sides the board now asks about: our exposure to <b>AI-accelerated attacks</b> (frontier models like Anthropic’s Mythos can auto-discover and exploit vulnerabilities), and how we govern the <b>AI we run</b>. Powers the CEO &amp; CISO AI-risk panels.</div></div><div class="badge" id="bai">recommended</div></div>
-    <div class="row c3">
-      <div class="field"><label>AI / LLM systems in production</label><div class="moneyf"><span class="cur">#</span><input type="number" step="1" class="mnum" id="aiSystems" placeholder="0"><select class="munit" id="aiSystems_u"><option value="1" selected>—</option><option value="1000">K</option></select></div></div>
-      <div class="field"><label>AI in customer-facing / automated decisioning?</label><select id="aiDecisioning"><option value="">Select…</option><option>Yes</option><option>Piloting</option><option>No</option></select></div>
-      <div class="field"><label>AI governance framework adopted</label><select id="aiFramework"><option value="">Select…</option><option>NIST AI RMF</option><option>ISO/IEC 42001</option><option>Both</option><option>None yet</option></select></div>
-    </div>
-    <div class="row c3" style="margin-top:14px">
-      <div class="field"><label>AI acceptable-use &amp; risk policy?</label><select id="aiPolicy"><option value="">Select…</option><option>Board-approved</option><option>Drafted</option><option>None</option></select></div>
-      <div class="field"><label>EU AI Act in scope?</label><select id="aiEuAct"><option value="">Select…</option><option>Yes — high-risk system</option><option>Yes — limited-risk</option><option>Not in scope</option><option>Unsure</option></select></div>
-      <div class="field"><label>AI systems inventoried &amp; monitored?</label><select id="aiInventory"><option value="">Select…</option><option>Yes — inventoried</option><option>Partially</option><option>No</option></select></div>
-    </div>
+    <div class="sh"><div class="sn">✦</div><div><div class="st">AI risk &amp; governance</div><div class="sd">Two sides the board now asks about: our exposure to <b>AI-accelerated attacks</b> (frontier models like Anthropic’s Mythos can auto-discover and exploit vulnerabilities), and how we govern the <b>AI we run</b>. Powers the CEO &amp; CISO AI-risk panels. <b>Nothing to self-assess here</b> — Nerion derives every answer from your AI inventory, the governance documents you upload, and your operating regions.</div></div><div class="badge" id="bai">derived</div></div>
+    <div id="aiGovDerived" style="margin-top:6px"></div>
+    <div class="sd" style="margin-top:12px">Systems &amp; decisioning come from your <a href="#secAiSupply" class="aiGovJump" data-to="secAiSupply" style="color:#2563eb;font-weight:600;text-decoration:none">AI inventory</a> · framework &amp; acceptable-use policy from the <a href="#secDocReview" class="aiGovJump" data-to="secDocReview" style="color:#2563eb;font-weight:600;text-decoration:none">governance documents you upload</a> · EU AI Act scope from your <a href="#regions" class="aiGovJump" data-to="regions" style="color:#2563eb;font-weight:600;text-decoration:none">operating regions</a>. Anything not yet provided stays blank in the cockpit until its source is connected — no estimates.</div>
   </div>
 
   <!-- 1c2 · AI & Software Supply-Chain Security (CISO tab) -->
@@ -280,7 +272,7 @@
       <button class="conn-go" id="aiInvParse" type="button">Load inventory</button>
       <span id="aiInvMsg" class="sd" style="margin:0"></span>
     </div>
-    <div class="sd" style="margin-top:6px">One row per asset. A <b>type</b> column classifies each as <b>ai_system</b>, <b>genai_app</b>, <b>machine_identity</b> or <b>crypto_asset</b> (optional <b>sensitivity</b> column: high / medium / low). Export from your CMDB or model registry — Nerion counts them, so you never type “how many”.</div>
+    <div class="sd" style="margin-top:6px">One row per asset. A <b>type</b> column classifies each as <b>ai_system</b>, <b>genai_app</b>, <b>machine_identity</b> or <b>crypto_asset</b> (optional <b>sensitivity</b> column: high / medium / low; optional <b>customer_facing</b> column: yes / no — drives the AI-decisioning read above). Export from your CMDB or model registry — Nerion counts them, so you never type “how many”.</div>
     <div id="aiInvSummary" style="margin-top:12px"></div>
     <div class="sd" style="margin-top:12px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface,#fafafa)">Posture — AI-SPM, shadow-AI (CASB/SSE), CI/CD scanning, machine-identity (NHI/ITDR) and cryptography discovery (CBOM) — reads live from the tools you connect in <b>Connect your systems</b>. <a href="#secTools" id="aiGotoConn" style="color:#2563eb;font-weight:600;text-decoration:none">Go to connectors →</a></div>
   </div>
@@ -538,8 +530,8 @@
   document.querySelectorAll('input[type=date]').forEach(function(dt){dt.addEventListener('click',function(){try{if(this.showPicker)this.showPicker();}catch(_){}});});
   // board-governance section badge
   ['govCommittee','govCadence','govErm','govIrTested','govRetainer','govRansom'].forEach(function(id){var e=document.getElementById(id);if(e)e.addEventListener('change',function(){var any=['govCommittee','govCadence','govErm','govIrTested'].some(function(k){var el=document.getElementById(k);return el&&el.value;});var b=document.getElementById('bgov');if(b&&any){b.textContent='✓ provided';b.classList.add('done');}});});
-  // AI risk & governance section badge
-  ['aiSystems','aiDecisioning','aiFramework','aiPolicy','aiEuAct','aiInventory'].forEach(function(id){var e=document.getElementById(id);if(e)e.addEventListener('change',function(){var b=document.getElementById('bai');if(b){b.textContent='✓ provided';b.classList.add('done');}});});
+  // AI risk & governance is fully derived (inventory + uploaded docs + regions) —
+  // computeAiGov() renders the read-only readout and drives the badge. No inputs to wire.
   // AI & supply-chain inventory — counts pulled from an uploaded/connected inventory
   // instead of hand-typed. Classifies each row by its `type` column and tallies.
   var AI_INV={};
@@ -550,6 +542,68 @@
       .map(function(p){var n=AI_INV[p[0]]||0;return '<div style="flex:1;min-width:140px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:#fff"><div style="font-size:22px;font-weight:700;color:#111">'+n.toLocaleString()+'</div><div class="sd" style="margin:2px 0 0">'+p[1]+'</div></div>';}).join('');
     s.innerHTML='<div style="display:flex;gap:10px;flex-wrap:wrap">'+cards+'</div>'+(AI_INV.sensitivity?('<div class="sd" style="margin-top:8px">Highest data sensitivity in scope: <b>'+AI_INV.sensitivity+'</b></div>'):'');
   }
+  // AI risk & governance is DERIVED, never self-reported: systems/decisioning from the
+  // AI inventory, framework/policy from uploaded governance documents, EU AI Act scope from
+  // operating regions. Anything without a source stays blank — no estimates (per product rule).
+  function aiGovModel(){
+    var loaded=!!AI_INV._loaded;
+    // Which AI-governance documents have been analyzed (by doc type label)
+    var docs=(typeof obDocDocs==='function')?obDocDocs():[];
+    var hasNist=docs.some(function(d){return /NIST AI RMF/i.test(d.type||'');});
+    var hasIso=docs.some(function(d){return /ISO\/IEC 42001|42001/i.test(d.type||'');});
+    var aup=docs.filter(function(d){return /AI Acceptable-Use/i.test(d.type||'');})[0]||null;
+    var framework=hasNist&&hasIso?'Both':hasNist?'NIST AI RMF':hasIso?'ISO/IEC 42001':null;
+    // Board-approval status is the one fact no document authoritatively states about itself;
+    // per the rule it's the only thing that may be attested. Captured as a checkbox below.
+    var boardApproved=!!(aup&&window.__aiPolicyBoardApproved);
+    var policy=aup?(boardApproved?'Board-approved':'Drafted'):null;
+    // Decisioning from an inventory column; null unless the column was present.
+    var decisioning=(loaded&&AI_INV.customerFacingCol)?(AI_INV.customerFacing?'Yes':'No'):null;
+    // EU AI Act scope derived from operating regions + inventory presence.
+    var euEU=(REGIONS||[]).some(function(r){return /^EU$|europe|global/i.test(r);});
+    var euAiAct=loaded?(euEU?(AI_INV.customerFacing?'Yes — high-risk system':'Yes — limited-risk'):'Not in scope'):null;
+    // Unsourced fields are null (not '' / 0) so the cockpit's conn checks render an honest
+    // empty state instead of "connected, 0" — no estimates.
+    return {
+      systems:loaded?(AI_INV.ai_system||0):null,
+      decisioning:decisioning,
+      framework:framework,
+      policy:policy,
+      euAiAct:euAiAct,
+      inventory:loaded?'Yes — inventoried':null,
+      _aup:aup
+    };
+  }
+  function computeAiGov(){
+    var host=document.getElementById('aiGovDerived');if(!host)return;
+    var m=aiGovModel();
+    function chip(val,label,src,dashNote){
+      var has=(val!==''&&val!=null);
+      return '<div style="flex:1;min-width:180px;padding:12px 14px;border:1px solid '+(has?'var(--line)':'#e6d9b8')+';border-radius:10px;background:'+(has?'#fff':'#fffdf3')+'">'
+        +'<div class="sd" style="margin:0 0 4px">'+label+'</div>'
+        +'<div style="font-size:16px;font-weight:700;color:'+(has?'#111':'#9a7b1f')+'">'+(has?val:'— not yet provided')+'</div>'
+        +'<div class="sd" style="margin:4px 0 0;font-size:11px;color:var(--muted)">'+(has?('from '+src):(dashNote||('connect '+src)))+'</div></div>';
+    }
+    var rows=[
+      chip(m.systems!=null?m.systems.toLocaleString():'',(m.systems===1?'AI / ML system in production':'AI / ML systems in production'),'AI inventory','load your AI inventory'),
+      chip(m.decisioning,'Customer-facing / automated decisioning','AI inventory (customer-facing column)','add a customer-facing column to your inventory'),
+      chip(m.framework,'AI governance framework','uploaded governance documents','upload a NIST AI RMF or ISO 42001 document'),
+      chip(m.policy,'AI acceptable-use policy','uploaded acceptable-use policy','upload your AI acceptable-use policy'),
+      chip(m.euAiAct,'EU AI Act scope','operating regions + inventory','select operating regions'),
+      chip(m.inventory,'AI systems inventoried &amp; monitored','AI inventory','load your AI inventory')
+    ].join('');
+    // Board-approval attestation appears only once an acceptable-use policy has been uploaded —
+    // the sole permitted self-attestation (no document states its own board-approval status).
+    var attest=m._aup?('<label class="sd" style="display:flex;align-items:center;gap:8px;margin-top:10px;cursor:pointer">'
+      +'<input type="checkbox" id="aiPolicyBoardApproved"'+(window.__aiPolicyBoardApproved?' checked':'')+'> '
+      +'The uploaded AI acceptable-use policy (<b>'+m._aup.name+'</b>) is <b>board-approved</b>.</label>'):'';
+    host.innerHTML='<div style="display:flex;gap:10px;flex-wrap:wrap">'+rows+'</div>'+attest;
+    var cb=document.getElementById('aiPolicyBoardApproved');
+    if(cb)cb.addEventListener('change',function(){window.__aiPolicyBoardApproved=cb.checked;computeAiGov();});
+    // Badge reflects how many of the six are now sourced.
+    var got=[m.systems!=null,!!m.decisioning,!!m.framework,!!m.policy,!!m.euAiAct,!!m.inventory].filter(Boolean).length;
+    var b=document.getElementById('bai');if(b){if(got){b.textContent='✓ '+got+'/6 derived';b.classList.add('done');}else{b.textContent='derived';b.classList.remove('done');}}
+  }
   function loadAiInv(){
     var f=document.getElementById('aiInvFile'),msg=document.getElementById('aiInvMsg');
     if(!f||!f.files||!f.files[0]){if(msg)msg.textContent='Choose a CSV/TSV inventory export first.';return;}
@@ -558,16 +612,18 @@
       var pd=parseDelim(String(r.result||''));var rows=pd.rows||[],h=pd.headers;
       if(!rows.length){if(msg)msg.textContent='No rows found.';return;}
       function col(names){if(!h)return -1;for(var i=0;i<h.length;i++){var hl=String(h[i]||'').toLowerCase();for(var j=0;j<names.length;j++){if(hl.indexOf(names[j])>=0)return i;}}return -1;}
-      var tc=col(['type','category','class','kind']),sc=col(['sensitivity','data_sens','classification']);
-      var tally={ai_system:0,genai_app:0,machine_identity:0,crypto_asset:0},sensRank={high:3,medium:2,low:1},topSens=0,topSensL='';
+      var tc=col(['type','category','class','kind']),sc=col(['sensitivity','data_sens','classification']),
+          fc=col(['customer_facing','customer-facing','customerfacing','decisioning','automated','use','exposure','facing']);
+      var tally={ai_system:0,genai_app:0,machine_identity:0,crypto_asset:0},sensRank={high:3,medium:2,low:1},topSens=0,topSensL='',cust=false;
       rows.forEach(function(row){
         var raw=(tc>=0?String(row[tc]||''):'').toLowerCase();
         var key=/genai|gen-ai|llm app|chatbot|copilot|assistant/.test(raw)?'genai_app':/machine|service account|non.?human|nhi|token|secret|api key|workload/.test(raw)?'machine_identity':/crypto|cert|key|tls|cbom|algorithm/.test(raw)?'crypto_asset':/ai|ml|model/.test(raw)?'ai_system':'ai_system';
         tally[key]=(tally[key]||0)+1;
         if(sc>=0){var sv=String(row[sc]||'').toLowerCase();for(var k in sensRank){if(sv.indexOf(k)>=0&&sensRank[k]>topSens){topSens=sensRank[k];topSensL=k.charAt(0).toUpperCase()+k.slice(1);}}}
+        if(fc>=0){var fv=String(row[fc]||'').toLowerCase();if(/yes|true|1|customer|external|decision|automat/.test(fv))cust=true;}
       });
-      AI_INV={ai_system:tally.ai_system,genai_app:tally.genai_app,machine_identity:tally.machine_identity,crypto_asset:tally.crypto_asset,sensitivity:topSensL,_loaded:true};
-      renderAiInv();
+      AI_INV={ai_system:tally.ai_system,genai_app:tally.genai_app,machine_identity:tally.machine_identity,crypto_asset:tally.crypto_asset,sensitivity:topSensL,customerFacing:cust,customerFacingCol:(fc>=0),_loaded:true};
+      renderAiInv();if(typeof computeAiGov==='function')computeAiGov();
       if(msg)msg.textContent='✓ '+rows.length+' assets classified.';
       var b=document.getElementById('bas');if(b){b.textContent='✓ '+rows.length+' assets';b.classList.add('done');}
     };
@@ -828,7 +884,7 @@
   // Writes the same localStorage keys the cockpit Framework tab reads
   // (cyberrx_doc_scores + cyberrx_docs), so document review is captured here at
   // onboarding instead of inside the cockpit.
-  var OB_DOC_TYPES=[{k:'d1',l:'Information Security Policy'},{k:'d2',l:'Risk Assessment / Register'},{k:'d3',l:'Third-Party / Supply-Chain Policy'},{k:'d4',l:'Access Control Policy'},{k:'d5',l:'Identity & Authentication Policy'},{k:'d6',l:'Incident Response Plan'},{k:'d7',l:'Business Continuity / DR Plan'},{k:'d8',l:'Change Management Policy'},{k:'d9',l:'Configuration Management Policy'},{k:'d10',l:'Data Protection Policy'}];
+  var OB_DOC_TYPES=[{k:'d1',l:'Information Security Policy'},{k:'d2',l:'Risk Assessment / Register'},{k:'d3',l:'Third-Party / Supply-Chain Policy'},{k:'d4',l:'Access Control Policy'},{k:'d5',l:'Identity & Authentication Policy'},{k:'d6',l:'Incident Response Plan'},{k:'d7',l:'Business Continuity / DR Plan'},{k:'d8',l:'Change Management Policy'},{k:'d9',l:'Configuration Management Policy'},{k:'d10',l:'Data Protection Policy'},{k:'d11',l:'AI Governance — NIST AI RMF'},{k:'d12',l:'AI Governance — ISO/IEC 42001'},{k:'d13',l:'AI Acceptable-Use Policy'}];
   var CMMI_LBL={0:'None',1:'Initial',2:'Managed',3:'Defined',4:'Quant. Managed',5:'Optimizing'};
   function obDocScores(){try{return JSON.parse(localStorage.getItem('cyberrx_doc_scores')||'{}')||{};}catch(_){return {};}}
   function obSaveDocScore(id,o){var m=obDocScores();m[id]=o;try{localStorage.setItem('cyberrx_doc_scores',JSON.stringify(m));}catch(_){}}
@@ -837,7 +893,7 @@
   function updateDocBadge(){var n=obDocDocs().length,b=document.getElementById('bdoc');if(b){if(n){b.textContent='✓ '+n+' analyzed';b.classList.add('done');}else{b.textContent='optional';b.classList.remove('done');}}}
   function obRenderDocList(){var docs=obDocDocs(),host=document.getElementById('obDocList');if(!host)return;
     host.innerHTML=docs.length?(docs.map(function(d){return '<div class="xrow"><span class="nm">'+d.name+'</span><span class="mt">'+d.type+' · '+d.matched+'/'+d.total+' attributes · CMMI '+d.cmmi+' ('+(CMMI_LBL[d.cmmi]||'')+')</span></div>';}).join('')+'<div style="margin-top:8px"><button class="conn-go" id="obDocClear" type="button">Clear analyzed documents</button></div>'):'<div class="sd">No policies analyzed yet — upload one above to evidence controls by document review.</div>';
-    var c=document.getElementById('obDocClear');if(c)c.addEventListener('click',function(){try{localStorage.removeItem('cyberrx_doc_scores');localStorage.removeItem('cyberrx_docs');}catch(_){}updateDocBadge();obRenderDocList();});}
+    var c=document.getElementById('obDocClear');if(c)c.addEventListener('click',function(){try{localStorage.removeItem('cyberrx_doc_scores');localStorage.removeItem('cyberrx_docs');}catch(_){}updateDocBadge();obRenderDocList();if(typeof computeAiGov==='function')computeAiGov();});}
   function obAnalyzeDoc(){var fi=document.getElementById('obDocFile'),ty=document.getElementById('obDocType'),msg=document.getElementById('obDocMsg');
     if(!fi||!fi.files||!fi.files[0]){if(msg){msg.textContent='Choose a file first.';msg.style.color='var(--warn)';}return;}
     var file=fi.files[0],dt=ty.value;if(msg){msg.textContent='Analyzing '+file.name+'…';msg.style.color='var(--muted)';}
@@ -849,14 +905,16 @@
         var docs=obDocDocs(),lbl=(OB_DOC_TYPES.filter(function(d){return d.k===dt;})[0]||{}).l||dt;
         docs.unshift({name:file.name,type:lbl,cmmi:res.cmmi,matched:res.matched||0,total:res.total||0,engine:res.engine||'keyword'});obSaveDocs(docs);
         if(msg){msg.textContent='✓ '+file.name+' — CMMI '+res.cmmi+' ('+(CMMI_LBL[res.cmmi]||'')+')';msg.style.color='var(--good)';}
-        updateDocBadge();obRenderDocList();})
+        updateDocBadge();obRenderDocList();if(typeof computeAiGov==='function')computeAiGov();})
       .catch(function(e){if(msg){msg.textContent='✗ '+e.message;msg.style.color='var(--warn)';}});}
   function obSeedSampleDocScores(){if(Object.keys(obDocScores()).length)return;
     var sample={'GV.OC-01':4,'GV.OC-03':3,'GV.RM-01':3,'GV.PO-01':4,'GV.PO-02':3,'PR.AA-01':4,'PR.AA-05':3,'PR.AT-01':3,'ID.RA-01':3,'ID.RA-05':2,'DE.CM-01':2,'RS.MA-01':3};
     Object.keys(sample).forEach(function(id){obSaveDocScore(id,{cmmi:sample[id],doc:'Information Security Policy (sample).pdf',matched:Math.min(6,sample[id]+2),total:6,attrs:[{label:'Policy purpose statement',found:true},{label:'Scope definition',found:true},{label:'Roles & responsibilities',found:sample[id]>=3},{label:'Enforcement provisions',found:sample[id]>=3},{label:'Review cadence',found:sample[id]>=4},{label:'Exception process',found:sample[id]>=4}]});});
     var docs=obDocDocs();docs.unshift({name:'Information Security Policy (sample).pdf',type:'Information Security Policy',cmmi:4,matched:5,total:6});obSaveDocs(docs);updateDocBadge();obRenderDocList();}
   (function(){var sel=document.getElementById('obDocType');if(sel)sel.innerHTML=OB_DOC_TYPES.map(function(d){return '<option value="'+d.k+'">'+d.l+'</option>';}).join('');
-    var a=document.getElementById('obDocAnalyze');if(a)a.addEventListener('click',obAnalyzeDoc);obRenderDocList();updateDocBadge();})();
+    var a=document.getElementById('obDocAnalyze');if(a)a.addEventListener('click',obAnalyzeDoc);obRenderDocList();updateDocBadge();
+    if(typeof computeAiGov==='function')computeAiGov();
+    document.querySelectorAll('.aiGovJump').forEach(function(a){a.addEventListener('click',function(ev){ev.preventDefault();var el=document.getElementById(a.dataset.to)||document.getElementById(a.getAttribute('href').slice(1));if(el)el.scrollIntoView({behavior:'smooth',block:'start'});});});})();
 
   // ---- cyber projects / initiatives (upload or pull from ticketing) ----
   var INIT=[];
@@ -1012,7 +1070,7 @@
   window.addEventListener('resize',function(){if(document.getElementById('cjmap'))drawMap();});
 
   // regions chips
-  document.querySelectorAll('#regions .chip').forEach(function(c){c.addEventListener('click',function(){c.classList.toggle('on');REGIONS=[...document.querySelectorAll('#regions .chip.on')].map(function(x){return x.dataset.r;});var b=document.getElementById('b1');if(REGIONS.length){b.textContent='✓ '+REGIONS.length+' regions';b.classList.add('done');}else{b.textContent='optional';b.classList.remove('done');}updateSummary();});});
+  document.querySelectorAll('#regions .chip').forEach(function(c){c.addEventListener('click',function(){c.classList.toggle('on');REGIONS=[...document.querySelectorAll('#regions .chip.on')].map(function(x){return x.dataset.r;});var b=document.getElementById('b1');if(REGIONS.length){b.textContent='✓ '+REGIONS.length+' regions';b.classList.add('done');}else{b.textContent='optional';b.classList.remove('done');}updateSummary();if(typeof computeAiGov==='function')computeAiGov();});});
   ['orgName','industry','finRevenue','finAppetite','insLimit'].forEach(function(id){var e=document.getElementById(id);if(e)e.addEventListener('input',updateSummary);});
   function v(id){var e=document.getElementById(id);return e?String(e.value||'').trim():'';}
   function anyFin(){return mval('finRevenue')||mval('finOpInc')||mval('finNetInc')||mval('finEV')||mval('finAppetite')||mval('finBudget');}
@@ -1163,10 +1221,13 @@
         committee:v('govCommittee'),cadence:v('govCadence'),ermIntegrated:v('govErm'),
         ir:{tested:v('govIrTested'),lastTabletop:v('govTabletop'),retainer:v('govRetainer'),ransomwarePolicy:v('govRansom')}
       },
-      aiGovernance:{
-        systems:mval('aiSystems'),decisioning:v('aiDecisioning'),framework:v('aiFramework'),
-        policy:v('aiPolicy'),euAiAct:v('aiEuAct'),inventory:v('aiInventory')
-      },
+      // Fully derived — inventory + uploaded governance docs + regions. No self-report.
+      // Unsourced fields are null so the cockpit renders an honest empty state (no estimates).
+      aiGovernance:(function(){var m=aiGovModel();return {
+        systems:m.systems,decisioning:m.decisioning,framework:m.framework,
+        policy:m.policy,euAiAct:m.euAiAct,inventory:m.inventory,
+        _derived:true,_policyBoardApproved:!!window.__aiPolicyBoardApproved
+      };})(),
       aiSupplyChain:{
         // Counts come from the uploaded / connected inventory — never hand-typed.
         aimlSystems:AI_INV.ai_system||0,genaiSanctioned:AI_INV.genai_app||0,
