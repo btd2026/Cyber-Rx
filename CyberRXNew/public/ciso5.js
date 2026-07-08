@@ -327,15 +327,21 @@ function c5get(id){
       // Spec: PULL Threat Intel → MAP to MITRE ATT&CK techniques matching your stack →
       //       JOIN BIA target impact. priority = technique_likelihood × business_impact.
       //       OUTPUT [scenario, techniques, likelihood, impact, priority]; sort priority desc.
-      var tech=(stz.techniques&&stz.techniques.length)?stz.techniques.join(', '):'mapped on connect';
-      var lk=(stz.likelihood!=null)?stz.likelihood:null;var imp=Number(stz.worst_case_usd)||0;
+      // One row per scenario in a compact table (scales cleanly to several without
+      // the drill getting busy). Likelihood reads "pending threat-intel" until the
+      // feed is connected, rather than a bare dash.
+      var scing=(stz.scenarios&&stz.scenarios.length)?stz.scenarios:(stz.scenario?[stz]:[]);
+      var srows=scing.slice(0,6).map(function(s,i){var t=(s.techniques&&s.techniques.length)?s.techniques.join(', '):'mapped on connect';
+        var l=(s.likelihood!=null)?String(s.likelihood):'pending threat-intel';var im=Number(s.worst_case_usd)||0;
+        return [{text:(s.scenario||'')+(s.target?(' → '+s.target):''),bold:true},t,{text:l,color:(s.likelihood!=null?null:'muted')},{text:(im>0?usd(im):'—'),color:'blue'},{text:'#'+(i+1),bold:true}];});
       return c5obj({id:id,name:'Most likely business disruption scenarios',connected:conn,
         displayValue:conn?(stz.scenario+(stz.target?(' → '+stz.target):'')):'—',
         label:'modeled',color:conn?'warn':'muted',
         formula:'priority = technique_likelihood × business_impact; scenarios ranked priority-desc',
-        method:'Scenarios come from your threat-intel feed (who targets your sector), mapped to the MITRE ATT&CK techniques matching your stack, joined to the business-impact (BIA) of the process each would disrupt. Likelihood is illustrative until threat-intel is connected.',
-        inputs:[{name:'Scenario',value:conn?stz.scenario:'—',source:'Threat Intel'},{name:'MITRE techniques',value:tech,source:'MITRE ATT&CK'},{name:'Technique likelihood',value:(lk!=null?lk:'—'),source:'Threat Intel'},{name:'Business impact',value:(imp>0?usd(imp):'—'),source:'BIA · target process'},{name:'= Priority',value:conn?'highest-ranked scenario shown':'—',source:'likelihood × impact'}],
+        method:'Scenarios come from your threat-intel feed (who targets your sector), mapped to the MITRE ATT&CK techniques matching your stack, joined to the business-impact (BIA) of the process each would disrupt. Ranked by priority; the table shows one row per scenario. Technique likelihood is quantified once a threat-intel feed is connected — until then it reads “pending threat-intel” and the ranking is by business impact.',
+        table:(srows.length?{title:'Scenarios · ranked by priority',cols:['Scenario','MITRE techniques','Likelihood','Business impact','Rank'],rows:srows}:null),
         sources:[{tool:'Threat intelligence',connector:'threatintel',field:'sector_actors · likelihood',lastRefresh:c5ago()},{tool:'MITRE ATT&CK',connector:'mitre',field:'techniques'},{tool:'BIA',connector:'bia',field:'business_impact'}],
+        action:conn?('Exercise the top scenario ('+stz.scenario+(stz.target?(' → '+stz.target):'')+') in a tabletop and confirm the recovery runbook for '+(stz.target||'the target process')+'. Then close the identity/access gap that makes it most likely — it is the same gap driving your largest exposure, so one fix lowers both.'):'Connect your threat-intel feed and BIA so scenarios rank by real likelihood × business impact, then tabletop the top one.',
         note:conn?('The most likely disruption is a '+stz.scenario+' affecting '+(stz.target||'a crown-jewel process')+'.'):'The disruption scenarios most likely to hit the business.',
         connectTool:'your threat-intel feed + BIA (onboarding)'});}
     case 'er_thirdparty':{var Vtp=c5vendors();var sbom=(typeof LIVE!=='undefined'&&LIVE&&LIVE.sbom)||[];var conn=Vtp.seed.length>0||sbom.length>0;var ntp=Vtp.atRisk.length,worsttp=Vtp.worst;
@@ -344,7 +350,14 @@ function c5get(id){
       //       criticality. exposure weighted by service_criticality. OUTPUT
       //       [vendor/component, rating/finding, service_criticality, exposure]; sort desc.
       var sbomVuln=sbom.reduce(function(s,c){return s+(Number(c.critical_vulns)||0);},0);
-      var rowsV=((Vtp.p&&Vtp.p.vendors)?Vtp.p.vendors.slice(0,5):[]).map(function(v){return {name:v.name,value:(v.score!=null?(v.score+'/100'):'—')+(v.service_criticality?(' · '+v.service_criticality+' service'):''),color:(v.color||capColor(v.score)),source:(Vtp.vs?Vtp.vs.vendor:'security rating')};});
+      var svc=(Vtp.vs&&Vtp.vs.vendor)||null; // the connected monitoring service
+      var rowsV=((Vtp.p&&Vtp.p.vendors)?Vtp.p.vendors.slice(0,5):[]).map(function(v){
+        // Deep-link each vendor to its page on the connected monitoring service so the
+        // CISO can open the exact findings and press the vendor on remediation.
+        var url=(svc&&typeof vendorUrl==='function')?vendorUrl(svc,(typeof vendorDomain==='function'?vendorDomain(v.name):'')):null;
+        var nm=url?('<a href="'+url+'" target="_blank" rel="noopener" style="color:var(--blue);text-decoration:none;font-weight:600">'+c5esc(v.name)+' ↗</a>'):c5esc(v.name);
+        return {name:nm,value:(v.score!=null?(v.score+'/100'):'—')+(v.service_criticality?(' · '+v.service_criticality+' service'):''),color:(v.color||capColor(v.score)),source:(svc?('open findings in '+svc):'security rating')};
+      });
       if(sbom.length)rowsV.push({name:'Software components',value:sbomVuln+' critical vuln'+(sbomVuln===1?'':'s')+' across '+sbom.length+' component'+(sbom.length===1?'':'s'),color:(sbomVuln>0?'warn':'good'),source:'SBOM'});
       return c5obj({id:id,name:'Third-party / supply-chain cyber exposure',connected:conn,
         displayValue:conn?((ntp>0?(ntp+' vendor'+(ntp>1?'s':'')+' flagged'):'Vendors adequate')+(sbomVuln>0?(' · '+sbomVuln+' SBOM vuln'+(sbomVuln===1?'':'s')):'')):'—',
@@ -353,6 +366,7 @@ function c5get(id){
         method:'Vendor ratings from your monitoring service (SecurityScorecard / BitSight), TPRM findings, and SBOM vulnerable-components — each joined to the crown-jewel service it supports and weighted by that service’s criticality.',
         inputs:rowsV,
         sources:[{tool:Vtp.vs?Vtp.vs.vendor:'Vendor Risk (TPRM)',connector:'vendor_monitor',field:'overall_score · findings',lastRefresh:c5ago()},{tool:'SecurityScorecard / BitSight',connector:'vendor_monitor',field:'rating'},{tool:'SBOM',connector:'sbom',field:'vulnerable_components'}],
+        action:(worsttp?('Open '+worsttp.name+' ('+worsttp.score+'/100) '+(svc?('in '+svc):'in your monitoring service')+' to see its specific findings, then contact the vendor for its remediation plan and timeline; require evidence before renewal. '):'')+(svc?('Click any vendor row above to open its findings in '+svc+'.'):'Connect a monitoring service (SecurityScorecard / BitSight) to open each vendor’s findings.'),
         note:worsttp?('Your worst-rated vendor is '+worsttp.name+' at '+worsttp.score+'/100 — exposure you carry through someone else’s security.'):'Exposure you carry through your suppliers and software supply chain.',
         connectTool:'a TPRM platform + monitoring service + SBOM'});}
     case 'exp_total':{var M=c5expModel();var conn=M.total>0;var trw=M.drivers.reduce(function(s,x){return s+(x.raw||0);},0);
@@ -1441,6 +1455,9 @@ function c5InspectObj(m){
   '</div>';
   // Optional visual (e.g. trend bars) rendered right under the result.
   if(m.visual)h+=m.visual;
+  // Recommended action — what the CISO should do about this. Rendered prominently
+  // under the result so the drill always answers "so what?".
+  if(m.action)h+='<div class="ev-sec">Recommended action</div><div class="conf" style="border-left:3px solid var(--blue)">'+m.action+'</div>';
   if(!m.connected){
     var src=m.connectTool?('<b>'+c5esc(m.connectTool)+'</b>'):'its data source';
     h+='<div class="ev-sec">What would populate it</div><div class="drill-p">This reads live once you connect '+src+'. Until then Nerion shows the honest not-connected state — never a placeholder number.</div>';
