@@ -1442,7 +1442,7 @@ function c5InspectObj(m){
     // reached. A cell is a string or {text,color,bold}.
     if(m.table&&m.table.cols&&m.table.rows&&m.table.rows.length){
       var tcell=function(cell,cls){var t=(cell&&cell.text!=null)?cell.text:(cell==null?'':cell);var sty=(cell&&(cell.color||cell.bold))?(' style="'+(cell.color?('color:var(--'+cell.color+')'):'')+(cell.bold?';font-weight:600':'')+'"'):'';return '<td class="'+cls+'"'+sty+'>'+t+'</td>';};
-      h+='<div class="ev-sec">How each row is judged</div><div style="overflow-x:auto"><table class="itbl"><thead><tr>'+m.table.cols.map(function(c){return '<th>'+c+'</th>';}).join('')+'</tr></thead><tbody>'+
+      h+='<div class="ev-sec">'+(m.table.title||'How each row is judged')+'</div><div style="overflow-x:auto"><table class="itbl"><thead><tr>'+m.table.cols.map(function(c){return '<th>'+c+'</th>';}).join('')+'</tr></thead><tbody>'+
         m.table.rows.map(function(r){return '<tr>'+r.map(function(cell,ci){return tcell(cell,ci===0?'':'src');}).join('')+'</tr>';}).join('')+
       '</tbody></table></div>';
     } else if(m.inputs&&m.inputs.length)h+='<div class="ev-sec">The numbers behind it</div><table class="itbl"><thead><tr><th>Item</th><th>Value</th><th>Source</th></tr></thead><tbody>'+m.inputs.map(function(i){
@@ -3026,6 +3026,13 @@ function c5Frameworks(){
 }
 /* The four Frameworks summary cards open the same inspector as every other metric,
    built from real assessment data (roll-up, coverage, trend history, deficiencies). */
+/* "See details" on a document-evidenced finding → back to onboarding's document-
+   review section, where every reviewed policy is kept with its findings. */
+document.addEventListener('click',function(e){var el=e.target.closest('[data-c5doc]');if(el)c5Connect('document review');});
+/* For a framework control id, the connected tool whose deployment evidenced it
+   (highest-deployed capability mapping to that control) — so the source names the
+   real telemetry, not just "system". */
+function c5fwCtrlTool(id){var best=null,bestp=-1;try{(typeof CAPS!=='undefined'?CAPS:[]).forEach(function(c){var fw=(typeof CAP_FRAMEWORK!=='undefined')?CAP_FRAMEWORK[c.k]:null;if(!fw)return;if((fw.csf||[]).concat(fw.r53||[]).indexOf(id)>=0){var p=(typeof capDeploy==='function')?capDeploy(c):null;if(p!=null&&p>bestp){bestp=p;best=c;}}});}catch(_){}return best;}
 /* Volume bars of overall framework maturity across recorded refreshes. Green &
    growing when improving, red & shrinking when regressing, grey & level when
    stalling — direction from the latest score vs the one before it (0–5 CMMI). */
@@ -3077,12 +3084,28 @@ function c5fwInspect(card,T,sel,cad){
       note:'The board’s “are we improving?” answered on your reassessment cadence ('+cad+').'});
   } else {
     var defs=[];T.groups.forEach(function(g){(g.children||[]).forEach(function(c){if(c.type==='cat'){(c.children||[]).forEach(function(x){if(x.score<C5FW_FLOOR)defs.push(x);});}else if(c.score<C5FW_FLOOR)defs.push(c);});});
+    var cov=(typeof fwDeployedIds==='function')?fwDeployedIds():{};
+    // One row per failing control: the objective, what fell short, and the REAL
+    // source of the score (a connected tool's telemetry, or a specific reviewed
+    // document — with a link back to where that document lives).
+    var frows=defs.map(function(x){
+      var cc=(typeof controlCmmi==='function')?controlCmmi(x.id,cov):{score:x.score,src:'none'};
+      var sc=Number(x.score);
+      var whatFailed=(sc<=0)?'Unevidenced — no telemetry or reviewed document':('CMMI '+sc.toFixed(1)+' · below the '+C5FW_FLOOR+' floor');
+      var srcCell;
+      if(cc.src==='document'){var fn=(cc.doc&&cc.doc.doc)||'policy document';var att=(cc.doc&&cc.doc.matched!=null&&cc.doc.total!=null)?(' · '+cc.doc.matched+'/'+cc.doc.total+' attributes met'):'';
+        srcCell='📄 '+fn+att+' <span data-c5doc="1" style="color:var(--blue);cursor:pointer;white-space:nowrap;font-weight:600">· see details ›</span>';}
+      else if(cc.src==='system'){var tc=c5fwCtrlTool(x.id);srcCell='🔌 '+((tc&&tc.tool)||'connected tool')+(cc.toolPct!=null?(' · '+cc.toolPct+'% deployed'):'')+' <span style="color:var(--muted)">(telemetry)</span>';}
+      else {srcCell='<span style="color:var(--muted)">— no evidence yet · connect a tool or upload the policy</span>';}
+      return [{text:'<b>'+x.id+'</b> '+c5esc(x.name||'')},{text:whatFailed,color:(sc<1?'crit':'warn')},{text:srcCell}];
+    });
     m=c5obj({name:'Controls failing · '+fwName,displayValue:String(T.failing),label:'computed',color:(T.failing>0?'crit':'good'),
+      why:'The controls in '+fwName+' scoring below the deficiency floor (CMMI '+C5FW_FLOOR+') — evidenced too weakly, or not at all. It matters because these are the findings an auditor writes up first, and the gaps that most weaken the program.',
       formula:'failing = controls scoring below the deficiency floor (CMMI '+C5FW_FLOOR+') in '+fwName,
-      method:'Each is a finding in the register on the right — with its evidence, gap and remediation — and flows into the auditor pack.',
-      inputs:defs.length?defs.slice(0,10).map(function(x){return {name:x.id,value:Number(x.score).toFixed(1),source:x.name};}):[{name:'None',value:'0',source:'no control below CMMI '+C5FW_FLOOR}],
+      method:'Each control is scored 0–5 from the best of its live tool telemetry and its analyzed policy document; it is "failing" when even that best evidence falls below the '+C5FW_FLOOR+' floor. The table lists every failing control — its objective, what fell short, and the exact source behind the score: a connected tool (telemetry) or a specific document reviewed at onboarding. Document-based findings link back to the document-review tab.',
+      table:(defs.length?{title:'Every failing control · objective · what failed · source',cols:['Control objective','What failed','Source'],rows:frows}:null),
       sources:[{tool:'Nerion assessment engine',connector:'nerion',field:'framework_cmmi.deficiencies',lastRefresh:c5ago()}],
-      note:(T.failing>0?(T.failing+' control'+(T.failing>1?'s':'')+' below CMMI '+C5FW_FLOOR+'. Tap a red control in the register for its finding, or Generate the auditor pack for the full deficiency list.'):'No controls below the deficiency floor.')});
+      note:(T.failing>0?(T.failing+' control'+(T.failing>1?'s':'')+' below CMMI '+C5FW_FLOOR+'. Each is a finding with its evidence, gap and remediation — and flows into the auditor pack.'):'No controls below the deficiency floor.')});
   }
   c5InspectObj(m);
 }

@@ -318,7 +318,7 @@
   </div>
 
   <!-- 1e · Policy & document evidence -->
-  <div class="sec">
+  <div class="sec" id="secDocReview">
     <div class="sh"><div class="sn">✦</div><div><div class="st">Policy &amp; document evidence <span style="color:var(--muted)">(framework maturity)</span></div><div class="sd">Upload your security policies (PDF · DOCX · TXT). Nerion reads each against the NIST control catalog and scores every control’s CMMI maturity from the policy language it contains — the <b>📄 document-review</b> evidence behind your framework scores, alongside live tool telemetry. Do it here so the cockpit Framework tab opens fully evidenced.</div></div><div class="badge" id="bdoc">optional</div></div>
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
       <select id="obDocType" style="min-width:230px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:#fff"></select>
@@ -564,7 +564,8 @@
   window.addEventListener('message',function(e){
     if(!(e.data&&e.data.type==='cyberrx-onboarding-focus'))return;
     var t=String(e.data.tool||'').toLowerCase(),id=null;
-    if(/cbom|crypto|quantum|pqc|ai-spm|aispm|genai|casb|sse|coding|copilot|claude code|ci\/cd|pipeline|slsa|nhi|machine identit|non-human|secrets|artifact|sbom/.test(t))id='secAiSupply';
+    if(/document review|policy|document evidence|reviewed document/.test(t))id='secDocReview';
+    else if(/cbom|crypto|quantum|pqc|ai-spm|aispm|genai|casb|sse|coding|copilot|claude code|ci\/cd|pipeline|slsa|nhi|machine identit|non-human|secrets|artifact|sbom/.test(t))id='secAiSupply';
     var el=id&&document.getElementById(id);if(!el)return;
     try{el.scrollIntoView({behavior:'smooth',block:'start'});}catch(_){el.scrollIntoView();}
     el.style.transition='box-shadow .3s';el.style.boxShadow='0 0 0 2px #2563eb';
