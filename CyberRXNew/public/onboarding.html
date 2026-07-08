@@ -86,6 +86,10 @@
   .conn-go{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px 16px;font-weight:700;font-size:12.5px;cursor:pointer}
   .conn-go.done{background:var(--good)}
   .conn-msg{font-size:12px;color:var(--muted);margin-top:8px}
+  .aiup{display:flex;gap:12px;align-items:flex-start;padding:14px;border:1px solid var(--line-2);border-radius:10px;background:var(--surface,#fafafa);margin-top:10px}
+  .aiup-n{flex:none;width:24px;height:24px;border-radius:50%;background:var(--blue);color:#fff;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;margin-top:1px}
+  .aiup-t{font-weight:600;font-size:13px}
+  .aiup-lbl{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-top:16px;font-weight:600}
   .toolgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .toolcard{border:1px solid var(--line-2);border-radius:10px;padding:12px 14px}
   .toolcard .th{display:flex;align-items:center;gap:8px;font-weight:600;font-size:13px}
@@ -256,8 +260,36 @@
   <!-- 1c · AI risk & governance (derived — no self-reporting) -->
   <div class="sec">
     <div class="sh"><div class="sn">✦</div><div><div class="st">AI risk &amp; governance</div><div class="sd">Two sides the board now asks about: our exposure to <b>AI-accelerated attacks</b> (frontier models like Anthropic’s Mythos can auto-discover and exploit vulnerabilities), and how we govern the <b>AI we run</b>. Powers the CEO &amp; CISO AI-risk panels. <b>Nothing to self-assess here</b> — Nerion derives every answer from your AI inventory, the governance documents you upload, and your operating regions.</div></div><div class="badge" id="bai">derived</div></div>
+    <div class="aiup"><div class="aiup-n">1</div><div style="flex:1">
+      <div class="aiup-t">Upload your AI inventory <span style="color:var(--muted);font-weight:400">— sets systems, decisioning &amp; inventory status</span></div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px">
+        <select id="aiGovInvSource" style="min-width:200px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:#fff">
+          <option value="">Inventory source…</option>
+          <option>ServiceNow CMDB</option><option>Device42</option><option>Axonius</option><option>AI asset inventory / model registry</option><option>CSV / Excel export</option>
+        </select>
+        <input type="file" id="aiGovInvFile" accept=".csv,.tsv,.txt">
+        <button class="conn-go" id="aiGovInvLoad" type="button">Load inventory</button>
+        <span id="aiGovInvMsg" class="sd" style="margin:0"></span>
+      </div>
+      <div class="sd" style="margin-top:6px">One row per asset. A <b>type</b> column classifies each (ai_system · genai_app · machine_identity · crypto_asset); optional <b>customer_facing</b> (yes/no) and <b>sensitivity</b> (high/medium/low) columns. Same file as the AI &amp; supply-chain section below — load it once.</div>
+    </div></div>
+    <div class="aiup"><div class="aiup-n">2</div><div style="flex:1">
+      <div class="aiup-t">Upload your AI governance documents <span style="color:var(--muted);font-weight:400">— sets framework &amp; acceptable-use policy</span></div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px">
+        <select id="aiGovDocType" style="min-width:230px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:#fff">
+          <option value="d11">AI Governance — NIST AI RMF</option>
+          <option value="d12">AI Governance — ISO/IEC 42001</option>
+          <option value="d13">AI Acceptable-Use Policy</option>
+        </select>
+        <input type="file" id="aiGovDocFile" accept=".pdf,.docx,.doc,.txt,.md">
+        <button class="conn-go" id="aiGovDocAnalyze" type="button">Analyze document</button>
+        <span id="aiGovDocMsg" class="sd" style="margin:0"></span>
+      </div>
+      <div class="sd" style="margin-top:6px">Nerion reads each document against the AI control catalog and records which framework and policy it evidences — the same <b>📄 document-review</b> engine used across onboarding.</div>
+    </div></div>
+    <div class="aiup-lbl">What Nerion has derived so far</div>
     <div id="aiGovDerived" style="margin-top:6px"></div>
-    <div class="sd" style="margin-top:12px">Systems &amp; decisioning come from your <a href="#secAiSupply" class="aiGovJump" data-to="secAiSupply" style="color:#2563eb;font-weight:600;text-decoration:none">AI inventory</a> · framework &amp; acceptable-use policy from the <a href="#secDocReview" class="aiGovJump" data-to="secDocReview" style="color:#2563eb;font-weight:600;text-decoration:none">governance documents you upload</a> · EU AI Act scope from your <a href="#regions" class="aiGovJump" data-to="regions" style="color:#2563eb;font-weight:600;text-decoration:none">operating regions</a>. Anything not yet provided stays blank in the cockpit until its source is connected — no estimates.</div>
+    <div class="sd" style="margin-top:12px">EU AI Act scope is derived from your <a href="#regions" class="aiGovJump" data-to="regions" style="color:#2563eb;font-weight:600;text-decoration:none">operating regions</a> plus the inventory above. Anything not yet provided stays blank in the cockpit until its source is connected — <b>no estimates</b>.</div>
   </div>
 
   <!-- 1c2 · AI & Software Supply-Chain Security (CISO tab) -->
@@ -614,8 +646,8 @@
     var got=[m.systems!=null,!!m.decisioning,!!m.framework,!!m.policy,!!m.euAiAct,!!m.inventory].filter(Boolean).length;
     var b=document.getElementById('bai');if(b){if(got){b.textContent='✓ '+got+'/6 derived';b.classList.add('done');}else{b.textContent='derived';b.classList.remove('done');}}
   }
-  function loadAiInv(){
-    var f=document.getElementById('aiInvFile'),msg=document.getElementById('aiInvMsg');
+  function loadAiInv(fileId,msgId){
+    var f=document.getElementById(fileId||'aiInvFile'),msg=document.getElementById(msgId||'aiInvMsg');
     if(!f||!f.files||!f.files[0]){if(msg)msg.textContent='Choose a CSV/TSV inventory export first.';return;}
     var r=new FileReader();
     r.onload=function(){
@@ -639,8 +671,12 @@
     };
     r.readAsText(f.files[0]);
   }
-  (function(){var b=document.getElementById('aiInvParse');if(b)b.addEventListener('click',loadAiInv);
-    var g=document.getElementById('aiGotoConn');if(g)g.addEventListener('click',function(ev){ev.preventDefault();var el=document.getElementById('secTools');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});});})();
+  (function(){var b=document.getElementById('aiInvParse');if(b)b.addEventListener('click',function(){loadAiInv();});
+    var g=document.getElementById('aiGotoConn');if(g)g.addEventListener('click',function(ev){ev.preventDefault();var el=document.getElementById('secTools');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});});
+    // Inline AI-governance loaders (in the AI risk & governance section) reuse the same
+    // engines so the user acts right where the derived tiles are, not elsewhere.
+    var gi=document.getElementById('aiGovInvLoad');if(gi)gi.addEventListener('click',function(){loadAiInv('aiGovInvFile','aiGovInvMsg');});
+    var gd=document.getElementById('aiGovDocAnalyze');if(gd)gd.addEventListener('click',function(){obAnalyzeDocFrom('aiGovDocFile','aiGovDocType','aiGovDocMsg');});})();
   // When the cockpit sends the user here to connect a tool, scroll to and highlight
   // the section that captures it.
   window.addEventListener('message',function(e){
@@ -904,7 +940,10 @@
   function obRenderDocList(){var docs=obDocDocs(),host=document.getElementById('obDocList');if(!host)return;
     host.innerHTML=docs.length?(docs.map(function(d){return '<div class="xrow"><span class="nm">'+d.name+'</span><span class="mt">'+d.type+' · '+d.matched+'/'+d.total+' attributes · CMMI '+d.cmmi+' ('+(CMMI_LBL[d.cmmi]||'')+')</span></div>';}).join('')+'<div style="margin-top:8px"><button class="conn-go" id="obDocClear" type="button">Clear analyzed documents</button></div>'):'<div class="sd">No policies analyzed yet — upload one above to evidence controls by document review.</div>';
     var c=document.getElementById('obDocClear');if(c)c.addEventListener('click',function(){try{localStorage.removeItem('cyberrx_doc_scores');localStorage.removeItem('cyberrx_docs');}catch(_){}updateDocBadge();obRenderDocList();if(typeof computeAiGov==='function')computeAiGov();});}
-  function obAnalyzeDoc(){var fi=document.getElementById('obDocFile'),ty=document.getElementById('obDocType'),msg=document.getElementById('obDocMsg');
+  function obAnalyzeDoc(){obAnalyzeDocFrom('obDocFile','obDocType','obDocMsg');}
+  // Shared document-review engine — used by the main Policy & document evidence
+  // section and by the inline uploader in the AI risk & governance section.
+  function obAnalyzeDocFrom(fileId,typeId,msgId){var fi=document.getElementById(fileId),ty=document.getElementById(typeId),msg=document.getElementById(msgId);
     if(!fi||!fi.files||!fi.files[0]){if(msg){msg.textContent='Choose a file first.';msg.style.color='var(--warn)';}return;}
     var file=fi.files[0],dt=ty.value;if(msg){msg.textContent='Analyzing '+file.name+'…';msg.style.color='var(--muted)';}
     var fd=new FormData();fd.append('file',file);fd.append('doc_type',dt);
