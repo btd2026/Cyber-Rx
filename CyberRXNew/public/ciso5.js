@@ -3321,15 +3321,18 @@ function c5DecProj(){
   var mineStore;try{mineStore=JSON.parse(localStorage.getItem('cyberrx_ciso_decisions')||'{}')||{};}catch(_){mineStore={};}
   var mine=levers.slice(0,6).map(function(l){
     var st=mineStore[l.k];
-    var status=l.inflight?('<span class="c5dp-pill blue">In flight'+(l.inflight.ticket?(' · '+c5esc(l.inflight.ticket)):'')+'</span>'):
-      (st?('<span class="c5dp-pill '+(st==='Committed'?'good':'muted')+'">'+c5esc(st)+'</span>'):'<span class="c5dp-pill warn">Needs a decision</span>');
-    var acts=(st||l.inflight)?'':'<button class="c5dp-btn primary" data-cisodec="'+l.k+'" data-cisoval="Committed">Commit &amp; fund</button><button class="c5dp-btn" data-cisodec="'+l.k+'" data-cisoval="Deferred">Defer</button>';
+    var state=l.inflight?'flight':(st==='Committed'?'committed':st==='Deferred'?'deferred':'open');
+    var pill=l.inflight?('<span class="c5dp-pill blue">◒ In flight'+(l.inflight.ticket?(' · '+c5esc(l.inflight.ticket)):'')+'</span>'):
+      (st?('<span class="c5dp-pill '+(st==='Committed'?'good':'muted')+'">'+(st==='Committed'?'✓ Committed &amp; funded':'Deferred')+'</span>'):'<span class="c5dp-pill warn">Awaiting your call</span>');
+    var acts=(st||l.inflight)?'':'<button class="c5dp-btn primary" data-cisodec="'+l.k+'" data-cisoval="Committed">Commit &amp; fund</button><button class="c5dp-btn ghost" data-cisodec="'+l.k+'" data-cisoval="Deferred">Defer</button>';
     var top=l.proj.slice(0).sort(function(a,b){return (b.to-b.from)-(a.to-a.from);})[0];
-    return '<div class="c5dp-row"><div style="flex:1"><div class="c5dp-t">Fund — '+c5esc(l.name)+'</div>'+
-      '<div class="c5dp-sub">'+c5esc(l.need)+(top?(' <span style="color:var(--muted)">· moves '+top.id+' '+top.from+'→'+top.to+' and '+l.proj.length+' control'+(l.proj.length>1?'s':'')+'</span>'):'')+'</div></div>'+
-      '<div class="c5dp-r">'+status+' '+acts+'</div></div>';
+    var impact=top?('<div class="c5dp-impact">Lifts <b>'+top.id+'</b> '+c5dpMini(top.from,top.to)+'<span class="c5dp-chip">+'+l.gain+' CMMI · '+l.proj.length+' control'+(l.proj.length>1?'s':'')+'</span></div>'):'';
+    return '<div class="c5dp-card '+state+'"><div class="c5dp-card-main"><div class="c5dp-t">Fund — '+c5esc(l.name)+'</div>'+
+      '<div class="c5dp-sub">'+c5esc(l.need)+'</div>'+impact+'</div>'+
+      '<div class="c5dp-card-side">'+pill+(acts?('<div class="c5dp-acts2">'+acts+'</div>'):'')+'</div></div>';
   }).join('');
-  if(!levers.length)mine='<div class="c5dp-empty">Connect your security tools and upload your policies, and the funded decisions that move your posture appear here — each with the exact controls it improves.</div>';
+  if(levers.length)mine='<div class="c5dp-cards">'+mine+'</div>';
+  else mine='<div class="c5dp-empty">Connect your security tools and upload your policies, and the funded decisions that move your posture appear here — each with the exact controls it improves.</div>';
 
   /* ---- Panel B: awaiting other leaders ---- */
   var store=c5AskStore(),seats=['board','ceo','cfo','clo','cro','cio','coo','cpo','audit'],pending=0,decided=0,rowsB=[];
@@ -3338,60 +3341,80 @@ function c5DecProj(){
     asks.forEach(function(a){
       if(a.sample)return; // skip pre-connect placeholders
       var st=store[a.id],who=c5SeatNameOf(seat),meta=C5_SEAT_META[seat]||{label:seat,role:''};
-      var statusHtml;
-      if(st&&st.status){decided++;statusHtml='<span class="c5dp-pill good">✓ '+c5esc(st.status)+'</span>';}
+      var statusHtml,acted=!!(st&&st.status);
+      if(acted){decided++;statusHtml='<span class="c5dp-pill good">✓ '+c5esc(st.status)+'</span>';}
       else{pending++;statusHtml='<span class="c5dp-pill warn">Pending</span>';}
-      rowsB.push('<div class="c5dp-row" data-seat="'+seat+'"><div style="flex:1">'+
-        '<div class="c5dp-t">'+c5esc(meta.label)+(who?(' · '+c5esc(who)):'')+'</div>'+
+      rowsB.push('<div class="c5dp-lrow" data-seat="'+seat+'"><div class="c5dp-avatar '+(acted?'done':'wait')+'">'+c5dpInitials(meta.label,who)+'</div>'+
+        '<div class="c5dp-lmain"><div class="c5dp-t">'+c5esc(who||meta.label)+' <span class="c5dp-role">'+c5esc(meta.label)+'</span></div>'+
         '<div class="c5dp-sub">'+c5esc(a.title)+'</div></div>'+
-        '<div class="c5dp-r">'+statusHtml+(st&&st.status?'':'<button class="c5dp-btn" data-remind="'+seat+'">✉ Remind</button>')+'</div></div>');
+        '<div class="c5dp-lside">'+statusHtml+(acted?'':'<button class="c5dp-btn" data-remind="'+seat+'">✉ Remind</button>')+'</div></div>');
     });
   });
-  var panelB=rowsB.length?('<div class="c5dp-note">'+pending+' awaiting a decision · '+decided+' recorded. Send a reminder and Nerion drafts the email for you.</div>'+rowsB.join('')):'<div class="c5dp-empty">Once you route risk acceptances and attestations to each leader, their outstanding decisions and status appear here.</div>';
+  var panelB=rowsB.length?(
+    '<div class="c5dp-stats c5dp-stats-2">'+c5dpStat(String(pending),'Awaiting a decision','warn')+c5dpStat(String(decided),'Recorded','good')+'</div>'+
+    '<div class="c5dp-lrows">'+rowsB.join('')+'</div>'+
+    '<div class="c5dp-foot">Send a reminder and Nerion drafts the email for you — from your inventory of who owes what.</div>'
+  ):'<div class="c5dp-empty">Once you route risk acceptances and attestations to each leader, their outstanding decisions and status appear here.</div>';
 
   /* ---- Panel C: what-if projection simulator ---- */
   if(!C5_DECPROJ_SEL&&levers.length)C5_DECPROJ_SEL=levers[0].k;
   var sel=levers.filter(function(l){return l.k===C5_DECPROJ_SEL;})[0]||levers[0]||null;
-  var opts=levers.map(function(l){return '<option value="'+l.k+'"'+(sel&&l.k===sel.k?' selected':'')+'>'+c5esc(l.name)+' (+'+l.gain+' CMMI across '+l.proj.length+')</option>';}).join('');
-  var simTable='';
+  var opts=levers.map(function(l){return '<option value="'+l.k+'"'+(sel&&l.k===sel.k?' selected':'')+'>'+c5esc(l.name)+'  (+'+l.gain+' CMMI · '+l.proj.length+')</option>';}).join('');
+  var sim='';
   if(sel){
     var fromAvg=sel.proj.reduce(function(s,p){return s+p.from;},0)/sel.proj.length,toAvg=sel.proj.reduce(function(s,p){return s+p.to;},0)/sel.proj.length;
-    simTable='<div class="c5dp-note" style="margin-top:8px"><b>If you complete this</b> ('+c5esc(sel.need)+'): '+sel.proj.length+' NIST CSF sub-categories improve · average maturity <b>'+fromAvg.toFixed(1)+' → '+toAvg.toFixed(1)+'</b>'+(sel.deploy!=null?(' · currently '+sel.deploy+'% deployed'):'')+'.</div>'+
-      '<table class="c5dp-tbl"><thead><tr><th>Sub-category</th><th>Now</th><th>→</th><th>Projected</th></tr></thead><tbody>'+
-      sel.proj.map(function(p){return '<tr><td><b>'+p.id+'</b> <span style="color:var(--muted)">'+c5esc(p.name||'')+'</span></td><td>'+c5dpBadge(p.from)+'</td><td style="color:var(--muted)">→</td><td>'+c5dpBadge(p.to)+'</td></tr>';}).join('')+
-      '</tbody></table>';
-  } else simTable='<div class="c5dp-empty">Connect a security tool or upload a policy and the simulator shows exactly which controls each recommendation moves, and from what score to what.</div>';
+    var delta=(toAvg-fromAvg);
+    sim='<div class="c5dp-do">To complete this: <b>'+c5esc(sel.need)+'</b></div>'+
+      '<div class="c5dp-stats">'+
+        c5dpStat(fromAvg.toFixed(1)+'<span class="c5dp-arrow">→</span>'+toAvg.toFixed(1),'Average maturity (CMMI)',delta>=1?'good':'blue')+
+        c5dpStat(String(sel.proj.length),'Sub-categories lifted','blue')+
+        c5dpStat(sel.deploy!=null?(sel.deploy+'%'):'—','Deployed today','muted')+
+      '</div>'+
+      '<div class="c5dp-meters">'+sel.proj.map(function(p){
+        return '<div class="c5dp-mrow"><div class="c5dp-mlabel"><b>'+p.id+'</b><span>'+c5esc(p.name||'')+'</span></div>'+
+          '<div class="c5dp-mviz">'+c5dpMeter(p.from,p.to)+'<span class="c5dp-mnum">'+p.from+'<span class="c5dp-arrow">→</span>'+p.to+'</span></div></div>';
+      }).join('')+'</div>';
+  } else sim='<div class="c5dp-empty">Connect a security tool or upload a policy and the simulator shows exactly which controls each recommendation moves, and from what score to what.</div>';
 
   /* reverse tool: controls currently below 5, pick one → what gets it to 5 */
   var allCtrls={};levers.forEach(function(l){l.proj.forEach(function(p){allCtrls[p.id]={id:p.id,name:p.name,score:p.from};});});
   var ctrlList=Object.keys(allCtrls).map(function(k){return allCtrls[k];}).sort(function(a,b){return a.score-b.score||(a.id<b.id?-1:1);});
-  if(!C5_DECPROJ_TARGET&&ctrlList.length)C5_DECPROJ_TARGET=ctrlList[0].id;
-  var tOpts=ctrlList.map(function(c){return '<option value="'+c.id+'"'+(c.id===C5_DECPROJ_TARGET?' selected':'')+'>'+c.id+' — '+c5esc(c.name||'')+' (now '+c.score+')</option>';}).join('');
+  if((!C5_DECPROJ_TARGET||!allCtrls[C5_DECPROJ_TARGET])&&ctrlList.length)C5_DECPROJ_TARGET=ctrlList[0].id;
+  var tOpts=ctrlList.map(function(c){return '<option value="'+c.id+'"'+(c.id===C5_DECPROJ_TARGET?' selected':'')+'>'+c.id+' — '+c5esc(c.name||'')+'  (now '+c.score+')</option>';}).join('');
   var rev='';
   if(C5_DECPROJ_TARGET&&allCtrls[C5_DECPROJ_TARGET]){
     var cur=allCtrls[C5_DECPROJ_TARGET],fam=String(C5_DECPROJ_TARGET).split(/[.\-]/)[0],doc=C5_FAM_DOC[fam]||'the relevant policy';
     var lv=c5ControlLevers(C5_DECPROJ_TARGET);
-    rev='<div class="c5dp-note" style="margin-top:8px">To move <b>'+C5_DECPROJ_TARGET+'</b> from <b>'+cur.score+'</b> toward <b>5</b>, do either (they take the higher):</div>'+
-      '<ul class="c5dp-ul">'+
-      lv.map(function(x){return '<li><b>Deploy '+c5esc(x.name)+' to 90%+</b>'+(x.deploy!=null?(' (currently '+x.deploy+'%)'):' (not yet connected)')+' — '+c5esc(x.need)+'</li>';}).join('')+
-      '<li><b>Upload / strengthen your '+c5esc(doc)+'</b> — the document-review engine scores this sub-category from the policy language, so a fuller, board-approved policy raises it directly.</li>'+
-      '</ul>';
+    rev='<div class="c5dp-do">To move <b>'+C5_DECPROJ_TARGET+'</b> from '+c5dpMini(cur.score,5)+' — take either path (the cockpit scores the higher of the two):</div>'+
+      '<div class="c5dp-play">'+
+      lv.map(function(x){return '<div class="c5dp-opt"><div class="c5dp-opt-ic tool">🔌</div><div class="c5dp-opt-b"><div class="c5dp-opt-t">Deploy '+c5esc(x.name)+' to 90%+</div><div class="c5dp-opt-d">'+(x.deploy!=null?('<b>'+x.deploy+'% today</b> · '):'<b>Not yet connected</b> · ')+c5esc(x.need)+'</div></div></div>';}).join('')+
+      '<div class="c5dp-opt"><div class="c5dp-opt-ic doc">📄</div><div class="c5dp-opt-b"><div class="c5dp-opt-t">Strengthen your '+c5esc(doc)+'</div><div class="c5dp-opt-d">The document-review engine scores this sub-category from the policy language — a fuller, board-approved policy raises it directly.</div></div></div>'+
+      '</div>';
   }
 
   host.innerHTML=
     '<div class="c5dp-wrap">'+
     '<div class="c5dp-sec"><div class="c5dp-h">Decisions I owe</div><div class="c5dp-hd">The funded moves waiting on your sign-off — each shows the controls it improves.</div>'+mine+'</div>'+
     '<div class="c5dp-sec"><div class="c5dp-h">Awaiting other leaders</div><div class="c5dp-hd">Risk acceptances &amp; attestations you routed to each partner, and where each stands.</div>'+panelB+'</div>'+
-    '<div class="c5dp-sec"><div class="c5dp-h">What-if projection</div><div class="c5dp-hd">Pick a recommendation to see which NIST CSF sub-categories move, and from what score to what — computed on your live control model.</div>'+
-      '<div class="c5dp-ctl"><label>Recommendation</label><select id="c5dp-sel">'+(opts||'<option>—</option>')+'</select></div>'+simTable+
-      '<div class="c5dp-h" style="margin-top:16px;font-size:13px">“What can I do to move a sub-category from 3 to 5?”</div>'+
-      '<div class="c5dp-ctl"><label>Sub-category</label><select id="c5dp-target">'+(tOpts||'<option>—</option>')+'</select></div>'+rev+
+    '<div class="c5dp-sec c5dp-hero"><div class="c5dp-h">What-if projection</div><div class="c5dp-hd">Model a recommendation against your live control scores — which NIST CSF 2.0 sub-categories move, and from what maturity to what.</div>'+
+      '<div class="c5dp-selrow"><span class="c5dp-selk">Recommendation</span><div class="c5dp-select"><select id="c5dp-sel">'+(opts||'<option>—</option>')+'</select></div></div>'+sim+
+      '<div class="c5dp-divider"></div>'+
+      '<div class="c5dp-h2">What moves a sub-category from 3 to 5?</div>'+
+      '<div class="c5dp-selrow"><span class="c5dp-selk">Sub-category</span><div class="c5dp-select"><select id="c5dp-target">'+(tOpts||'<option>—</option>')+'</select></div></div>'+rev+
     '</div>'+
     '</div>';
   var s1=document.getElementById('c5dp-sel');if(s1)s1.addEventListener('change',function(){C5_DECPROJ_SEL=s1.value;c5DecProj();});
   var s2=document.getElementById('c5dp-target');if(s2)s2.addEventListener('change',function(){C5_DECPROJ_TARGET=s2.value;c5DecProj();});
 }
 function c5dpBadge(s){var col=s>=4?'good':s>=3?'blue':s>=2?'warn':'crit';return '<span class="c5dp-cmmi" style="background:var(--'+col+')">'+s+'</span>';}
+/* A 5-segment maturity meter: solid up to the current score, a highlighted "gain"
+   run up to the projected score, empty beyond. */
+function c5dpMeter(from,to){var s='';for(var i=1;i<=5;i++){var cls=i<=from?'on':(i<=to?'gain':'off');s+='<i class="c5m-seg '+cls+'"></i>';}return '<span class="c5m">'+s+'</span>';}
+/* A compact inline from→to chip with two CMMI badges. */
+function c5dpMini(from,to){return '<span class="c5dp-mini">'+c5dpBadge(from)+'<span class="c5dp-arrow">→</span>'+c5dpBadge(to)+'</span>';}
+/* A stat tile: big value, label, accent color. */
+function c5dpStat(val,label,accent){return '<div class="c5dp-stat"><div class="c5dp-stat-v '+(accent||'')+'">'+val+'</div><div class="c5dp-stat-l">'+label+'</div></div>';}
+function c5dpInitials(label,who){var s=String(who||label||'?').trim().split(/\s+/);return ((s[0]||'?')[0]+(s.length>1?s[s.length-1][0]:'')).toUpperCase();}
 
 /* ---- reminder email modal (LLM draft + send piping) ---- */
 function c5RemindOpen(seat){
