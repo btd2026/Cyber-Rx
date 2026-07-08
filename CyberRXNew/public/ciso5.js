@@ -299,7 +299,10 @@ function c5get(id){
         label:'computed',color:conn?(atr>0?'warn':'good'):'muted',
         formula:'crown jewels at greatest risk = crown-jewel systems whose live exposure path is currently material',
         method:'Crown jewels come from your Crown Jewel Register (derived from your CMDB inventory). Risk to each is read from live EDR detections and open critical vulnerabilities (VM) on that asset.',
-        inputs:(Scr.list||[]).map(function(x){return {name:x.name+(x.tier?(' · '+x.tier):''),value:x.status,color:(x.status==='At risk'?'warn':'good'),source:x.sub||'crown-jewel register'};}).concat([{name:'= At greatest risk',value:atr+' of '+Scr.total,source:'crown jewels with a material path'}]),
+        inputs:(Scr.list||[]).map(function(x){
+          var val=x.status+(x.why&&x.status==='At risk'?(' <span data-c5m="'+x.why+'" style="color:var(--blue);cursor:pointer;white-space:nowrap">· why? ›</span>'):'');
+          return {name:x.name+(x.tier?(' · '+x.tier):''),value:val,color:(x.status==='At risk'?'warn':'good'),source:x.src||(x.sub||'EDR · VM')};
+        }).concat([{name:'= At greatest risk',value:atr+' of '+Scr.total,source:'crown jewels with a material path'}]),
         sources:[{tool:'Crown Jewel Register + CMDB',connector:'cmdb',field:'crown_jewels',lastRefresh:c5ago()},{tool:'EDR',connector:'edr',field:'detections'},{tool:'Vulnerability mgmt (VM)',connector:'vuln',field:'critical_vulns'}],
         note:topcj?('Your most exposed crown jewel is '+topcj.name+' — '+String(topcj.sub||'').toLowerCase()+'.'):'The crown-jewel systems carrying the most risk right now.',
         connectTool:'your Crown Jewel Register · CMDB · EDR · VM'});}
@@ -1191,9 +1194,20 @@ function c5AuditAreas(kind){
    identity/access risk (the same shared exposure), the rest read secure. */
 function c5Services(){
   var cj=(typeof LIVE!=='undefined'&&LIVE&&LIVE.crown_jewels)||[];var M=c5expModel();var idMat=M.drivers.some(function(d){return d.id==='exp_identity'&&d.usd>0;});
-  var list=cj.slice(0,6).map(function(c,i){var o={name:c.name,tier:c.tier};
-    if(i===0&&idMat){o.status='At risk';o.c='warn';o.sub='Identity / access path is the risk';}
-    else{o.status='Secure';o.c='good';o.sub='Secure · within posture';}
+  var edr=sig('edr_pct'),patch=sig('patch_pct'),oi=sig('open_incidents');
+  // Telemetry source string, named honestly. Per-asset EDR/VM feeds aren't wired
+  // yet, so we read the estate signals; the src column names the tools they come
+  // from rather than a vague "within posture".
+  var vmTxt=(patch!=null?('VM: '+(100-patch)+'% critical open'):'VM: not connected');
+  var edrTxt=(edr!=null?('EDR '+edr+'% deployed'):'EDR: not connected');
+  // Reconcile with the onboarding map: select the SAME number of crown jewels it
+  // does — top max(2, ceil(15% of assets)) — so the cockpit count always matches
+  // the crown-jewels-preview the user confirmed at onboarding.
+  var assetN=(typeof LIVE!=='undefined'&&LIVE&&LIVE.counts&&Number(LIVE.counts.assets))||cj.length;
+  var cjN=Math.min(cj.length,12,Math.max(2,Math.ceil(assetN*0.15)));
+  var list=cj.slice(0,cjN).map(function(c,i){var o={name:c.name,tier:c.tier};
+    if(i===0&&idMat){o.status='At risk';o.c='warn';o.sub='Identity / access path is exposed';o.src='EDR + identity/access telemetry';o.why='exp_identity';}
+    else{o.status='Secure';o.c='good';o.sub='No active detection';o.src=edrTxt+' · '+vmTxt;}
     return o;});
   return {list:list,total:list.length,atRisk:list.filter(function(x){return x.status==='At risk';}).length};
 }
