@@ -3241,10 +3241,215 @@ function c5Asks(seat){
    seat body; the curated panels are filled by their existing renderers). */
 function c5SeatViews(){['board','ceo','cfo','clo','cro','cio','coo','cpo','audit'].forEach(function(s){try{c5Asks(s);}catch(_){}});}
 document.addEventListener('click',function(e){
-  var r=e.target.closest('[data-askreset]');if(r){var id=r.getAttribute('data-askreset');var m=c5AskStore();delete m[id];try{localStorage.setItem('cyberrx_asks',JSON.stringify(m));}catch(_){}if(typeof CUR!=='undefined'&&CUR)c5Asks(CUR);return;}
+  var r=e.target.closest('[data-askreset]');if(r){var id=r.getAttribute('data-askreset');var m=c5AskStore();delete m[id];try{localStorage.setItem('cyberrx_asks',JSON.stringify(m));}catch(_){}if(typeof CUR!=='undefined'&&CUR)c5Asks(CUR);if(document.getElementById('c5-decproj'))c5DecProj();return;}
   var b=e.target.closest('[data-ask]');if(!b||!b.getAttribute('data-askval'))return;
   c5AskSave(b.getAttribute('data-ask'),{status:b.getAttribute('data-askval'),ts:Date.now()});
   if(typeof CUR!=='undefined'&&CUR)c5Asks(CUR);
+  if(document.getElementById('c5-decproj'))c5DecProj();
+});
+
+/* ================= Decisions & Projections (CISO tab 07) =================
+   One board for the CISO: the decisions they owe, the decisions they are
+   waiting on from other leaders (with status + an LLM-drafted reminder email
+   they can send from here), and a what-if simulator that shows — on the real
+   control model — which NIST CSF sub-categories move from what score to what
+   score if a recommendation is completed. Nothing illustrative: projections
+   run on controlCmmi()/fwDeployedIds()/CAP_FRAMEWORK, the same math as the
+   Frameworks tab. */
+var C5_SEAT_META={board:{label:'Board',role:'Board / Audit Committee'},ceo:{label:'CEO',role:'Chief Executive'},cfo:{label:'CFO',role:'Chief Financial Officer'},clo:{label:'General Counsel',role:'Legal / CLO'},cro:{label:'CRO',role:'Chief Risk Officer'},cio:{label:'CIO / CTO',role:'Technology'},coo:{label:'COO',role:'Operations'},cpo:{label:'CPO',role:'Product'},audit:{label:'Internal Audit',role:'Audit'}};
+function c5SeatNameOf(seat){try{return (typeof SEAT_NAMES!=='undefined'&&SEAT_NAMES&&SEAT_NAMES[seat])||'';}catch(_){return '';}}
+function c5SeatEmails(){try{return JSON.parse(localStorage.getItem('cyberrx_seat_emails')||'{}')||{};}catch(_){return {};}}
+function c5SeatEmailSave(seat,e){var m=c5SeatEmails();m[seat]=e;try{localStorage.setItem('cyberrx_seat_emails',JSON.stringify(m));}catch(_){}}
+function c5OrgName(){try{return (typeof LIVE!=='undefined'&&LIVE&&(LIVE.org_name||LIVE.client_name||LIVE.name))||'the organization';}catch(_){return 'the organization';}}
+function c5CisoName(){var n=c5SeatNameOf('ciso');return n?(n+' (CISO)'):'the CISO';}
+
+/* --- projection math (on the live control model) --- */
+function c5ProjCov(){try{return (typeof fwDeployedIds==='function')?fwDeployedIds():{};}catch(_){return {};}}
+function c5CtrlScore(id,cov){try{return (typeof controlCmmi==='function')?(controlCmmi(id,cov).score||0):0;}catch(_){return 0;}}
+/* Complete a capability lever (raise its deployment to targetPct) → the CSF
+   sub-categories it covers that would improve, and by how much. */
+function c5ProjectCap(capKey,targetPct){
+  var fw=(typeof CAP_FRAMEWORK!=='undefined'&&CAP_FRAMEWORK[capKey])||null;if(!fw)return [];
+  var cov=c5ProjCov(),out=[];
+  (fw.csf||[]).forEach(function(id){
+    var meta=(typeof C5_CSF_META!=='undefined'&&C5_CSF_META[id])||null;
+    var from=c5CtrlScore(id,cov);
+    var projCov={};for(var k in cov)projCov[k]=cov[k];projCov[id]=Math.max(projCov[id]||0,targetPct);
+    var to=c5CtrlScore(id,projCov);
+    if(to>from)out.push({id:id,name:meta?meta.name:'',from:from,to:to});
+  });
+  return out;
+}
+/* The recommendation levers = capabilities not yet at full maturity, biggest
+   control uplift first. Each carries its "what to do" (cap.need) and any
+   in-flight project (capProject) so the CISO sees status. */
+function c5Levers(){
+  var caps=(typeof CAPS!=='undefined'&&CAPS)||[];var out=[];
+  caps.forEach(function(c){
+    var proj=c5ProjectCap(c.k,100);if(!proj.length)return;
+    var gain=proj.reduce(function(s,p){return s+(p.to-p.from);},0);
+    var inflight=null;try{if(typeof capProject==='function')inflight=capProject(c);}catch(_){}
+    var dep=null;try{if(typeof capDeploy==='function')dep=capDeploy(c);}catch(_){}
+    out.push({k:c.k,name:c.name,need:c.need,connect:c.connect,proj:proj,gain:gain,inflight:inflight,deploy:dep});
+  });
+  out.sort(function(a,b){return b.gain-a.gain;});
+  return out;
+}
+/* Reverse: for a control currently below target, what raises it — which lever
+   (to 90%+) and which policy document evidences it. */
+var C5_FAM_DOC={GV:'Information Security Policy',ID:'Risk Assessment / Register',PR:'Access Control / Data Protection Policy',DE:'Configuration / Logging Policy',RS:'Incident Response Plan',RC:'Business Continuity / DR Plan'};
+function c5ControlLevers(id){
+  var caps=(typeof CAPS!=='undefined'&&CAPS)||[],out=[];
+  caps.forEach(function(c){var fw=(typeof CAP_FRAMEWORK!=='undefined'&&CAP_FRAMEWORK[c.k])||null;if(!fw)return;
+    if((fw.csf||[]).indexOf(id)<0)return;var dep=null;try{dep=capDeploy(c);}catch(_){}
+    out.push({name:c.name,need:c.need,deploy:dep});});
+  return out;
+}
+
+var C5_DECPROJ_SEL='';   // selected lever key for the simulator
+var C5_DECPROJ_TARGET='';// selected control id for the reverse tool
+function c5DecProj(){
+  var host=document.getElementById('c5-decproj');if(!host)return;
+  var cov=c5ProjCov();
+  /* ---- Panel A: decisions I owe ---- */
+  var levers=c5Levers();
+  var mineStore;try{mineStore=JSON.parse(localStorage.getItem('cyberrx_ciso_decisions')||'{}')||{};}catch(_){mineStore={};}
+  var mine=levers.slice(0,6).map(function(l){
+    var st=mineStore[l.k];
+    var status=l.inflight?('<span class="c5dp-pill blue">In flight'+(l.inflight.ticket?(' · '+c5esc(l.inflight.ticket)):'')+'</span>'):
+      (st?('<span class="c5dp-pill '+(st==='Committed'?'good':'muted')+'">'+c5esc(st)+'</span>'):'<span class="c5dp-pill warn">Needs a decision</span>');
+    var acts=(st||l.inflight)?'':'<button class="c5dp-btn primary" data-cisodec="'+l.k+'" data-cisoval="Committed">Commit &amp; fund</button><button class="c5dp-btn" data-cisodec="'+l.k+'" data-cisoval="Deferred">Defer</button>';
+    var top=l.proj.slice(0).sort(function(a,b){return (b.to-b.from)-(a.to-a.from);})[0];
+    return '<div class="c5dp-row"><div style="flex:1"><div class="c5dp-t">Fund — '+c5esc(l.name)+'</div>'+
+      '<div class="c5dp-sub">'+c5esc(l.need)+(top?(' <span style="color:var(--muted)">· moves '+top.id+' '+top.from+'→'+top.to+' and '+l.proj.length+' control'+(l.proj.length>1?'s':'')+'</span>'):'')+'</div></div>'+
+      '<div class="c5dp-r">'+status+' '+acts+'</div></div>';
+  }).join('');
+  if(!levers.length)mine='<div class="c5dp-empty">Connect your security tools and upload your policies, and the funded decisions that move your posture appear here — each with the exact controls it improves.</div>';
+
+  /* ---- Panel B: awaiting other leaders ---- */
+  var store=c5AskStore(),seats=['board','ceo','cfo','clo','cro','cio','coo','cpo','audit'],pending=0,decided=0,rowsB=[];
+  seats.forEach(function(seat){
+    var asks=[];try{asks=c5AskModel(seat)||[];}catch(_){}
+    asks.forEach(function(a){
+      if(a.sample)return; // skip pre-connect placeholders
+      var st=store[a.id],who=c5SeatNameOf(seat),meta=C5_SEAT_META[seat]||{label:seat,role:''};
+      var statusHtml;
+      if(st&&st.status){decided++;statusHtml='<span class="c5dp-pill good">✓ '+c5esc(st.status)+'</span>';}
+      else{pending++;statusHtml='<span class="c5dp-pill warn">Pending</span>';}
+      rowsB.push('<div class="c5dp-row" data-seat="'+seat+'"><div style="flex:1">'+
+        '<div class="c5dp-t">'+c5esc(meta.label)+(who?(' · '+c5esc(who)):'')+'</div>'+
+        '<div class="c5dp-sub">'+c5esc(a.title)+'</div></div>'+
+        '<div class="c5dp-r">'+statusHtml+(st&&st.status?'':'<button class="c5dp-btn" data-remind="'+seat+'">✉ Remind</button>')+'</div></div>');
+    });
+  });
+  var panelB=rowsB.length?('<div class="c5dp-note">'+pending+' awaiting a decision · '+decided+' recorded. Send a reminder and Nerion drafts the email for you.</div>'+rowsB.join('')):'<div class="c5dp-empty">Once you route risk acceptances and attestations to each leader, their outstanding decisions and status appear here.</div>';
+
+  /* ---- Panel C: what-if projection simulator ---- */
+  if(!C5_DECPROJ_SEL&&levers.length)C5_DECPROJ_SEL=levers[0].k;
+  var sel=levers.filter(function(l){return l.k===C5_DECPROJ_SEL;})[0]||levers[0]||null;
+  var opts=levers.map(function(l){return '<option value="'+l.k+'"'+(sel&&l.k===sel.k?' selected':'')+'>'+c5esc(l.name)+' (+'+l.gain+' CMMI across '+l.proj.length+')</option>';}).join('');
+  var simTable='';
+  if(sel){
+    var fromAvg=sel.proj.reduce(function(s,p){return s+p.from;},0)/sel.proj.length,toAvg=sel.proj.reduce(function(s,p){return s+p.to;},0)/sel.proj.length;
+    simTable='<div class="c5dp-note" style="margin-top:8px"><b>If you complete this</b> ('+c5esc(sel.need)+'): '+sel.proj.length+' NIST CSF sub-categories improve · average maturity <b>'+fromAvg.toFixed(1)+' → '+toAvg.toFixed(1)+'</b>'+(sel.deploy!=null?(' · currently '+sel.deploy+'% deployed'):'')+'.</div>'+
+      '<table class="c5dp-tbl"><thead><tr><th>Sub-category</th><th>Now</th><th>→</th><th>Projected</th></tr></thead><tbody>'+
+      sel.proj.map(function(p){return '<tr><td><b>'+p.id+'</b> <span style="color:var(--muted)">'+c5esc(p.name||'')+'</span></td><td>'+c5dpBadge(p.from)+'</td><td style="color:var(--muted)">→</td><td>'+c5dpBadge(p.to)+'</td></tr>';}).join('')+
+      '</tbody></table>';
+  } else simTable='<div class="c5dp-empty">Connect a security tool or upload a policy and the simulator shows exactly which controls each recommendation moves, and from what score to what.</div>';
+
+  /* reverse tool: controls currently below 5, pick one → what gets it to 5 */
+  var allCtrls={};levers.forEach(function(l){l.proj.forEach(function(p){allCtrls[p.id]={id:p.id,name:p.name,score:p.from};});});
+  var ctrlList=Object.keys(allCtrls).map(function(k){return allCtrls[k];}).sort(function(a,b){return a.score-b.score||(a.id<b.id?-1:1);});
+  if(!C5_DECPROJ_TARGET&&ctrlList.length)C5_DECPROJ_TARGET=ctrlList[0].id;
+  var tOpts=ctrlList.map(function(c){return '<option value="'+c.id+'"'+(c.id===C5_DECPROJ_TARGET?' selected':'')+'>'+c.id+' — '+c5esc(c.name||'')+' (now '+c.score+')</option>';}).join('');
+  var rev='';
+  if(C5_DECPROJ_TARGET&&allCtrls[C5_DECPROJ_TARGET]){
+    var cur=allCtrls[C5_DECPROJ_TARGET],fam=String(C5_DECPROJ_TARGET).split(/[.\-]/)[0],doc=C5_FAM_DOC[fam]||'the relevant policy';
+    var lv=c5ControlLevers(C5_DECPROJ_TARGET);
+    rev='<div class="c5dp-note" style="margin-top:8px">To move <b>'+C5_DECPROJ_TARGET+'</b> from <b>'+cur.score+'</b> toward <b>5</b>, do either (they take the higher):</div>'+
+      '<ul class="c5dp-ul">'+
+      lv.map(function(x){return '<li><b>Deploy '+c5esc(x.name)+' to 90%+</b>'+(x.deploy!=null?(' (currently '+x.deploy+'%)'):' (not yet connected)')+' — '+c5esc(x.need)+'</li>';}).join('')+
+      '<li><b>Upload / strengthen your '+c5esc(doc)+'</b> — the document-review engine scores this sub-category from the policy language, so a fuller, board-approved policy raises it directly.</li>'+
+      '</ul>';
+  }
+
+  host.innerHTML=
+    '<div class="c5dp-wrap">'+
+    '<div class="c5dp-sec"><div class="c5dp-h">Decisions I owe</div><div class="c5dp-hd">The funded moves waiting on your sign-off — each shows the controls it improves.</div>'+mine+'</div>'+
+    '<div class="c5dp-sec"><div class="c5dp-h">Awaiting other leaders</div><div class="c5dp-hd">Risk acceptances &amp; attestations you routed to each partner, and where each stands.</div>'+panelB+'</div>'+
+    '<div class="c5dp-sec"><div class="c5dp-h">What-if projection</div><div class="c5dp-hd">Pick a recommendation to see which NIST CSF sub-categories move, and from what score to what — computed on your live control model.</div>'+
+      '<div class="c5dp-ctl"><label>Recommendation</label><select id="c5dp-sel">'+(opts||'<option>—</option>')+'</select></div>'+simTable+
+      '<div class="c5dp-h" style="margin-top:16px;font-size:13px">“What can I do to move a sub-category from 3 to 5?”</div>'+
+      '<div class="c5dp-ctl"><label>Sub-category</label><select id="c5dp-target">'+(tOpts||'<option>—</option>')+'</select></div>'+rev+
+    '</div>'+
+    '</div>';
+  var s1=document.getElementById('c5dp-sel');if(s1)s1.addEventListener('change',function(){C5_DECPROJ_SEL=s1.value;c5DecProj();});
+  var s2=document.getElementById('c5dp-target');if(s2)s2.addEventListener('change',function(){C5_DECPROJ_TARGET=s2.value;c5DecProj();});
+}
+function c5dpBadge(s){var col=s>=4?'good':s>=3?'blue':s>=2?'warn':'crit';return '<span class="c5dp-cmmi" style="background:var(--'+col+')">'+s+'</span>';}
+
+/* ---- reminder email modal (LLM draft + send piping) ---- */
+function c5RemindOpen(seat){
+  var meta=C5_SEAT_META[seat]||{label:seat,role:''},who=c5SeatNameOf(seat),email=c5SeatEmails()[seat]||'';
+  var asks=[];try{asks=(c5AskModel(seat)||[]).filter(function(a){return !a.sample;});}catch(_){}
+  var store=c5AskStore();var pend=asks.filter(function(a){return !(store[a.id]&&store[a.id].status);});
+  var m=document.getElementById('c5remind');if(!m){m=document.createElement('div');m.id='c5remind';document.body.appendChild(m);}
+  m.className='c5remind-scrim';m.setAttribute('data-seat',seat);
+  m.innerHTML='<div class="c5remind-card">'+
+    '<div class="c5remind-bar"><b>✉ Remind '+c5esc(meta.label)+(who?(' · '+c5esc(who)):'')+'</b><button class="c5dp-btn" data-remindclose="1">Close</button></div>'+
+    '<div class="c5remind-body">'+
+      '<div class="c5remind-field"><label>To</label><input id="c5rm-to" type="email" placeholder="name@company.com" value="'+c5esc(email)+'"></div>'+
+      '<div class="c5remind-field"><label>Subject</label><input id="c5rm-subj" type="text" placeholder="drafting…"></div>'+
+      '<div class="c5remind-field"><label>Message</label><textarea id="c5rm-body" rows="12" placeholder="Click “Draft with AI”, or write your own…"></textarea></div>'+
+      '<div class="c5remind-acts"><button class="c5dp-btn" id="c5rm-draft">✨ Draft with AI</button><span id="c5rm-eng" class="c5remind-eng"></span><span style="flex:1"></span><button class="c5dp-btn primary" id="c5rm-send">Send</button></div>'+
+      '<div id="c5rm-msg" class="c5remind-msg"></div>'+
+    '</div></div>';
+  m.style.display='flex';
+  // auto-draft on open
+  c5RemindDraft(seat,pend,meta,who);
+  var d=document.getElementById('c5rm-draft');if(d)d.addEventListener('click',function(){c5RemindDraft(seat,pend,meta,who);});
+  var sd=document.getElementById('c5rm-send');if(sd)sd.addEventListener('click',function(){c5RemindSend(seat);});
+  var to=document.getElementById('c5rm-to');if(to)to.addEventListener('change',function(){c5SeatEmailSave(seat,to.value.trim());});
+}
+function c5RemindDraft(seat,pend,meta,who){
+  var msg=document.getElementById('c5rm-msg'),eng=document.getElementById('c5rm-eng');
+  var subj=document.getElementById('c5rm-subj'),body=document.getElementById('c5rm-body');
+  if(eng)eng.textContent='drafting…';
+  var items=(pend||[]).map(function(a){return {title:a.title,ask:a.ask,why:a.why,status:'pending'};});
+  var payload={fromName:c5SeatNameOf('ciso')||'the CISO',fromRole:'CISO',toName:who||meta.label,toRole:meta.role,org:c5OrgName(),items:items};
+  var base='';try{base=(typeof apiBase==='function')?apiBase():'';}catch(_){}
+  fetch(base+'/api/notify/draft',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)})
+    .then(function(r){return r.json();})
+    .then(function(res){if(subj)subj.value=res.subject||'';if(body)body.value=res.body||'';if(eng)eng.textContent=res.engine==='llm'?'drafted by AI':res.engine==='local'?'drafted (internal LLM)':'drafted (template)';})
+    .catch(function(e){if(eng)eng.textContent='';if(msg){msg.textContent='Draft service unavailable — write your own message.';msg.style.color='var(--warn)';}
+      // local template fallback so the modal is never empty
+      if(body&&!body.value){var names=(who||meta.label).split(' ')[0];body.value='Hi '+names+',\n\nA quick reminder on the cyber-risk items in your area awaiting your decision:\n'+(pend||[]).map(function(a){return '  • '+a.title;}).join('\n')+'\n\nEach takes only a moment in the cockpit.\n\nThanks,\n'+(c5SeatNameOf('ciso')||'CISO');}
+      if(subj&&!subj.value)subj.value='Reminder: cyber decisions awaiting your sign-off';});
+}
+function c5RemindSend(seat){
+  var to=(document.getElementById('c5rm-to')||{}).value||'',subj=(document.getElementById('c5rm-subj')||{}).value||'',body=(document.getElementById('c5rm-body')||{}).value||'';
+  var msg=document.getElementById('c5rm-msg');
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to.trim())){if(msg){msg.textContent='Enter a valid recipient email.';msg.style.color='var(--warn)';}return;}
+  c5SeatEmailSave(seat,to.trim());
+  if(msg){msg.textContent='Sending…';msg.style.color='var(--muted)';}
+  var base='';try{base=(typeof apiBase==='function')?apiBase():'';}catch(_){}
+  fetch(base+'/api/notify/send',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({to:to.trim(),subject:subj,body:body})})
+    .then(function(r){return r.json().then(function(j){return {ok:r.ok,j:j};});})
+    .then(function(o){
+      if(o.j&&o.j.sent){if(msg){msg.innerHTML='✓ Sent to <b>'+c5esc(to.trim())+'</b>.';msg.style.color='var(--good)';}setTimeout(c5RemindCloseFn,1200);}
+      else{ // server not configured for SMTP → open the user's own mail client with the draft
+        var mailto='mailto:'+encodeURIComponent(to.trim())+'?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(body);
+        if(msg){msg.innerHTML='Server email isn’t configured here — <a href="'+mailto+'" style="color:var(--blue);font-weight:600">open in your mail client ▸</a> (draft is ready to send).';msg.style.color='var(--ink-2)';}
+        try{window.location.href=mailto;}catch(_){}}
+    })
+    .catch(function(e){var mailto='mailto:'+encodeURIComponent(to.trim())+'?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(body);if(msg){msg.innerHTML='Could not reach the mail service — <a href="'+mailto+'" style="color:var(--blue);font-weight:600">open in your mail client ▸</a>.';msg.style.color='var(--warn)';}});
+}
+function c5RemindCloseFn(){var m=document.getElementById('c5remind');if(m)m.style.display='none';}
+document.addEventListener('click',function(e){
+  var rm=e.target.closest('[data-remind]');if(rm){c5RemindOpen(rm.getAttribute('data-remind'));return;}
+  if(e.target.closest('[data-remindclose]')){c5RemindCloseFn();return;}
+  var scrim=document.getElementById('c5remind');if(scrim&&e.target===scrim){c5RemindCloseFn();return;}
+  var cd=e.target.closest('[data-cisodec]');if(cd){var k=cd.getAttribute('data-cisodec'),v=cd.getAttribute('data-cisoval');var st;try{st=JSON.parse(localStorage.getItem('cyberrx_ciso_decisions')||'{}')||{};}catch(_){st={};}st[k]=v;try{localStorage.setItem('cyberrx_ciso_decisions',JSON.stringify(st));}catch(_){}c5DecProj();return;}
 });
 
 /* ---------- Program Health ▸ two inner tabs (Nerion's View / Classic View) ----------
