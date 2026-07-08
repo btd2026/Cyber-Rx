@@ -2940,7 +2940,7 @@ function c5fwFindingData(sel,node){
 }
 /* Build the full assessment payload from the tree + findings and POST it to the
    auditor-pack builder — the deck is a rendering of the same Metric/Finding data. */
-function c5fwExport(){
+function c5fwPayload(){
   var sel=FW_SEL,cov=(typeof fwDeployedIds==='function')?fwDeployedIds():{},T=c5fwTree(sel,cov);
   var controls=[];T.groups.forEach(function(g){(g.children||[]).forEach(function(c){if(c.type==='cat'){(c.children||[]).forEach(function(x){controls.push(x);});}else controls.push(c);});});
   var nm=(typeof FW_NAMES!=='undefined'&&FW_NAMES[sel])||sel;var mapped=(sel==='cis'||sel==='soc2'||sel==='hipaa');
@@ -2991,13 +2991,21 @@ function c5fwExport(){
     version:version,backbone:backbone,execNarrative:execNarrative,scopeProse:scopeProse,methodologyProse:methodologyProse,detailedIntro:detailedIntro,
     gap:gap,riskRegister:riskRegister,roadmapPhased:roadmapPhased,
     groups:groups,register:register,findings:findings,roadmap:roadmap,mapping:mapping,evidence:evidence};
-  var base=(typeof apiBase==='function')?apiBase():'',o=(typeof orgId==='function')?orgId():'';
-  if(typeof fetch!=='function'){return;}
-  fetch(base+'/api/ciso/auditor-pack.pptx'+(o?('?org_id='+encodeURIComponent(o)):''),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
-    .then(function(r){if(!r.ok)throw new Error('export failed');return r.blob();})
-    .then(function(blob){var u=URL.createObjectURL(blob);var a=document.createElement('a');a.href=u;a.download='nerion-auditor-pack-'+sel+'.pptx';document.body.appendChild(a);a.click();setTimeout(function(){try{URL.revokeObjectURL(u);a.remove();}catch(_){}},1000);})
-    .catch(function(){try{window.open(base+'/api/ciso/report.pptx'+(o?('?org_id='+encodeURIComponent(o)):''),'_blank');}catch(_){}});
+  return {payload:payload,sel:sel};
 }
+/* Download an export by POSTing the assessment payload to a builder endpoint. */
+function c5fwDownload(path,fname,body){
+  var base=(typeof apiBase==='function')?apiBase():'',o=(typeof orgId==='function')?orgId():'';
+  if(typeof fetch!=='function')return;
+  fetch(base+path+(o?('?org_id='+encodeURIComponent(o)):''),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+    .then(function(r){if(!r.ok)throw new Error('export failed');return r.blob();})
+    .then(function(blob){var u=URL.createObjectURL(blob);var a=document.createElement('a');a.href=u;a.download=fname;document.body.appendChild(a);a.click();setTimeout(function(){try{URL.revokeObjectURL(u);a.remove();}catch(_){}},1000);})
+    .catch(function(){});
+}
+/* PPTX auditor pack. */
+function c5fwExport(){var P=c5fwPayload();if(!P)return;c5fwDownload('/api/ciso/auditor-pack.pptx','nerion-auditor-pack-'+P.sel+'.pptx',P.payload);}
+/* Excel control scorecard + POA&M. */
+function c5fwExportXlsx(){var P=c5fwPayload();if(!P)return;c5fwDownload('/api/ciso/control-scorecard.xlsx','nerion-control-scorecard-'+P.sel+'.xlsx',P.payload);}
 function c5Frameworks(){
   var host=document.getElementById('c5-frameworks');if(!host)return;
   if(typeof seedDemoDocScores==='function'){try{seedDemoDocScores();}catch(_){}}
@@ -3024,7 +3032,7 @@ function c5Frameworks(){
     '<div class="c5card" data-c5fwcard="failing"><div class="c5card-top"><span class="c5card-l">Controls failing</span><span class="c5chip c5-computed">computed</span></div><div class="c5card-v" style="color:var(--'+(T.failing>0?'crit':'good')+')">'+T.failing+'</div><div class="cn">deficiencies (below CMMI '+C5FW_FLOOR+')</div></div>'+
     '</div>';
   var pills='<div class="c5fw-pills">'+[['csf','NIST CSF 2.0'],['r53','NIST 800-53'],['soc2','SOC 2'],['hipaa','HIPAA'],['cis','CIS v8 (mapped)']].map(function(o){return '<button class="c5fw-pill'+(sel===o[0]?' on':'')+'" data-c5fwsel="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div>';
-  var cadCtrl='<div class="c5fw-controls"><div class="c5fw-cad"><span style="font-size:11px;color:var(--muted);margin-right:2px">Reassess:</span>'+[['weekly','Weekly'],['monthly','Monthly'],['quarterly','Quarterly']].map(function(o){return '<button class="c5fw-cadb'+(cad===o[0]?' on':'')+'" data-c5fwcad="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div><button class="c5btn" onclick="c5fwExport()">Generate auditor pack (PPTX)</button></div>';
+  var cadCtrl='<div class="c5fw-controls"><div class="c5fw-cad"><span style="font-size:11px;color:var(--muted);margin-right:2px">Reassess:</span>'+[['weekly','Weekly'],['monthly','Monthly'],['quarterly','Quarterly']].map(function(o){return '<button class="c5fw-cadb'+(cad===o[0]?' on':'')+'" data-c5fwcad="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div><div style="display:flex;gap:8px"><button class="c5btn" onclick="c5fwExport()">Auditor pack (PPTX)</button><button class="c5btn" onclick="c5fwExportXlsx()" style="background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line)">Control scorecard + POA&amp;M (XLSX)</button></div></div>';
   // tree
   var tree='<div class="c5fw-tree">'+T.groups.map(function(g){var open=!!C5FW_EXP[g.id];var gc=c5fwCol(g.score),gs=c5fwStatus(g.score);
     var inner='';
