@@ -153,6 +153,16 @@ try {
   // Now with the posture tools connected — tiles should light without self-report.
   vm.runInContext("localStorage.setItem('cyberrx_tools',JSON.stringify({aispm:{on:true},casb:{on:true},cicd:{on:true},github:{on:true},nhi:{on:true},cbom:{on:true}})); typeof c5AiSupply==='function'&&c5AiSupply(); ['ais_aiml','ais_genai','ais_aicode','ais_pipeline','ais_nhi','ais_pqc'].forEach(function(m){c5get(m);c5Inspect(m);}); localStorage.removeItem('cyberrx_tools');", ctx);
 } catch (e) { problems.push(`[ai supply-chain] ${e.message}`); }
+// Exercise the Documents-reviewed panel: empty state, seeded multi-doc state, and
+// the five-framework crosswalk for an evidenced control.
+try {
+  vm.runInContext("typeof c5DocsReviewHtml==='function'&&c5DocsReviewHtml();", ctx); // empty state
+  vm.runInContext("localStorage.setItem('cyberrx_docs',JSON.stringify([{name:'InfoSec Policy.pdf',type:'Information Security Policy',cmmi:4,matched:5,total:6}]));localStorage.setItem('cyberrx_doc_scores',JSON.stringify({'GV.OC-01':{cmmi:4,doc:'InfoSec Policy.pdf',matched:5,total:6,attrs:[{label:'Scope',found:true},{label:'Roles',found:false}]},'PR.AA-01':{cmmi:3,doc:'InfoSec Policy.pdf',matched:3,total:5,attrs:[{label:'Identity mgmt',found:true}]},'AC-2':{cmmi:3,doc:'InfoSec Policy.pdf',matched:2,total:4,attrs:[]}}));", ctx);
+  const html = vm.runInContext("c5DocsReviewHtml()", ctx);
+  if (typeof html !== 'string' || html.indexOf('InfoSec Policy.pdf') < 0) problems.push('[docs review] seeded doc not rendered');
+  vm.runInContext("c5OpenDocsReview();c5CloseDocsReview();typeof c5DocCount==='function'&&c5DocCount();c5RevX();", ctx);
+  vm.runInContext("localStorage.removeItem('cyberrx_docs');localStorage.removeItem('cyberrx_doc_scores');", ctx);
+} catch (e) { problems.push(`[docs review] ${e.message}`); }
 // Exercise evidence panel for every EV key.
 try {
   const keys = vm.runInContext('Object.keys(EV)', ctx);

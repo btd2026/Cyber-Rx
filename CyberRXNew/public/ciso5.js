@@ -2998,7 +2998,7 @@ function c5fwFinding(sel,node){
   h+='<div class="ev-sec">Effect (risk)</div><div class="drill-p">'+F.effect+'</div>';
   h+='<div class="ev-sec">Recommendation</div><div class="drill-p">'+F.recommendation+(F.targetUplift?(' — target uplift '+F.targetUplift+'.'):'')+'</div>';
   if(F.mappings&&F.mappings.length){h+='<div class="ev-sec">Cross-framework</div><div class="drill-p">'+F.mappings.map(function(id){return '<span class="c5fw-chip">'+id+'</span>';}).join('')+'</div>';}
-  h+='<div class="c5foot" style="margin-top:14px">Documented to AICPA attestation rigor · traceable to source evidence · our own wording, not reproduced standard text. Continuous management self-assessment, not an independent audit opinion.</div></div>';
+  h+='</div>';
   return h;
 }
 /* Plain-text finding fields for a control — the single source used by both the tab
@@ -3152,18 +3152,20 @@ function c5Frameworks(){
       '<div style="font-size:12px;color:var(--ink-2);margin-top:1px">See how your '+((typeof FW_NAMES!=='undefined'&&FW_NAMES[sel])||'framework')+' maturity compares to the DTNKShield community — anonymously.</div></div>'+
     '</div><span class="peer-badge">DTNKShield ›</span></div>';
   host.innerHTML=c5header()+
-    c5shell('Program health · how is the security program performing?','Assessed against the framework your program is built on — refreshed on your cadence.',null,'If you built your security program around a framework — NIST CSF 2.0, 800-53, CIS, SOC 2 or HIPAA — this is where you see how that program is actually performing, so it makes sense to check it often. Every control is scored on the CMMI 0–5 scale from your live telemetry and analyzed policies, rolled up to category, function and family, with auditor-grade findings you can hand to an assessor. Public standards quote control text; CIS and SOC 2 are referenced by number/criterion and mapping only.')+
+    c5shell('Program health · how is the security program performing?','Assessed against the framework your program is built on — refreshed on your cadence.',null,'Attackers moved to AI. Your assessment moved to real time — live telemetry, always-current posture, zero blind spots.')+
     cadCtrl+
-    '<div class="c5fw-refresh">Refreshed <b>'+cad+'</b> · last assessed <b>'+fmt(now)+'</b> · next refresh <b>'+fmt(nextD)+'</b></div>'+
+    '<div class="c5fw-refresh" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"><span>Refreshed <b>'+cad+'</b> · last assessed <b>'+fmt(now)+'</b> · next refresh <b>'+fmt(nextD)+'</b></span>'+
+      '<button id="c5docsBtn" type="button" style="border:1px solid var(--line);background:var(--surface);color:var(--blue);font-weight:600;font-size:12px;padding:6px 12px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:6px">📄 Documents reviewed'+(function(){var n=(typeof c5DocCount==="function")?c5DocCount():0;return n?(' · '+n):"";})()+'</button></div>'+
     pills+
     cards+
     peerBox+
     xnote+
     '<div class="c5fw-wrap"><div class="c5fw-right">'+tree+'</div><div class="c5fw-left" id="c5fw-detail">'+c5fwFinding(sel,selNode)+'</div></div>'+
-    '<div class="c5foot">CMMI 0 None · 1 Initial · 2 Managed · 3 Defined · 4 Quant. Managed · 5 Optimizing. Meets target ≥ '+C5FW_TARGET.toFixed(1)+' (green) · Observation ≥ '+C5FW_FLOOR+' (amber) · Deficiency &lt; '+C5FW_FLOOR+' (red). Documented to AICPA rigor; continuous management self-assessment, not an independent audit opinion. CIS by number/title/mapping only; SOC 2 by criterion ID.</div>';
+    '<div class="c5foot">CMMI 0 None · 1 Initial · 2 Managed · 3 Defined · 4 Quant. Managed · 5 Optimizing. Meets target ≥ '+C5FW_TARGET.toFixed(1)+' (green) · Observation ≥ '+C5FW_FLOOR+' (amber) · Deficiency &lt; '+C5FW_FLOOR+' (red). CIS by number/title/mapping only; SOC 2 by criterion ID.</div>';
   // record cadence snapshot
   if(typeof fwRecord==='function'){try{fwRecord(T.overall);}catch(_){}}
   var _pb=document.getElementById('c5fwPeerBox');if(_pb)_pb.onclick=function(){c5fwPeerOpen();};
+  var _db=document.getElementById('c5docsBtn');if(_db)_db.onclick=function(){c5OpenDocsReview();};
   // wiring
   host.querySelectorAll('[data-c5fwsel]').forEach(function(b){b.onclick=function(){window.FW_SEL=b.getAttribute('data-c5fwsel');C5FW_EXP=null;C5FW_CTRL=null;c5Frameworks();};});
   host.querySelectorAll('[data-c5fwcad]').forEach(function(b){b.onclick=function(){try{localStorage.setItem('cyberrx_audit_cadence',b.getAttribute('data-c5fwcad'));}catch(_){}c5Frameworks();};});
@@ -3171,6 +3173,137 @@ function c5Frameworks(){
   host.querySelectorAll('[data-c5fwctl]').forEach(function(b){b.onclick=function(){C5FW_CTRL=b.getAttribute('data-c5fwctl');c5Frameworks();};});
   host.querySelectorAll('[data-c5fwcard]').forEach(function(b){b.style.cursor='pointer';b.onclick=function(){c5fwInspect(b.getAttribute('data-c5fwcard'),T,sel,cad);};});
 }
+/* ============================================================================
+   Documents reviewed — the analyst-grade read of every policy uploaded during
+   onboarding. Each document was parsed control-by-control against NIST CSF 2.0
+   and NIST SP 800-53; here we present that review the way a senior assessor would
+   write it up — per control: which expected attributes were found vs. missing, the
+   maturity that evidences, an auditor narrative, and the same finding carried across
+   all five frameworks (CSF · 800-53 · CIS · SOC 2 · HIPAA) via the public crosswalk,
+   so the reviewer sees exactly which control in each standard the document satisfies.
+   Reads the stored document review (docScores / docList) — nothing hardcoded. */
+function c5DocScoresSafe(){try{return (typeof docScores==='function')?docScores():{};}catch(_){return {};}}
+function c5DocListSafe(){try{return (typeof docList==='function')?docList():[];}catch(_){return [];}}
+function c5DocCount(){try{return c5DocListSafe().length;}catch(_){return 0;}}
+/* One-time reverse crosswalk: CSF subcategory id → {cis:[],soc2:[],hipaa:[]}. Built
+   from the same public maps the Frameworks tab scores from. */
+var C5_REVX=null;
+function c5RevX(){
+  if(C5_REVX)return C5_REVX;
+  var idx={};
+  function add(csf,fw,id){if(!csf)return;if(!idx[csf])idx[csf]={cis:[],soc2:[],hipaa:[]};if(idx[csf][fw].indexOf(id)<0)idx[csf][fw].push(id);}
+  function walk(map,fw){if(!Array.isArray(map))return;map.forEach(function(g){(g[2]||[]).forEach(function(it){(it[2]||[]).forEach(function(csf){add(csf,fw,it[0]);});});});}
+  try{walk(typeof CIS_MAP!=='undefined'?CIS_MAP:null,'cis');}catch(_){}
+  try{walk(typeof SOC2_MAP!=='undefined'?SOC2_MAP:null,'soc2');}catch(_){}
+  try{walk(typeof HIPAA_MAP!=='undefined'?HIPAA_MAP:null,'hipaa');}catch(_){}
+  C5_REVX=idx;return idx;
+}
+/* CSF subcategory id → human name, from the same CSF_RAW the tree uses. */
+var C5_CSFNAME=null;
+function c5CsfName(id){
+  if(!C5_CSFNAME){C5_CSFNAME={};try{if(typeof CSF_RAW!=='undefined')Object.keys(CSF_RAW).forEach(function(fn){var cats=CSF_RAW[fn];Object.keys(cats).forEach(function(cat){cats[cat].forEach(function(r){C5_CSFNAME[r[0]]=r[1];});});});}catch(_){}}
+  return C5_CSFNAME[id]||'';
+}
+function c5R53Fam(id){var m=String(id).match(/^([A-Z]{2})-/);if(!m)return '';try{if(typeof R53_RAW!=='undefined'){var f=R53_RAW.filter(function(r){return r[0]===m[1];})[0];if(f)return f[1];}}catch(_){}return '';}
+function c5IsCsf(id){return /^[A-Z]{2}\.[A-Z]{2}-\d/.test(String(id));}
+function c5IsR53(id){return /^[A-Z]{2}-\d/.test(String(id));}
+function c5CtrlName(id){return c5IsCsf(id)?c5CsfName(id):c5R53Fam(id);}
+/* The five-framework mapping row for one evidenced control. Native standard first
+   (CSF or 800-53), then the controls it maps to in the other four. */
+function c5DocXwalk(id){
+  var out={csf:[],r53:[],cis:[],soc2:[],hipaa:[]};
+  if(c5IsCsf(id)){out.csf.push(id);var rx=c5RevX()[id];if(rx){out.cis=rx.cis.slice(0,4);out.soc2=rx.soc2.slice(0,4);out.hipaa=rx.hipaa.slice(0,4);}}
+  else if(c5IsR53(id)){out.r53.push(id);}
+  return out;
+}
+function c5DocChips(x){
+  var FW=[['csf','CSF 2.0'],['r53','800-53'],['cis','CIS v8'],['soc2','SOC 2'],['hipaa','HIPAA']];
+  var parts=FW.map(function(f){var ids=x[f[0]]||[];if(!ids.length)return '';
+    return '<span style="display:inline-flex;align-items:center;gap:5px;font-size:10.5px"><span style="color:var(--muted);font-weight:600">'+f[1]+'</span>'+ids.map(function(i){return '<span class="c5fw-chip" style="cursor:default">'+c5esc(i)+'</span>';}).join('')+'</span>';
+  }).filter(Boolean);
+  return parts.length?('<div style="display:flex;flex-wrap:wrap;gap:10px 14px;margin-top:8px">'+parts.join('')+'</div>'):'';
+}
+/* Build the full HTML for the Documents-reviewed panel. */
+function c5DocsReviewHtml(){
+  var docs=c5DocListSafe(),scores=c5DocScoresSafe();
+  var CMMI_LBL=(typeof CMMI_LABELS!=='undefined')?CMMI_LABELS:{0:'None',1:'Initial',2:'Managed',3:'Defined',4:'Quant. Managed',5:'Optimizing'};
+  if(!docs.length&&!Object.keys(scores).length){
+    return '<div style="padding:8px 2px"><div style="font-size:15px;font-weight:600;color:var(--ink)">No policies analyzed yet</div>'+
+      '<p style="color:var(--ink-2);font-size:13px;line-height:1.55;max-width:640px">Upload your security policies during onboarding and Nerion reads each one control-by-control against NIST CSF 2.0 and NIST SP 800-53, then carries every finding across CIS, SOC 2 and HIPAA. The full review appears here, mapped to the controls in this tab.</p>'+
+      '<button data-c5onb="document review" style="margin-top:6px;border:1px solid var(--line);background:var(--surface);color:var(--blue);font-weight:600;font-size:12.5px;padding:8px 14px;border-radius:8px;cursor:pointer">Go to document review →</button></div>';
+  }
+  // Index the per-control review by the document that produced it.
+  var byDoc={};Object.keys(scores).forEach(function(cid){var s=scores[cid]||{};var dn=s.doc||'Uploaded policy';(byDoc[dn]=byDoc[dn]||[]).push({id:cid,s:s});});
+  // Documents in list order; append any scored doc not in the list.
+  var order=docs.map(function(d){return d.name;});Object.keys(byDoc).forEach(function(dn){if(order.indexOf(dn)<0)order.push(dn);});
+  var metaByName={};docs.forEach(function(d){metaByName[d.name]=d;});
+  var fnOrder=['GV','ID','PR','DE','RS','RC'],fnName={GV:'Govern',ID:'Identify',PR:'Protect',DE:'Detect',RS:'Respond',RC:'Recover'};
+  function stColor(c){return c>=4?'good':c>=3?'good':c>=2?'warn':'crit';}
+  var html='';
+  order.forEach(function(dn){
+    var rows=(byDoc[dn]||[]).slice().sort(function(a,b){return a.id<b.id?-1:1;});
+    var meta=metaByName[dn]||{};
+    var cmmis=rows.map(function(r){return Number(r.s.cmmi)||0;});
+    var mean=cmmis.length?(cmmis.reduce(function(a,b){return a+b;},0)/cmmis.length):(Number(meta.cmmi)||0);
+    var matched=rows.reduce(function(a,r){return a+(Number(r.s.matched)||0);},0),total=rows.reduce(function(a,r){return a+(Number(r.s.total)||0);},0);
+    // Framework coverage counts (distinct controls touched, native + crosswalk).
+    var cov={csf:0,r53:0,cis:{},soc2:{},hipaa:{}},csfN=0,r53N=0;
+    rows.forEach(function(r){var x=c5DocXwalk(r.id);if(x.csf.length)csfN++;if(x.r53.length)r53N++;x.cis.forEach(function(i){cov.cis[i]=1;});x.soc2.forEach(function(i){cov.soc2[i]=1;});x.hipaa.forEach(function(i){cov.hipaa[i]=1;});});
+    var covPills=[['NIST CSF 2.0',csfN],['NIST SP 800-53',r53N],['CIS v8',Object.keys(cov.cis).length],['SOC 2',Object.keys(cov.soc2).length],['HIPAA',Object.keys(cov.hipaa).length]]
+      .map(function(p){return '<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:3px 9px;border:1px solid var(--line);border-radius:20px;background:var(--surface)"><b style="color:var(--ink)">'+p[1]+'</b><span style="color:var(--ink-2)">'+p[0]+'</span></span>';}).join('');
+    // Group controls by CSF function for readability.
+    var groups={};rows.forEach(function(r){var fn=c5IsCsf(r.id)?r.id.slice(0,2):(c5R53Fam(r.id)?'—':'—');(groups[fn]=groups[fn]||[]).push(r);});
+    var groupHtml=fnOrder.concat(Object.keys(groups).filter(function(k){return fnOrder.indexOf(k)<0;})).filter(function(fn){return groups[fn];}).map(function(fn){
+      var label=fnName[fn]||'800-53 / other';
+      var items=groups[fn].map(function(r){
+        var c=Number(r.s.cmmi)||0,col=stColor(c),nm=c5CtrlName(r.id);
+        var attrs=Array.isArray(r.s.attrs)?r.s.attrs:[];
+        var present=attrs.filter(function(a){return a.found;}),missing=attrs.filter(function(a){return !a.found;});
+        var attrHtml=attrs.length?('<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">'+
+          present.map(function(a){return '<span style="font-size:10.5px;padding:2px 8px;border-radius:20px;background:color-mix(in srgb,var(--good) 14%,var(--surface));color:var(--good);border:1px solid color-mix(in srgb,var(--good) 30%,transparent)">✓ '+c5esc(a.label)+'</span>';}).join('')+
+          missing.map(function(a){return '<span style="font-size:10.5px;padding:2px 8px;border-radius:20px;background:color-mix(in srgb,var(--crit) 10%,var(--surface));color:var(--crit);border:1px solid color-mix(in srgb,var(--crit) 26%,transparent)">✗ '+c5esc(a.label)+'</span>';}).join('')+'</div>'):'';
+        var narr=(attrs.length?('The policy addresses this control with <b>'+present.length+' of '+attrs.length+'</b> expected attribute'+(attrs.length>1?'s':'')+' present'+(missing.length?(' — missing '+missing.map(function(a){return a.label.toLowerCase();}).join(', ')):', all reviewed attributes present')+'. '):'')+
+          'Assessed at <b>CMMI '+c+' — '+(CMMI_LBL[c]||'')+'</b>'+(c<3?', below the target of 3.5; strengthen the policy language above to raise maturity.':c<4?', meeting baseline; tighten the remaining attributes to reach optimized.':', a mature, well-evidenced control.');
+        var x=c5DocXwalk(r.id);
+        return '<div style="padding:12px 0;border-top:1px solid var(--line)">'+
+          '<div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">'+
+            '<span style="font-size:11px;font-weight:700;color:#fff;background:var(--'+col+');border-radius:6px;padding:1px 7px">CMMI '+c+'</span>'+
+            '<b style="font-family:var(--serif);font-size:13.5px">'+c5esc(r.id)+'</b>'+
+            (nm?('<span style="color:var(--ink-2);font-size:12.5px">'+c5esc(nm)+'</span>'):'')+
+          '</div>'+
+          '<div style="font-size:12.5px;color:var(--ink-2);line-height:1.55;margin-top:6px">'+narr+'</div>'+
+          attrHtml+c5DocChips(x)+
+        '</div>';
+      }).join('');
+      return '<div style="margin-top:14px"><div style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--blue)">'+label+'</div>'+items+'</div>';
+    }).join('');
+    html+='<section style="margin:0 0 26px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--surface)">'+
+      '<div style="padding:16px 20px;background:var(--surface-2);border-bottom:1px solid var(--line)">'+
+        '<div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><span style="font-size:18px">📄</span><b style="font-family:var(--serif);font-size:17px;color:var(--ink)">'+c5esc(dn)+'</b>'+(meta.type?('<span style="font-size:12px;color:var(--ink-2)">'+c5esc(meta.type)+'</span>'):'')+'</div>'+
+        '<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:10px">'+
+          '<div><span style="font-size:22px;font-weight:700;font-family:var(--serif);color:var(--'+stColor(mean)+')">'+mean.toFixed(1)+'</span><span style="font-size:12px;color:var(--muted)"> / 5 mean CMMI</span></div>'+
+          '<div style="font-size:12px;color:var(--ink-2)"><b style="color:var(--ink)">'+rows.length+'</b> control'+(rows.length!==1?'s':'')+' evidenced · <b style="color:var(--ink)">'+matched+'</b> of '+total+' attributes present</div>'+
+        '</div>'+
+        '<div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:11px">'+covPills+'</div>'+
+      '</div>'+
+      '<div style="padding:6px 20px 18px">'+groupHtml+'</div>'+
+    '</section>';
+  });
+  return '<div>'+
+    '<p style="color:var(--ink-2);font-size:13px;line-height:1.55;max-width:760px;margin:0 0 20px">Every policy you uploaded, read control-by-control against <b>NIST CSF 2.0</b> and <b>NIST SP 800-53 Rev 5</b>, with each finding carried across <b>CIS Controls v8</b>, <b>SOC 2</b> and the <b>HIPAA Security Rule</b> through the public crosswalk. Maturity, attributes present and missing, and the mapped control in each standard — the evidence behind the scores in this tab.</p>'+
+    html+
+    '<div style="font-size:11px;color:var(--muted);line-height:1.5;border-top:1px solid var(--line);padding-top:12px">Attribute analysis and CMMI are produced by Nerion’s document engine against the public NIST catalogs. CIS · SOC 2 · HIPAA are mapped by public crosswalk (NIST CSF 2.0 informative references · SP 800-66) — a readiness indicator, not an independent audit opinion; CIS/SOC 2 shown by number/criterion only.</div>'+
+  '</div>';
+}
+function c5OpenDocsReview(){
+  try{
+    var host=document.getElementById('docDoc');if(!host)return;
+    host.innerHTML=c5DocsReviewHtml();
+    var sc=document.getElementById('docScrim'),md=document.getElementById('docModal');
+    if(sc)sc.classList.add('open');if(md)md.classList.add('open');
+  }catch(_){}
+}
+function c5CloseDocsReview(){var sc=document.getElementById('docScrim'),md=document.getElementById('docModal');if(sc)sc.classList.remove('open');if(md)md.classList.remove('open');}
 /* The four Frameworks summary cards open the same inspector as every other metric,
    built from real assessment data (roll-up, coverage, trend history, deficiencies). */
 /* "See details" on a document-evidenced finding → back to onboarding's document-
