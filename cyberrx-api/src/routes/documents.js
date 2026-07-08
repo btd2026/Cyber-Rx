@@ -467,10 +467,37 @@ router.post('/analyze', upload.single('file'), async (req, res) => {
       controls: result.controls.length,
       cost_usd: result.cost_usd || 0,
     });
+    // Ledger the LLM spend so the cumulative cost is queryable (best-effort).
+    if (result.engine === 'llm') {
+      try {
+        require('../services/DocumentSpendService').record({
+          orgId: req.headers['x-org-id'] || req.body.org_id || null,
+          model: result.model, engine: 'llm', docType,
+          label: req.file.originalname, usage: result.usage, costUsd: result.cost_usd,
+        });
+      } catch (_) { /* non-fatal */ }
+    }
     res.json(result);
   } catch (e) {
     logger.error('document analysis failed', { error: e.message });
     res.status(500).json({ error: 'Document analysis failed: ' + e.message });
+  }
+});
+
+/**
+ * GET /api/documents/spend — cumulative LLM document-review spend.
+ * Optional X-Org-Id / ?org_id scopes totals to one organization.
+ * Returns today / last-30 / all-time cost + token totals, a per-model breakdown,
+ * a 14-day daily rollup, and the 20 most recent reviews.
+ */
+router.get('/spend', async (req, res) => {
+  try {
+    const orgId = req.headers['x-org-id'] || req.query.org_id || null;
+    const out = await require('../services/DocumentSpendService').summary({ orgId });
+    res.json(out);
+  } catch (e) {
+    logger.error('document spend summary error', { error: e.message });
+    res.status(500).json({ error: 'Failed to compute spend: ' + e.message });
   }
 });
 
