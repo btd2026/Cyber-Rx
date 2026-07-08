@@ -3144,24 +3144,41 @@ function c5briefHead(brief){
   if(!brief)return '';
   return '<div class="c5briefhead"><div class="k">Your CISO’s read</div><div class="t">'+brief+'</div></div>';
 }
-/* The single most-exposed crown jewel, from live data — grounds the risk-
-   acceptance ask so it names a real asset and figure, not a placeholder. */
-function c5TopExposure(){
-  var CJ=(typeof LIVE!=='undefined'&&LIVE&&LIVE.crown_jewel_risk)||null;
-  if(CJ&&CJ.items&&CJ.items.length){var t=CJ.items[0];return {name:t.asset||'your top crown jewel',usd:Number(t.exposure_usd)||null};}
-  return null;
+/* Route live crown-jewel exposures to the seat whose remit owns them, so each
+   exec's risk-acceptance asks name the real assets in THEIR area — not the same
+   top exposure for everyone. Enterprise seats (CEO/CRO/Board) see the top of the
+   whole list; others match by asset keyword, falling back to the top exposure. */
+var C5_SEAT_DOMAIN={
+  cfo:['payment','billing','fraud','financ','revenue','disburse','premium','settlement'],
+  coo:['operation','continuity','disburse','logistic','manufactur','plant','service','settlement','supply'],
+  cio:['identity','active directory','directory','infrastructure','network','firewall','server','platform','application','system','edge','cloud'],
+  cpo:['portal','customer','product','mobile','web','app'],
+  clo:['data','pii','phi','pci','privacy','records','claimant','breach']
+};
+function c5SeatExposures(seat){
+  var CJ=(typeof LIVE!=='undefined'&&LIVE&&LIVE.crown_jewel_risk&&LIVE.crown_jewel_risk.items)||[];
+  if(!CJ.length)return [];
+  if(seat==='ceo'||seat==='board')return CJ.slice(0,1);
+  if(seat==='cro')return CJ.slice(0,3);
+  var kw=C5_SEAT_DOMAIN[seat]||[];
+  var m=CJ.filter(function(it){var n=' '+String(it.asset||'').toLowerCase()+' ';return kw.some(function(k){return n.indexOf(k)>=0;});});
+  return (m.length?m:CJ.slice(0,1)).slice(0,2);
 }
 function c5AskMoney(v){if(v==null)return '';var n=Number(v);if(!isFinite(n)||n<=0)return '';if(n>=1e9)return '$'+(n/1e9).toFixed(1)+'B';if(n>=1e6)return '$'+(n/1e6).toFixed(0)+'M';if(n>=1e3)return '$'+(n/1e3).toFixed(0)+'K';return '$'+n.toFixed(0);}
 /* The activities the CISO asks of each seat — grounded in live exposure where it
    can be, plus the governance attestations each role owns. */
 function c5AskModel(seat){
-  var top=c5TopExposure(),asks=[];
-  var exp=top?(top.usd?(' ('+c5AskMoney(top.usd)+' modeled exposure)'):''):'';
-  if(top&&['cro','cfo','coo','cio','ceo'].indexOf(seat)>=0)
-    asks.push({id:seat+'_accept_top',kind:'accept',title:'Risk acceptance — '+top.name,
-      why:'This is the most exposed crown jewel'+exp+'. Remediation is scoped but not yet funded.',
+  var asks=[];
+  // Risk acceptances — one per exposed crown jewel in this seat's domain.
+  var enterprise=(seat==='cro'||seat==='board'||seat==='ceo');
+  c5SeatExposures(seat).forEach(function(t){
+    var usd=Number(t.exposure_usd)||null,name=t.asset||'a crown jewel';
+    asks.push({id:seat+'_accept_'+String(name).replace(/[^a-z0-9]+/gi,'_').toLowerCase().slice(0,40),kind:'accept',
+      title:'Risk acceptance — '+name,
+      why:(enterprise?'One of your most exposed crown jewels':'The exposed crown jewel in your area is <b>'+name+'</b>')+(usd?(' ('+c5AskMoney(usd)+' modeled exposure)'):'')+'. Remediation is scoped but not yet funded.',
       ask:'Approve accepting the residual risk until the fix is funded next cycle, or decline and fund it now.',
       opts:['Approve acceptance','Decline — fund now','Defer']});
+  });
   if(seat==='cfo')
     asks.push({id:'cfo_fund_best',kind:'fund',title:'Fund the highest-return control',
       why:'Your best dollar closes the identity gap — the most risk removed per dollar, and it trims the insurance tail where you are thin.',
