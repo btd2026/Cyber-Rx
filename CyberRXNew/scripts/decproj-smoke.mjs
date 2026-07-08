@@ -36,6 +36,14 @@ ok('ciso own-decision buttons wired', /data-cisodec=/.test(ciso));
 ok('render loop calls c5DecProj', (cockpit.match(/typeof c5DecProj==='function'\)c5DecProj\(\)/g) || []).length >= 2);
 // Styling present.
 ok('decproj styles present', /\.c5dp-wrap\{/.test(cockpit) && /\.c5remind-scrim\{/.test(cockpit));
+// Executive email pre-fill: onboarding collects 9 emails, saves to the store the
+// reminder modal reads, and the cockpit hydrates from LIVE for cross-session use.
+const onb = read('onboarding.html');
+ok('onboarding has 9 seatemail inputs', (onb.match(/class="seatemail"/g) || []).length === 9);
+ok('onboarding collects seatEmails', /seatEmails\[i\.dataset\.seat\]/.test(onb));
+ok('onboarding sends seatEmails in payload', /seatEmails:seatEmails/.test(onb));
+ok('onboarding saves cyberrx_seat_emails', /setItem\('cyberrx_seat_emails'/.test(onb));
+ok('c5SeatEmails hydrates from LIVE.seatEmails', /LIVE\.seatEmails/.test(ciso));
 
 if (fail) { console.error(`\ndecproj-smoke: ${passed} passed, ${fail} FAILED`); process.exit(1); }
 console.log(`decproj-smoke OK — ${passed} checks pass (tab wired · projection on live control model · reminder-email piping · render loop).`);

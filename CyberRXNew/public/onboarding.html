@@ -210,21 +210,21 @@
         <div class="chips" id="regions"><span class="chip" data-r="US">US</span><span class="chip" data-r="EU">EU</span><span class="chip" data-r="UK">UK</span><span class="chip" data-r="Canada">Canada</span><span class="chip" data-r="Singapore">Singapore</span><span class="chip" data-r="Australia">Australia</span><span class="chip" data-r="APAC">APAC</span><span class="chip" data-r="Global">Global</span></div>
       </div>
     </div>
-    <div style="margin-top:16px"><label style="display:block;margin-bottom:8px">Leadership <span class="h">— each seat’s cockpit is addressed to them, and their name is stamped on every decision they make</span></label>
+    <div style="margin-top:16px"><label style="display:block;margin-bottom:8px">Leadership <span class="h">— each seat’s cockpit is addressed to them, their name is stamped on every decision, and their email lets the CISO send reminders from the cockpit</span></label>
       <div class="row c3">
-        <div class="field"><label>CEO</label><input class="seatname" data-seat="ceo" placeholder="Full name"></div>
-        <div class="field"><label>CFO</label><input class="seatname" data-seat="cfo" placeholder="Full name"></div>
-        <div class="field"><label>CISO</label><input class="seatname" data-seat="ciso" placeholder="Full name"></div>
+        <div class="field"><label>CEO</label><input class="seatname" data-seat="ceo" placeholder="Full name"><input class="seatemail" data-seat="ceo" type="email" placeholder="name@company.com" style="margin-top:6px"></div>
+        <div class="field"><label>CFO</label><input class="seatname" data-seat="cfo" placeholder="Full name"><input class="seatemail" data-seat="cfo" type="email" placeholder="name@company.com" style="margin-top:6px"></div>
+        <div class="field"><label>CISO</label><input class="seatname" data-seat="ciso" placeholder="Full name"><input class="seatemail" data-seat="ciso" type="email" placeholder="name@company.com" style="margin-top:6px"></div>
       </div>
       <div class="row c3" style="margin-top:12px">
-        <div class="field"><label>COO</label><input class="seatname" data-seat="coo" placeholder="Full name"></div>
-        <div class="field"><label>CTO</label><input class="seatname" data-seat="cio" placeholder="Full name"></div>
-        <div class="field"><label>CPO <span class="h">— Chief Product Officer</span></label><input class="seatname" data-seat="cpo" placeholder="Full name"></div>
+        <div class="field"><label>COO</label><input class="seatname" data-seat="coo" placeholder="Full name"><input class="seatemail" data-seat="coo" type="email" placeholder="name@company.com" style="margin-top:6px"></div>
+        <div class="field"><label>CTO</label><input class="seatname" data-seat="cio" placeholder="Full name"><input class="seatemail" data-seat="cio" type="email" placeholder="name@company.com" style="margin-top:6px"></div>
+        <div class="field"><label>CPO <span class="h">— Chief Product Officer</span></label><input class="seatname" data-seat="cpo" placeholder="Full name"><input class="seatemail" data-seat="cpo" type="email" placeholder="name@company.com" style="margin-top:6px"></div>
       </div>
       <div class="row c3" style="margin-top:12px">
-        <div class="field"><label>General Counsel (CLO)</label><input class="seatname" data-seat="clo" placeholder="Full name"></div>
-        <div class="field"><label>Chief Risk Officer (CRO)</label><input class="seatname" data-seat="cro" placeholder="Full name"></div>
-        <div class="field"><label>Chief Audit Executive <span class="h">— Internal Audit</span></label><input class="seatname" data-seat="audit" placeholder="Full name"></div>
+        <div class="field"><label>General Counsel (CLO)</label><input class="seatname" data-seat="clo" placeholder="Full name"><input class="seatemail" data-seat="clo" type="email" placeholder="name@company.com" style="margin-top:6px"></div>
+        <div class="field"><label>Chief Risk Officer (CRO)</label><input class="seatname" data-seat="cro" placeholder="Full name"><input class="seatemail" data-seat="cro" type="email" placeholder="name@company.com" style="margin-top:6px"></div>
+        <div class="field"><label>Chief Audit Executive <span class="h">— Internal Audit</span></label><input class="seatname" data-seat="audit" placeholder="Full name"><input class="seatemail" data-seat="audit" type="email" placeholder="name@company.com" style="margin-top:6px"></div>
       </div>
     </div>
   </div>
@@ -1340,6 +1340,7 @@
     var orgId='org_'+slug(org);
     var frameworksInScope=Array.prototype.slice.call(document.querySelectorAll('#scopeFrameworks input:checked')).map(function(c){return c.value;});
     var seatNames={};document.querySelectorAll('.seatname').forEach(function(i){if(i.value.trim())seatNames[i.dataset.seat]=i.value.trim();});
+    var seatEmails={};document.querySelectorAll('.seatemail').forEach(function(i){var e=i.value.trim();if(e&&/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e))seatEmails[i.dataset.seat]=e;});
     var payload={
       org_name:org,org_id:orgId,industry:v('industry'),regions:REGIONS,currency:CUR_CODE,
       financials:{revenue:mval('finRevenue'),operatingIncome:mval('finOpInc'),netIncome:mval('finNetInc'),enterpriseValue:mval('finEV'),sharesOutstanding:mval('finShares')},
@@ -1379,7 +1380,7 @@
       regulatoryRegister:REG.collect(),
       materialityCriteria:MAT.collect(),
       benchmarkData:BEN.collect(),
-      seatNames:seatNames,
+      seatNames:seatNames,seatEmails:seatEmails,
       growth:{
         pipelineUsd:mval('growthPipeline'),reviewBeforeWks:v('growthBefore'),reviewNowWks:v('growthNow'),
         dealsGated:v('growthDeals'),trustReviews:v('growthTrust'),
@@ -1394,7 +1395,7 @@
       if(r.ok&&body&&body.org_id)orgId=body.org_id;
       else if(!r.ok){msg.textContent='Setup error: '+(body.error||('HTTP '+r.status));msg.style.color='var(--warn)';btn.disabled=false;return;}
     }catch(e){/* offline: still hand off; cockpit shows illustrative */}
-    try{localStorage.setItem('cyberrx_org_id',orgId);localStorage.setItem('cyberrx_org_name',org);localStorage.setItem('cyberrx_seat_names',JSON.stringify(seatNames));localStorage.setItem('cyberrx_industry',v('industry')||'');localStorage.setItem('cyberrx_frameworks',JSON.stringify(frameworksInScope));localStorage.setItem('cyberrx_currency',CUR_SYM+'|'+CUR_CODE);localStorage.setItem('cyberrx_objectives',JSON.stringify(collectObjectives()));}catch(_){}
+    try{localStorage.setItem('cyberrx_org_id',orgId);localStorage.setItem('cyberrx_org_name',org);localStorage.setItem('cyberrx_seat_names',JSON.stringify(seatNames));localStorage.setItem('cyberrx_seat_emails',JSON.stringify(seatEmails));localStorage.setItem('cyberrx_industry',v('industry')||'');localStorage.setItem('cyberrx_frameworks',JSON.stringify(frameworksInScope));localStorage.setItem('cyberrx_currency',CUR_SYM+'|'+CUR_CODE);localStorage.setItem('cyberrx_objectives',JSON.stringify(collectObjectives()));}catch(_){}
     // Persist the chosen ticketing system so cockpit decisions open projects there.
     var itsm=SELTOOLS.servicenow;
     try{if(itsm&&itsm.on)localStorage.setItem('cyberrx_itsm',JSON.stringify({vendor:itsm.vendor||'ServiceNow',instance:itsm.key||'',demo:!!itsm.demo}));}catch(_){}

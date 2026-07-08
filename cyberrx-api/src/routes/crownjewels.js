@@ -273,6 +273,14 @@ router.post('/ingest', optionalJWT, async (req, res) => {
         if (typeof v === 'string' && v.trim()) seatNames[String(k).slice(0, 20)] = v.trim().slice(0, 80);
       });
     }
+    // Executive emails — lets the CISO cockpit send reminder emails to each leader.
+    const seatEmails = {};
+    if (b.seatEmails && typeof b.seatEmails === 'object') {
+      Object.keys(b.seatEmails).forEach((k) => {
+        const v = b.seatEmails[k];
+        if (typeof v === 'string' && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v.trim())) seatEmails[String(k).slice(0, 20)] = v.trim().slice(0, 120);
+      });
+    }
 
     // Ensure the org row exists so the FK on business_processes/assets is satisfied.
     // JSONB-merge economics into setup_json so re-ingest overlays without clobbering.
@@ -282,7 +290,7 @@ router.post('/ingest', optionalJWT, async (req, res) => {
        VALUES ($1,$2,$3,$4::jsonb,NOW())
        ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name,
          setup_json = COALESCE(orgs.setup_json,'{}'::jsonb) || EXCLUDED.setup_json`,
-      [mapped.org.id, mapped.org.name, '', JSON.stringify({ economics, resilience, initiatives, governance, aiGovernance, aiSupplyChain, growth, strategicInitiatives, objectives, capabilities, crownJewelRegister, bia, sbom, riskAppetite, regulatoryRegister, materialityCriteria, benchmarkData, document_validation: documentValidation, seatNames })]);
+      [mapped.org.id, mapped.org.name, '', JSON.stringify({ economics, resilience, initiatives, governance, aiGovernance, aiSupplyChain, growth, strategicInitiatives, objectives, capabilities, crownJewelRegister, bia, sbom, riskAppetite, regulatoryRegister, materialityCriteria, benchmarkData, document_validation: documentValidation, seatNames, seatEmails })]);
 
     // Idempotent replace: clear the org's prior inventory, then insert the mapped rows.
     step = 'clear_inventory';
