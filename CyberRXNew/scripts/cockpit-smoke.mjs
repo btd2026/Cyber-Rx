@@ -156,6 +156,17 @@ try {
   // Now with the posture tools connected — tiles should light without self-report.
   vm.runInContext("localStorage.setItem('cyberrx_tools',JSON.stringify({aispm:{on:true},casb:{on:true},cicd:{on:true},github:{on:true},nhi:{on:true},cbom:{on:true}})); typeof c5AiSupply==='function'&&c5AiSupply(); ['ais_aiml','ais_genai','ais_aicode','ais_pipeline','ais_nhi','ais_pqc'].forEach(function(m){c5get(m);c5Inspect(m);}); localStorage.removeItem('cyberrx_tools');", ctx);
 } catch (e) { problems.push(`[ai supply-chain] ${e.message}`); }
+// Exercise the executive-partner Asks engine ("What I need from you").
+try {
+  vm.runInContext("if(typeof LIVE==='object'&&LIVE){LIVE.crown_jewel_risk={items:[{asset:'Claims platform',exposure_usd:34000000,risk:82}]};}", ctx);
+  const croAsks = vm.runInContext("JSON.stringify(c5AskModel('cro'))", ctx);
+  if (!/risk[- ]?accept|Risk acceptance/i.test(croAsks) || croAsks.indexOf('Claims platform') < 0) problems.push('[asks] CRO risk-acceptance ask not grounded in top exposure');
+  const boardAsks = vm.runInContext("JSON.stringify(c5AskModel('board'))", ctx);
+  if (boardAsks.indexOf('materiality') < 0) problems.push('[asks] Board attestation missing');
+  const rt = vm.runInContext("c5AskSave('t_x',{status:'Approve acceptance',ts:1}); (c5AskStore()['t_x']||{}).status", ctx);
+  if (rt !== 'Approve acceptance') problems.push('[asks] save/store roundtrip failed');
+  vm.runInContext("['board','ceo','cfo','clo','cro','cio','coo','cpo','audit'].forEach(function(s){c5Asks(s);}); c5SeatViews();", ctx);
+} catch (e) { problems.push(`[asks] ${e.message}`); }
 // Exercise the Documents-reviewed panel: empty state, seeded multi-doc state, and
 // the five-framework crosswalk for an evidenced control.
 try {
