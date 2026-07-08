@@ -392,7 +392,7 @@
   </div>
 
   <!-- 4 · Business processes -->
-  <div class="sec">
+  <div class="sec" id="secProc">
     <div class="sh"><div class="sn">4</div><div><div class="st">Business processes</div><div class="sd">Your key revenue processes — drives crown jewels, downtime cost, and recovery.</div></div><div class="badge" id="b4">recommended</div></div>
     <div class="srcchoice"><div class="srcopt sel" data-choice="proc" data-mode="connect"><div class="so-h">⚡ Connect &amp; pull</div><div class="so-d">ServiceNow CMDB / BIA — no upload</div></div><div class="srcopt" data-choice="proc" data-mode="upload"><div class="so-h">⤓ Upload a file</div><div class="so-d">CSV or TSV — fallback</div></div></div>
     <div id="procUpload" style="display:none">
@@ -436,7 +436,7 @@
   </div>
 
   <!-- 6a2 · Business capability map (CISO Enterprise-Risk: capabilities with highest exposure) -->
-  <div class="sec">
+  <div class="sec" id="secBcap">
     <div class="sh"><div class="sn">✦</div><div><div class="st">Business capability map <span style="color:var(--muted)">(for the CISO Enterprise-Risk read)</span></div><div class="sd">Your core business capabilities and the cyber exposure each carries. Powers the CISO Program-Health tile <b>“business capabilities with highest exposure.”</b> From your capability map + GRC — leave blank to keep that tile illustrative.</div></div><div class="badge" id="bcap">optional</div></div>
     <div class="srcchoice"><div class="srcopt sel" data-choice="cap" data-mode="upload"><div class="so-h">✎ Add manually</div><div class="so-d">capability · exposure · GRC status</div></div><div class="srcopt" data-choice="cap" data-mode="connect"><div class="so-h">⚡ Pull from GRC</div><div class="so-d">Archer / ServiceNow GRC / LeanIX — live</div></div></div>
     <div id="capUpload">
@@ -506,7 +506,7 @@
   </div>
 
   <!-- 6c · Third-party vendors (tier 1 & 2) -->
-  <div class="sec">
+  <div class="sec" id="secVendor">
     <div class="sh"><div class="sn">✦</div><div><div class="st">Third-party vendors (tier 1 &amp; 2)</div><div class="sd">Your critical suppliers — the ones whose security <b>is</b> your exposure. Upload a list, or pull them from your third-party risk (TPRM) platform. Your monitoring service (SecurityScorecard / BitSight / UpGuard / Panorays / Black Kite — connected in step 7) then rates each one <b>live</b> in the cockpit’s third-party panel.</div></div><div class="badge" id="bvend">optional</div></div>
     <div class="srcchoice"><div class="srcopt sel" data-choice="vend" data-mode="upload"><div class="so-h">⤓ Upload a file</div><div class="so-d">CSV or TSV</div></div><div class="srcopt" data-choice="vend" data-mode="connect"><div class="so-h">⚡ Pull from TPRM</div><div class="so-d">AuditBoard / OneTrust / ProcessUnity — live</div></div></div>
     <div id="vendUpload">
@@ -521,7 +521,7 @@
   </div>
 
   <!-- 7 · Connect tools -->
-  <div class="sec">
+  <div class="sec" id="secTools">
     <div class="sh"><div class="sn">7</div><div><div class="st">Connect your tools</div><div class="sd">Most of your evidence is pulled live from here. Connect each system you run and Nerion streams the data that answers your executives’ questions — the more you connect, the more credible every answer.</div></div><div class="badge" id="b7">optional</div></div>
     <div class="demo-bar"><span class="demo-label">Demo mode<span class="demo-sub">Explore with simulated signals — no API keys. Clearly labeled “Demo”; never sent to the engine as real data.</span></span><button class="demo-btn" id="demoToggle" type="button">Enable demo mode</button></div>
     <div class="cred"><div class="cred-top"><span class="ct">Evidence credibility</span><span class="cv l0" id="credLabel">Not yet credible</span></div><div class="cred-bar"><i id="credBar"></i></div><div class="cred-meta"><b id="credSig">0</b> live signals · <b id="credSys">0</b> systems connected · <b id="credCov">0%</b> coverage</div></div>
@@ -564,7 +564,11 @@
   window.addEventListener('message',function(e){
     if(!(e.data&&e.data.type==='cyberrx-onboarding-focus'))return;
     var t=String(e.data.tool||'').toLowerCase(),id=null;
-    if(/document review|policy|document evidence|reviewed document/.test(t))id='secDocReview';
+    if(/capability map|business capabilit|grc/.test(t))id='secBcap';
+    else if(/vendor|tprm|securityscorecard|bitsight|third.?party/.test(t))id='secVendor';
+    else if(/threat intel|recorded future|mandiant|mitre/.test(t))id='secTools';
+    else if(/crown jewel|inventory|\bvm\b|vulnerability|\bedr\b|cmdb/.test(t))id='secProc';
+    else if(/document review|policy|document evidence|reviewed document/.test(t))id='secDocReview';
     else if(/cbom|crypto|quantum|pqc|ai-spm|aispm|genai|casb|sse|coding|copilot|claude code|ci\/cd|pipeline|slsa|nhi|machine identit|non-human|secrets|artifact|sbom/.test(t))id='secAiSupply';
     var el=id&&document.getElementById(id);if(!el)return;
     try{el.scrollIntoView({behavior:'smooth',block:'start'});}catch(_){el.scrollIntoView();}

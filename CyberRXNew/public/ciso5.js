@@ -35,7 +35,7 @@
     '.c5tile-h{font-size:16px;font-weight:500;margin-top:8px;line-height:1.3;color:var(--ink)}',
     '.c5tile-h.c5muted{color:var(--muted)}',
     '.c5ic svg{width:18px;height:18px;display:block}',
-    '.c5tile-ic{display:inline-flex;color:var(--muted);flex:none}.c5tile-ic svg{width:15px;height:15px;display:block}',
+    '.c5tile-ic{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:8px;flex:none;background:var(--surface-2);background:color-mix(in srgb,var(--ac,var(--muted)) 16%,var(--surface));color:var(--ink-2);color:var(--ac,var(--ink-2))}.c5tile-ic svg{width:16px;height:16px;display:block}',
     '.c5tile-s{font-size:12.5px;color:var(--ink-2);margin-top:3px}',
     '.c5sqrow{display:flex;gap:4px;margin-top:11px;flex-wrap:wrap}',
     '.c5sq{width:13px;height:13px;border-radius:3px;background:var(--line)}',
@@ -1463,7 +1463,9 @@ function c5Connect(tool){
   try{window.postMessage(msg,'*');}catch(_){}
   try{window.location.href='onboarding.html';}catch(_){}
 }
-document.addEventListener('click',function(e){var el=e.target.closest('[data-c5m]');if(el&&el.getAttribute('data-c5m'))c5Inspect(el.getAttribute('data-c5m'));});
+document.addEventListener('click',function(e){if(e.target.closest('[data-c5onb]'))return;var el=e.target.closest('[data-c5m]');if(el&&el.getAttribute('data-c5m'))c5Inspect(el.getAttribute('data-c5m'));});
+/* A tile's "Connect: <source> →" prompt → the exact onboarding section for it. */
+document.addEventListener('click',function(e){var el=e.target.closest('[data-c5onb]');if(el){e.stopPropagation();c5Connect(el.getAttribute('data-c5onb'));}});
 /* Protection summary-card detail inspector — opens the list behind each count. */
 document.addEventListener('click',function(e){var el=e.target.closest('[data-c5pc]');if(el&&el.getAttribute('data-c5pc'))c5protInspect(el.getAttribute('data-c5pc'));});
 /* Per-control business-value inspector — professionally backs each "$X" claim
@@ -1641,7 +1643,8 @@ function c5Brief(seat){
 function cap(s){return s?(s.charAt(0).toUpperCase()+s.slice(1)):s;}
 function c5tile(mid,pillCls,pillTxt,subHtml,extraHtml,iconKey){var m=c5get(mid);
   var head=m.connected?m.displayValue:'Not connected';var pc=m.connected?pillCls:'n';var pt=m.connected?pillTxt:'—';
-  var ik=iconKey||C5TILE_ICON[mid];var ic=ik?('<span class="c5tile-ic">'+c5icon(ik)+'</span>'):'';
+  var acol=m.connected?(m.color==='ink'?'ink-2':(m.color||'ink-2')):'muted';
+  var ik=iconKey||C5TILE_ICON[mid];var ic=ik?('<span class="c5tile-ic" style="--ac:var(--'+acol+')">'+c5icon(ik)+'</span>'):'';
   return '<div class="c5tile'+(m.connected?'':' c5off')+'" data-c5m="'+mid+'" title="'+c5tip(m)+'"><div class="c5tile-top"><span class="c5tile-l">'+ic+m.name+'</span><span class="c5pill '+pc+'">'+pt+'</span></div>'+
     '<div class="c5tile-h'+(m.connected?'':' c5muted')+'">'+head+'</div>'+
     (subHtml?('<div class="c5tile-s">'+subHtml+'</div>'):'')+(extraHtml||'')+'</div>';
@@ -1715,19 +1718,21 @@ function c5Health(){
   // sources are connected). When required inputs aren't connected yet, the subtext
   // becomes a "Connect: <input> →" hint that deep-links to onboarding — without a
   // contradictory "Needs data" state on top of a computed number.
-  function tileFor(mid,onSub,offSub,icon){
-    var m=c5get(mid),p=pillFor(mid),w=widgetReady(mid);
-    var sub=(w&&!w.satisfied)
-      ? '<span class="c5needs" style="cursor:pointer;color:var(--blue)">Connect: '+c5esc((w.missing||[]).join(', '))+' →</span>'
-      : (m.connected?onSub:offSub);
+  // Connected → show the normal subtext (never a "Connect:" instruction). Only when
+  // NOT connected do we show the connect prompt, and it deep-links to the exact
+  // onboarding section (onbKey) rather than a generic jump.
+  function tileFor(mid,onSub,icon,onbKey,onbLabel){
+    var m=c5get(mid),p=pillFor(mid);
+    var sub=m.connected?onSub
+      :'<span class="c5needs" data-c5onb="'+c5esc(onbKey||'')+'" style="cursor:pointer;color:var(--blue)">Connect: '+c5esc(onbLabel||onbKey)+' →</span>';
     return c5tile(mid,p.c,p.t,sub,'',icon);
   }
   var anyRisk=['er_crown','er_capability','er_scenarios','er_thirdparty'].some(function(id){var m=c5get(id);return m.connected&&(m.color==='warn'||m.color==='crit');});
   var tiles='<div class="c5tiles">'+
-    tileFor('er_crown','Register × CMDB × VM × EDR','connect Crown Jewel Register · CMDB · EDR · VM','checklist')+
-    tileFor('er_capability','Capability Map × GRC gaps','add your Business Capability Map + GRC','store')+
-    tileFor('er_scenarios','Threat Intel × MITRE × BIA','connect Threat Intel · MITRE · BIA','trend')+
-    tileFor('er_thirdparty','TPRM × ratings × SBOM','add your tier-1/2 vendors + SBOM','store')+
+    tileFor('er_crown','Register × CMDB × VM × EDR','checklist','crown jewel inventory','Crown Jewel inventory · VM · EDR')+
+    tileFor('er_capability','Capability Map × GRC gaps','store','business capability map','Business Capability Map')+
+    tileFor('er_scenarios','Threat Intel × MITRE × BIA','trend','threat intelligence','Threat Intelligence')+
+    tileFor('er_thirdparty','TPRM × ratings × SBOM','store','vendor risk','Vendor Risk / TPRM')+
     '</div>';
   // Bottom line — synthesized from the four reads, pointing to the single most
   // exposed thing (the top-ranked crown jewel), so it stays consistent with tile 1.
