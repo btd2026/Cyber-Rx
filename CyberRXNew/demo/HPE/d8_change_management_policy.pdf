@@ -1,0 +1,113 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+2 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+3 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R] /Count 2 >>
+endobj
+4 0 obj
+<< /Length 4387 >>
+stream
+BT /F2 17 Tf 54 730.0 Td (Change Management Policy) Tj ET
+BT /F2 13 Tf 54 697.0 Td (1. Purpose and Scope) Tj ET
+BT /F1 10 Tf 54 674.0 Td (This Change Management Policy establishes the governance, controls, and lifecycle requirements for) Tj ET
+BT /F1 10 Tf 54 660.0 Td (all changes introduced into the production environments of Hewlett Packard Enterprise \(HPE\). The) Tj ET
+BT /F1 10 Tf 54 646.0 Td (policy defines a consistent change control process that reduces the risk of service disruption,) Tj ET
+BT /F1 10 Tf 54 632.0 Td (protects the integrity of information systems, and ensures that every change is authorized, tested,) Tj ET
+BT /F1 10 Tf 54 618.0 Td (documented, and traceable. It applies to all HPE employees, contractors, and third-party suppliers) Tj ET
+BT /F1 10 Tf 54 604.0 Td (who request, review, approve, implement, or support changes to infrastructure, applications,) Tj ET
+BT /F1 10 Tf 54 590.0 Td (networks, cloud services, and supporting configuration items.) Tj ET
+BT /F1 10 Tf 54 570.0 Td (All change management activity is governed and recorded within ServiceNow, which serves as the) Tj ET
+BT /F1 10 Tf 54 556.0 Td (authoritative system of record for the end-to-end change lifecycle.) Tj ET
+BT /F2 13 Tf 54 530.0 Td (2. Policy Statement) Tj ET
+BT /F1 10 Tf 54 507.0 Td (No change may be deployed to a production system without an approved change record in ServiceNow.) Tj ET
+BT /F1 10 Tf 54 493.0 Td (Every change must progress through the defined lifecycle stages: request, categorization, risk) Tj ET
+BT /F1 10 Tf 54 479.0 Td (assessment, approval, pre-deployment testing, implementation, verification, and closure. Bypassing) Tj ET
+BT /F1 10 Tf 54 465.0 Td (the change process is a policy violation subject to disciplinary action.) Tj ET
+BT /F2 13 Tf 54 439.0 Td (3. Change Categorization) Tj ET
+BT /F1 10 Tf 54 416.0 Td (Each change must be classified so that the appropriate level of review and approval is applied. HPE) Tj ET
+BT /F1 10 Tf 54 402.0 Td (recognizes the following categories:) Tj ET
+BT /F1 10 Tf 54 382.0 Td (- Standard changes are pre-authorized, low-risk, repeatable changes that follow a documented and) Tj ET
+BT /F1 10 Tf 54 368.0 Td (  previously approved procedure \(for example, routine patch application or user provisioning\).) Tj ET
+BT /F1 10 Tf 54 354.0 Td (  Standard changes are governed by an established ServiceNow template and do not require) Tj ET
+BT /F1 10 Tf 54 340.0 Td (  case-by-case review board approval.) Tj ET
+BT /F1 10 Tf 54 326.0 Td (- Normal changes are non-emergency changes that carry meaningful risk or complexity. They) Tj ET
+BT /F1 10 Tf 54 312.0 Td (  require full risk assessment and formal approval by the Change Advisory Board before) Tj ET
+BT /F1 10 Tf 54 298.0 Td (  implementation.) Tj ET
+BT /F1 10 Tf 54 284.0 Td (- Emergency changes address urgent situations such as active incidents, security breaches, or) Tj ET
+BT /F1 10 Tf 54 270.0 Td (  imminent service outages. They follow an accelerated approval path via the Emergency Change) Tj ET
+BT /F1 10 Tf 54 256.0 Td (  Advisory Board \(ECAB\) and must be fully documented, with retrospective review completed after) Tj ET
+BT /F1 10 Tf 54 242.0 Td (  implementation.) Tj ET
+BT /F1 10 Tf 54 228.0 Td (- Expedited changes are time-sensitive normal changes that cannot wait for the standard CAB) Tj ET
+BT /F1 10 Tf 54 214.0 Td (  cycle but do not meet the emergency threshold. They require expedited approval from designated) Tj ET
+BT /F1 10 Tf 54 200.0 Td (  approvers and the change owner's management.) Tj ET
+BT /F2 13 Tf 54 174.0 Td (4. Change Advisory Board and Approval) Tj ET
+BT /F1 10 Tf 54 151.0 Td (The Change Advisory Board \(CAB\) is responsible for reviewing, assessing, and authorizing normal and) Tj ET
+BT /F1 10 Tf 54 137.0 Td (expedited changes. The CAB evaluates business justification, risk, impact, scheduling conflicts, and) Tj ET
+BT /F1 10 Tf 54 123.0 Td (readiness of rollback plans. Membership includes representatives from operations, engineering,) Tj ET
+BT /F1 10 Tf 54 109.0 Td (security, and affected business units. For urgent matters, the Emergency Change Advisory Board) Tj ET
+BT /F1 10 Tf 54 95.0 Td (\(ECAB\) provides rapid review and approval outside the regular CAB schedule.) Tj ET
+BT /F1 10 Tf 54 75.0 Td (Approval decisions, including any conditions or rejections, are captured directly in the ServiceNow) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 3 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 3239 >>
+stream
+BT /F1 10 Tf 54 738.0 Td (change record. A change may not proceed to implementation until all required approvals are recorded.) Tj ET
+BT /F2 13 Tf 54 712.0 Td (5. Pre-Deployment Testing and Validation) Tj ET
+BT /F1 10 Tf 54 689.0 Td (All changes must undergo appropriate pre-deployment testing and validation before promotion to) Tj ET
+BT /F1 10 Tf 54 675.0 Td (production. Change owners are required to perform testing in a non-production staging environment) Tj ET
+BT /F1 10 Tf 54 661.0 Td (that mirrors production as closely as practical. QA activities must include functional verification,) Tj ET
+BT /F1 10 Tf 54 647.0 Td (integration testing where applicable, and validation that the change meets its stated objective.) Tj ET
+BT /F1 10 Tf 54 633.0 Td (Evidence of successful testing and validation must be attached to the change record. Changes lacking) Tj ET
+BT /F1 10 Tf 54 619.0 Td (documented test and verification results will not receive CAB approval.) Tj ET
+BT /F2 13 Tf 54 593.0 Td (6. Rollback and Back-Out Procedures) Tj ET
+BT /F1 10 Tf 54 570.0 Td (Every change record must include a documented rollback plan describing how to revert or back out the) Tj ET
+BT /F1 10 Tf 54 556.0 Td (change if implementation fails or produces unintended results. The back-out procedure must be tested) Tj ET
+BT /F1 10 Tf 54 542.0 Td (where feasible and must define the steps, resources, and time required to restore the affected) Tj ET
+BT /F1 10 Tf 54 528.0 Td (systems to their prior known-good state. If a deployment cannot be verified as successful, the) Tj ET
+BT /F1 10 Tf 54 514.0 Td (implementer must execute the rollback and undo the change, then update the record accordingly.) Tj ET
+BT /F2 13 Tf 54 488.0 Td (7. Change Audit Trail, Logging, and Documentation) Tj ET
+BT /F1 10 Tf 54 465.0 Td (ServiceNow maintains a complete change audit trail for every change throughout its lifecycle.) Tj ET
+BT /F1 10 Tf 54 451.0 Td (Records must document the requester, categorization, risk assessment, approvals, testing evidence,) Tj ET
+BT /F1 10 Tf 54 437.0 Td (implementation and verification results, and rollback outcomes. All logging, approvals, and status) Tj ET
+BT /F1 10 Tf 54 423.0 Td (transitions are retained to support compliance, internal audit, and post-implementation review.) Tj ET
+BT /F1 10 Tf 54 409.0 Td (Change documentation and audit records are retained in accordance with HPE records retention) Tj ET
+BT /F1 10 Tf 54 395.0 Td (requirements and must be available for inspection by auditors and regulators.) Tj ET
+BT /F2 13 Tf 54 369.0 Td (8. Roles, Compliance, and Enforcement) Tj ET
+BT /F1 10 Tf 54 346.0 Td (Change owners, implementers, approvers, and CAB members are accountable for adhering to this policy.) Tj ET
+BT /F1 10 Tf 54 332.0 Td (Compliance is monitored through periodic audits of ServiceNow change records. Deviations,) Tj ET
+BT /F1 10 Tf 54 318.0 Td (unauthorized changes, or failures to maintain the required audit trail are reported to management) Tj ET
+BT /F1 10 Tf 54 304.0 Td (and may result in corrective action. This policy is reviewed at least annually and updated to) Tj ET
+BT /F1 10 Tf 54 290.0 Td (reflect changes in HPE's environment, regulatory obligations, and operational practices.) Tj ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 3 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Type /Catalog /Pages 3 0 R >>
+endobj
+xref
+0 9
+0000000000 65535 f 
+0000000015 00000 n 
+0000000112 00000 n 
+0000000214 00000 n 
+0000000277 00000 n 
+0000004715 00000 n 
+0000004851 00000 n 
+0000008141 00000 n 
+0000008277 00000 n 
+trailer
+<< /Size 9 /Root 8 0 R /Info << /Title (d8_change_management_policy) >> >>
+startxref
+8326
+%%EOF

@@ -1,0 +1,119 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+2 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+3 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R] /Count 2 >>
+endobj
+4 0 obj
+<< /Length 4266 >>
+stream
+BT /F2 17 Tf 54 730.0 Td (Access Control Policy) Tj ET
+BT /F2 13 Tf 54 697.0 Td (1. Purpose and Scope) Tj ET
+BT /F1 10 Tf 54 674.0 Td (This Access Control Policy establishes the requirements Hewlett Packard Enterprise \(HPE\) applies to) Tj ET
+BT /F1 10 Tf 54 660.0 Td (govern logical access to its information systems, applications, cloud services, and data. It applies) Tj ET
+BT /F1 10 Tf 54 646.0 Td (to all HPE employees, contractors, service partners, and third parties who are granted access to HPE) Tj ET
+BT /F1 10 Tf 54 632.0 Td (resources. The policy covers the full identity lifecycle and the technical and administrative) Tj ET
+BT /F1 10 Tf 54 618.0 Td (controls that enforce appropriate, authorized, and auditable access across the enterprise.) Tj ET
+BT /F2 13 Tf 54 592.0 Td (2. Guiding Principles) Tj ET
+BT /F1 10 Tf 54 569.0 Td (HPE governs access according to the principles of least privilege, minimum necessary, and) Tj ET
+BT /F1 10 Tf 54 555.0 Td (need-to-know. Individuals are granted only the access required to perform their assigned duties, and) Tj ET
+BT /F1 10 Tf 54 541.0 Td (no more. Access is denied by default and explicitly granted through approved processes. HPE adopts a) Tj ET
+BT /F1 10 Tf 54 527.0 Td (zero trust posture in which no user, device, or network location is inherently trusted; every access) Tj ET
+BT /F1 10 Tf 54 513.0 Td (request is authenticated, authorized, and continuously evaluated before and during a session.) Tj ET
+BT /F2 13 Tf 54 487.0 Td (3. Identity Lifecycle Management) Tj ET
+BT /F2 11.5 Tf 54 460.0 Td (3.1 Provisioning and Onboarding) Tj ET
+BT /F1 10 Tf 54 438.5 Td (Identities are managed centrally through Microsoft Entra ID \(integrated with on-premises Active) Tj ET
+BT /F1 10 Tf 54 424.5 Td (Directory\) and federated to applications via Okta as the enterprise single sign-on and identity) Tj ET
+BT /F1 10 Tf 54 410.5 Td (provider. During onboarding, Human Resources initiates the joiner event, which triggers automated) Tj ET
+BT /F1 10 Tf 54 396.5 Td (provisioning of a user account and baseline entitlements based on the individual's role, department,) Tj ET
+BT /F1 10 Tf 54 382.5 Td (and location. All access beyond the baseline requires a formal request submitted through the access) Tj ET
+BT /F1 10 Tf 54 368.5 Td (management workflow, with approval and authorization from the appropriate resource owner and the) Tj ET
+BT /F1 10 Tf 54 354.5 Td (requester's manager before entitlements are granted.) Tj ET
+BT /F2 11.5 Tf 54 330.5 Td (3.2 Changes and Movers) Tj ET
+BT /F1 10 Tf 54 309.0 Td (When a worker changes roles, entitlements are recalculated and prior access that is no longer needed) Tj ET
+BT /F1 10 Tf 54 295.0 Td (is removed to prevent privilege accumulation. Managers and resource owners are responsible for) Tj ET
+BT /F1 10 Tf 54 281.0 Td (validating that mover access aligns with the new role.) Tj ET
+BT /F2 11.5 Tf 54 257.0 Td (3.3 Deprovisioning, Offboarding, and Termination) Tj ET
+BT /F1 10 Tf 54 235.5 Td (Upon termination, resignation, or contract completion, HR triggers the leaver event, and accounts) Tj ET
+BT /F1 10 Tf 54 221.5 Td (are automatically disabled in Entra ID and Okta, revoking single sign-on and downstream application) Tj ET
+BT /F1 10 Tf 54 207.5 Td (access. Deprovisioning during offboarding includes prompt account disablement, revocation of tokens) Tj ET
+BT /F1 10 Tf 54 193.5 Td (and sessions, and suspension of federated access. Accounts that are inactive beyond 45 days are) Tj ET
+BT /F1 10 Tf 54 179.5 Td (automatically flagged for locking and review. Dormant, orphaned, and unused accounts are) Tj ET
+BT /F1 10 Tf 54 165.5 Td (periodically identified and disabled.) Tj ET
+BT /F2 13 Tf 54 139.5 Td (4. Role-Based Access Control) Tj ET
+BT /F1 10 Tf 54 116.5 Td (HPE uses role-based access control \(RBAC\) to standardize entitlements. Access is assigned to Entra) Tj ET
+BT /F1 10 Tf 54 102.5 Td (ID and Active Directory security groups and Okta application roles rather than to individuals, and) Tj ET
+BT /F1 10 Tf 54 88.5 Td (privileges are bundled into roles that map to job functions. Segregation of duties \(SoD\) controls) Tj ET
+BT /F1 10 Tf 54 74.5 Td (are enforced to ensure that no single individual can execute conflicting or high-risk) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 3 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 3955 >>
+stream
+BT /F1 10 Tf 54 738.0 Td (transactions-such as requesting and approving the same access, or developing and deploying to) Tj ET
+BT /F1 10 Tf 54 724.0 Td (production-without independent oversight. Toxic-combination rules are evaluated at request time and) Tj ET
+BT /F1 10 Tf 54 710.0 Td (during recertification.) Tj ET
+BT /F2 13 Tf 54 684.0 Td (5. Privileged Access Management) Tj ET
+BT /F1 10 Tf 54 661.0 Td (Privileged access-including admin, root, and other elevated entitlements-is tightly restricted,) Tj ET
+BT /F1 10 Tf 54 647.0 Td (granted only under least privilege, and managed through a Privileged Access Management \(PAM\)) Tj ET
+BT /F1 10 Tf 54 633.0 Td (solution. Privileged credentials are vaulted, rotated, and issued just-in-time with time-bound) Tj ET
+BT /F1 10 Tf 54 619.0 Td (elevation and session recording. Administrators use dedicated privileged accounts separate from) Tj ET
+BT /F1 10 Tf 54 605.0 Td (their standard identities, and multi-factor authentication is mandatory for all elevated actions.) Tj ET
+BT /F1 10 Tf 54 591.0 Td (Service accounts are inventoried, assigned to an accountable owner, restricted to their intended) Tj ET
+BT /F1 10 Tf 54 577.0 Td (purpose, and reviewed regularly; interactive logon and unnecessary privileges are prohibited, and) Tj ET
+BT /F1 10 Tf 54 563.0 Td (secrets are stored in an approved vault.) Tj ET
+BT /F2 13 Tf 54 537.0 Td (6. Remote and Network Access) Tj ET
+BT /F1 10 Tf 54 514.0 Td (Remote access to HPE systems is permitted only through approved, encrypted channels. VPN) Tj ET
+BT /F1 10 Tf 54 500.0 Td (connectivity and zero trust network access enforce device posture checks, identity verification, and) Tj ET
+BT /F1 10 Tf 54 486.0 Td (conditional access before granting network access. Conditional access policies in Entra ID evaluate) Tj ET
+BT /F1 10 Tf 54 472.0 Td (risk signals-user, device, location, and behavior-and may require step-up authentication or block) Tj ET
+BT /F1 10 Tf 54 458.0 Td (access. All remote sessions are subject to logging and monitoring.) Tj ET
+BT /F2 13 Tf 54 432.0 Td (7. Access Reviews and Recertification) Tj ET
+BT /F1 10 Tf 54 409.0 Td (HPE conducts periodic reviews of access to confirm that entitlements remain appropriate. Access) Tj ET
+BT /F1 10 Tf 54 395.0 Td (reviews and recertification campaigns require managers and resource owners to perform attestation of) Tj ET
+BT /F1 10 Tf 54 381.0 Td (each user's entitlements at least quarterly for privileged and high-risk access and at least) Tj ET
+BT /F1 10 Tf 54 367.0 Td (annually for standard access. Entitlements that are not affirmatively recertified are revoked.) Tj ET
+BT /F1 10 Tf 54 353.0 Td (Review results are documented and retained as audit evidence.) Tj ET
+BT /F2 13 Tf 54 327.0 Td (8. Monitoring, Logging, and Auditing) Tj ET
+BT /F1 10 Tf 54 304.0 Td (Authentication and authorization events across Entra ID, Active Directory, Okta, and the PAM) Tj ET
+BT /F1 10 Tf 54 290.0 Td (platform are captured through centralized logging and forwarded to HPE's SIEM for monitoring,) Tj ET
+BT /F1 10 Tf 54 276.0 Td (correlation, and retention. Audit trails support investigations and compliance reporting. Automated) Tj ET
+BT /F1 10 Tf 54 262.0 Td (alerting and anomaly detection identify suspicious behavior-such as impossible-travel logins,) Tj ET
+BT /F1 10 Tf 54 248.0 Td (brute-force attempts, privilege escalation, and anomalous service-account activity-and trigger) Tj ET
+BT /F1 10 Tf 54 234.0 Td (response actions, including account locking or suspension pending investigation.) Tj ET
+BT /F2 13 Tf 54 208.0 Td (9. Enforcement and Review) Tj ET
+BT /F1 10 Tf 54 185.0 Td (Violations of this policy may result in revocation of access and disciplinary action up to and) Tj ET
+BT /F1 10 Tf 54 171.0 Td (including termination. This policy is reviewed at least annually and updated to reflect changes in) Tj ET
+BT /F1 10 Tf 54 157.0 Td (technology, regulation, and business requirements.) Tj ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 3 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Type /Catalog /Pages 3 0 R >>
+endobj
+xref
+0 9
+0000000000 65535 f 
+0000000015 00000 n 
+0000000112 00000 n 
+0000000214 00000 n 
+0000000277 00000 n 
+0000004594 00000 n 
+0000004730 00000 n 
+0000008736 00000 n 
+0000008872 00000 n 
+trailer
+<< /Size 9 /Root 8 0 R /Info << /Title (d4_access_control_policy) >> >>
+startxref
+8921
+%%EOF

@@ -1,0 +1,155 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+2 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+3 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R 9 0 R] /Count 3 >>
+endobj
+4 0 obj
+<< /Length 4091 >>
+stream
+BT /F2 17 Tf 54 730.0 Td (HPE AI Governance Framework - Aligned to the NIST AI Risk Management Framework \(AI RMF 1.0\)) Tj ET
+BT /F1 10 Tf 54 703.0 Td (Owner: HPE Office of Responsible AI) Tj ET
+BT /F1 10 Tf 54 689.0 Td (Version: 1.0  Effective Date: 2026-07-08  Review Cycle: Annual) Tj ET
+BT /F1 10 Tf 54 675.0 Td (Scope: GreenLake AIOps, Aruba AI network insights, HPEFS fraud detection, and Ezmeral ML) Tj ET
+BT /F2 13 Tf 54 649.0 Td (Purpose and Scope) Tj ET
+BT /F1 10 Tf 54 626.0 Td (This framework establishes how Hewlett Packard Enterprise \(HPE\) governs, maps, measures, and manages) Tj ET
+BT /F1 10 Tf 54 612.0 Td (risk across the lifecycle of its AI systems. It operationalizes the four core functions of the NIST) Tj ET
+BT /F1 10 Tf 54 598.0 Td (AI Risk Management Framework \(AI RMF 1.0\) - GOVERN, MAP, MEASURE, and MANAGE - to ensure our AI is) Tj ET
+BT /F1 10 Tf 54 584.0 Td (trustworthy, safe, fair, and accountable. It applies to all HPE-built, HPE-operated, and third-party) Tj ET
+BT /F1 10 Tf 54 570.0 Td (AI capabilities embedded in our products and internal operations, including GreenLake AIOps, Aruba) Tj ET
+BT /F1 10 Tf 54 556.0 Td (AI network insights, HPEFS fraud detection, and Ezmeral ML.) Tj ET
+BT /F1 10 Tf 54 536.0 Td (Our objective is a repeatable, evidence-based governance program that balances innovation with the) Tj ET
+BT /F1 10 Tf 54 522.0 Td (protection of customers, end users, affected communities, and HPE itself.) Tj ET
+BT /F1 10 Tf 54 502.0 Td (---) Tj ET
+BT /F2 13 Tf 54 476.0 Td (GOVERN - Policy, Accountability, and Oversight) Tj ET
+BT /F1 10 Tf 54 453.0 Td (Governance is the foundation on which all other functions rest. HPE maintains an enterprise) Tj ET
+BT /F1 10 Tf 54 439.0 Td (Responsible AI Policy that codifies principles of fairness, transparency, safety, privacy, security,) Tj ET
+BT /F1 10 Tf 54 425.0 Td (and human accountability. The policy is approved by executive leadership and is binding on every) Tj ET
+BT /F1 10 Tf 54 411.0 Td (business unit that builds or deploys AI.) Tj ET
+BT /F1 10 Tf 54 391.0 Td (Roles and responsibilities are defined through a formal RACI model and administered by the AI) Tj ET
+BT /F1 10 Tf 54 377.0 Td (Governance Committee, chaired by the Chief AI Officer and including Legal, Privacy, Security,) Tj ET
+BT /F1 10 Tf 54 363.0 Td (Product, and business-unit representation. Key accountable roles include:) Tj ET
+BT /F1 10 Tf 54 343.0 Td (- AI System Owners - accountable for each system's risk posture and compliance \(e.g., the) Tj ET
+BT /F1 10 Tf 54 329.0 Td (  GreenLake AIOps owner, the HPEFS fraud-detection owner\).) Tj ET
+BT /F1 10 Tf 54 315.0 Td (- Model Stewards / Data Stewards - responsible for data quality, model documentation, and) Tj ET
+BT /F1 10 Tf 54 301.0 Td (  lifecycle records.) Tj ET
+BT /F1 10 Tf 54 287.0 Td (- Responsible AI Office - sets policy, maintains this framework, and provides independent) Tj ET
+BT /F1 10 Tf 54 273.0 Td (  oversight and assurance.) Tj ET
+BT /F1 10 Tf 54 259.0 Td (- AI Risk & Compliance - validates that risk assessments, controls, and audit evidence are) Tj ET
+BT /F1 10 Tf 54 245.0 Td (  complete.) Tj ET
+BT /F1 10 Tf 54 225.0 Td (The Committee sets the enterprise AI risk appetite and risk tolerance, approves high-risk) Tj ET
+BT /F1 10 Tf 54 211.0 Td (deployments, and reviews the risk register quarterly. All governance decisions, approvals, and) Tj ET
+BT /F1 10 Tf 54 197.0 Td (exceptions are logged as auditable evidence.) Tj ET
+BT /F1 10 Tf 54 177.0 Td (An enterprise AI inventory - the AI-BOM and model registry - catalogs every model, its version,) Tj ET
+BT /F1 10 Tf 54 163.0 Td (training data lineage, intended use, owner, and risk tier. No AI system may enter production unless) Tj ET
+BT /F1 10 Tf 54 149.0 Td (it is registered in this catalog and has a named accountable owner.) Tj ET
+BT /F1 10 Tf 54 129.0 Td (---) Tj ET
+BT /F2 13 Tf 54 103.0 Td (MAP - Context, Use Case, and Risk Categorization) Tj ET
+BT /F1 10 Tf 54 80.0 Td (The MAP function establishes the context in which each AI system operates so that risks can be) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 3 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 4434 >>
+stream
+BT /F1 10 Tf 54 738.0 Td (understood before they are measured or managed.) Tj ET
+BT /F1 10 Tf 54 718.0 Td (For every system, stewards document the intended use, purpose, deployment context, and out-of-scope) Tj ET
+BT /F1 10 Tf 54 704.0 Td (uses. For example, Aruba AI network insights is scoped to anomaly detection and optimization) Tj ET
+BT /F1 10 Tf 54 690.0 Td (recommendations for network operators, not autonomous enforcement; HPEFS fraud detection is scoped) Tj ET
+BT /F1 10 Tf 54 676.0 Td (to decision support with mandatory human review of adverse actions.) Tj ET
+BT /F1 10 Tf 54 656.0 Td (Each system is then subject to risk categorization using a tiered model:) Tj ET
+BT /F1 9 Tf 54 636.0 Td (| Risk Tier | Description | Examples |) Tj ET
+BT /F1 9 Tf 54 623.0 Td (| ----------- | ------------- | ---------- |) Tj ET
+BT /F1 9 Tf 54 610.0 Td (| High-risk | Decisions materially affecting individuals, finances, or safety | HPEFS fraud detection |) Tj ET
+BT /F1 9 Tf 54 597.0 Td (| Moderate | Operational decisions with human oversight | GreenLake AIOps, Aruba AI insights |) Tj ET
+BT /F1 9 Tf 54 584.0 Td (| Limited | Low-impact assistive or internal tooling | Ezmeral ML internal pipelines |) Tj ET
+BT /F1 10 Tf 54 565.0 Td (Tiering considers impact and harm potential, bias and fairness exposure, discrimination risk, safety) Tj ET
+BT /F1 10 Tf 54 551.0 Td (implications, and affected-stakeholder scope. As part of MAP, teams conduct a stakeholder analysis) Tj ET
+BT /F1 10 Tf 54 537.0 Td (identifying end users, data subjects, customers, and affected communities, and perform an initial) Tj ET
+BT /F1 10 Tf 54 523.0 Td (impact and bias assessment to surface potential harms early. Higher tiers trigger deeper scrutiny,) Tj ET
+BT /F1 10 Tf 54 509.0 Td (mandatory human oversight, and Committee-level approval.) Tj ET
+BT /F1 10 Tf 54 489.0 Td (---) Tj ET
+BT /F2 13 Tf 54 463.0 Td (MEASURE - Metrics, Testing, and Assurance) Tj ET
+BT /F1 10 Tf 54 440.0 Td (The MEASURE function quantifies trustworthiness through analytic, empirical, and adversarial) Tj ET
+BT /F1 10 Tf 54 426.0 Td (evaluation.) Tj ET
+BT /F1 10 Tf 54 406.0 Td (Each system is evaluated against defined metrics and benchmarks appropriate to its purpose:) Tj ET
+BT /F1 10 Tf 54 392.0 Td (accuracy, precision/recall, false-positive rates \(critical for HPEFS fraud detection\), latency, and) Tj ET
+BT /F1 10 Tf 54 378.0 Td (fairness metrics disaggregated across relevant population groups to detect bias and discrimination.) Tj ET
+BT /F1 10 Tf 54 364.0 Td (Results are compared against pre-registered acceptance thresholds before deployment.) Tj ET
+BT /F1 10 Tf 54 344.0 Td (HPE applies structured testing, validation, and verification, including:) Tj ET
+BT /F1 10 Tf 54 324.0 Td (- Red-teaming and adversarial testing for robustness, mapped to the OWASP LLM Top 10 and MITRE) Tj ET
+BT /F1 10 Tf 54 310.0 Td (  ATLAS threat frameworks, especially for generative and LLM-backed features in GreenLake AIOps.) Tj ET
+BT /F1 10 Tf 54 296.0 Td (- Robustness and stress testing against edge cases, distribution shift, and adversarial inputs.) Tj ET
+BT /F1 10 Tf 54 282.0 Td (- Independent validation by AI Risk & Compliance, producing assurance evidence and an audit) Tj ET
+BT /F1 10 Tf 54 268.0 Td (  trail for each release.) Tj ET
+BT /F1 10 Tf 54 248.0 Td (All measurement results, test reports, and validation sign-offs are retained as audit evidence in) Tj ET
+BT /F1 10 Tf 54 234.0 Td (the model registry, enabling internal and external audit on demand.) Tj ET
+BT /F1 10 Tf 54 214.0 Td (---) Tj ET
+BT /F2 13 Tf 54 188.0 Td (MANAGE - Risk Response, Monitoring, and Incident Handling) Tj ET
+BT /F1 10 Tf 54 165.0 Td (The MANAGE function prioritizes and treats identified risks and sustains trustworthiness in) Tj ET
+BT /F1 10 Tf 54 151.0 Td (production.) Tj ET
+BT /F1 10 Tf 54 131.0 Td (Risk response follows a treatment hierarchy - mitigate, transfer, avoid, or accept - with) Tj ET
+BT /F1 10 Tf 54 117.0 Td (residual-risk acceptance requiring sign-off proportional to the risk tier. Controls and remediation) Tj ET
+BT /F1 10 Tf 54 103.0 Td (actions are tracked to closure in the risk register.) Tj ET
+BT /F1 10 Tf 54 83.0 Td (Continuous monitoring is mandatory in production. HPE monitors model performance, accuracy, and) Tj ET
+BT /F1 10 Tf 54 69.0 Td (drift \(data drift and concept drift\), fairness stability, and operational health. Threshold breaches) Tj ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 3 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Length 2071 >>
+stream
+BT /F1 10 Tf 54 738.0 Td (- for example, degradation in Aruba AI insights or rising false negatives in HPEFS fraud detection -) Tj ET
+BT /F1 10 Tf 54 724.0 Td (trigger automated alerts and defined escalation.) Tj ET
+BT /F1 10 Tf 54 704.0 Td (Human-in-the-loop oversight is required for all moderate- and high-risk systems. Human reviewers) Tj ET
+BT /F1 10 Tf 54 690.0 Td (approve adverse or high-impact decisions, and every deployed system provides an override and kill) Tj ET
+BT /F1 10 Tf 54 676.0 Td (switch capability allowing operators to suspend or roll back the model.) Tj ET
+BT /F1 10 Tf 54 656.0 Td (AI incident response is governed by dedicated playbooks integrated with HPE's Security Operations.) Tj ET
+BT /F1 10 Tf 54 642.0 Td (Incidents - model failures, harmful outputs, bias events, or adversarial compromise - are) Tj ET
+BT /F1 10 Tf 54 628.0 Td (classified, escalated, contained, and reported per severity, with regulator and customer) Tj ET
+BT /F1 10 Tf 54 614.0 Td (notification where required.) Tj ET
+BT /F1 10 Tf 54 594.0 Td (The AI lifecycle explicitly includes retirement and decommissioning: models are formally retired,) Tj ET
+BT /F1 10 Tf 54 580.0 Td (their registry entries closed, artifacts archived, and downstream dependencies remediated.) Tj ET
+BT /F1 10 Tf 54 560.0 Td (---) Tj ET
+BT /F2 13 Tf 54 534.0 Td (Continuous Improvement) Tj ET
+BT /F1 10 Tf 54 511.0 Td (Governance is iterative. HPE incorporates feedback from monitoring, incidents, audits, red-team) Tj ET
+BT /F1 10 Tf 54 497.0 Td (findings, and stakeholder input into retraining, model updates, and lessons-learned reviews. The AI) Tj ET
+BT /F1 10 Tf 54 483.0 Td (Governance Committee reviews program effectiveness annually, updates risk tiers and this framework,) Tj ET
+BT /F1 10 Tf 54 469.0 Td (and re-benchmarks controls against evolving regulation and the NIST AI RMF. This closed loop ensures) Tj ET
+BT /F1 10 Tf 54 455.0 Td (HPE's AI systems remain trustworthy, accountable, and aligned to our responsible AI commitments over) Tj ET
+BT /F1 10 Tf 54 441.0 Td (time.) Tj ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 3 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 8 0 R >>
+endobj
+10 0 obj
+<< /Type /Catalog /Pages 3 0 R >>
+endobj
+xref
+0 11
+0000000000 65535 f 
+0000000015 00000 n 
+0000000112 00000 n 
+0000000214 00000 n 
+0000000283 00000 n 
+0000004425 00000 n 
+0000004561 00000 n 
+0000009046 00000 n 
+0000009182 00000 n 
+0000011304 00000 n 
+0000011440 00000 n 
+trailer
+<< /Size 11 /Root 10 0 R /Info << /Title (d17_ai_governance_nist_rmf) >> >>
+startxref
+11490
+%%EOF

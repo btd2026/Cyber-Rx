@@ -1,0 +1,148 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+2 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+3 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R 9 0 R] /Count 3 >>
+endobj
+4 0 obj
+<< /Length 4346 >>
+stream
+BT /F2 17 Tf 54 730.0 Td (Hewlett Packard Enterprise \(HPE\) - Incident Response Plan) Tj ET
+BT /F2 13 Tf 54 697.0 Td (1. Purpose and Scope) Tj ET
+BT /F1 10 Tf 54 674.0 Td (This Incident Response Plan \(IRP\) governs how Hewlett Packard Enterprise detects, triages, contains,) Tj ET
+BT /F1 10 Tf 54 660.0 Td (and recovers from cybersecurity incidents across its global infrastructure, cloud platforms, product) Tj ET
+BT /F1 10 Tf 54 646.0 Td (lines, and corporate networks. It applies to all HPE employees, contractors, and third parties) Tj ET
+BT /F1 10 Tf 54 632.0 Td (operating within the HPE environment. The plan is owned by the HPE Global Security Operations Center) Tj ET
+BT /F1 10 Tf 54 618.0 Td (\(SOC\) and is reviewed at least annually or after any material change to the threat landscape.) Tj ET
+BT /F2 13 Tf 54 592.0 Td (2. Roles and Responsibilities) Tj ET
+BT /F1 10 Tf 54 569.0 Td (HPE operates a follow-the-sun SOC staffed 24x7x365 across three regional hubs, providing continuous) Tj ET
+BT /F1 10 Tf 54 555.0 Td (monitoring, detection, and first-line triage. The SOC feeds confirmed incidents to the Computer) Tj ET
+BT /F1 10 Tf 54 541.0 Td (Security Incident Response Team \(CSIRT\), HPE's designated incident response team, also referred to) Tj ET
+BT /F1 10 Tf 54 527.0 Td (internally as the Security Incident Response Team \(SIRT\).) Tj ET
+BT /F1 10 Tf 54 507.0 Td (Key roles include:) Tj ET
+BT /F1 10 Tf 54 487.0 Td (- Incident Commander \(IC\) - owns the incident lifecycle end to end, coordinates the response) Tj ET
+BT /F1 10 Tf 54 473.0 Td (  team, and authorizes containment actions.) Tj ET
+BT /F1 10 Tf 54 459.0 Td (- SOC Analysts \(Tier 1/2/3\) - perform monitoring, alert validation, triage, and escalation.) Tj ET
+BT /F1 10 Tf 54 445.0 Td (- Forensics & Threat Intelligence Lead - directs evidence handling, imaging, and analysis.) Tj ET
+BT /F1 10 Tf 54 431.0 Td (- Communications & Legal Liaison - manages regulatory notification, customer disclosure, and) Tj ET
+BT /F1 10 Tf 54 417.0 Td (  privacy obligations.) Tj ET
+BT /F1 10 Tf 54 403.0 Td (- Executive Sponsor \(CISO delegate\) - engaged for Sev-1 events.) Tj ET
+BT /F2 13 Tf 54 377.0 Td (3. Incident Classification, Severity, and Priority) Tj ET
+BT /F1 10 Tf 54 354.0 Td (Every event is assigned a classification and severity/priority rating during triage to drive the) Tj ET
+BT /F1 10 Tf 54 340.0 Td (appropriate response tempo:) Tj ET
+BT /F1 9 Tf 54 320.0 Td (| Severity | Description | Example | Target Response |) Tj ET
+BT /F1 9 Tf 54 307.0 Td (| ---------- | ------------- | --------- | ----------------- |) Tj ET
+BT /F1 9 Tf 54 294.0 Td (| Sev-1 \(Critical\) | Confirmed breach, active data exfiltration, ransomware, or outage of a customer-facing service | Domain compromise, encryption of production systems | Immediate, IC + executives engaged |) Tj ET
+BT /F1 9 Tf 54 281.0 Td (| Sev-2 \(High\) | Significant threat with contained blast radius | Targeted phishing with credential theft | < 30 min |) Tj ET
+BT /F1 9 Tf 54 268.0 Td (| Sev-3 \(Medium\) | Isolated malware or policy violation | Endpoint infection, single-host anomaly | < 4 hours |) Tj ET
+BT /F1 9 Tf 54 255.0 Td (| Sev-4 \(Low\) | Minor or informational | Reconnaissance, blocked intrusion attempt | < 24 hours |) Tj ET
+BT /F1 10 Tf 54 236.0 Td (Priority combines severity with business impact and asset criticality. A Sev-1 / critical incident) Tj ET
+BT /F1 10 Tf 54 222.0 Td (triggers the full call tree and continuous incident bridge until resolution.) Tj ET
+BT /F2 13 Tf 54 196.0 Td (4. Detection and Triage) Tj ET
+BT /F1 10 Tf 54 173.0 Td (Detection relies on HPE's SIEM, EDR/XDR telemetry, cloud-native detections, threat intelligence) Tj ET
+BT /F1 10 Tf 54 159.0 Td (feeds, and user reports to the security mailbox. On alert, the SOC performs initial triage:) Tj ET
+BT /F1 10 Tf 54 145.0 Td (validating the alert, scoping affected assets, and assigning severity. Confirmed incidents are) Tj ET
+BT /F1 10 Tf 54 131.0 Td (logged in the case management system with a unique incident ID that anchors all subsequent evidence) Tj ET
+BT /F1 10 Tf 54 117.0 Td (and actions.) Tj ET
+BT /F2 13 Tf 54 91.0 Td (5. Escalation, Notification, and Call Tree) Tj ET
+BT /F1 10 Tf 54 68.0 Td (Upon confirmation, the SOC initiates the escalation and notification chain defined in the incident) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 3 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 4175 >>
+stream
+BT /F1 10 Tf 54 738.0 Td (call tree. Each severity maps to a defined set of contacts and an escalation chain:) Tj ET
+BT /F1 10 Tf 54 718.0 Td (1. SOC lead notifies the on-call CSIRT Incident Commander.) Tj ET
+BT /F1 10 Tf 54 704.0 Td (2. The IC engages required responders \(forensics, IT, application owners\).) Tj ET
+BT /F1 10 Tf 54 690.0 Td (3. For Sev-1/Sev-2, the IC notifies the CISO, Legal, and Communications within 30 minutes.) Tj ET
+BT /F1 10 Tf 54 676.0 Td (4. Regulatory and customer notification obligations \(e.g., GDPR 72-hour reporting\) are managed by) Tj ET
+BT /F1 10 Tf 54 662.0 Td (the Legal/Communications liaison.) Tj ET
+BT /F1 10 Tf 54 642.0 Td (The call tree, including primary and backup contacts and their 24x7 details, is maintained in the) Tj ET
+BT /F1 10 Tf 54 628.0 Td (CSIRT contact directory and validated quarterly.) Tj ET
+BT /F2 13 Tf 54 602.0 Td (6. Containment, Eradication, and Recovery) Tj ET
+BT /F1 10 Tf 54 579.0 Td (Response follows a structured lifecycle:) Tj ET
+BT /F1 10 Tf 54 559.0 Td (- Containment - Short-term actions to limit spread: network isolation of affected hosts, VLAN) Tj ET
+BT /F1 10 Tf 54 545.0 Td (  quarantine, blocking malicious IPs/domains/hashes at the firewall and proxy, disabling) Tj ET
+BT /F1 10 Tf 54 531.0 Td (  compromised accounts, and revoking tokens. HPE prioritizes containment that preserves forensic) Tj ET
+BT /F1 10 Tf 54 517.0 Td (  value where feasible.) Tj ET
+BT /F1 10 Tf 54 503.0 Td (- Eradication - Removal of the threat: deleting malware, closing exploited vulnerabilities,) Tj ET
+BT /F1 10 Tf 54 489.0 Td (  rotating credentials, and rebuilding compromised systems from trusted images.) Tj ET
+BT /F1 10 Tf 54 475.0 Td (- Recovery - Restoring systems to production from validated backups, monitoring for reinfection,) Tj ET
+BT /F1 10 Tf 54 461.0 Td (  and confirming normal operations before closing the incident.) Tj ET
+BT /F2 13 Tf 54 435.0 Td (7. Forensics, Evidence, and Chain of Custody) Tj ET
+BT /F1 10 Tf 54 412.0 Td (The Forensics Lead directs evidence collection and preservation according to strict standards.) Tj ET
+BT /F1 10 Tf 54 398.0 Td (Volatile data is captured first, followed by disk and memory imaging using write-blockers and) Tj ET
+BT /F1 10 Tf 54 384.0 Td (forensically sound tooling. All artifacts are hashed, logged, and stored in secured evidence) Tj ET
+BT /F1 10 Tf 54 370.0 Td (lockers. A documented chain of custody records every transfer and handler to ensure admissibility) Tj ET
+BT /F1 10 Tf 54 356.0 Td (should the incident lead to litigation or law enforcement referral. Forensics analysis supports root) Tj ET
+BT /F1 10 Tf 54 342.0 Td (cause determination and attribution.) Tj ET
+BT /F2 13 Tf 54 316.0 Td (8. Playbooks, Runbooks, and Procedures) Tj ET
+BT /F1 10 Tf 54 293.0 Td (Responders execute standardized playbooks and runbooks mapped to common scenarios - ransomware,) Tj ET
+BT /F1 10 Tf 54 279.0 Td (business email compromise, insider threat, DDoS, cloud account compromise, and data exfiltration.) Tj ET
+BT /F1 10 Tf 54 265.0 Td (Each response plan documents step-by-step procedures, decision points, required tooling, and) Tj ET
+BT /F1 10 Tf 54 251.0 Td (rollback criteria. Playbooks are version-controlled and updated as new tactics emerge, ensuring) Tj ET
+BT /F1 10 Tf 54 237.0 Td (consistent, repeatable response regardless of which analyst is on shift.) Tj ET
+BT /F2 13 Tf 54 211.0 Td (9. Response Metrics, SLAs, and KPIs) Tj ET
+BT /F1 10 Tf 54 188.0 Td (HPE measures response effectiveness using defined metrics and KPIs reported monthly to leadership:) Tj ET
+BT /F1 10 Tf 54 168.0 Td (- MTTD \(Mean Time to Detect\)) Tj ET
+BT /F1 10 Tf 54 154.0 Td (- MTTR \(Mean Time to Respond/Recover\)) Tj ET
+BT /F1 10 Tf 54 140.0 Td (- Time-to containment and time-to-eradication) Tj ET
+BT /F1 10 Tf 54 126.0 Td (- Percentage of incidents meeting SLA targets by severity) Tj ET
+BT /F1 10 Tf 54 112.0 Td (- False-positive rate and escalation accuracy) Tj ET
+BT /F1 10 Tf 54 92.0 Td (Sev-1 incidents carry the most aggressive SLA thresholds. Trend analysis of these KPIs drives tuning) Tj ET
+BT /F1 10 Tf 54 78.0 Td (of detections and resourcing.) Tj ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 3 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Length 1325 >>
+stream
+BT /F2 13 Tf 54 732.0 Td (10. Lessons Learned and Continuous Improvement) Tj ET
+BT /F1 10 Tf 54 709.0 Td (Within ten business days of resolving a Sev-1 or Sev-2 incident, the CSIRT conducts a post-mortem /) Tj ET
+BT /F1 10 Tf 54 695.0 Td (after-action review. This blameless retrospective captures the root cause, timeline, what went well,) Tj ET
+BT /F1 10 Tf 54 681.0 Td (and gaps. Lessons learned are converted into tracked remediation actions, playbook updates, and new) Tj ET
+BT /F1 10 Tf 54 667.0 Td (detection rules to prevent recurrence.) Tj ET
+BT /F2 13 Tf 54 641.0 Td (11. Exercises, Drills, and Testing) Tj ET
+BT /F1 10 Tf 54 618.0 Td (The IRP is validated through regular exercises: quarterly tabletop sessions with executives,) Tj ET
+BT /F1 10 Tf 54 604.0 Td (semi-annual technical drills, and red-team simulations against production-like environments. This) Tj ET
+BT /F1 10 Tf 54 590.0 Td (testing confirms the call tree, playbooks, and tooling perform under pressure and that the response) Tj ET
+BT /F1 10 Tf 54 576.0 Td (team maintains readiness.) Tj ET
+BT /F2 13 Tf 54 550.0 Td (12. Plan Maintenance) Tj ET
+BT /F1 10 Tf 54 527.0 Td (This plan is reviewed annually, after major incidents, and following significant exercises. The HPE) Tj ET
+BT /F1 10 Tf 54 513.0 Td (CISO office approves all revisions.) Tj ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 3 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 8 0 R >>
+endobj
+10 0 obj
+<< /Type /Catalog /Pages 3 0 R >>
+endobj
+xref
+0 11
+0000000000 65535 f 
+0000000015 00000 n 
+0000000112 00000 n 
+0000000214 00000 n 
+0000000283 00000 n 
+0000004680 00000 n 
+0000004816 00000 n 
+0000009042 00000 n 
+0000009178 00000 n 
+0000010554 00000 n 
+0000010690 00000 n 
+trailer
+<< /Size 11 /Root 10 0 R /Info << /Title (d6_incident_response_plan) >> >>
+startxref
+10740
+%%EOF

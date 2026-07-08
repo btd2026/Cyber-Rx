@@ -1,0 +1,120 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+2 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+3 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R] /Count 2 >>
+endobj
+4 0 obj
+<< /Length 4366 >>
+stream
+BT /F2 17 Tf 54 730.0 Td (Data Protection & Classification Policy) Tj ET
+BT /F2 13 Tf 54 697.0 Td (1. Purpose and Scope) Tj ET
+BT /F1 10 Tf 54 674.0 Td (Hewlett Packard Enterprise \(HPE\) processes a broad spectrum of information assets, including) Tj ET
+BT /F1 10 Tf 54 660.0 Td (customer personally identifiable information \(PII\), payment card industry \(PCI\) cardholder data) Tj ET
+BT /F1 10 Tf 54 646.0 Td (generated through HPE GreenLake billing operations, and proprietary intellectual property \(IP\). This) Tj ET
+BT /F1 10 Tf 54 632.0 Td (Data Protection & Classification Policy establishes how such information is categorized, labeled,) Tj ET
+BT /F1 10 Tf 54 618.0 Td (and safeguarded across its entire lifecycle. It applies to all employees, contractors, third) Tj ET
+BT /F1 10 Tf 54 604.0 Td (parties, and systems that create, access, process, or store HPE data, regardless of format or) Tj ET
+BT /F1 10 Tf 54 590.0 Td (location.) Tj ET
+BT /F2 13 Tf 54 564.0 Td (2. Data Classification and Categorization) Tj ET
+BT /F1 10 Tf 54 541.0 Td (All HPE information must be assigned a classification level so that appropriate protections can be) Tj ET
+BT /F1 10 Tf 54 527.0 Td (applied consistently. HPE uses a four-tier categorization scheme:) Tj ET
+BT /F1 10 Tf 54 507.0 Td (- Public - Information approved for unrestricted release, such as published marketing material,) Tj ET
+BT /F1 10 Tf 54 493.0 Td (  press releases, and product datasheets. Disclosure poses no harm to HPE or its customers.) Tj ET
+BT /F1 10 Tf 54 479.0 Td (- Sensitive - Internal-use information whose unauthorized disclosure could cause limited harm,) Tj ET
+BT /F1 10 Tf 54 465.0 Td (  such as internal procedures, org charts, and non-public operational data.) Tj ET
+BT /F1 10 Tf 54 451.0 Td (- Confidential - Information requiring strong protection, including customer PII, contracts, and) Tj ET
+BT /F1 10 Tf 54 437.0 Td (  internal financial records. Unauthorized exposure could cause significant business, legal, or) Tj ET
+BT /F1 10 Tf 54 423.0 Td (  reputational harm.) Tj ET
+BT /F1 10 Tf 54 409.0 Td (- Restricted - The most tightly controlled category, covering PCI cardholder data from GreenLake) Tj ET
+BT /F1 10 Tf 54 395.0 Td (  billing, authentication secrets, source code, and trade-secret IP. Compromise could result in) Tj ET
+BT /F1 10 Tf 54 381.0 Td (  regulatory penalties, financial loss, or material competitive damage.) Tj ET
+BT /F1 10 Tf 54 361.0 Td (Each asset must carry a visible classification label at the point of creation. Labeling may be) Tj ET
+BT /F1 10 Tf 54 347.0 Td (applied through document headers, metadata tags, email markings, or automated data-classification) Tj ET
+BT /F1 10 Tf 54 333.0 Td (tooling. When data of differing sensitivities is combined, the resulting set inherits the highest) Tj ET
+BT /F1 10 Tf 54 319.0 Td (applicable classification.) Tj ET
+BT /F2 13 Tf 54 293.0 Td (3. Roles and Responsibilities) Tj ET
+BT /F1 10 Tf 54 270.0 Td (Effective data protection depends on clearly assigned accountability:) Tj ET
+BT /F1 10 Tf 54 250.0 Td (- Data Owners are senior business leaders accountable for specific information domains \(for) Tj ET
+BT /F1 10 Tf 54 236.0 Td (  example, the GreenLake billing owner for cardholder data\). Owners approve classifications,) Tj ET
+BT /F1 10 Tf 54 222.0 Td (  authorize access, and are ultimately responsible for the protection of their data.) Tj ET
+BT /F1 10 Tf 54 208.0 Td (- Data Stewards translate owner intent into practice, maintaining data quality, defining) Tj ET
+BT /F1 10 Tf 54 194.0 Td (  retention rules, and ensuring the correct categorization and labeling of records within their) Tj ET
+BT /F1 10 Tf 54 180.0 Td (  domain.) Tj ET
+BT /F1 10 Tf 54 166.0 Td (- Data Custodians - typically IT and infrastructure teams - are responsible for the technical) Tj ET
+BT /F1 10 Tf 54 152.0 Td (  safeguarding, storage, backup, and secure operation of the systems that hold the data.) Tj ET
+BT /F1 10 Tf 54 138.0 Td (- All Users are responsible for handling information in accordance with its classification and) Tj ET
+BT /F1 10 Tf 54 124.0 Td (  for reporting suspected loss or misuse.) Tj ET
+BT /F2 13 Tf 54 98.0 Td (4. Data Handling, Storage, and Transmission) Tj ET
+BT /F1 10 Tf 54 75.0 Td (Handling requirements scale with classification. Confidential and Restricted data must be encrypted) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Type /Page /Parent 3 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 4 0 R >>
+endobj
+6 0 obj
+<< /Length 4142 >>
+stream
+BT /F1 10 Tf 54 738.0 Td (both at rest \(AES-256\) and in transit \(TLS 1.2 or higher\). Storage of Restricted data, including PCI) Tj ET
+BT /F1 10 Tf 54 724.0 Td (cardholder data, is limited to approved, access-controlled, and segmented environments consistent) Tj ET
+BT /F1 10 Tf 54 710.0 Td (with PCI DSS; primary account numbers must be rendered unreadable through tokenization or truncation) Tj ET
+BT /F1 10 Tf 54 696.0 Td (wherever stored. Transmission of Confidential or Restricted information over untrusted networks) Tj ET
+BT /F1 10 Tf 54 682.0 Td (requires approved encrypted channels, and such data must never be sent through unmanaged personal) Tj ET
+BT /F1 10 Tf 54 668.0 Td (email or consumer file-sharing services. Access to all classified data follows least-privilege and) Tj ET
+BT /F1 10 Tf 54 654.0 Td (need-to-know principles, with periodic access reviews performed by Data Owners and stewards.) Tj ET
+BT /F2 13 Tf 54 628.0 Td (5. Data Loss Prevention and Exfiltration Monitoring) Tj ET
+BT /F1 10 Tf 54 605.0 Td (HPE deploys enterprise Data Loss Prevention \(DLP\) controls across endpoints, email, cloud services,) Tj ET
+BT /F1 10 Tf 54 591.0 Td (and network egress points to detect and prevent unauthorized movement of Confidential and Restricted) Tj ET
+BT /F1 10 Tf 54 577.0 Td (data. DLP policies are tuned to identify PII patterns, PCI cardholder data, and source-code) Tj ET
+BT /F1 10 Tf 54 563.0 Td (fingerprints, blocking or quarantining prohibited transfers. Continuous exfiltration monitoring and) Tj ET
+BT /F1 10 Tf 54 549.0 Td (alerting feed the Security Operations Center, where anomalous transfers, mass downloads, and policy) Tj ET
+BT /F1 10 Tf 54 535.0 Td (violations are investigated. Attempts to circumvent DLP or data-protection controls are treated as) Tj ET
+BT /F1 10 Tf 54 521.0 Td (serious security incidents.) Tj ET
+BT /F2 13 Tf 54 495.0 Td (6. Data Retention, Archival, and Lifecycle) Tj ET
+BT /F1 10 Tf 54 472.0 Td (Information is managed across its full lifecycle - from creation through active use, archival, and) Tj ET
+BT /F1 10 Tf 54 458.0 Td (eventual disposal. Data Owners, supported by Legal and Compliance, define retention schedules that) Tj ET
+BT /F1 10 Tf 54 444.0 Td (satisfy contractual, regulatory, and business requirements. PCI cardholder data is retained only as) Tj ET
+BT /F1 10 Tf 54 430.0 Td (long as necessary for billing and legal obligations and is not stored beyond authorized limits.) Tj ET
+BT /F1 10 Tf 54 416.0 Td (Records that reach the end of their retention period are moved to secure archival storage where) Tj ET
+BT /F1 10 Tf 54 402.0 Td (continued preservation is required, or scheduled for purging when no longer needed. Automated) Tj ET
+BT /F1 10 Tf 54 388.0 Td (purging routines enforce these schedules to prevent unnecessary accumulation of sensitive data.) Tj ET
+BT /F2 13 Tf 54 362.0 Td (7. Data Disposal, Destruction, and Shredding) Tj ET
+BT /F1 10 Tf 54 339.0 Td (When data or the media holding it reaches end of life, it must be securely disposed of in a manner) Tj ET
+BT /F1 10 Tf 54 325.0 Td (that renders recovery infeasible. Electronic media containing Confidential or Restricted data must) Tj ET
+BT /F1 10 Tf 54 311.0 Td (be sanitized through cryptographic erasure or wiping to NIST SP 800-88 standards, and failed or) Tj ET
+BT /F1 10 Tf 54 297.0 Td (decommissioned drives must undergo physical destruction. Paper records containing PII or cardholder) Tj ET
+BT /F1 10 Tf 54 283.0 Td (data must be cross-cut shredding or placed in secure destruction bins. All destruction of Restricted) Tj ET
+BT /F1 10 Tf 54 269.0 Td (data must be documented with a certificate of destruction retained by the responsible custodian.) Tj ET
+BT /F2 13 Tf 54 243.0 Td (8. Enforcement and Review) Tj ET
+BT /F1 10 Tf 54 220.0 Td (Violations of this policy may result in disciplinary action up to termination and potential legal) Tj ET
+BT /F1 10 Tf 54 206.0 Td (consequences. This policy is reviewed at least annually, and after significant regulatory or) Tj ET
+BT /F1 10 Tf 54 192.0 Td (operational change, by the HPE Information Security and Privacy organizations.) Tj ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 3 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Type /Catalog /Pages 3 0 R >>
+endobj
+xref
+0 9
+0000000000 65535 f 
+0000000015 00000 n 
+0000000112 00000 n 
+0000000214 00000 n 
+0000000277 00000 n 
+0000004694 00000 n 
+0000004830 00000 n 
+0000009023 00000 n 
+0000009159 00000 n 
+trailer
+<< /Size 9 /Root 8 0 R /Info << /Title (d10_data_protection_policy) >> >>
+startxref
+9208
+%%EOF
