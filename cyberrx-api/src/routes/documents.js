@@ -441,7 +441,7 @@ router.post('/analyze', upload.single('file'), async (req, res) => {
     if (mapping) {
       try {
         const LlmReview = require('../services/LlmDocumentReviewService');
-        result = await LlmReview.reviewDocument(text, mapping);
+        result = await LlmReview.reviewDocument(text, mapping, { label: req.file.originalname });
       } catch (e) { logger.warn('LLM doc review error, using keyword fallback', { error: e.message }); result = null; }
     }
     if (!result) { result = analyzeDeep(text, docType); result.engine = 'keyword'; }
@@ -461,9 +461,11 @@ router.post('/analyze', upload.single('file'), async (req, res) => {
     logger.info('document analyzed', {
       docType,
       filename: req.file.originalname,
+      engine: result.engine || 'keyword',
       cmmi: result.cmmi,
       coverage: result.coverage,
       controls: result.controls.length,
+      cost_usd: result.cost_usd || 0,
     });
     res.json(result);
   } catch (e) {
