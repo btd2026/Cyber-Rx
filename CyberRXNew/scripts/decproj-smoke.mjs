@@ -44,6 +44,18 @@ ok('onboarding collects seatEmails', /seatEmails\[i\.dataset\.seat\]/.test(onb))
 ok('onboarding sends seatEmails in payload', /seatEmails:seatEmails/.test(onb));
 ok('onboarding saves cyberrx_seat_emails', /setItem\('cyberrx_seat_emails'/.test(onb));
 ok('c5SeatEmails hydrates from LIVE.seatEmails', /LIVE\.seatEmails/.test(ciso));
+// Automation-capped maturity: coverage alone can't push a manual/semi control to 5,
+// and it applies via the single controlCmmi used by every framework.
+ok('capAutoCeil defined', /function capAutoCeil\(c\)/.test(cockpit));
+ok('controlCmmi caps tool score by automation', /if\(toolS!=null\)\{var tc=fwControlTool\(id\);ceil=/.test(cockpit));
+ok('all 10 capabilities classified auto/semi/manual', (cockpit.match(/,auto:'(auto|semi|manual)',name:/g) || []).length === 10);
+ok('manual capability present (awareness)', /k:'aware',auto:'manual'/.test(cockpit));
+ok('projection uses the capability automation ceiling', /capAutoCeil\(cap\)/.test(ciso) && /toolProj=Math\.min/.test(ciso));
+// Expandable decisions + expandable leader rows + jump-to-seat navigation.
+ok('decision cards expandable', /data-decexp=/.test(ciso) && /C5_DP_OPENDEC/.test(ciso));
+ok('leader rows expandable', /data-askexp=/.test(ciso) && /C5_DP_OPENASK/.test(ciso));
+ok('jump-to-seat navigation', /data-goseat=/.test(ciso) && /function c5GoSeat\(seat\)/.test(ciso) && /selectSeat\(seat\)/.test(ciso));
+ok('reverse tool shows per-path ceiling', /up to CMMI/.test(ciso));
 
 if (fail) { console.error(`\ndecproj-smoke: ${passed} passed, ${fail} FAILED`); process.exit(1); }
 console.log(`decproj-smoke OK — ${passed} checks pass (tab wired · projection on live control model · reminder-email piping · render loop).`);
