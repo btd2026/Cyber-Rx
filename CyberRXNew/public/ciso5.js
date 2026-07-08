@@ -1425,6 +1425,8 @@ function c5InspectObj(m){
     '<div style="width:42px;height:42px;border-radius:11px;flex:none;display:flex;align-items:center;justify-content:center;background:var(--surface);background:color-mix(in srgb,var(--'+col+') 16%,var(--surface));color:var(--'+col+')">'+c5icon(c5whyIcon(m.connected?m.color:'muted'))+'</div>'+
     '<div style="min-width:0"><div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">Result</div><div style="font-size:24px;font-weight:700;line-height:1.1;color:var(--'+col+')">'+(m.connected?m.displayValue:'Not connected')+'</div></div>'+
   '</div>';
+  // Optional visual (e.g. trend bars) rendered right under the result.
+  if(m.visual)h+=m.visual;
   if(!m.connected){
     var src=m.connectTool?('<b>'+c5esc(m.connectTool)+'</b>'):'its data source';
     h+='<div class="ev-sec">What would populate it</div><div class="drill-p">This reads live once you connect '+src+'. Until then Nerion shows the honest not-connected state — never a placeholder number.</div>';
@@ -3024,6 +3026,29 @@ function c5Frameworks(){
 }
 /* The four Frameworks summary cards open the same inspector as every other metric,
    built from real assessment data (roll-up, coverage, trend history, deficiencies). */
+/* Volume bars of overall framework maturity across recorded refreshes. Green &
+   growing when improving, red & shrinking when regressing, grey & level when
+   stalling — direction from the latest score vs the one before it (0–5 CMMI). */
+function c5trendBars(hist,cad,fwName){
+  var vals=(hist||[]).map(function(h){return Number(h.v)||0;}).filter(function(v){return !isNaN(v);});
+  var series=vals.slice(-8);
+  var last=series.length?series[series.length-1]:null,prev=series.length>=2?series[series.length-2]:null;
+  var dir=(prev==null)?'muted':(last>prev+0.05?'good':(last<prev-0.05?'crit':'muted'));
+  var maxH=58,scaleMax=5;
+  var bars=series.length?series.map(function(v,i){var isLast=(i===series.length-1);var hpx=Math.max(6,Math.round(v/scaleMax*maxH));
+    return '<div style="display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:5px;flex:1;min-width:0">'+
+      '<div style="width:100%;max-width:30px;height:'+hpx+'px;border-radius:5px 5px 2px 2px;background:var(--'+dir+');opacity:'+(isLast?1:0.42)+'"></div>'+
+      '<div style="font-size:10px;color:var(--muted);font-variant-numeric:tabular-nums">'+v.toFixed(1)+'</div></div>';
+  }).join(''):'<div style="flex:1;font-size:12px;color:var(--muted);align-self:center">No refreshes recorded yet.</div>';
+  var cap=(prev==null)
+    ?('Baseline — one refresh recorded ('+(last!=null?last.toFixed(1):'—')+' / 5). The bars grow green when '+(fwName||'this framework')+' maturity rises, shrink red when it falls, and hold level grey when it is flat, from your next '+cad+' reassessment.')
+    :(dir==='good'?('Improving — '+(fwName||'')+' maturity rose from '+prev.toFixed(1)+' to '+last.toFixed(1)+' since the last refresh.')
+      :dir==='crit'?('Regressing — maturity fell from '+prev.toFixed(1)+' to '+last.toFixed(1)+' since the last refresh.')
+      :('Holding — maturity is steady at '+last.toFixed(1)+' vs '+prev.toFixed(1)+' last refresh.'));
+  return '<div class="ev-sec">Overall maturity across refreshes</div>'+
+    '<div style="display:flex;align-items:flex-end;gap:10px;height:'+(maxH+22)+'px;padding:10px 8px 4px;border:1px solid var(--line);border-radius:12px;background:var(--surface-2)">'+bars+'</div>'+
+    '<div style="font-size:12px;color:var(--ink-2);margin-top:8px">'+cap+'</div>';
+}
 function c5fwInspect(card,T,sel,cad){
   var fwName=(typeof FW_NAMES!=='undefined'&&FW_NAMES[sel])||'the framework';
   var trendH=(typeof fwHistory==='function')?fwHistory():[];
@@ -3044,10 +3069,11 @@ function c5fwInspect(card,T,sel,cad){
       note:'How much of '+fwName+' you can actually evidence today. Connect more tools or upload more policies to raise it.'});
   } else if(card==='trend'){
     m=c5obj({name:'Trend vs last refresh',displayValue:(trendDelta!=null?((trendDelta>=0?'+':'')+trendDelta.toFixed(1)):'Baseline'),label:'computed',color:(trendDelta==null?'ink':trendDelta>=0?'good':'crit'),
-      formula:'trend = overall CMMI this refresh − overall CMMI at the first recorded '+cad+' refresh',
-      method:trendDelta==null?('This is your first recorded refresh — the baseline. The trend appears after the next '+cad+' reassessment.'):('Recorded each '+cad+' reassessment.'),
-      inputs:trendH.length?trendH.slice(-6).map(function(h,i){return {name:'Refresh '+(i+1),value:Number(h.v).toFixed(1),source:h.date||h.at||''};}):[{name:'History',value:'baseline only',source:'records build each '+cad+' refresh'}],
-      sources:[{tool:'Nerion assessment engine',connector:'nerion',field:'fw_history',lastRefresh:c5ago()}],
+      formula:'trend = overall CMMI this refresh − overall CMMI at the last recorded '+cad+' refresh',
+      method:trendDelta==null?('This is your first recorded refresh — the baseline. The bars grow (green) when overall maturity rises, shrink (red) when it falls, and hold level (grey) when it is flat, from your next '+cad+' reassessment on.'):('Each bar is the overall '+fwName+' maturity at one '+cad+' refresh; direction compares the latest to the one before it.'),
+      visual:c5trendBars(trendH,cad,fwName),
+      inputs:trendH.length?trendH.slice(-6).map(function(h,i){return {name:'Refresh '+(i+1),value:Number(h.v).toFixed(1)+' / 5',source:h.date||h.at||'recorded '+cad};}):[{name:'History',value:'baseline only',source:'records build each '+cad+' refresh'}],
+      sources:[{tool:'Nerion assessment engine',connector:'nerion',field:'fw_history (overall CMMI per refresh)',lastRefresh:c5ago()}],
       note:'The board’s “are we improving?” answered on your reassessment cadence ('+cad+').'});
   } else {
     var defs=[];T.groups.forEach(function(g){(g.children||[]).forEach(function(c){if(c.type==='cat'){(c.children||[]).forEach(function(x){if(x.score<C5FW_FLOOR)defs.push(x);});}else if(c.score<C5FW_FLOOR)defs.push(c);});});
