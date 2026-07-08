@@ -44,6 +44,9 @@
     '.c5aic-t{font-size:13.5px;font-weight:650;color:var(--ink);line-height:1.25}',
     '.c5aic-v{font-size:12px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;margin-top:3px}',
     '.c5aic-s{font-size:12.5px;color:var(--ink-2);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+    '.c5phwrap{margin-top:2px}',
+    '.c5cjt-note{font-size:12px;color:var(--ink-2);background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:9px 13px;margin:10px 0}',
+    '.c5cjt-frame{border-radius:12px;overflow:hidden;box-shadow:0 1px 2px rgba(16,24,40,.05)}',
     '.c5aic-alarm{border-color:var(--crit);animation:c5aicpulse 1.1s infinite}',
     '@keyframes c5aicpulse{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--crit) 42%,transparent)}50%{box-shadow:0 0 0 5px color-mix(in srgb,var(--crit) 0%,transparent)}}',
     '.c5sqrow{display:flex;gap:4px;margin-top:11px;flex-wrap:wrap}',
@@ -3113,8 +3116,64 @@ function c5fwDownload(path,fname,body){
 function c5fwExport(){var P=c5fwPayload();if(!P)return;c5fwDownload('/api/ciso/auditor-pack.pptx','nerion-auditor-pack-'+P.sel+'.pptx',P.payload);}
 /* Excel control scorecard + POA&M. */
 function c5fwExportXlsx(){var P=c5fwPayload();if(!P)return;c5fwDownload('/api/ciso/control-scorecard.xlsx','nerion-control-scorecard-'+P.sel+'.xlsx',P.payload);}
+/* ---------- Program Health ▸ two inner tabs (Nerion's View / Classic View) ----------
+   The subtab strip uses the app's own .subtabs chrome. "Nerion's View" is the new
+   crown-jewel value tree (an isolated iframe island — see crownjewel-tree.html —
+   ported verbatim from the frozen reference, data injected via postMessage).
+   "Classic View" is the existing framework-maturity content, relocated as-is. */
+var C5_PH_DEFAULT='nerion'; // flip to 'classic' to change the default tab in one line
+var C5_PH_TAB=C5_PH_DEFAULT;
+function c5CjtSrc(){try{return new URL('crownjewel-tree.html',location.href).href;}catch(_){return 'crownjewel-tree.html';}}
+var C5_CJT_INPUT=null,C5_CJT_WIRED=false;
+function c5CjtMsg(e){var f=document.getElementById('c5cjt-frame');if(!f)return;
+  if(f.contentWindow&&e&&e.source&&e.source!==f.contentWindow)return;
+  var d=(e&&e.data)||{};
+  if(d.type==='crowntree-ready'){if(C5_CJT_INPUT){try{f.contentWindow.postMessage({type:'crowntree-data',RISKS:C5_CJT_INPUT.RISKS,C:C5_CJT_INPUT.C,DATA:C5_CJT_INPUT.DATA,org:C5_CJT_INPUT.org},'*');}catch(_){}}}
+  else if(d.type==='crowntree-height'){var h=Math.max(320,Math.min(4000,Number(d.h)||0));if(h)f.style.height=h+'px';}}
+/* Mount the frozen tree island. Injects live data if the adapter produced any;
+   otherwise the island renders its built-in illustrative sample (Section 6.2 —
+   degrade to the seed, never hard-fail) and we show a "sample data" note. */
+function c5MountCrownTree(container){
+  if(!container)return;
+  C5_CJT_INPUT=(typeof c5CrownTreeInput==='function')?c5CrownTreeInput():null;
+  if(!C5_CJT_WIRED){try{window.addEventListener('message',c5CjtMsg);}catch(_){}C5_CJT_WIRED=true;}
+  var note=C5_CJT_INPUT?'':'<div class="c5cjt-note">Illustrative sample data — the crown-jewel value tree reads live once your Crown-Jewel Register, Business Capability Map and control-maturity sources are connected.</div>';
+  container.innerHTML=note+'<iframe id="c5cjt-frame" class="c5cjt-frame" title="Crown-jewel value tree" scrolling="no" style="width:100%;border:0;height:640px;display:block;background:#EEF1F6" src="'+c5CjtSrc()+'"></iframe>';
+}
+/* Adapter: Nerion data -> the island's exact input contract (Section 4). Returns
+   null until the raw function->process->jewel->risk->control graph (with per-jewel
+   $ value and per-control maturity) is exposed, so the island falls back to its
+   frozen sample rather than showing fabricated control mappings.
+   TODO(nerion): build {org, RISKS, C, DATA, CATALOG:106} from —
+     DATA[].name/.crit         Business Capability Map / function registry
+     procs[].name              Business Process Inventory
+     jewels[].name/.type       Crown-Jewel Register (asset class -> Application|Infrastructure)
+     jewels[].value ($B)       Financial model (business value / BIA), in billions
+     risks[].id                Risk Register (which R-codes threaten each jewel)
+     ctrls[][0] (CSF code)     Control-library mapping (risk -> CSF subcategories)
+     ctrls[][1] (maturity 0-5) controlCmmi() / maturity source
+   Do NOT pre-compute dollars — the island derives every figure from value + maturity. */
+function c5CrownTreeInput(){return null;}
+/* Program Health dispatcher — renders the tab strip, then the active panel.
+   Lazy-mounts: the island is only built while "Nerion's View" is active. */
 function c5Frameworks(){
   var host=document.getElementById('c5-frameworks');if(!host)return;
+  var tab=(C5_PH_TAB==='classic')?'classic':'nerion';
+  host.innerHTML=c5header()+
+    '<div class="subwrap c5phwrap"><div class="subtabs">'+
+      '<button class="subtab'+(tab==='nerion'?' on':'')+'" data-phtab="nerion">Nerion’s View</button>'+
+      '<button class="subtab'+(tab==='classic'?' on':'')+'" data-phtab="classic">Classic View</button>'+
+    '</div></div><div id="c5ph-body"></div>';
+  host.querySelectorAll('[data-phtab]').forEach(function(b){b.onclick=function(){C5_PH_TAB=b.getAttribute('data-phtab');c5Frameworks();};});
+  var body=document.getElementById('c5ph-body');
+  if(tab==='nerion'){c5MountCrownTree(body);}
+  else{c5FrameworksClassic(body);}
+}
+/* Classic View — the framework-maturity content that Program Health rendered
+   before, moved as-is behind its tab. Renders into the panel passed in (its own
+   self-re-render handlers call c5Frameworks(), which re-renders this panel). */
+function c5FrameworksClassic(host){
+  if(!host)return;
   if(typeof seedDemoDocScores==='function'){try{seedDemoDocScores();}catch(_){}}
   try{c5SetSnapshot();}catch(_){} // populate FW_SNAPSHOT for the community benchmark
   if(typeof FW_SEL==='undefined'){window.FW_SEL='csf';}

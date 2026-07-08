@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cyber value tree — business to crown jewels to controls</title>
+<style>
+  :root{
+    --ink:#0E1F36; --paper:#EEF1F6; --card:#FFFFFF; --line:#CBD5E4; --conn:#B9C4D6;
+    --muted:#5C6B82; --text:#16243B; --accent:#0E7C86; --risk:#B23A2E; --gold:#B8862B;
+    --shadow:0 1px 2px rgba(14,31,54,.06),0 6px 20px rgba(14,31,54,.07);
+    --t-data:#2F6DB5; --t-app:#0E7C86; --t-infra:#9A4A2F;
+  }
+  *{box-sizing:border-box} html,body{margin:0}
+  body{background:var(--paper);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-size:15px;-webkit-font-smoothing:antialiased}
+  .serif{font-family:Georgia,"Times New Roman",serif}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 22px}
+  header{background:var(--ink);color:#EAF0F8}
+  .head-top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:15px 0;border-bottom:1px solid #ffffff1a}
+  .brand{display:flex;align-items:center;gap:12px;font-weight:600}
+  .brand .dot{width:10px;height:10px;border-radius:2px;background:var(--accent);box-shadow:0 0 0 4px #0e7c8633}
+  .brand small{display:block;font-weight:400;color:#9fb2cc;font-size:12px;letter-spacing:.04em;text-transform:uppercase}
+  .toggle{display:inline-flex;background:#ffffff14;border:1px solid #ffffff2b;border-radius:999px;padding:3px}
+  .toggle button{border:0;background:transparent;padding:6px 13px;border-radius:999px;font-size:12.5px;font-weight:600;color:#9fb2cc;cursor:pointer}
+  .toggle button.on{background:#fff;color:var(--ink)}
+  .hero{padding:22px 0 16px}
+  .eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#7fd3d8;font-weight:700}
+  .hero h1{margin:.35em 0 .35em;font-weight:500;font-size:clamp(21px,2.9vw,31px);line-height:1.15;color:#fff}
+  .hero h1 em{font-style:italic;color:#7fd3d8}
+  .flow{display:flex;gap:8px;flex-wrap:wrap;align-items:center;color:#9fb2cc;font-size:12px}
+  .flow .ar{opacity:.6}
+  .flow .step{background:#ffffff12;border:1px solid #ffffff22;border-radius:7px;padding:4px 9px}
+  .flow .step.jewel{border-color:#d8b35f;color:#f4e4c1}
+
+  .risklegend{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:14px 16px;margin-top:16px}
+  .risklegend h3{margin:0 0 10px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+  .rlgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:8px 20px}
+  .rlitem{display:flex;gap:9px;align-items:flex-start;font-size:13px}
+  .rid{flex:0 0 auto;background:var(--ink);color:#fff;font-family:Georgia,serif;font-weight:700;font-size:12px;border-radius:6px;padding:2px 7px}
+
+  .bar-legend{display:flex;gap:16px;flex-wrap:wrap;align-items:center;padding:14px 0 2px;color:var(--muted);font-size:12.5px}
+  .bar-legend .grp{display:flex;align-items:center;gap:7px}
+  .sw{width:16px;height:12px;border-radius:3px;display:inline-block}
+  .tpill{font-size:9.5px;font-weight:800;letter-spacing:.05em;color:#fff;border-radius:5px;padding:1px 6px}
+  .treebar{display:flex;gap:8px;align-items:center;padding:16px 0 2px;flex-wrap:wrap}
+  .treebar .lbl{font-size:12px;color:var(--muted)}
+  .treebar button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 12px;font-size:12.5px;font-weight:600;color:var(--text);cursor:pointer;box-shadow:var(--shadow)}
+  .treebar button:hover{border-color:var(--accent);color:var(--accent)}
+  .expander{cursor:pointer;user-select:none}
+
+  .scroll{overflow-x:auto;padding:8px 0 22px}
+  .tree{display:inline-block;min-width:100%;text-align:center;white-space:nowrap}
+  .tree ul{position:relative;padding-top:22px;display:flex;justify-content:center;margin:0;list-style:none}
+  .tree li{position:relative;padding:22px 6px 0;display:flex;flex-direction:column;align-items:center}
+  .tree li::before,.tree li::after{content:'';position:absolute;top:0;right:50%;border-top:2px solid var(--conn);width:50%;height:22px}
+  .tree li::after{right:auto;left:50%;border-left:2px solid var(--conn)}
+  .tree li:only-child::before,.tree li:only-child::after{display:none}
+  .tree li:only-child{padding-top:22px}
+  .tree li:first-child::before,.tree li:last-child::after{border:0 none}
+  .tree li:last-child::before{border-right:2px solid var(--conn);border-radius:0 6px 0 0}
+  .tree li:first-child::after{border-radius:6px 0 0 0}
+  .tree ul ul::before{content:'';position:absolute;top:0;left:calc(50% - 1px);border-left:2px solid var(--conn);width:0;height:22px}
+  .tree>ul{padding-top:0}
+  .tree>ul>li:only-child::before{display:block;left:calc(50% - 1px);border-left:2px solid var(--conn);width:0;height:22px;top:0}
+  .tree li.collapsed>ul{display:none}
+
+  .node{display:inline-block;white-space:normal;vertical-align:top;background:var(--card);border:1px solid var(--line);border-radius:11px;box-shadow:var(--shadow);text-align:left;position:relative}
+  .node .accent{height:5px;border-radius:11px 11px 0 0}
+  .node .pad{padding:10px 12px}
+  .node .ttl{font-weight:650;font-size:13px;line-height:1.25}
+  .node .sub{color:var(--muted);font-size:11px;margin-top:2px}
+  .node .nums{display:flex;gap:12px;margin-top:8px;align-items:baseline}
+  .node .val{font-family:Georgia,serif;font-size:14px}
+  .node .rk{font-family:Georgia,serif;font-size:14px;color:var(--risk)}
+  .node .mf{color:#3f8a4f;font-size:.82em;font-family:Georgia,serif}
+  .node .lf{color:var(--risk);font-family:Georgia,serif}
+  .node .nlab{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;display:block}
+  .minibar{height:6px;border-radius:4px;background:#e9edf3;margin-top:8px;overflow:hidden}
+  .minibar i{display:block;height:100%;border-radius:4px}
+  .haschild>.node{cursor:pointer}
+  .expander{position:absolute;bottom:-11px;left:50%;transform:translateX(-50%);width:20px;height:20px;border-radius:50%;background:#fff;border:2px solid var(--conn);color:var(--muted);font-size:12px;display:grid;place-items:center;z-index:2;font-weight:700}
+  .haschild>.node:hover{border-color:var(--accent)}
+
+  .node.org{width:320px}.node.org .accent{background:var(--accent)}.node.org .big{font-family:Georgia,serif;font-size:22px}
+  .node.fn{width:190px}
+  .node.proc{width:170px;background:#f7f9fc}.node.proc .ttl{font-size:12px}
+  .node.proc .tag{font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700}
+
+  .node.jewel{width:196px;border:1.5px solid #E4C879;box-shadow:0 0 0 3px #f6eccf88,var(--shadow);background:linear-gradient(#fffdf7,#fff)}
+  .node.jewel .accent{background:var(--gold)!important}
+  .node.jewel .crown{position:absolute;top:-13px;left:50%;transform:translateX(-50%);font-size:20px;filter:drop-shadow(0 2px 2px #0002);z-index:3}
+  .node.jewel .cjline{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+  .node.jewel .cjtag{font-size:8.5px;letter-spacing:.06em;text-transform:uppercase;font-weight:800;color:#8a6a1e}
+  .node.jewel .ttl{font-size:12.5px}
+
+  .node.risk{width:116px;text-align:center}
+  .node.risk .pad{padding:9px 10px;text-align:center}
+  .node.risk .rid{display:inline-block;font-family:Georgia,serif;font-weight:700;color:#fff;border-radius:6px;padding:2px 9px;font-size:14px}
+  .node.risk .rname{font-size:10px;color:var(--muted);margin-top:6px;line-height:1.2}
+  .node.risk .rrisk{font-family:Georgia,serif;font-size:12.5px;margin-top:5px;color:var(--risk)}
+
+  .node.ct{width:96px;text-align:center}
+  .node.ct .pad{padding:8px;text-align:center}
+  .node.ct .code{font-weight:700;font-size:11px;font-family:ui-monospace,Menlo,Consolas,monospace}
+  .node.ct .cname{font-size:9.5px;color:var(--muted);line-height:1.2;margin-top:2px}
+  .node.ct .score{margin:6px auto 0;width:30px;height:30px;border-radius:8px;display:grid;place-items:center;color:#fff;font-weight:700;font-family:Georgia,serif;font-size:15px}
+  .node.ct .cfunc{display:inline-block;font-size:8px;letter-spacing:.04em;text-transform:uppercase;font-weight:700;color:#fff;padding:1px 5px;border-radius:4px;margin-top:5px}
+  .node.ct{width:106px}
+  .node.ct.atrisk{border-color:#e6b7ae;box-shadow:0 0 0 2px #b23a2e14,var(--shadow)}
+  .node.ct.mitig{background:#f4faf5}
+  .node.ct .cmoney{margin-top:5px;font-family:Georgia,serif;font-size:11px;line-height:1.2}
+  .node.ct .cmoney s{color:#3f8a4f}
+  .node.ct .mtag{display:block;color:#3f8a4f;font-family:system-ui;font-weight:800;font-size:8px;text-transform:uppercase;letter-spacing:.05em;margin-top:1px}
+  .node.ct .atag{color:#b23a2e;font-family:system-ui;font-weight:700;font-size:9px}
+  .node.ct .hintdot{position:absolute;top:6px;right:7px;width:14px;height:14px;border-radius:50%;border:1px solid var(--line);color:var(--muted);font-size:9px;display:grid;place-items:center;font-weight:700}
+
+  .scope{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:16px 20px;margin-top:4px;display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center}
+  .scope .big{font-family:Georgia,serif;font-size:38px;color:var(--accent);line-height:1;text-align:center}
+  .scope .big small{display:block;font-family:system-ui;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:3px}
+  .scope p{margin:0;font-size:14.5px}.scope p b{color:var(--ink)}
+  footer{color:var(--muted);font-size:12px;padding:22px 0 40px;border-top:1px solid var(--line);margin-top:20px}
+  .tip{position:fixed;z-index:50;max-width:330px;background:var(--ink);color:#dbe6f4;padding:12px 14px;border-radius:10px;font-size:12.5px;line-height:1.5;box-shadow:0 10px 30px rgba(0,0,0,.32);pointer-events:none;opacity:0;transition:opacity .12s}
+  .tip.on{opacity:1}.tip b{color:#fff}.tip .cx{color:#7fd3d8;font-weight:700}.tip .mut{color:#94a7c2}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="head-top">
+      <div class="brand"><span class="dot"></span><div><span id="brandName">Northwind Insurance</span><small>Cyber value tree · illustrative</small></div></div>
+      <div class="toggle" id="toggle"><button data-mode="code" class="on">CSF numbers</button><button data-mode="name">+ names</button></div>
+    </div>
+    <div class="hero">
+      <div class="eyebrow">Top-down · risk-based</div>
+      <h1 class="serif">Trace the line from the business to the <em>crown jewels</em> — and down to the controls that keep them safe.</h1>
+      <div class="flow">
+        <span class="step">Organization</span><span class="ar">→</span>
+        <span class="step">Function</span><span class="ar">→</span>
+        <span class="step">Key process</span><span class="ar">→</span>
+        <span class="step jewel">👑 Crown jewel</span><span class="ar">→</span>
+        <span class="step">Risk</span><span class="ar">→</span>
+        <span class="step">NIST CSF control + score</span>
+      </div>
+    </div>
+    <div class="risklegend"><h3>Risk legend</h3><div class="rlgrid" id="rl"></div></div>
+    <div class="bar-legend">
+      <div class="grp"><span class="sw" style="background:#4E9A51"></span>well mitigated</div>
+      <div class="grp"><span class="sw" style="background:#D8862B"></span>partial</div>
+      <div class="grp"><span class="sw" style="background:#B23A2E"></span>exposed</div>
+      <div class="grp" style="margin-left:6px"><span style="font-size:15px">👑</span> crown jewel:</div>
+      <div class="grp"><span class="tpill" style="background:var(--t-app)">APP</span><span class="tpill" style="background:var(--t-infra)">INFRA</span></div>
+      <div class="grp"><s style="color:#3f8a4f;font-family:Georgia,serif">$</s>&nbsp;risk mitigated (control ≥ 3)</div>
+      <div class="grp" style="margin-left:auto">hover a name for details · hover any $ for the math</div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="treebar">
+    <span class="lbl">Fold the tree:</span>
+    <button data-act="expand">⊞ Expand all</button>
+    <button data-act="jewels">👑 Collapse to crown jewels</button>
+    <button data-act="functions">Collapse to functions</button>
+    <button data-act="collapse">⊟ Collapse all</button>
+    <span class="lbl" style="margin-left:auto">or click any − / + on a node to fold just that branch</span>
+  </div>
+  <div class="scroll"><div class="tree" id="tree"></div></div>
+  <div class="scope" id="scope"></div>
+  <footer>Illustrative sample data (an insurance carrier, to match the “Claims Processing” example). Crown jewels are applications and key infrastructure (firewalls, identity) — data is protected as a risk to the application or system that holds it, not as a separate crown jewel. Each crown jewel's value is split across its controls; a control at <b>maturity 3 or higher</b> is treated as mitigating its slice (struck through), and live $ at risk sums only the slices guarded by controls below 3 — rolled up jewel → process → function → enterprise. Hover any control for its NIST CSF 2.0 name and description.</footer>
+</div>
+<div class="tip" id="tip"></div>
+
+<script>
+const TARGET=4, CATALOG=106;
+const MAT=["#B23A2E","#B23A2E","#D8862B","#C4A526","#4E9A51","#2E7D46"];
+const matColor=m=>MAT[Math.max(0,Math.min(5,Math.round(m)))];
+const expColor=e=> e>=.30?"#B23A2E":e>=.15?"#D8862B":"#4E9A51";
+const FUNCCOL={GV:"#5B4B8A",ID:"#2F6DB5",PR:"#0E7C86",DE:"#B07A1E",RS:"#9A4A2F",RC:"#2E7D46"};
+const FUNCNAME={GV:"Govern",ID:"Identify",PR:"Protect",DE:"Detect",RS:"Respond",RC:"Recover"};
+const TYPECOL={Data:"var(--t-data)",Application:"var(--t-app)",Infrastructure:"var(--t-infra)"};
+const $B=v=>"$"+(v>=1?v.toFixed(1)+"B":(v*1000).toFixed(0)+"M");
+
+let RISKS={
+ R1:"Ransomware / destructive outage — operations halted",
+ R2:"Credential & identity compromise — account takeover",
+ R3:"Model / intellectual-property theft or manipulation",
+ R4:"Sensitive data breach — PII / PCI / PHI exposed",
+ R5:"Perimeter breach / customer-account takeover",
+ R6:"Third-party / vendor data compromise",
+ R7:"Insecure code & model integrity in production"
+};
+// control: {f, cat, name, desc}
+let C={
+ "GV.SC-04":{f:"GV",cat:"Supply Chain Risk Mgmt",name:"Supplier prioritization",desc:"Suppliers are known and prioritized by how critical they are, so security effort focuses on the ones that matter most."},
+ "GV.SC-07":{f:"GV",cat:"Supply Chain Risk Mgmt",name:"Supplier risk monitoring",desc:"The cyber risk from each supplier, product, or service is understood and monitored throughout the relationship — not just at onboarding."},
+ "ID.AM-02":{f:"ID",cat:"Asset Management",name:"Software & service inventory",desc:"A current inventory of software, services, and systems is maintained, so nothing critical is unknown or unmanaged."},
+ "PR.AA-01":{f:"PR",cat:"Identity & Access",name:"Identity & credential management",desc:"Identities and credentials for people, services, and hardware (including keys) are issued, managed, and revoked under control."},
+ "PR.AA-05":{f:"PR",cat:"Identity & Access",name:"Least-privilege access",desc:"Access is granted on least privilege and separation of duties, so a compromised account can reach as little as possible."},
+ "PR.DS-01":{f:"PR",cat:"Data Security",name:"Data-at-rest protection",desc:"Stored data is protected (e.g., encrypted) so it stays confidential and intact even if the storage is reached."},
+ "PR.DS-02":{f:"PR",cat:"Data Security",name:"Data-in-transit protection",desc:"Data moving across networks is protected (e.g., encrypted) so it can't be read or altered on the wire."},
+ "PR.PS-06":{f:"PR",cat:"Platform Security",name:"Secure software development",desc:"Secure development practices are built into the software lifecycle and monitored, reducing the vulnerabilities that ship to production."},
+ "PR.IR-01":{f:"PR",cat:"Infrastructure Resilience",name:"Infrastructure protection & segmentation",desc:"Networks and environments are protected from unauthorized access and segmented, so an intruder is contained rather than free to roam."},
+ "DE.CM-01":{f:"DE",cat:"Continuous Monitoring",name:"Network monitoring",desc:"Networks and network services are continuously monitored to detect suspicious or malicious activity early."},
+ "DE.CM-09":{f:"DE",cat:"Continuous Monitoring",name:"Computing & software monitoring",desc:"Hardware, software, runtime environments (and models/apps) are continuously monitored for signs of compromise."},
+ "DE.AE-02":{f:"DE",cat:"Adverse Event Analysis",name:"Event analysis",desc:"Potentially harmful events are analyzed to understand what is happening and whether it is an attack."},
+ "RC.RP-01":{f:"RC",cat:"Incident Recovery",name:"Recovery plan execution",desc:"The recovery plan is executed when an incident hits, so critical services are restored within target timeframes."}
+};
+
+// Function -> Key Process -> Crown Jewel {type} -> Risk -> Controls
+let DATA=[
+ {name:"Claims Processing",crit:"Critical",procs:[
+   {name:"Adjudicate & pay claims",jewels:[
+     {name:"Claims adjudication application",type:"Application",value:3.0,risks:[
+       {id:"R4",ctrls:[["PR.DS-01",4],["PR.AA-05",2],["DE.AE-02",3]]},
+       {id:"R7",ctrls:[["PR.PS-06",3],["DE.CM-09",2]]},
+       {id:"R2",ctrls:[["PR.AA-01",2]]}]}]},
+   {name:"Detect & prevent fraud",jewels:[
+     {name:"Fraud-detection model",type:"Application",value:0.9,risks:[
+       {id:"R7",ctrls:[["PR.PS-06",3],["DE.CM-09",2]]}]}]},
+   {name:"Disburse payments",jewels:[
+     {name:"Payment disbursement system",type:"Application",value:1.6,risks:[
+       {id:"R1",ctrls:[["PR.IR-01",2],["RC.RP-01",2],["DE.CM-01",3]]}]}]}
+ ]},
+ {name:"Underwriting",crit:"Critical",procs:[
+   {name:"Price & bind policies",jewels:[
+     {name:"Policy admin & rating engine",type:"Application",value:2.0,risks:[
+       {id:"R3",ctrls:[["PR.AA-05",3],["PR.PS-06",3]]}]}]},
+   {name:"Assess external risk data",jewels:[
+     {name:"Underwriting data platform",type:"Application",value:1.1,risks:[
+       {id:"R6",ctrls:[["GV.SC-04",3],["GV.SC-07",2]]}]}]}
+ ]},
+ {name:"Billing & Payments",crit:"High",procs:[
+   {name:"Collect premiums",jewels:[
+     {name:"Billing & payments system (PCI)",type:"Application",value:1.4,risks:[
+       {id:"R4",ctrls:[["PR.DS-01",4],["PR.DS-02",4],["DE.CM-01",3]]}]}]}
+ ]},
+ {name:"Customer Servicing",crit:"High",procs:[
+   {name:"Serve customers digitally",jewels:[
+     {name:"Customer portal",type:"Application",value:1.8,risks:[
+       {id:"R5",ctrls:[["PR.AA-05",2],["PR.AA-01",2],["DE.CM-01",3]]}]}]}
+ ]},
+ {name:"Enterprise Technology & Security",crit:"Critical",procs:[
+   {name:"Protect the network perimeter",jewels:[
+     {name:"Perimeter firewalls & network edge",type:"Infrastructure",value:3.0,risks:[
+       {id:"R5",ctrls:[["PR.IR-01",3],["PR.AA-05",2],["DE.CM-01",3]]}]}]},
+   {name:"Manage enterprise identity",jewels:[
+     {name:"Active Directory / identity infrastructure",type:"Infrastructure",value:3.5,risks:[
+       {id:"R2",ctrls:[["PR.AA-01",2],["PR.AA-05",2],["DE.CM-09",3]]}]}]}
+ ]}
+];
+
+const MITIGATED=3;
+let ORG='Northwind Insurance';
+function build(){
+document.getElementById('brandName').textContent=ORG;
+let TOTV=0,TOTR=0,TOTM=0; const scope=new Set();
+DATA.forEach(f=>{f.value=0;f.risk=0;f.mit=0;
+  f.procs.forEach(p=>{p.value=0;p.risk=0;p.mit=0;
+    p.jewels.forEach(j=>{let total=0;j.risks.forEach(r=>total+=r.ctrls.length);
+      const share=j.value/total; j.total=total; j.risk=0;j.mit=0;
+      j.risks.forEach(r=>{r.live=0;r.pot=0;r.n=r.ctrls.length;r.nx=0;
+        r.ctrls.forEach(c=>{c.share=share;c.jval=j.value;c.total=total;c.mit=c[1]>=MITIGATED;c.live=c.mit?0:share;r.pot+=share;r.live+=c.live;if(!c.mit)r.nx++;scope.add(c[0]);});
+        r.mitigated=(r.live===0); j.risk+=r.live; j.mit+=(r.pot-r.live);});
+      j.exposure=j.risk/j.value;p.value+=j.value;p.risk+=j.risk;p.mit+=j.mit;});
+    p.exposure=p.risk/p.value;f.value+=p.value;f.risk+=p.risk;f.mit+=p.mit;});
+  f.exposure=f.risk/f.value;TOTV+=f.value;TOTR+=f.risk;TOTM+=f.mit;});
+const inScope=scope.size;
+let mode="code";
+
+document.getElementById("rl").innerHTML=Object.entries(RISKS).map(([k,v])=>`<div class="rlitem"><span class="rid">${k}</span><span>${v}</span></div>`).join("");
+const mini=e=>`<div class="minibar"><i style="width:${Math.min(100,e*100)}%;background:${expColor(e)}"></i></div>`;
+const riskCell=(live,mit)=> (mit>0&&live>0)?`<s class="mf">${$B(mit)}</s> <span class="lf">${$B(live)}</span>`:(live===0)?`<s class="mf">${$B(mit)}</s>`:`<span class="lf">${$B(live)}</span>`;
+
+function ctrlNode(c){const info=C[c[0]];
+  return `<li><div class="node ct ${c.mit?'mitig':'atrisk'}" data-code="${c[0]}" data-m="${c[1]}" data-jval="${c.jval}" data-total="${c.total}" data-share="${c.share}"><div class="pad">
+    <span class="hintdot">i</span>
+    <div class="code">${c[0]}</div><div class="cname">${mode==='name'?info.name:''}</div>
+    <div class="score" style="background:${matColor(c[1])}">${c[1]}</div>
+    <div class="cmoney">${c.mit?'<s>'+$B(c.share)+'</s><span class="mtag">mitigated</span>':'<span class="atag">'+$B(c.share)+' at risk</span>'}</div>
+    <div><span class="cfunc" style="background:${FUNCCOL[info.f]}">${FUNCNAME[info.f]}</span></div></div></div></li>`;}
+function riskNode(r){const rexp=r.pot?r.live/r.pot:0; const col=r.mitigated?'#4E9A51':expColor(rexp);
+  return `<li><div class="node risk haschild" data-risk="${r.id}" data-live="${r.live}" data-pot="${r.pot}" data-n="${r.n}" data-nx="${r.nx}"><div class="accent" style="background:${col}"></div>
+   <div class="pad"><span class="rid" style="background:${col}">${r.id}</span>
+     <div class="rname">${RISKS[r.id].split(" — ")[0]}</div>
+     <div class="rrisk">${riskCell(r.live, r.pot-r.live)}</div>
+     <div class="nlab" style="text-align:center">${r.mitigated?'mitigated':'at risk'}</div></div>
+   <div class="expander">−</div></div><ul>${r.ctrls.map(ctrlNode).join("")}</ul></li>`;}
+function jewelNode(j){
+  return `<li class="collapsed"><div class="node jewel haschild"><span class="crown">👑</span><div class="accent"></div>
+   <div class="pad"><div class="cjline"><span class="tpill" style="background:${TYPECOL[j.type]}">${j.type==='Infrastructure'?'INFRA':j.type==='Application'?'APP':'DATA'}</span><span class="cjtag">Crown jewel</span></div>
+     <div class="ttl">${j.name}</div>
+     <div class="nums"><div><span class="val">${$B(j.value)}</span><span class="nlab">value</span></div>
+       <div><span class="rk mathhover" data-mtype="jewel" data-val="${j.value}" data-total="${j.total}" data-live="${j.risk}" data-mit="${j.mit}">${riskCell(j.risk,j.mit)}</span><span class="nlab">at risk</span></div></div>${mini(j.exposure)}</div>
+   <div class="expander">+</div></div><ul>${j.risks.map(riskNode).join("")}</ul></li>`;}
+function procNode(p){return `<li><div class="node proc haschild"><div class="accent" style="background:${expColor(p.exposure)}"></div>
+   <div class="pad"><div class="tag">Key process</div><div class="ttl">${p.name}</div>
+     <div class="nums"><div><span class="rk mathhover" data-mtype="rollup" data-label="Key process" data-live="${p.risk}" data-mit="${p.mit}">${riskCell(p.risk,p.mit)}</span><span class="nlab">at risk</span></div></div></div>
+   <div class="expander">−</div></div><ul>${p.jewels.map(jewelNode).join("")}</ul></li>`;}
+function fnNode(f){return `<li><div class="node fn haschild"><div class="accent" style="background:${expColor(f.exposure)}"></div>
+   <div class="pad"><div class="ttl">${f.name}</div><div class="sub">${f.crit} function</div>
+     <div class="nums"><div><span class="val">${$B(f.value)}</span><span class="nlab">value</span></div>
+       <div><span class="rk mathhover" data-mtype="rollup" data-label="Function" data-live="${f.risk}" data-mit="${f.mit}">${riskCell(f.risk,f.mit)}</span><span class="nlab">at risk</span></div></div>${mini(f.exposure)}</div>
+   <div class="expander">−</div></div><ul>${f.procs.map(procNode).join("")}</ul></li>`;}
+
+document.getElementById("tree").innerHTML=`<ul><li><div class="node org"><div class="accent"></div><div class="pad">
+   <div class="ttl">${ORG}</div><div class="sub">Enterprise exposure on crown jewels</div>
+   <div class="nums"><div><span class="big">${$B(TOTV)}</span><span class="nlab">business value</span></div>
+     <div><span class="big mathhover" style="color:var(--risk)" data-mtype="rollup" data-label="Enterprise" data-live="${TOTR}" data-mit="${TOTM}">${$B(TOTR)}</span><span class="nlab">at risk (live)</span></div>
+     <div><span class="big" style="color:#3f8a4f"><s>${$B(TOTM)}</s></span><span class="nlab">already mitigated</span></div></div>
+ </div></div><ul>${DATA.map(fnNode).join("")}</ul></li></ul>`;
+
+document.getElementById("scope").innerHTML=`<div class="big">${inScope}<small>of ${CATALOG}</small></div>
+ <p>Only <b>${inScope} of NIST CSF 2.0's ${CATALOG} subcategories</b> appear on this tree — the ones that actually mitigate a risk to a crown jewel (across applications and infrastructure). A control at <b>maturity 3+</b> counts as mitigating its slice of risk (shown struck through); the live figures above sum only the slices still guarded by controls below 3. <b>Invest by risk, down the red branches.</b></p>`;
+
+const tip=document.getElementById("tip");
+function showTip(html,e){tip.innerHTML=html;tip.classList.add("on");tip.style.left=Math.min(e.clientX+14,innerWidth-346)+"px";tip.style.top=Math.min(e.clientY+16,innerHeight-140)+"px";}
+function wire(){
+  document.querySelectorAll(".haschild>.node").forEach(n=>{n.onclick=e=>{if(e.target.closest(".ct"))return;
+    const li=n.closest("li"); const expanding=li.classList.contains("collapsed");
+    if(expanding){[...li.parentNode.children].forEach(s=>{if(s!==li&&s.querySelector&&s.querySelector(":scope > .node")&&s.querySelector(":scope > ul"))setCol(s,true);});}
+    setCol(li,!expanding);};});
+  document.querySelectorAll(".node.risk").forEach(el=>{el.addEventListener("mousemove",e=>{
+     if(e.target.closest('.rrisk')){const live=+el.dataset.live,pot=+el.dataset.pot,n=+el.dataset.n,nx=+el.dataset.nx;
+       showTip(`<b>${el.dataset.risk} — how this $ is computed</b><br>${n} controls guard this risk (${$B(pot/n)} slice each).<br><br><b style="color:#fff">${nx} below maturity 3</b> → ${$B(live)} live at risk.<br>${n-nx} at 3+ → <s style="color:#7fe0a0">${$B(pot-live)} mitigated</s>.`,e);return;}
+     showTip(`<span class="cx">${el.dataset.risk}</span> — ${RISKS[el.dataset.risk]}`,e);});
+   el.addEventListener("mouseleave",()=>tip.classList.remove("on"));});
+  document.querySelectorAll(".mathhover").forEach(el=>{
+    el.addEventListener("mousemove",e=>{e.stopPropagation();const live=+el.dataset.live,mit=+el.dataset.mit;
+      if(el.dataset.mtype==='jewel'){const val=+el.dataset.val,total=+el.dataset.total;
+        showTip(`<b>Crown jewel — how this $ is computed</b><br>Value ${$B(val)} split across ${total} controls (${$B(val/total)} each).<br><br>Slices behind controls below 3 → <b style="color:#fff">${$B(live)} live at risk</b>.<br>Slices behind controls at 3+ → <s style="color:#7fe0a0">${$B(mit)} mitigated</s>.`,e);}
+      else{showTip(`<b>${el.dataset.label} — how this $ is computed</b><br>Sum of exposed control-slices beneath (controls below 3) → <b style="color:#fff">${$B(live)} live at risk</b>.<br>Sum of mitigated slices (controls 3+) → <s style="color:#7fe0a0">${$B(mit)} mitigated</s>.`,e);}});
+    el.addEventListener("mouseleave",()=>tip.classList.remove("on"));});
+  document.querySelectorAll(".node.ct").forEach(el=>{
+    el.addEventListener("mousemove",e=>{
+      if(e.target.closest('.cmoney')){const jval=+el.dataset.jval,total=+el.dataset.total,share=+el.dataset.share,m=+el.dataset.m;
+        showTip(`<b>How this $ is computed</b><br>Jewel value ${$B(jval)} ÷ ${total} controls = <b style="color:#fff">${$B(share)}</b> slice.<br><br>${m>=3?'Score '+m+' (≥3) → <span style="color:#7fe0a0">mitigated</span>, this slice is bought down.':'Score '+m+' (below 3) → <span style="color:#ff9d90">fully at risk</span>, this slice is live exposure.'}`,e);return;}
+      const c=C[el.dataset.code],m=el.dataset.m;
+      const lvl=["Non-existent","Initial / ad hoc","Managed","Defined","Quantitatively managed","Optimizing"][m];
+      showTip(`<b>${el.dataset.code} · ${c.name}</b><br><span class="mut">${FUNCNAME[c.f]} › ${c.cat}</span><br><br>${c.desc}<br><br><span class="mut">Maturity <b style="color:#fff">${m}/5</b> — ${lvl}. ${m>=3?'<b style="color:#7fe0a0">Risk mitigated</b> (3+).':'<b style="color:#ff9d90">Below the 3+ mitigation threshold.</b>'}</span>`,e);});
+    el.addEventListener("mouseleave",()=>tip.classList.remove("on"));});
+}
+document.getElementById("toggle").querySelectorAll("button").forEach(b=>b.onclick=()=>{mode=b.dataset.mode;[...b.parentNode.children].forEach(x=>x.classList.toggle("on",x===b));
+  document.querySelectorAll(".node.ct").forEach(el=>{el.querySelector(".cname").textContent=mode==='name'?C[el.dataset.code].name:'';});});
+
+// ---- global fold controls ----
+function setCol(li,val){li.classList.toggle('collapsed',val);const ex=li.querySelector(':scope > .node .expander');if(ex)ex.textContent=val?'+':'−';}
+function applyView(act){
+  document.querySelectorAll('.tree li').forEach(li=>{
+    const node=li.querySelector(':scope > .node'); if(!node||!li.querySelector(':scope > ul'))return;
+    const isOrg=node.classList.contains('org'),isFn=node.classList.contains('fn'),isProc=node.classList.contains('proc'),isJewel=node.classList.contains('jewel');
+    let collapse=false;
+    if(act==='collapse') collapse=!isOrg;                 // fold everything under the org
+    else if(act==='functions') collapse=isFn;             // show org → functions only
+    else if(act==='jewels') collapse=isJewel;             // show down to the crown jewels
+    else collapse=false;                                  // expand all
+    setCol(li,collapse);
+  });
+}
+document.querySelectorAll('.treebar button').forEach(b=>b.onclick=()=>applyView(b.dataset.act));
+wire();
+reportHeight();
+try{new ResizeObserver(reportHeight).observe(document.body);}catch(_){}
+}
+// ---- host integration: report height + accept injected data (the only change
+// from the frozen reference — the visual, math, fold, tooltips are untouched) ----
+function reportHeight(){try{var h=Math.max(document.body.scrollHeight,document.documentElement.scrollHeight,320);parent.postMessage({type:'crowntree-height',h:h},'*');}catch(_){}}
+window.addEventListener('message',function(e){var d=(e&&e.data)||{};if(d.type!=='crowntree-data')return;
+  if(d.RISKS)RISKS=d.RISKS;if(d.C)C=d.C;if(Array.isArray(d.DATA))DATA=d.DATA;if(d.org)ORG=d.org;
+  try{build();}catch(err){try{console.error(err);}catch(_){}}});
+try{parent.postMessage({type:'crowntree-ready'},'*');}catch(_){}
+build();  // render the built-in sample immediately; a host may post real data to override
+</script>
+</body>
+</html>
