@@ -2131,16 +2131,20 @@ function c5Exposure(){
   var ctrlOff=ctrls.filter(function(o){return o.p==null;}).length;
   var maxV=Math.max.apply(null,ctrlConn.map(function(o){return o.usd;}).concat([1]));
   var topCtrl=ctrlConn[0]||null,topWeak=weak[0]||null;
+  // The most-exposed business area is ranked by MODELED EXPOSURE ($), not by score —
+  // a high-score area can still carry the largest residual exposure.
+  var byExp=areas.slice().filter(function(a){return a.exp>0;}).sort(function(a,b){return b.exp-a.exp;});
+  var topExp=byExp[0]||topWeak||null;
 
   // ── Verdict + three-number summary ─────────────────────────────────────────
   var haveAreas=areas.length>0,haveCtrls=ctrlConn.length>0;
   var nm=function(c){return c.name.replace(/ *\(.*\)/,'');};
   var verdict=haveAreas
     ?(weak.length===0
-        ?'Every business area is well protected.'
-        :(well.length>=weak.length
-            ?('Most of the business is well protected. '+weak.length+' area'+(weak.length>1?'s':'')+' still need'+(weak.length>1?'':'s')+' work — listed below.')
-            :('Several business areas still need work. Your exposure is concentrated in a few of them — listed below, worst first.')))
+        ?'The business is protected across every area — hold and evidence it.'
+        :(topExp
+            ?('Protection is uneven. '+topExp.name+' carries the highest modeled exposure and should be prioritized first.')
+            :'Protection is uneven across business areas — prioritize the ones below, worst first.'))
     :'Where the business is protected, where it isn’t, and where to act first.';
   // Plain, assistant-style intro — what these areas are, and what "protected" means.
   var intro='These are the business areas that keep the company running. Each one depends on your security controls — the stronger those controls, the safer the area. Click any area for the detail.';
@@ -2149,13 +2153,33 @@ function c5Exposure(){
   var scard=function(ic,lbl,val,sub,col,pc,tip){col=col||'muted';return '<div class="c5opc" data-c5pc="'+pc+'" style="--ac:var(--'+col+')" title="'+c5esc(tip||'')+'"><span class="c5opc-go">details ›</span><div class="c5opc-h"><span class="c5opc-ic">'+c5icon(ic)+'</span><span class="c5opc-t">'+lbl+'</span></div><div class="c5opc-v" style="color:var(--'+(col==='muted'?'ink':col)+')">'+val+'</div><div class="c5opc-s">'+sub+'</div></div>';};
 
   // ── Widget rows ────────────────────────────────────────────────────────────
+  // Evidence label per row — modeled/computed/demo, never hidden in fine print.
+  var evLabel=function(a){if((typeof signalsAreDemo==='function')&&signalsAreDemo())return 'Demo';return a.measured?'Computed':'Modeled';};
+  // The one-line business driver of an area's exposure (detail lives in the drill-down).
+  var mainDriver=function(a){
+    if(a.risks&&a.risks.length){var t=String(a.risks[0].title||'');return t.length>58?(t.slice(0,56)+'…'):t;}
+    if((a.gaps||0)>0)return 'unresolved control gaps in business-critical services';
+    return 'residual exposure in business-critical services';
+  };
   var areaRow=function(a,mode){var cls=capColor(a.score);
-    var sub=(mode==='well')
-      ?((a.grc?('GRC '+a.grc+' · '):'')+'no open control gaps'+(a.measured?'':' · illustrative'))
-      :((a.gaps>0?(a.gaps+' open control gap'+(a.gaps>1?'s':'')):'below its protection target')+(a.exp>0?(' · '+usd(a.exp)+' of exposure carried'):'')+(a.measured?'':' · illustrative'));
-    // Name the actual open risks driving a to-strengthen area — the CISO sees WHY.
-    var rl=(mode!=='well'&&a.risks&&a.risks.length)?('<div class="c5esub" style="margin-top:3px;color:var(--ink-2)">Open risks: '+a.risks.slice(0,3).map(function(r){var sv=String(r.severity||'').toLowerCase(),sc=/crit/.test(sv)?'crit':/high/.test(sv)?'warn':'muted';return c5esc(r.title)+(r.severity?(' <b style="color:var(--'+sc+')">'+c5esc(r.severity)+'</b>'):'');}).join(' · ')+(a.risks.length>3?(' · +'+(a.risks.length-3)+' more'):'')+'</div>'):'';
-    return '<div class="c5erow" data-c5area="'+c5esc(a.name)+'" title="'+c5esc(a.name+' — protection detail. Click for the controls, gaps and exposure behind this score.')+'"><div style="flex:1;min-width:0"><div class="c5exp">'+a.name+' <span class="c5pill '+(mode==='well'?'g':a.score<50?'r':'a')+'" style="margin-left:4px">'+(mode==='well'?'Protected':(a.score<50?'Priority':'Strengthen'))+'</span></div><div class="c5esub">'+sub+'</div>'+rl+'</div>'+
+    var status=(mode==='well')?'Protected':(a.score<50?'Priority':'Strengthen');
+    var pill=(mode==='well')?'g':(a.score<50?'r':'a');
+    var parts=[];
+    if(mode==='well'){parts.push('Meets protection threshold');if(a.grc)parts.push('GRC '+a.grc);parts.push('no open control gaps');}
+    else{if(a.exp>0)parts.push('<b>'+usd(a.exp)+' modeled exposure</b>');parts.push('Driver: '+c5esc(mainDriver(a)));}
+    var sub=parts.join(' · ');
+    var evc='<span class="c5pill n" style="margin-left:6px;font-size:10px">'+evLabel(a)+'</span>';
+    // Score/status clarity: say WHY a high-scoring area still needs strengthening, so
+    // the executive never reads the score and status as a contradiction.
+    var why='';
+    if(mode!=='well'){
+      if(a.score>=TARGET&&(a.gaps||0)>0) why='Strong controls ('+a.score+'), but an open control gap keeps residual exposure elevated.';
+      else if(a.score>=TARGET&&a.exp>0) why='High business value keeps residual exposure elevated despite stronger controls.';
+      else if((a.gaps||0)>0) why=a.gaps+' open control gap'+(a.gaps>1?'s':'')+' to close.';
+      else why='Below the protection threshold ('+TARGET+').';
+    }
+    var whyHtml=why?('<div class="c5esub" style="margin-top:3px;color:var(--ink-2)">'+why+'</div>'):'';
+    return '<div class="c5erow" data-c5area="'+c5esc(a.name)+'" title="'+c5esc(a.name+' — click for open risks, gaps, critical dependencies and the exposure basis.')+'"><div style="flex:1;min-width:0"><div class="c5exp">'+a.name+' <span class="c5pill '+pill+'" style="margin-left:4px">'+status+'</span>'+evc+'</div><div class="c5esub">'+sub+'</div>'+whyHtml+'<div class="c5esub" style="color:var(--muted);font-size:11px;margin-top:2px">Click for open risks &amp; exposure basis ›</div></div>'+
       '<div class="c5etrack"><div style="width:'+a.score+'%;height:100%;background:linear-gradient(90deg,color-mix(in srgb,var(--'+cls+') 62%,transparent),var(--'+cls+'))"></div></div>'+
       '<div class="c5emult" style="color:var(--'+cls+')">'+a.score+'</div></div>';
   };
@@ -2171,14 +2195,14 @@ function c5Exposure(){
   // have real data — no how-to text, no method/formula on screen.
   // Stat card: a static (non-clickable) value card in the c5opc style.
   var statc=function(ic,lbl,val,sub,col,vfs){col=col||'muted';return '<div class="c5opc" style="cursor:default;--ac:var(--'+col+')"><div class="c5opc-h"><span class="c5opc-ic">'+c5icon(ic)+'</span><span class="c5opc-t">'+lbl+'</span></div><div class="c5opc-v" style="color:var(--'+(col==='muted'?'ink':col)+')'+(vfs?(';font-size:'+vfs):'')+'">'+val+'</div><div class="c5opc-s">'+sub+'</div></div>';};
-  // Summary: lead with the real money (total risk removed — not duplicated below),
-  // then the two area reads when the capability map is connected, or a highest-value
-  // control + a connect prompt when it isn't. No empty "—" boxes, no box that just
-  // repeats the controls list.
-  var summary='<div class="c5statgrid">'+statc('coin','Risk removed by controls',haveCtrls?usd(rr.total):'—','Modeled expected loss your controls buy down','good');
+  // Summary: lead with the real money (total modeled exposure reduced by controls —
+  // not duplicated below), then the two area reads when the capability map is
+  // connected, or a highest-value control + a connect prompt when it isn't. No empty
+  // "—" boxes, no box that just repeats the controls list.
+  var summary='<div class="c5statgrid">'+statc('coin','Modeled exposure reduced by controls',haveCtrls?usd(rr.total):'—','Modeled expected loss your controls buy down','good');
   if(haveAreas){
-    summary+=scard('shieldcheck','Areas well protected',String(well.length),'Strong enough to defend to the board',well.length?'good':'muted','well','The business areas clearing their protection bar with no open control gaps. Click for the list.')+
-      scard('target','Areas to strengthen',String(weak.length),'Carrying the residual exposure',weak.length?'warn':'muted','weak','The business areas below the bar or carrying open control gaps. Click for the list.');
+    summary+=scard('shieldcheck','Areas meeting protection threshold',String(well.length),'Evidence supports current protection level',well.length?'good':'muted','well','The business areas clearing their protection threshold with no open control gaps. Click for the list.')+
+      scard('target','Areas requiring remediation',String(weak.length),'Carrying residual exposure',weak.length?'warn':'muted','weak','The business areas below the threshold or carrying open control gaps. Click for the list.');
   } else {
     summary+=statc('cpu','Highest-value control',topCtrl?nm(topCtrl.c):'—',topCtrl?('removes '+usd(topCtrl.usd)+' · '+topCtrl.p+'% deployed'):'connect your security tools','good','17px')+
       '<div class="c5opc" data-c5onb="business capability map" style="--ac:var(--blue)"><span class="c5opc-go">connect ›</span><div class="c5opc-h"><span class="c5opc-ic">'+c5icon('store')+'</span><span class="c5opc-t">Protection by business area</span></div><div class="c5opc-v" style="color:var(--blue);font-size:15px">Connect capability map →</div><div class="c5opc-s">Rank protection by business function once your Business Capability Map is added.</div></div>';
@@ -2189,23 +2213,29 @@ function c5Exposure(){
   // TAB A — protection by business area (where are we protected?)
   var bodyA=c5header()+
     c5shell('Protection · how your core business areas are protected',verdict,tone,intro)+
-    summary;
+    summary+
+    (haveAreas?c5ProtectionEvidencePanel(areas):'');
   if(haveAreas){
-    bodyA+='<div class="c5seclab">Where the business is well protected</div><div>'+w1+'</div>'+
-          '<div class="c5seclab" style="margin-top:18px">Where to concentrate next</div><div>'+w2+'</div>';
+    bodyA+='<div class="c5seclab">Business areas meeting protection threshold</div><div>'+w1+'</div>'+
+          '<div class="c5seclab" style="margin-top:18px">Business areas to prioritize</div><div>'+w2+'</div>';
   }
-  if(haveAreas&&topWeak){
-    // Plain, friendly bottom line: name the most exposed area and its exposure in
-    // dollars, say exactly what to do (close its gaps, drive down its risks — both
-    // named in the rows above), and clarify that the figure is modeled loss, not
-    // revenue. Numbers are the live counts for that area.
-    var blExp=(topWeak.exp>0)?(' at '+usd(topWeak.exp)+' of exposure'):'';
-    var blGaps=(topWeak.gaps||0), blRisks=(topWeak.risks&&topWeak.risks.length)||0;
+  if(haveAreas&&(topExp||topWeak)){
+    // Name the most-exposed area (by modeled $), explain WHY it's the priority, and
+    // give the decision. Never says "close its 0 control-gaps" — when gaps are zero,
+    // it says exposure is driven by residual risk scenarios and business criticality.
+    var T=topExp||topWeak;
+    var blExp=(T.exp>0)?(', with '+usd(T.exp)+' modeled exposure'):'';
+    var g=(T.gaps||0), r=(T.risks&&T.risks.length)||0;
+    var why=(g>0)
+      ?'This exposure is concentrated in business-critical services with unresolved control gaps. Closing these gaps first reduces the largest concentration of residual business exposure.'
+      :(r>0
+          ?'No open control gaps remain, but residual risk remains due to unresolved risk scenarios and business criticality — exposure is driven by residual risk, not currently open control gaps.'
+          :'Exposure is concentrated here because of the business criticality of the services it carries; keep evidencing its controls.');
     bodyA+=c5bl('Bottom line',
-      'Your most exposed business area is '+topWeak.name+blExp+'.',
+      T.name+' is the most exposed business area'+blExp+'.',
       tone,
-      'Close its open control-gaps ('+blGaps+') and drive down its open risks ('+blRisks+') — each named in the rows above — then work down the exposure-ranked list.'+(topWeak.exp>0?(' That '+usd(topWeak.exp)+' is the modeled loss that would land here if its protection fails — not the revenue it earns.'):''),
-      (topWeak.exp>0?{mid:'exp_total',txt:'Where the '+usd(topWeak.exp)+' comes from'}:null));
+      why+' Decision: prioritize '+T.name+' remediation before lower-exposure areas.'+(T.exp>0?(' The '+usd(T.exp)+' is modeled loss that would land here if protection fails — not the revenue it earns.'):''),
+      {mid:'exp_total',txt:'Prioritize '+T.name+' remediation'});
   } else if(haveAreas&&weak.length===0){
     bodyA+=c5bl('Bottom line','The business is protected across every area.',null,'Every area clears its protection bar. Hold the posture and evidence it — this is the read the board wants to see sustained.',null);
   } else {
@@ -2228,6 +2258,42 @@ function c5Exposure(){
   var host2=document.getElementById('c5-exposure2');
   if(host2){host.innerHTML=bodyA;host2.innerHTML=bodyB;}
   else{host.innerHTML=bodyA+bodyB;} // single-tab fallback
+}
+/* Evidence confidence for the Protection tab. Tracks the eight source categories the
+   protection read depends on, computes an overall level that can never read "High"
+   when a critical source is missing, and renders a compact secondary line that also
+   states the modeled-exposure basis visibly (not buried in row fine print). */
+function c5ProtectionEvidence(areas){
+  areas=areas||[];
+  function capConn(k){try{return !!(typeof CAP_BY_KEY!=='undefined'&&CAP_BY_KEY[k]&&typeof capDeploy==='function'&&capDeploy(CAP_BY_KEY[k])!=null);}catch(_){return false;}}
+  var L=(typeof LIVE!=='undefined'&&LIVE)||{};
+  var demo=(typeof signalsAreDemo==='function')&&signalsAreDemo();
+  var capmap=areas.length>0;
+  var ctrlAssess=areas.some(function(a){return a.measured;});
+  var finModel=areas.some(function(a){return a.exp>0;});
+  var vendorConn=false;try{vendorConn=!!c5get('er_thirdparty').connected;}catch(_){ }
+  var sources=[
+    {key:'capmap', label:'Business capability map',        connected:capmap,     critical:true},
+    {key:'cmdb',   label:'CMDB / asset inventory',         connected:!!((L.crown_jewels&&L.crown_jewels.length)||(L.counts&&L.counts.assets)), critical:false},
+    {key:'ctrl',   label:'Control assessment results',     connected:ctrlAssess, critical:true, computed:true},
+    {key:'vuln',   label:'Vulnerability / exposure data',  connected:capConn('vuln'),                  critical:false},
+    {key:'iam',    label:'Identity / access data',         connected:(capConn('mfa')||capConn('pam')), critical:false},
+    {key:'cloud',  label:'Cloud / infrastructure data',    connected:capConn('cspm'),                  critical:false},
+    {key:'vendor', label:'Third-party / vendor risk data', connected:vendorConn, critical:false},
+    {key:'fin',    label:'Financial / business-value model',connected:finModel,  critical:true, computed:true}
+  ];
+  var conf=(typeof TrustLogic!=='undefined')?TrustLogic.evidenceConfidence(sources):{level:'—'};
+  return {sources:sources,conf:conf,demo:demo};
+}
+function c5ProtectionEvidencePanel(areas){
+  var E=c5ProtectionEvidence(areas);
+  var SL=(typeof TrustLogic!=='undefined')?TrustLogic.sourceStatus:function(o){return o&&o.connected?{label:'Connected',cls:'g'}:{label:'Not Connected',cls:'n'};};
+  var lvlCls={'High':'g','Medium':'a','Low':'a','Not Enough Evidence':'n'}[E.conf.level]||'n';
+  var chips=E.sources.map(function(s){var st=SL({connected:s.connected,computed:s.computed,partial:s.partial});return '<span class="c5pill '+st.cls+'" style="display:inline-block;margin:2px 5px 2px 0">'+s.label+': '+st.label+'</span>';}).join('');
+  return '<div style="margin-top:14px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)">'+
+    '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:12px;font-weight:600;color:var(--ink-2)">Evidence confidence</span><span class="c5pill '+lvlCls+'">'+E.conf.level+'</span>'+(E.demo?'<span class="c5pill n">Demo data — some exposure values are modeled</span>':'')+'</div>'+
+    '<div style="margin-top:7px;line-height:2">'+chips+'</div>'+
+    '<div style="margin-top:7px;font-size:11.5px;color:var(--muted)">Modeled exposure = estimated business value associated with services dependent on unresolved control gaps.</div></div>';
 }
 
 /* ---------- Tab 03 — Control effectiveness ---------- */
