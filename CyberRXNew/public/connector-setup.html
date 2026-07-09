@@ -57,8 +57,13 @@
 </div>
 <script>
 (function(){
-  var API=(window.CYBERRX_API||localStorage.getItem('cyberrx_api_base')||'').replace(/\/+$/,'');
-  var ORG=window.CYBERRX_ORG_ID||localStorage.getItem('cyberrx_org_id')||'demo';
+  function qs(k){try{return new URLSearchParams(window.location.search).get(k)||'';}catch(_){return '';}}
+  // API base + org resolve from (1) query params passed by the embedding page,
+  // (2) a global override, (3) localStorage, (4) the production API. The empty-
+  // string default used to leave the embedded iframe fetching the static host,
+  // which has no /api — the catalog then failed to load.
+  var API=(qs('api')||window.CYBERRX_API||localStorage.getItem('cyberrx_api_base')||'https://cyber-rx.onrender.com').replace(/\/+$/,'');
+  var ORG=qs('org')||window.CYBERRX_ORG_ID||localStorage.getItem('cyberrx_org_id')||'demo';
   var view=document.getElementById('view');
   var MANIFESTS=[], CURRENT=null, FORM={auth:{},tenant:{},scope:{},denom:{},review:'90d'};
   function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}

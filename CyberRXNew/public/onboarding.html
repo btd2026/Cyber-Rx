@@ -292,8 +292,6 @@
       <div class="sd" style="margin-top:6px">Nerion reads each document against the AI control catalog and records which framework and policy it evidences — the same <b>📄 document-review</b> engine used across onboarding. Upload all three below; each is analyzed and kept separately.</div>
       <div id="aiGovDocList" style="margin-top:10px"></div>
     </div></div>
-    <div class="aiup-lbl">What Nerion has derived so far</div>
-    <div id="aiGovDerived" style="margin-top:6px"></div>
     <div class="sd" style="margin-top:12px">EU AI Act scope is derived from your <a href="#regions" class="aiGovJump" data-to="regions" style="color:#2563eb;font-weight:600;text-decoration:none">operating regions</a> plus the inventory above. Anything not yet provided stays blank in the cockpit until its source is connected — <b>no estimates</b>.</div>
   </div>
 
@@ -557,8 +555,17 @@
     <div class="sh"><div class="sn">7</div><div><div class="st">Connect your tools</div><div class="sd">Most of your evidence is pulled live from here. Connect each system you run and Nerion streams the data that answers your executives’ questions — the more you connect, the more credible every answer.</div></div><div class="badge" id="b7">optional</div></div>
     <div class="demo-bar"><span class="demo-label">Demo mode<span class="demo-sub">Explore with simulated signals — no API keys. Clearly labeled “Demo”; never sent to the engine as real data.</span></span><button class="demo-btn" id="demoToggle" type="button">Enable demo mode</button></div>
     <div class="cred"><div class="cred-top"><span class="ct">Evidence credibility</span><span class="cv l0" id="credLabel">Not yet credible</span></div><div class="cred-bar"><i id="credBar"></i></div><div class="cred-meta"><b id="credSig">0</b> live signals · <b id="credSys">0</b> systems connected · <b id="credCov">0%</b> coverage</div></div>
-    <div class="note" style="margin-top:2px;margin-bottom:8px"><b>✦ Control-aware setup</b> — pick a tool below; Nerion asks only for what it needs (auth, scope, denominator), then shows exactly which controls are ready for continuous assessment. <a href="connector-setup.html" target="_blank" style="color:var(--blue);font-weight:600;text-decoration:none">Open full screen ↗</a></div>
-    <iframe id="caSetup" src="connector-setup.html" title="Control-aware connector setup" style="width:100%;height:760px;border:1px solid var(--line);border-radius:14px;background:var(--panel,#fff)"></iframe>
+    <div class="note" style="margin-top:2px;margin-bottom:8px"><b>✦ Control-aware setup</b> — pick a tool below; Nerion asks only for what it needs (auth, scope, denominator), then shows exactly which controls are ready for continuous assessment. <a id="caFullScreen" href="connector-setup.html" target="_blank" style="color:var(--blue);font-weight:600;text-decoration:none">Open full screen ↗</a></div>
+    <iframe id="caSetup" title="Control-aware connector setup" style="width:100%;height:760px;border:1px solid var(--line);border-radius:14px;background:var(--panel,#fff)"></iframe>
+    <script>(function(){
+      // Pass the resolved API base + org into the embedded setup so its catalog
+      // fetch hits the real API and not the static host it is served from.
+      function base(){try{return (window.CYBERRX_API||localStorage.getItem('cyberrx_api_base')||'https://cyber-rx.onrender.com').replace(/\/+$/,'');}catch(_){return 'https://cyber-rx.onrender.com';}}
+      var org='';try{org=localStorage.getItem('cyberrx_org_id')||'';}catch(_){}
+      var q='?api='+encodeURIComponent(base())+(org?'&org='+encodeURIComponent(org):'');
+      var f=document.getElementById('caSetup');if(f)f.src='connector-setup.html'+q;
+      var a=document.getElementById('caFullScreen');if(a)a.href='connector-setup.html'+q;
+    })();</script>
     <details style="margin-top:14px"><summary style="cursor:pointer;color:var(--muted);font-size:13px;font-weight:600">Quick connect (legacy vendor list)</summary>
     <div id="toolGrid" style="margin-top:10px"></div></details>
     <div class="note" style="margin-top:12px">Expand a tool, pick your vendor and enter a key to connect now — or leave blank and finish in the cockpit’s <b>“Live data — connected sources”</b> panel after go-live. Real connections show <b>“Connected”</b>; demo-mode tools show <b>“Demo”</b> and are never counted as real.</div>
@@ -896,6 +903,10 @@
 
   // ---- business capability map (CISO Enterprise-Risk: capabilities with highest exposure) ----
   var CAP_GRC=['Adequate','Watch','Gap'];
+  // Registry of every repeatable-row list so onboarding can save & restore the
+  // rows a user typed or uploaded (they are dynamic DOM, so the field-snapshot
+  // autosave misses them — this is what makes uploads to these registers persist).
+  var OB_REGISTERS={};
   function addCapRow(v){v=v||{};var wrap=document.getElementById('capRows');if(!wrap)return;
     var row=document.createElement('div');row.className='cap-row';row.style.cssText='display:grid;grid-template-columns:1.6fr 1.1fr 0.9fr 0.85fr 0.85fr auto;gap:10px;margin-bottom:10px;align-items:end';
     row.innerHTML='<div class="field"><label>Capability</label><input class="cap-name" placeholder="e.g. Claims processing · Member enrollment · Payments"></div>'+
@@ -924,6 +935,8 @@
   }).filter(Boolean);}
   function updateCapBadge(){var n=collectCapabilities().length,b=document.getElementById('bcap');if(b){if(n){b.textContent='✓ '+n+' capabilit'+(n>1?'ies':'y');b.classList.add('done');}else{b.textContent='optional';b.classList.remove('done');}}}
   (function(){var a=document.getElementById('addCap');if(a)a.addEventListener('click',function(){addCapRow();});})();
+  // Register the capability map so its rows (typed or CSV-uploaded) save & restore.
+  OB_REGISTERS.cap={add:addCapRow,collect:collectCapabilities,clear:function(){var w=document.getElementById('capRows');if(w)w.innerHTML='';updateCapBadge();}};
   // No GRC tool? Upload an Excel/CSV instead — columns: capability · exposure ·
   // grc_status (Adequate/Watch/Gap) · control_gaps · open_risk.
   (function(){var CAP_IO={add:function(v){addCapRow(v);}};
@@ -954,7 +967,12 @@
         else o[f.key]=(f.type==='number')?(parseFloat(el.value||'')||null):(el.value||'').trim();});
       return o;
     }).filter(Boolean);}
-    return {add:add,collect:collect};
+    function clear(){var wrap=document.getElementById(wrapId);if(wrap)wrap.innerHTML='';upd();}
+    var api={add:add,collect:collect,clear:clear};
+    // Register under a stable key (derived from the wrap id) so save/restore can
+    // round-trip the rows the user entered or uploaded.
+    OB_REGISTERS[wrapId.replace(/Rows$/,'')]=api;
+    return api;
   }
   var SBOM=makeRowList('sbomRows','sbom-row',[
     {cls:'sbom-name',key:'component',label:'Component',ph:'e.g. openssl 3.0.1',w:'1.8fr'},
@@ -1045,7 +1063,9 @@
   function obSaveDocs(a){try{localStorage.setItem('cyberrx_docs',JSON.stringify(a.slice(0,20)));}catch(_){}}
   function updateDocBadge(){var n=obDocDocs().length,b=document.getElementById('bdoc');if(b){if(n){b.textContent='✓ '+n+' analyzed';b.classList.add('done');}else{b.textContent='optional';b.classList.remove('done');}}}
   function obRenderDocList(){var docs=obDocDocs(),host=document.getElementById('obDocList');if(!host)return;
-    host.innerHTML=docs.length?(docs.map(function(d){return '<div class="xrow"><span class="nm">'+d.name+'</span><span class="mt">'+d.type+' · '+d.matched+'/'+d.total+' attributes · CMMI '+d.cmmi+' ('+(CMMI_LBL[d.cmmi]||'')+')</span></div>';}).join('')+'<div style="margin-top:8px"><button class="conn-go" id="obDocClear" type="button">Clear analyzed documents</button></div>'):'<div class="sd">No policies analyzed yet — upload one above to evidence controls by document review.</div>';
+    // Show the document, its type, and how many control attributes Nerion tests
+    // for it — no scores/results at this level (those live in the cockpit).
+    host.innerHTML=docs.length?(docs.map(function(d){return '<div class="xrow"><span class="nm">'+d.name+'</span><span class="mt">'+d.type+' · '+(d.total||0)+' attributes tested</span></div>';}).join('')+'<div style="margin-top:8px"><button class="conn-go" id="obDocClear" type="button">Clear uploaded documents</button></div>'):'<div class="sd">No documents uploaded yet — upload one above to evidence controls by document review.</div>';
     var c=document.getElementById('obDocClear');if(c)c.addEventListener('click',function(){try{localStorage.removeItem('cyberrx_doc_scores');localStorage.removeItem('cyberrx_docs');localStorage.removeItem('cyberrx_doc_text');}catch(_){}updateDocBadge();obRenderDocList();if(typeof renderAiGovDocList==='function')renderAiGovDocList();if(typeof computeAiGov==='function')computeAiGov();});}
   // The AI-governance document types (derived from OB_DOC_TYPES — single source of
   // truth), each kept and shown separately so a user can upload all of them and see
@@ -1061,11 +1081,12 @@
         '<span style="color:var(--good,#0ca30c);font-weight:700;flex:0 0 auto">✓</span>'+
         '<span style="font-weight:600;flex:0 0 auto">'+t.l+'</span>'+
         '<span style="color:var(--ink-2,#516074);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+d.name+'</span>'+
-        '<span style="font-weight:600;color:var(--good,#0ca30c);flex:0 0 auto">Uploaded</span></div>';}
+        '<span style="font-weight:600;color:var(--good,#0ca30c);flex:0 0 auto">Provided</span></div>';}
       return '<div style="'+base+'">'+
         '<span style="opacity:.4;flex:0 0 auto">○</span>'+
         '<span style="font-weight:600;flex:0 0 auto">'+t.l+'</span>'+
-        '<span style="color:var(--muted);flex:1">not uploaded yet</span></div>';
+        '<span style="flex:1"></span>'+
+        '<span style="font-weight:600;color:var(--muted);flex:0 0 auto">Missing</span></div>';
     }).join('');
     host.innerHTML='<div style="display:flex;flex-direction:column;gap:6px">'+rows+'</div>';
   }
@@ -1085,8 +1106,10 @@
         try{if(res.text){var tx=JSON.parse(localStorage.getItem('cyberrx_doc_text')||'{}')||{};tx[dt]={text:res.text,filename:file.name};localStorage.setItem('cyberrx_doc_text',JSON.stringify(tx));}}catch(_){}
         var docs=obDocDocs(),lbl=(OB_DOC_TYPES.filter(function(d){return d.k===dt;})[0]||{}).l||dt;
         docs.unshift({name:file.name,type:lbl,cmmi:res.cmmi,matched:res.matched||0,total:res.total||0,engine:res.engine||'keyword'});obSaveDocs(docs);
-        // The AI-governance uploader just confirms the file is in — no score at this level.
-        if(msg){msg.textContent=(msgId==='aiGovDocMsg'?'✓ '+file.name+' uploaded':'✓ '+file.name+' — CMMI '+res.cmmi+' ('+(CMMI_LBL[res.cmmi]||'')+')');msg.style.color='var(--good)';}
+        // Onboarding uploaders just confirm the file is in — no CMMI/score at this
+        // level (results live in the cockpit). AI-gov: plain "uploaded"; the policy
+        // uploader adds how many control attributes are tested for that document.
+        if(msg){msg.textContent=(msgId==='aiGovDocMsg'?'✓ '+file.name+' uploaded':'✓ '+file.name+' uploaded · '+(res.total||0)+' attributes tested');msg.style.color='var(--good)';}
         updateDocBadge();obRenderDocList();if(typeof renderAiGovDocList==='function')renderAiGovDocList();if(typeof computeAiGov==='function')computeAiGov();})
       .catch(function(e){if(msg){msg.textContent='✗ '+e.message;msg.style.color='var(--warn)';}});}
   function obSeedSampleDocScores(){if(Object.keys(obDocScores()).length)return;
@@ -1410,6 +1433,23 @@
     var go=document.querySelector('.tb[data-ti="'+i+'"]');if(go){go.classList.add(demo?'amber':'done');go.textContent=demo?'✓ Demo':'✓ Connected';}
     updateCred();
   }
+  // Re-apply a saved SELTOOLS map to the grid on reload — finds each tool's card by
+  // matching its real key (base key or a vendor alias) and re-marks it connected.
+  function restoreTools(saved){
+    if(!saved||typeof saved!=='object')return;
+    Object.keys(saved).forEach(function(realKey){
+      var v=saved[realKey];if(!v||!v.on)return;
+      for(var i=0;i<TOOLS.length;i++){var t=TOOLS[i];var keys=[t.key].concat(t.map?Object.keys(t.map).map(function(k){return t.map[k];}):[]);
+        if(keys.indexOf(realKey)<0)continue;
+        var card=document.getElementById('conn'+i);
+        if(card){var sel=card.querySelector('.tv');if(sel&&v.vendor){for(var o=0;o<sel.options.length;o++){if(sel.options[o].value===v.vendor||sel.options[o].text===v.vendor){sel.selectedIndex=o;break;}}}
+          var tk=card.querySelector('.tk');if(tk&&v.key)tk.value=v.key;}
+        markConnected(t,i,realKey,v.vendor||t.vendors[0],v.key||'',!!v.demo);
+        break;}
+    });
+    // If everything came back as demo, reflect the demo-mode button state too.
+    try{var allDemo=Object.keys(saved).length&&Object.keys(saved).every(function(k){return saved[k]&&saved[k].demo;});var db=document.getElementById('demoToggle');if(allDemo&&db){db.classList.add('active');db.textContent='✓ Demo mode active';}}catch(_){}
+  }
   (function renderTools(){
     var g=document.getElementById('toolGrid');if(!g)return;
     g.className='';g.innerHTML=TOOLS.map(function(t,i){
@@ -1603,10 +1643,15 @@
     document.querySelectorAll('.seatname').forEach(function(i){if(i.dataset.seat)seatN[i.dataset.seat]=i.value;});
     document.querySelectorAll('.seatemail').forEach(function(i){if(i.dataset.seat)seatE[i.dataset.seat]=i.value;});
     var certs=Array.prototype.slice.call(document.querySelectorAll('#growthCerts input:checked')).map(function(c){return c.value;});
+    // Serialize every repeatable-row register (SBOM, risk appetite, capability map,
+    // regulatory, materiality, benchmark, …) so typed/uploaded rows survive reload.
+    var registers={};try{Object.keys(OB_REGISTERS).forEach(function(k){try{registers[k]=OB_REGISTERS[k].collect();}catch(_){}});}catch(_){}
     return {v:2,ts:Date.now(),fields:f,seatN:seatN,seatE:seatE,certs:certs,regions:REGIONS,
       proc:PROC,app:APP,risk:RISK,
       init:(typeof INIT!=='undefined'?INIT:null),vendors:(typeof VENDORS!=='undefined'?VENDORS:null),
-      aiInv:(typeof AI_INV!=='undefined'?AI_INV:null)};
+      aiInv:(typeof AI_INV!=='undefined'?AI_INV:null),
+      registers:registers,
+      seltools:(typeof SELTOOLS!=='undefined'?SELTOOLS:null)};
   }
   function obSaveState(){if(OB_RESTORING)return;try{localStorage.setItem('cyberrx_ob_state',JSON.stringify(obCollectState()));}catch(_){}}
   function obRestoreState(){
@@ -1628,6 +1673,17 @@
       if(typeof INIT!=='undefined'&&Array.isArray(s.init)&&s.init.length){INIT=s.init;try{showRows(document.getElementById('resInit'),INIT,function(x){return '<div class="xrow"><span class="nm">'+x.name+'</span><span class="mt">'+(x.owner||'')+(x.cost?(' · '+x.cost):'')+' · '+(x.status||'')+'</span></div>';});var bi=document.getElementById('binit');if(bi){bi.textContent='✓ '+INIT.length+' loaded';bi.classList.add('done');}}catch(_){}}
       if(typeof VENDORS!=='undefined'&&Array.isArray(s.vendors)&&s.vendors.length){VENDORS=s.vendors;try{vendRows();}catch(_){}}
       if(s.aiInv&&typeof AI_INV!=='undefined'){AI_INV=s.aiInv;try{renderAiInv();}catch(_){}}
+      // Rebuild the repeatable-row registers (capability map, SBOM, risk appetite, …).
+      if(s.registers&&typeof OB_REGISTERS!=='undefined'){Object.keys(s.registers).forEach(function(k){var reg=OB_REGISTERS[k],rows=s.registers[k];if(!reg||!Array.isArray(rows)||!rows.length)return;try{if(reg.clear)reg.clear();rows.forEach(function(v){reg.add(v);});}catch(_){}});}
+      // Re-mark the tools the user connected (or demo-connected) so the grid + the
+      // evidence-credibility meter come back showing exactly what was connected.
+      if(s.seltools&&typeof restoreTools==='function'){try{restoreTools(s.seltools);}catch(_){}}
+      // Restore "Connect & save" badges for register API connections.
+      try{var rc=JSON.parse(localStorage.getItem('cyberrx_reg_connect')||'{}');Object.keys(rc).forEach(function(k){var b=document.getElementById('b'+k);if(b&&rc[k]&&rc[k].system){b.textContent='✓ connected';b.classList.add('done');}});}catch(_){}
+      // Bring back the uploaded-document lists (policy evidence + AI governance).
+      try{if(typeof obRenderDocList==='function')obRenderDocList();}catch(_){}
+      try{if(typeof renderAiGovDocList==='function')renderAiGovDocList();}catch(_){}
+      try{if(typeof updateDocBadge==='function')updateDocBadge();}catch(_){}
       try{if(typeof computeAiGov==='function')computeAiGov();}catch(_){}
       try{updateSummary();}catch(_){}try{renderMap();}catch(_){}
       try{var sm=document.getElementById('summary');if(sm&&sm.innerHTML.indexOf('Restored')<0)sm.innerHTML='↺ <b>Restored your saved progress</b> · '+sm.innerHTML;}catch(_){}
