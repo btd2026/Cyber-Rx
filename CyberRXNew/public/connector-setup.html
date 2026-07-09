@@ -62,7 +62,7 @@
 <div class="wrap">
   <div class="eyebrow">Nerion · Continuous control assessment</div>
   <h1 id="hdr">Connect a tool</h1>
-  <p class="sub" id="subhdr">Pick a tool. Nerion shows only what it needs to collect the evidence for the controls that tool supports — connect, confirm scope, choose your denominator, validate. Nerion handles the rest.</p>
+  <p class="sub" id="subhdr">Pick a tool and connect it in one click — grant read-only consent and Nerion handles the rest. No API keys or endpoint mapping to figure out; anything else it needs it will ask for only if required.</p>
   <div id="view"></div>
 </div>
 <script>
@@ -161,43 +161,65 @@
        '<div class="prove"><div class="box can"><b>What this connector can prove</b><div class="muted" style="margin-top:4px">'+esc(m.what_this_connector_can_prove)+'</div></div>'+
        '<div class="box cant"><b>What it cannot prove alone</b><div class="muted" style="margin-top:4px">'+esc(m.what_this_connector_cannot_prove_alone)+'</div></div></div>'+
        '<div class="chips" style="margin-top:10px">'+ctrls.map(function(c){return '<span class="chip"><b>'+esc(c.control_id)+'</b> '+esc(c.framework.split(' ')[0])+'</span>';}).join('')+'</div></div>';
-    // Step 3 — connect (auth + tenant). OAuth "one-click" appears above the manual
-    // form when this connector's provider is configured on the instance.
-    h+='<div class="sec"><h3>Connect</h3><div id="oauthBox"></div><p class="why" id="manualWhy">Read-only. Your secret is encrypted and never shown again.</p><div class="cols">';
+    // Step 3 — connect. One-click OAuth is the primary path; the manual credential
+    // form is collapsed by default so the page stays simple. maybeRenderOauth()
+    // reveals the button for OAuth-capable connectors and, when no OAuth provider is
+    // configured, auto-opens the manual form (the only path) and hides the toggle.
+    h+='<div class="sec"><h3>Connect</h3><div id="oauthBox"></div>';
+    h+='<button class="back" id="manualToggle" style="margin-top:4px">Enter credentials manually instead</button>';
+    h+='<div id="manualWrap" style="display:none;margin-top:8px">';
+    h+='<p class="why" id="manualWhy">Read-only. Your secret is encrypted and never shown again.</p><div class="cols">';
     (m.required_auth_fields||[]).forEach(function(f){h+=fieldInput('auth',f);});
     (m.required_tenant_fields||[]).forEach(function(f){if(!(m.required_auth_fields||[]).some(function(a){return a.key===f.key;}))h+=fieldInput('tenant',f);});
-    h+='</div><p class="why" style="margin-top:2px">Grant these <b>read-only</b> permissions to the credential:</p><div class="chips">'+(m.required_permissions||[]).map(function(p){return '<span class="perm">'+esc(p)+'</span>';}).join('')+'</div></div>';
-    // Step 4 — scope
-    if((m.required_scope_fields||[]).length){h+='<div class="sec"><h3>Confirm scope</h3><p class="why">Only what the controls this tool supports actually need.</p><div class="cols">';
+    h+='</div><p class="why" style="margin-top:2px">Grant these <b>read-only</b> permissions to the credential:</p><div class="chips">'+(m.required_permissions||[]).map(function(p){return '<span class="perm">'+esc(p)+'</span>';}).join('')+'</div>';
+    // Scope / denominator / review — advanced, collapsed so connecting stays simple.
+    var hasAdv=(m.required_scope_fields||[]).length||(m.required_denominator_fields||[]).length;
+    h+='<button class="back" id="advToggle" style="margin-top:12px">Advanced: scope, denominator &amp; review period</button>';
+    h+='<div id="advWrap" style="display:none;margin-top:8px">';
+    if((m.required_scope_fields||[]).length){h+='<div class="sec" style="margin-top:8px"><h3>Confirm scope</h3><p class="why">Only what the controls this tool supports actually need.</p><div class="cols">';
       (m.required_scope_fields||[]).forEach(function(f){h+=fieldInput('scope',f);});h+='</div></div>';}
-    // Step 5 — denominator
     if((m.required_denominator_fields||[]).length){h+='<div class="sec"><h3>Choose your denominator</h3><p class="why">Every coverage % needs an authoritative population, or related controls stay Not Ready.</p><div class="cols">';
       (m.required_denominator_fields||[]).forEach(function(f){h+=fieldInput('denom',f);});h+='</div></div>';}
-    // Review period
     h+='<div class="sec"><h3>Review period</h3><div class="fld" style="max-width:220px"><select id="review__p" data-p="review" data-k="review"><option value="30d">Last 30 days</option><option value="90d" selected>Last 90 days</option><option value="12m">Last 12 months</option></select></div></div>';
+    h+='</div>'; // /advWrap
     h+='<button class="btn" id="validate">Validate &amp; check readiness →</button>';
+    h+='</div>'; // /manualWrap
     h+='<div id="readiness"></div>';
     h+='</div>';
     view.innerHTML=h;
     document.getElementById('back').onclick=renderCatalog;
     view.querySelectorAll('input,select').forEach(function(el){el.oninput=function(){var p=el.getAttribute('data-p'),k=el.getAttribute('data-k');if(p==='review'){FORM.review=el.value;return;}var v=el.value;if(el.getAttribute('type')!=='password'){/* keep */}FORM[p][k]=v;};});
     document.getElementById('validate').onclick=runValidate;
+    // Toggles for the collapsed manual form and the advanced sub-section.
+    var mt=document.getElementById('manualToggle');
+    mt.onclick=function(){var w=document.getElementById('manualWrap');var open=w.style.display!=='none';w.style.display=open?'none':'block';mt.textContent=open?'Enter credentials manually instead':'Hide manual credentials';};
+    var at=document.getElementById('advToggle');
+    if(!hasAdv){at.style.display='none';}
+    at.onclick=function(){var w=document.getElementById('advWrap');var open=w.style.display!=='none';w.style.display=open?'none':'block';at.textContent=(open?'Advanced: scope, denominator & review period':'Hide advanced options');};
     maybeRenderOauth(m.connector_id);
+  }
+
+  // Reveal the manual credential form and flip the toggle label. Used when the
+  // connector has no one-click OAuth provider, so credentials are the only path.
+  function openManual(){
+    var w=document.getElementById('manualWrap'),mt=document.getElementById('manualToggle');
+    if(w)w.style.display='block';
+    if(mt)mt.style.display='none';
   }
 
   // Which connectors have an OAuth "one-click connect" provider.
   var OAUTH_MAP={entra:'microsoft',okta:'okta',google_workspace:'google',google:'google',gws:'google',github:'github'};
   function maybeRenderOauth(connectorId){
-    var provider=OAUTH_MAP[connectorId];var box=document.getElementById('oauthBox');if(!provider||!box)return;
+    var provider=OAUTH_MAP[connectorId];var box=document.getElementById('oauthBox');
+    if(!provider||!box){openManual();return;} // no one-click for this tool → credentials are the only path
     api('/api/oauth/'+provider+'/status').then(function(s){
-      if(!s||!s.configured)return; // not wired on this instance → manual form only
+      if(!s||!s.configured){openManual();return;} // not wired on this instance → manual form only
       var dom=s.needsDomain?'<input id="oauthDomain" placeholder="your-org.okta.com" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:var(--panel2);color:var(--ink);font-size:13.5px;margin-bottom:8px">':'';
-      box.innerHTML='<div style="margin-bottom:10px">'+dom+
+      box.innerHTML='<div style="margin-bottom:4px">'+dom+
         '<button class="btn" id="oauthBtn" style="width:100%;background:#2f6fe0">🔒 Connect with '+esc(s.label)+' — one click, read-only</button>'+
-        '<p class="why" style="margin-top:8px;text-align:center">Grant read-only consent — no keys to paste.</p>'+
-        '<div style="display:flex;align-items:center;gap:10px;margin:10px 0"><div style="flex:1;height:1px;background:var(--line)"></div><span class="muted" style="font-size:11px">or enter credentials manually</span><div style="flex:1;height:1px;background:var(--line)"></div></div></div>';
+        '<p class="why" style="margin-top:8px;text-align:center">Grant read-only consent — no keys to paste. This is all you need to connect.</p></div>';
       document.getElementById('oauthBtn').onclick=function(){startOauth(provider,connectorId,s);};
-    }).catch(function(){});
+    }).catch(function(){openManual();});
   }
   function startOauth(provider,connectorId,status){
     var q='?connector='+encodeURIComponent(connectorId);
