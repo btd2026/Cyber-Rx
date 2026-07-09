@@ -5067,24 +5067,44 @@ function speakSeat(seat){var s=SEATS[seat];if(!s)return;
   var ds=document.getElementById('docScrim');if(ds)ds.addEventListener('click',function(){try{c5CloseDocsReview();}catch(_){}});
   document.addEventListener('keydown',function(e){if(e.key==='Escape'){try{c5CloseDocsReview();}catch(_){}}});})();
 
-/* Recompute — the "core promise" action. /api/crown-jewels/summary recomputes the
-   whole engine live from the org's stored data on every read, so this re-pulls
-   LIVE (crown jewels, economics, value chain) and the connected-tool signals, then
-   re-renders the active seat. Framework maturity is recomputed too: controlCmmi()
-   reads the latest document-review scores + live tool coverage on every render, so
-   any newly-uploaded policy or freshly-connected tool is reflected immediately.
-   Nothing is cached or hard-coded — this is a full recalculation from real data. */
+/* Re-score every uploaded document against the CURRENT backend control map, from
+   the text captured at upload (cyberrx_doc_text) — no re-upload needed. This is the
+   fix for "I uploaded everything but controls still show Non-existent": if the
+   documents were first analyzed by an older backend (before a coverage expansion),
+   re-analysis now re-evidences the newly-mapped controls. Deterministic + free
+   (keyword engine). Calls back with how many control scores were written. */
+function reanalyzeStoredDocs(done){
+  var tx;try{tx=JSON.parse(localStorage.getItem('cyberrx_doc_text')||'{}')||{};}catch(_){tx={};}
+  var types=Object.keys(tx),base=apiBase();
+  if(!types.length||!base){done&&done(0,0);return;}
+  var pending=types.length,updated=0,docs=0;
+  types.forEach(function(dt){var d=tx[dt]||{};
+    fetch(base+'/api/documents/analyze-text',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({doc_type:dt,text:d.text||'',filename:d.filename||''})})
+      .then(function(r){return r.ok?r.json():null;})
+      .then(function(res){if(res&&res.controls&&res.controls.length){docs++;res.controls.forEach(function(c){saveDocScore(c.id,{cmmi:c.cmmi,doc:d.filename||dt,matched:c.matched,total:c.total,attrs:c.attrs||[],narrative:c.narrative||'',gap:c.gap||''});updated++;});}})
+      .catch(function(){})
+      .then(function(){if(--pending<=0)done&&done(updated,docs);});
+  });
+}
+/* Recompute — the "core promise" action. It (1) re-scores every uploaded document
+   against the current control map (so newly-mapped controls light up), then
+   (2) re-pulls LIVE crown-jewels/economics/value-chain (the /summary engine
+   recomputes on every read) and connected-tool signals, then (3) re-renders. Every
+   framework control is recomputed from the latest document review + live telemetry.
+   Nothing is cached or hard-coded — a full recalculation from real evidence. */
 (function(){var rb=document.getElementById('recomputeBtn');if(!rb)return;
   rb.addEventListener('click',function(){
     var orig=rb.textContent;rb.disabled=true;rb.textContent='↻ Recomputing…';
-    try{loadLive();}catch(_){}
-    try{loadSignals();}catch(_){}
-    try{if(typeof fetchReadiness==='function')fetchReadiness();}catch(_){}
-    // Re-render the current seat so document-review-driven panels (the Framework
-    // tab especially) refresh even when the backend is offline / in sample mode.
-    try{var cur=(document.querySelector('.seat.on')||{}).dataset;render(cur&&cur.seat||'ciso');}catch(_){}
-    setTimeout(function(){rb.textContent='✓ Recomputed';
-      setTimeout(function(){rb.disabled=false;rb.textContent=orig;},1400);},900);
+    reanalyzeStoredDocs(function(nScores,nDocs){
+      try{loadLive();}catch(_){}
+      try{loadSignals();}catch(_){}
+      try{if(typeof fetchReadiness==='function')fetchReadiness();}catch(_){}
+      // Re-render the current seat so the Framework tab reflects the re-scored docs
+      // + live tool coverage even when the backend is offline / in sample mode.
+      try{var cur=(document.querySelector('.seat.on')||{}).dataset;render(cur&&cur.seat||'ciso');}catch(_){}
+      rb.textContent=nScores?('✓ Re-scored '+nDocs+' doc'+(nDocs===1?'':'s')):'✓ Recomputed';
+      setTimeout(function(){rb.disabled=false;rb.textContent=orig;},1600);
+    });
   });})();
 
 /* ================= War Room — full incident command center (ported) ================= */

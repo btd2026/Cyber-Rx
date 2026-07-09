@@ -730,6 +730,10 @@ for (const dt of Object.keys(CSF_DOC_COVERAGE)) {
   CSF_DOC_COVERAGE[dt].forEach((c) => { if (!have.has(c.id)) CONTROL_MAP[dt].controls.push(c); });
 }
 
+// How much extracted text we return to the client for later re-scoring. Policy
+// text is small (tens of KB); this cap keeps the response and localStorage sane.
+const TEXT_STORE_CAP = 200000;
+
 function extractText(buffer, filename) {
   const ext = (filename || '').split('.').pop().toLowerCase();
   if (['txt', 'csv', 'md'].includes(ext)) {
@@ -913,6 +917,11 @@ router.post('/analyze', upload.single('file'), async (req, res) => {
     result.filename = req.file.originalname;
     result.size = req.file.size;
     result.docType = docType;
+    // Return the server-extracted text (capped) so the client can persist it and
+    // RE-SCORE the document later against an updated control map — without asking
+    // the user to re-upload. This is what makes "Recompute" able to re-evidence
+    // controls whose coverage was added after the original upload.
+    result.text = String(text || '').slice(0, TEXT_STORE_CAP);
 
     // Backward compat fields
     const oldKw = require('./documents-legacy-keywords');
@@ -964,6 +973,56 @@ router.get('/spend', async (req, res) => {
   } catch (e) {
     logger.error('document spend summary error', { error: e.message });
     res.status(500).json({ error: 'Failed to compute spend: ' + e.message });
+  }
+});
+
+/**
+ * POST /api/documents/analyze-text — re-score a document from previously-extracted
+ * text (JSON: { doc_type, text, filename }). Stateless and deterministic: it runs
+ * the keyword engine against the CURRENT control map, so a document uploaded before
+ * a coverage expansion re-evidences the newly-mapped controls with no re-upload and
+ * no LLM cost. The response shape matches /analyze.
+ */
+router.post('/analyze-text', express.json({ limit: '4mb' }), (req, res) => {
+  try {
+    const docType = String(req.body.doc_type || '');
+    const text = String(req.body.text || '');
+    if (!CONTROL_MAP[docType]) return res.status(400).json({ error: 'Unknown doc_type: ' + docType });
+    if (text.trim().length < 20) return res.status(422).json({ error: 'Text too short to analyze.' });
+    const result = analyzeDeep(text, docType);
+    result.engine = 'keyword';
+    result.filename = String(req.body.filename || '') || docType;
+    result.docType = docType;
+    res.json(result);
+  } catch (e) {
+    logger.error('document re-analysis failed', { error: e.message });
+    res.status(500).json({ error: 'Re-analysis failed: ' + e.message });
+  }
+});
+
+/**
+ * GET /api/documents/coverage — deployment self-check. Reports how many distinct
+ * NIST CSF 2.0 sub-categories THIS running backend can score by document review
+ * (after the CSF_DOC_COVERAGE merge), so you can confirm an environment is running
+ * the current engine. A stale deployment reports far fewer than 100.
+ */
+router.get('/coverage', (_req, res) => {
+  try {
+    const csf = new Set();
+    const perDocType = {};
+    for (const dt of Object.keys(CONTROL_MAP)) {
+      perDocType[dt] = CONTROL_MAP[dt].controls.length;
+      CONTROL_MAP[dt].controls.forEach((c) => { if (/^[A-Z]{2}\.[A-Z]{2}-/.test(c.id)) csf.add(c.id); });
+    }
+    res.json({
+      csfControls: csf.size,
+      csfIds: Array.from(csf).sort(),
+      docTypes: Object.keys(CONTROL_MAP).length,
+      perDocType,
+      note: 'Distinct NIST CSF 2.0 sub-categories scoreable by document review on this backend. Expect ~103 when the coverage expansion is deployed.',
+    });
+  } catch (e) {
+    res.status(500).json({ error: 'coverage check failed: ' + e.message });
   }
 });
 
