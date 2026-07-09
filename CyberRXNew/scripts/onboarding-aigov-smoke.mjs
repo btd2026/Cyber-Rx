@@ -116,5 +116,11 @@ try {
   console.warn('note: backend document routes not found, skipping cross-file checks (' + e.code + ')');
 }
 
+// Each AI document is kept + shown separately (uploading one must not hide the others).
+wired('AI section has a persistent per-document list', /id="aiGovDocList"/.test(html) && /function renderAiGovDocList\(\)/.test(html));
+wired('AI list derives its types from OB_DOC_TYPES (single source of truth)', /OB_DOC_TYPES.*\.filter\(function\(d\)\{return \/\^AI \/\.test\(d\.l\)/.test(html));
+wired('AI list refreshes after each analyze', /renderAiGovDocList\(\);if\(typeof computeAiGov/.test(html));
+wired('AI list renders on load (after its deps are defined)', /obRenderDocList\(\);renderAiGovDocList\(\);updateDocBadge/.test(html));
+
 if (fail) { console.error(`\nonboarding-aigov-smoke: ${pass} passed, ${fail} FAILED`); process.exit(1); }
 console.log(`onboarding-aigov-smoke OK — ${pass} checks pass (derivation; inline uploaders; ${backendChecked ? 'AI doc types wired to backend AI-control review' : 'backend not checked'}).`);
