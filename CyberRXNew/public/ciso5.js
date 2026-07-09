@@ -4133,11 +4133,29 @@ function c5fwInspect(card,T,sel,cad){
       sources:[{tool:'Nerion assessment engine',connector:'nerion',field:'framework_cmmi.overall',lastRefresh:c5ago()}],
       note:'Your continuous, auditor-grade maturity against '+fwName+'. '+(T.overall<C5FW_TARGET?('Below the '+C5FW_TARGET.toFixed(1)+' target — the deficiencies in the register on the right are where to focus.'):'At or above target.')});
   } else if(card==='coverage'){
+    // The specific controls with NO evidence yet (no tool telemetry and no
+    // reviewed policy) — the ones behind the "Unevidenced" count. Each gets a
+    // link back to onboarding to connect its tool or upload its governing policy.
+    var un=[];T.groups.forEach(function(g){(g.children||[]).forEach(function(c){if(c.type==='cat'){(c.children||[]).forEach(function(x){if(x.src==='none')un.push(x);});}else if(c.src==='none')un.push(c);});});
+    var unShown=un.slice(0,50),unMore=un.length-unShown.length;
+    var urows=unShown.map(function(x){
+      var tc=c5fwCtrlTool(x.id);var toolName=(tc&&tc.name)?tc.name.replace(/ *\(.*/,''):'';
+      var docLbl=x.r53doc||'';
+      var how=toolName?('Connect '+c5esc(toolName)+(docLbl?(' or upload the '+c5esc(docLbl)):' or upload its governing policy'))
+        :(docLbl?('Upload the '+c5esc(docLbl)):'Connect its control tool or upload its governing policy');
+      var hint=toolName||docLbl||'control tools';
+      return [{text:'<b>'+c5esc(x.id)+'</b> '+c5esc(x.name||'')},{text:'No evidence yet — no tool telemetry or reviewed policy',color:'crit'},
+        {text:how+' <span data-c5onb="'+c5esc(hint)+'" style="color:var(--blue);cursor:pointer;font-weight:600;white-space:nowrap">in onboarding ›</span>'}];
+    });
     m=c5obj({name:'Evidence coverage · '+fwName,displayValue:T.coverage+'%',label:'computed',color:(T.coverage>=75?'good':T.coverage>=50?'warn':'crit'),
       formula:'coverage = controls with evidence (tool telemetry or analyzed policy) ÷ total controls in '+fwName,
       inputs:[{name:'Evidenced',value:String(T.evidenced),source:'tools + documents'},{name:'Total controls',value:String(T.total),source:fwName+' control universe'},{name:'Unevidenced',value:String(T.total-T.evidenced),source:'connect tools / upload policies to raise'}],
+      action:(un.length?('The '+un.length+' unevidenced control'+(un.length>1?'s are':' is')+' listed below — connect each one’s control tool or upload its governing policy to raise coverage toward 100%. <span data-c5onb="control tools" style="color:var(--blue);cursor:pointer;font-weight:600;white-space:nowrap">Fix in onboarding ›</span>')
+        :('Every control in '+fwName+' is evidenced — keep tool telemetry and policies current so coverage does not decay.')),
+      table:(un.length?{title:'The '+un.length+' unevidenced control'+(un.length>1?'s':'')+' · what each needs'+(unMore>0?(' · showing '+unShown.length):''),cols:['Control','What’s missing','How to evidence it'],rows:urows}:null),
       sources:[{tool:'Nerion assessment engine',connector:'nerion',field:'framework_cmmi.coverage',lastRefresh:c5ago()}],
-      note:'How much of '+fwName+' you can actually evidence today. Connect more tools or upload more policies to raise it.'});
+      note:'How much of '+fwName+' you can actually evidence today. Connect more tools or upload more policies to raise it.'
+        +(unMore>0?(' '+unMore+' more unevidenced control'+(unMore>1?'s are':' is')+' not shown in the table above.'):'')});
   } else if(card==='trend'){
     m=c5obj({name:'Trend vs last refresh',displayValue:(trendDelta!=null?((trendDelta>=0?'+':'')+trendDelta.toFixed(1)):'Baseline'),label:'computed',color:(trendDelta==null?'ink':trendDelta>=0?'good':'crit'),
       formula:'trend = overall CMMI this refresh − overall CMMI at the last recorded '+cad+' refresh',
