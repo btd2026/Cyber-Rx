@@ -51,6 +51,10 @@ const DEFAULT_KQL =
   "mttd_hrs = avg(datetime_diff('minute', CreatedTime, FirstActivityTime)) / 60.0, " +
   "mttr_hrs = avgif(datetime_diff('minute', ClosedTime, CreatedTime), Status == \"Closed\") / 60.0";
 
+// Distinct hosts reporting heartbeat in the last 24h = live log-source count.
+const DEFAULT_COVERAGE_KQL =
+  'Heartbeat | where TimeGenerated > ago(24h) | summarize sources = dcount(Computer)';
+
 async function test(creds) {
   if (!creds.tenantId || !creds.clientId || !creds.clientSecret || !creds.workspaceId) {
     throw new Error('Tenant ID, client ID, client secret and Log Analytics workspace ID are required.');
@@ -70,13 +74,21 @@ async function fetchSignals(creds) {
     if (num(row.mttd_hrs) != null) signals.push({ key: 'mttd_hrs', value: num(row.mttd_hrs), asOf: nowIso(), raw: {} });
     if (num(row.mttr_hrs) != null) signals.push({ key: 'mttr_hrs', value: num(row.mttr_hrs), asOf: nowIso(), raw: {} });
   } catch (_) { /* confirm the workspace has the SecurityIncident table (Sentinel enabled) */ }
+  // Best-effort log-source coverage: distinct hosts sending heartbeat in the
+  // last 24h — the real reporting-host count the app turns into SIEM coverage.
+  try {
+    const hb = firstRow(await query(creds, tk, creds.coverageQuery || DEFAULT_COVERAGE_KQL)) || {};
+    if (hb.sources != null && Number.isFinite(Number(hb.sources))) {
+      signals.push({ key: 'siem_log_sources', value: Math.round(Number(hb.sources)), asOf: nowIso(), raw: {} });
+    }
+  } catch (_) { /* Heartbeat table optional in this workspace */ }
   if (!signals.length) throw new Error('Authenticated, but no readable signals — confirm Sentinel is enabled and the SecurityIncident table has data.');
   return { signals, meta: { vendor: 'Microsoft Sentinel' } };
 }
 
 module.exports = {
   key: 'sentinel', label: 'Microsoft Sentinel', vendor: 'Microsoft', category: 'SIEM / Detection',
-  signals: ['mttd_hrs', 'mttr_hrs', 'open_incidents'],
+  signals: ['mttd_hrs', 'mttr_hrs', 'open_incidents', 'siem_log_sources'],
   scopes: ['Log Analytics Reader', 'Microsoft Sentinel Reader'],
   fields: [
     { key: 'tenantId', label: 'Directory (tenant) ID' },

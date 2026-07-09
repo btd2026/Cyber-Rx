@@ -3876,13 +3876,24 @@ var TACTIC_CAPS={
   'Exfiltration':['dlp','seg','siem'],'Impact':['backup','edr','seg']
 };
 /* Deployment % for a capability, from live signals; null = not connected/measured. */
+/* SIEM log-source coverage. Prefer a coverage % the SIEM reports directly;
+   otherwise derive it honestly from the distinct reporting-host count the
+   connector pulls (siem_log_sources) ÷ the org's known asset count. Returns
+   null when neither is available — never a fabricated number. */
+function siemCoverage(){
+  var direct=sig('siem_coverage_pct'); if(direct!=null)return direct;
+  var ls=sig('siem_log_sources');
+  var assets=(typeof LIVE!=='undefined'&&LIVE&&LIVE.counts&&Number(LIVE.counts.assets))||0;
+  if(ls!=null&&assets>0)return Math.max(0,Math.min(100,Math.round(ls/assets*100)));
+  return null;
+}
 function capDeploy(c){
   if(c.k==='edr')return sig('edr_pct');
   if(c.k==='mfa')return sig('mfa_pct');
   if(c.k==='pam')return sig('pam_pct');
-  if(c.k==='vuln')return sig('patch_pct');
+  if(c.k==='vuln'){var p=sig('patch_pct');if(p!=null)return p;var vs=sig('vuln_sla_pct');return vs!=null?vs:null;} // Tenable patch_pct; else Qualys SLA %
   if(c.k==='aware'){var t=sig('training_pct');if(t!=null)return t;var ph=sig('phishing_pct');return ph!=null?Math.max(0,100-ph):null;}
-  if(c.k==='siem')return sig('siem_coverage_pct'); // real log-source coverage from the SIEM; no fabricated fixed value
+  if(c.k==='siem')return siemCoverage(); // real log-source coverage; derived, never fabricated
   if(c.k==='cspm')return sig('cspm_pct');
   if(c.k==='backup')return sig('backup_immutable_pct');
   return null; // dlp, seg — no live signal yet
