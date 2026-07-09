@@ -1379,17 +1379,24 @@ function iamCard(){
    each removes = the org's total control-removed risk distributed by weight ×
    live deployment %, so the per-control amounts SUM to the whole — the
    "risk vs control = saving" ledger the CISO takes to the board. */
+// Each security capability → the CSF subcategories a connected tool of that kind
+// evidences. The csf lists are reconciled with the authoritative control library
+// (nistCsfControlLibrary.js): every CSF control the library marks tool-testable
+// (test auto/partial with a tool of this capability) is covered here, so once the
+// tool is connected the control reads as "by connected tool" — not document-only.
+// (Controls whose only tooling is GRC/ITSM/inventory/threat-intel are evidenced by
+// document review or those sources, not these 10 security capabilities.)
 var CAP_FRAMEWORK={
-  mfa:{csf:['PR.AA-01','PR.AA-03'],r53:['IA-2','IA-5','AC-7'],weight:1.6},
+  mfa:{csf:['PR.AA-01','PR.AA-02','PR.AA-03','PR.AA-04','PR.AA-05'],r53:['IA-2','IA-5','AC-7'],weight:1.6},
   pam:{csf:['PR.AA-05'],r53:['AC-2','AC-5','AC-6'],weight:1.5},
-  edr:{csf:['DE.CM-01','RS.MI-01'],r53:['SI-3','SI-4'],weight:1.5},
-  vuln:{csf:['ID.RA-01'],r53:['RA-5','SI-2'],weight:1.2},
-  siem:{csf:['DE.AE-03','DE.CM-09'],r53:['AU-6','SI-4'],weight:1.1},
-  cspm:{csf:['PR.PS-01'],r53:['CM-6','CM-2'],weight:1.1},
-  backup:{csf:['PR.DS-11','RC.RP-03'],r53:['CP-9','CP-10'],weight:1.0},
+  edr:{csf:['DE.CM-01','DE.CM-03','DE.CM-09','PR.PS-05','RS.AN-07','RS.MI-01','RS.MI-02'],r53:['SI-3','SI-4'],weight:1.5},
+  vuln:{csf:['ID.RA-01','ID.RA-05','PR.PS-02'],r53:['RA-5','SI-2'],weight:1.2},
+  siem:{csf:['DE.AE-02','DE.AE-03','DE.AE-04','DE.AE-06','DE.CM-01','DE.CM-09','PR.PS-04','RS.AN-03','RS.AN-08'],r53:['AU-6','SI-4'],weight:1.1},
+  cspm:{csf:['ID.AM-03','PR.PS-01','PR.IR-03','PR.IR-04'],r53:['CM-6','CM-2'],weight:1.1},
+  backup:{csf:['PR.DS-11','RC.RP-01','RC.RP-02','RC.RP-03','RC.RP-05'],r53:['CP-9','CP-10'],weight:1.0},
   seg:{csf:['PR.IR-01'],r53:['SC-7'],weight:1.0},
-  dlp:{csf:['PR.DS-01','PR.DS-02'],r53:['SC-7','MP-6'],weight:0.9},
-  aware:{csf:['PR.AT-01'],r53:['AT-2'],weight:0.9}
+  dlp:{csf:['ID.AM-07','PR.DS-01','PR.DS-02'],r53:['SC-7','MP-6'],weight:0.9},
+  aware:{csf:['PR.AT-01','PR.AT-02'],r53:['AT-2'],weight:0.9}
 };
 function capRiskRemoved(){
   var total=controlsEffUsd(),eff={},sum=0;

@@ -4057,7 +4057,7 @@ function c5FrameworksClassic(host){
     (function(){var sc=c5fwSrcCounts(T);
       var line=T.native
         ? ('<div class="c5fw-refresh" style="margin-top:4px">These '+T.total+' controls are assessed <b>framework-natively</b> (no crosswalk): <b style="color:var(--good)">🧪 '+sc.native+'</b> natively assessed · <b style="color:var(--muted)">— '+sc.none+'</b> not yet tested (require the control-specific API evidence). CSF ids shown per control are <b>related mappings, informational only</b>.</div>')
-        : ('<div class="c5fw-refresh" style="margin-top:4px">How these '+T.total+' controls are evidenced: <b style="color:var(--good)">📄 '+sc.doc+'</b> by document review · <b style="color:var(--blue)">🔌 '+sc.sys+'</b> by connected tool'+(sc.mapped?(' · <b>🔗 '+sc.mapped+'</b> by crosswalk'):'')+' · <b style="color:var(--muted)">— '+sc.none+'</b> not yet evidenced.</div>');
+        : ('<div class="c5fw-refresh" style="margin-top:4px">How these '+T.total+' controls are evidenced <b>today</b>: <b style="color:var(--blue)">🔌 '+sc.sys+'</b> from connected tools · <b style="color:var(--good)">📄 '+sc.doc+'</b> from your policies'+(sc.mapped?(' · <b>🔗 '+sc.mapped+'</b> by mapping'):'')+' · <b style="color:var(--muted)">— '+sc.none+'</b> not yet evidenced. Connecting more tools moves controls from policy evidence to live telemetry.</div>');
       if(T.native)return line;
       if(sc.none>0){var gaps=c5fwGaps(T);if(gaps.length){var docg=gaps.filter(function(x){return x.kind==='d';}),tg=gaps.filter(function(x){return x.kind==='t';});
         line+='<div class="c5fw-refresh" style="margin-top:3px">To close the gap: '+
