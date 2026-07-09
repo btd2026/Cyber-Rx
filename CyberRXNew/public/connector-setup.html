@@ -49,6 +49,13 @@
   .status{display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:6px;font-size:12.5px;color:var(--ink2)}
   .status b{color:var(--ink)}
   .muted{color:var(--muted)}
+  .tbadges{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 4px}
+  .tbadge{display:inline-flex;align-items:center;gap:7px;font-size:12px;padding:6px 12px;border-radius:20px;border:1px solid var(--line);background:var(--panel2);color:var(--ink2)}
+  .tbadge b{color:var(--ink)}
+  .tbadge i{width:8px;height:8px;border-radius:50%;background:var(--muted);flex:none}
+  .tbadge.ready i{background:var(--good)}.tbadge.partial i{background:var(--warn)}.tbadge.not i{background:var(--crit)}
+  .tbadge.ready{border-color:color-mix(in srgb,var(--good) 45%,var(--line))}.tbadge.partial{border-color:color-mix(in srgb,var(--warn) 45%,var(--line))}.tbadge.not{border-color:color-mix(in srgb,var(--crit) 45%,var(--line))}
+  .rsec{border-top:1px solid var(--line);padding:12px 0}.rsec-h{font-size:11.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
 </style>
 </head>
 <body>
@@ -217,31 +224,61 @@
     btn.disabled=true;btn.textContent='Validating…';
     var creds=Object.assign({},nonEmpty(FORM.auth),nonEmpty(FORM.tenant));
     var cfg={scope_configured:nonEmpty(FORM.scope),denominator_configured:nonEmpty(FORM.denom),review_period:FORM.review};
+    // Three separate checks — connection, telemetry, then control readiness. Auth
+    // success alone never makes a control ready.
     api('/api/connectors/'+id+'/validate',{method:'POST',body:JSON.stringify({credentials:creds})}).catch(function(){return null;})
       .then(function(){return api('/api/connectors/'+id+'/configure',{method:'POST',body:JSON.stringify(cfg)}).catch(function(){return null;});})
-      .then(function(){return api('/api/connectors/'+id+'/test-collection',{method:'POST',body:JSON.stringify({})}).catch(function(){return null;});})
-      .then(function(){return api('/api/connectors/'+id+'/readiness');})
+      .then(function(){return api('/api/connectors/'+id+'/validate-all',{method:'POST',body:JSON.stringify({})}).catch(function(){return null;});})
+      .then(function(v){return (v&&v.status)?v.status:api('/api/connectors/'+id+'/status');})
       .then(renderReadiness)
       .catch(function(){document.getElementById('readiness').innerHTML='<p class="muted" style="margin-top:14px">Validation ran, but readiness could not be loaded (API/DB unavailable in this environment).</p>';})
       .then(function(){btn.disabled=false;btn.textContent='Re-validate';});
   }
 
   function pillCls(s){return s==='Ready'?'ready':s==='Partially Ready'?'partial':'not';}
+  // Colour a badge/pill by whether a status is good / partial / not-ready / error.
+  function badgeTone(s){s=String(s||'');
+    if(/^(Connected|Telemetry Available|Ready for Operating Effectiveness Assessment|Ready)$/.test(s))return 'ready';
+    if(/Partially|Partial|Design Assessment Only|Not Enough Evidence/.test(s))return 'partial';
+    if(/Error|Invalid|Expired|Unreachable/.test(s))return 'not';
+    return 'not';
+  }
+  function badge(label,val){return '<span class="tbadge '+badgeTone(val)+'"><i></i>'+esc(label)+': <b>'+esc(val)+'</b></span>';}
+  function list(arr,cls){arr=arr||[];return arr.length?('<div class="rm '+(cls||'muted')+'">'+arr.map(esc).join(' · ')+'</div>'):'';}
   function renderReadiness(r){
     if(!r){document.getElementById('readiness').innerHTML='';return;}
-    var h='<div class="sec"><h3>Connector readiness for continuous assessment</h3>'+
-      '<div class="status"><span>Connection: <b>'+esc(r.connection_status)+'</b></span><span>Permissions: <b>'+esc(r.permission_status)+'</b></span>'+
-      '<span>Telemetry: <b>'+esc(r.telemetry_status)+'</b></span><span>Denominator: <b>'+esc(r.denominator_status)+'</b></span>'+
-      '<span>Scope: <b>'+esc(r.scope_status)+'</b></span><span>Live-tenant validated: <b>'+(r.live_tenant_validated?'Yes':'No')+'</b></span></div>'+
-      '<div class="status"><span><b>'+r.ready_controls.length+'</b> ready</span><span><b>'+r.partially_ready_controls.length+'</b> partially ready</span><span><b>'+r.not_ready_controls.length+'</b> not ready</span></div>';
+    // Three DISTINCT badges — never one generic "Connected".
+    var h='<div class="sec"><h3>Connector status</h3><div class="tbadges">'+
+      badge('Connected', r.connection_status)+
+      badge('Telemetry available', r.telemetry_status)+
+      badge('Ready for continuous assessment', r.control_assessment_status)+
+      '</div>';
+    // Section 1 — Connection
+    h+='<div class="rsec"><div class="rsec-h">1 · Connection</div>'+
+      '<div class="rm">Status: <b>'+esc(r.connection_status)+'</b>'+(r.last_connection_check_at?(' · last checked '+esc(String(r.last_connection_check_at).slice(0,19).replace("T"," "))):'')+'</div>'+
+      (badgeTone(r.connection_status)==='not'?'<div class="rm"><button class="btn" id="reconnectBtn" style="margin-top:6px;padding:7px 14px">Reconnect</button></div>':'')+'</div>';
+    // Section 2 — Telemetry
+    h+='<div class="rsec"><div class="rsec-h">2 · Telemetry</div>'+
+      '<div class="rm">Status: <b>'+esc(r.telemetry_status)+'</b></div>'+
+      (r.missing_permissions&&r.missing_permissions.length?('<div class="rm">Missing permissions: '+r.missing_permissions.map(esc).join(', ')+'</div>'):'')+
+      (r.missing_telemetry&&r.missing_telemetry.length?('<div class="rm">Missing signals: '+r.missing_telemetry.slice(0,8).map(esc).join(', ')+'</div>'):'<div class="rm muted">All required signals available.</div>')+
+      (r.last_telemetry_check_at?('<div class="rm muted">Last collection: '+esc(String(r.last_telemetry_check_at).slice(0,19).replace("T"," "))+'</div>'):'')+'</div>';
+    // Section 3 — Control readiness
+    h+='<div class="rsec"><div class="rsec-h">3 · Control readiness</div>'+
+      '<div class="status"><span><b>'+(r.ready_controls||[]).length+'</b> ready for continuous assessment</span><span><b>'+(r.partially_ready_controls||[]).length+'</b> partially ready</span><span><b>'+(r.not_ready_controls||[]).length+'</b> not ready</span></div>'+
+      (r.missing_denominators&&r.missing_denominators.length?('<div class="rm">Missing denominator: '+r.missing_denominators.map(esc).join(', ')+'</div>'):'')+
+      (r.missing_scope&&r.missing_scope.length?'<div class="rm">Missing scope.</div>':'')+
+      (r.missing_review_period&&r.missing_review_period.length?'<div class="rm">Missing review period.</div>':'')+
+      (r.next_steps&&r.next_steps.length?('<div class="rm"><b>Next steps:</b> '+r.next_steps.map(esc).join(' ')+'</div>'):'');
     (r.control_readiness||[]).forEach(function(c){
       h+='<div class="rrow"><span class="pill '+pillCls(c.readiness_status)+'">'+esc(c.readiness_status)+'</span>'+
         '<div><div class="rn">'+esc(c.control_name)+' <span class="rid">'+esc(c.framework.split(' ')[0])+' '+esc(c.control_id)+'</span></div>'+
         '<div class="rm">'+esc(c.message)+'</div>'+
         (c.missing_evidence&&c.missing_evidence.length?('<div class="rm muted">Missing: '+c.missing_evidence.slice(0,6).map(esc).join(', ')+'</div>'):'')+'</div></div>';
     });
-    h+='<p class="why" style="margin-top:12px">Nerion never marks a control “Effective” during onboarding — only whether it has enough evidence to assess it continuously.</p></div>';
+    h+='</div><p class="why" style="margin-top:12px">Connecting is not the same as being ready. Nerion proves it can connect, collect the required telemetry, and has enough scoped, fresh evidence before a control is “Ready for continuous assessment” — and never marks a control “Effective” during onboarding.</p></div>';
     document.getElementById('readiness').innerHTML=h;
+    var rc=document.getElementById('reconnectBtn');if(rc)rc.onclick=function(){renderSetup();};
   }
 
   loadCatalog();
