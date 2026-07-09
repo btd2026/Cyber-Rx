@@ -342,6 +342,9 @@ app.use('/api/ai-systems',        [apiGetLimiter, apiPostLimiter], require('./ro
 // Real integrations — read-only security-tool connectors that feed live signals
 // (Entra ID, CrowdStrike, Tenable, Splunk) into the posture/coverage pipeline.
 app.use('/api/integrations',      [apiGetLimiter, apiPostLimiter], require('./routes/integrations'));
+// Framework-native continuous control operating-effectiveness assessments
+// (CSF, 800-53, CIS, HIPAA, SOC 2 — each assessed independently, no crosswalk).
+app.use('/api/control-assessment', [apiGetLimiter], require('./routes/controlAssessment'));
 
 // Platform value realized — renewal-justification rollup over real activity.
 app.use('/api/value',             [apiGetLimiter], require('./routes/value'));

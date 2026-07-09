@@ -3095,9 +3095,57 @@ function c5fwStatus(sc){if(sc>=C5FW_TARGET)return {t:'Meets target',cls:'good',k
 function c5fwLvl(sc){var L=(typeof CMMI_LABELS!=='undefined')?CMMI_LABELS:{0:'None',1:'Initial',2:'Managed',3:'Defined',4:'Quant. Managed',5:'Optimizing'};return L[Math.round(sc)]||'';}
 function c5fwCol(sc){return (typeof cmmiColor==='function')?cmmiColor(Math.round(sc)):'ink';}
 function c5fwMean(arr){if(!arr.length)return 0;return arr.reduce(function(a,b){return a+b;},0)/arr.length;}
+/* ============================================================================
+   Framework-native assessment wiring (phase 2). CIS / SOC 2 / HIPAA are scored
+   by the framework-native control-assessment engine (backend), NOT by averaging
+   the CSF controls they crosswalk to. Results are fetched once and cached; the
+   CSF ids each control maps to are retained only as related_control_mapping
+   (informational), never used for the score.
+   ============================================================================ */
+var C5_CA_RESULTS=null, C5_CA_BUSY=false;
+var C5_CA_FWKEY={csf:'nist_csf_2_0',r53:'nist_800_53_rev5',cis:'cis_v8_1',soc2:'soc2_2017_tsc',hipaa:'hipaa_164'};
+/* Native assessment status → the 0–5 maturity scale for display. Derived ONLY
+   from this framework's own result (effectiveness score), never inherited. Not
+   Tested / Not Enough / Not API-Testable / Out of Scope return null (excluded). */
+function caNativeScore(nat){
+  if(!nat)return null;
+  var s=nat.assessment_status;
+  if(s==='Effective')return 5;
+  if(s==='Partially Effective')return Math.round((Number(nat.control_effectiveness_score)||0.5)*5*10)/10;
+  if(s==='Ineffective')return 0;
+  return null;
+}
+function caStatusPill(status){
+  var m={'Effective':['good','Effective'],'Partially Effective':['warn','Partial'],'Ineffective':['crit','Ineffective'],
+    'Not Enough Evidence':['muted','Not enough evidence'],'Not Tested':['muted','Not tested'],
+    'Not API-Testable':['blue','Manual review'],'Out of Scope':['muted','Out of scope']};
+  var o=m[status]||['muted',status||'Not tested'];
+  return '<span class="c5fw-sc" style="font-size:11px;font-weight:700;color:var(--'+o[0]+')">'+o[1]+'</span>';
+}
+/* Fetch framework-native assessments once, cache, then re-render. Degrades to an
+   empty result set (everything Not Tested) if the API is unreachable — never a
+   fabricated score. */
+function caFetch(){
+  if(C5_CA_BUSY||C5_CA_RESULTS)return;
+  C5_CA_BUSY=true;
+  try{
+    var base=(typeof apiBase==='function')?apiBase():'';
+    var org=(typeof orgId==='function')?orgId():'';
+    fetch(base+'/api/control-assessment?org_id='+encodeURIComponent(org),{headers:{'Accept':'application/json'}})
+      .then(function(r){return r&&r.ok?r.json():null;})
+      .then(function(d){
+        C5_CA_BUSY=false;
+        var m={};
+        if(d&&d.frameworks){Object.keys(d.frameworks).forEach(function(k){var byId={};(d.frameworks[k].results||[]).forEach(function(res){byId[res.control_id]=res;});m[k]=byId;});}
+        C5_CA_RESULTS=m;
+        try{if(typeof c5Frameworks==='function')c5Frameworks();}catch(_){}
+      })
+      .catch(function(){C5_CA_BUSY=false;C5_CA_RESULTS={};});
+  }catch(_){C5_CA_BUSY=false;C5_CA_RESULTS={};}
+}
 /* Build the framework tree with real roll-ups. Returns {groups, overall, coverage, failing, all}. */
 function c5fwTree(sel,cov){
-  var groups=[],all=[],evidenced=0;
+  var groups=[],all=[],evidenced=0,catalogTotal=0;
   function ctl(id,name,mapped){var cc=controlCmmi(id,cov);all.push(cc.score);if(cc.src!=='none')evidenced++;
     return {type:'ctl',id:id,name:name,score:cc.score,src:cc.src,toolPct:cc.toolPct,doc:cc.doc,mapped:mapped||null};}
   if(sel==='csf'&&typeof CSF_RAW!=='undefined'){
@@ -3121,24 +3169,40 @@ function c5fwTree(sel,cov){
         ctls.push(node);}
       groups.push({type:'grp',id:fam,name:fam+' · '+nm,score:c5fwMean(ctls.map(function(c){return c.score;})),children:ctls,rollup:ctls.map(function(c){return {id:c.id,score:c.score};})});});
   } else if(typeof fwXmap==='function'){
+    // FRAMEWORK-NATIVE (CIS / SOC 2 / HIPAA). No crosswalk scoring: a control's
+    // status comes from the native assessment engine (C5_CA_RESULTS[fwKey]),
+    // NEVER from averaging the CSF controls it maps to. The CSF ids are kept on
+    // the node as `related` (informational) only. Controls the engine has not yet
+    // natively assessed are Not Tested and excluded from the maturity roll-up.
+    var caFw=(C5_CA_RESULTS&&C5_CA_FWKEY[sel])?C5_CA_RESULTS[C5_CA_FWKEY[sel]]:null;
     fwXmap(sel).forEach(function(g){var gid=g[0],gname=g[1],items=g[2]||[];
-      var ctls=items.map(function(it){var ids=it[2]||[],scores=ids.map(function(id){return controlCmmi(id,cov).score;}),sc=c5fwMean(scores);all.push(sc);if(ids.length)evidenced++;
-        return {type:'ctl',id:it[0],name:it[1],score:sc,src:'mapped',mapped:ids};});
-      groups.push({type:'grp',id:gid,name:gname,score:c5fwMean(ctls.map(function(c){return c.score;})),children:ctls,rollup:ctls.map(function(c){return {id:c.id,score:c.score};})});
+      var ctls=items.map(function(it){
+        catalogTotal++;
+        var nat=caFw?caFw[it[0]]:null;
+        var sc=caNativeScore(nat);
+        var status=nat?nat.assessment_status:'Not Tested';
+        var src=nat?'native':'native-pending';
+        var tested=(sc!=null);
+        if(tested){all.push(sc);evidenced++;}
+        return {type:'ctl',id:it[0],name:it[1],score:(sc==null?0:sc),tested:tested,status:status,src:src,related:(it[2]||[]),native:nat||null};
+      });
+      var ts=ctls.filter(function(c){return c.tested;}).map(function(c){return c.score;});
+      groups.push({type:'grp',id:gid,name:gname,score:c5fwMean(ts),children:ctls,rollup:ctls.map(function(c){return {id:c.id,score:c.score};})});
     });
   }
   var failing=all.filter(function(s){return s<C5FW_FLOOR;}).length;
-  return {groups:groups,overall:c5fwMean(all),coverage:all.length?Math.round(evidenced/all.length*100):0,failing:failing,total:all.length,evidenced:evidenced};
+  var _total=catalogTotal||all.length;
+  return {groups:groups,overall:c5fwMean(all),coverage:_total?Math.round(evidenced/_total*100):0,failing:failing,total:_total,evidenced:evidenced,native:(catalogTotal>0)};
 }
 /* How the framework's controls are currently evidenced — so "24 of 106" is broken
    down by SOURCE (document review vs connected tool vs not-yet), which is what
    tells you WHY controls are unevidenced and what to do about it. */
 function c5fwSrcCounts(T){
-  var d=0,s=0,m=0,n=0;
-  function tally(v){if(v==='document')d++;else if(v==='system')s++;else if(v==='mapped')m++;else n++;}
+  var d=0,s=0,m=0,n=0,nat=0;
+  function tally(v){if(v==='document')d++;else if(v==='system')s++;else if(v==='mapped')m++;else if(v==='native')nat++;else n++;}
   (T.groups||[]).forEach(function(g){(g.children||[]).forEach(function(c){
     if(c.type==='cat')(c.children||[]).forEach(function(x){tally(x.src);});else tally(c.src);});});
-  return {doc:d,sys:s,mapped:m,none:n};
+  return {doc:d,sys:s,mapped:m,none:n,native:nat};
 }
 /* The unevidenced controls grouped by the SOURCE they await — so the gap reads as
    "upload these 5 documents / connect these 2 tools", not "90 deficiencies". */
@@ -3865,6 +3929,8 @@ function c5FrameworksClassic(host){
   try{c5SetSnapshot();}catch(_){} // populate FW_SNAPSHOT for the community benchmark
   if(typeof FW_SEL==='undefined'){window.FW_SEL='csf';}
   var sel=FW_SEL,cov=(typeof fwDeployedIds==='function')?fwDeployedIds():{};
+  // CIS / SOC 2 / HIPAA are scored by the framework-native engine — fetch once.
+  if(sel==='cis'||sel==='soc2'||sel==='hipaa'){try{caFetch();}catch(_){}}
   var T=c5fwTree(sel,cov);
   // Stash for the community-benchmark panel (compares THIS framework's maturity).
   window.C5FW_OVERALL=T.overall;window.C5FW_GROUPS=T.groups;
@@ -3913,7 +3979,11 @@ function c5FrameworksClassic(host){
       '<span style="display:flex;gap:8px">'+
       '<button id="c5reanalyzeBtn" type="button" style="border:1px solid var(--line);background:var(--surface);color:var(--ink-2);font-weight:600;font-size:12px;padding:6px 12px;border-radius:8px;cursor:pointer">↻ Re-score documents</button>'+
       '<button id="c5docsBtn" type="button" style="border:1px solid var(--line);background:var(--surface);color:var(--blue);font-weight:600;font-size:12px;padding:6px 12px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:6px">📄 Documents reviewed'+(function(){var n=(typeof c5DocCount==="function")?c5DocCount():0;return n?(' · '+n):"";})()+'</button></span></div>'+
-    (function(){var sc=c5fwSrcCounts(T);var line='<div class="c5fw-refresh" style="margin-top:4px">How these '+T.total+' controls are evidenced: <b style="color:var(--good)">📄 '+sc.doc+'</b> by document review · <b style="color:var(--blue)">🔌 '+sc.sys+'</b> by connected tool'+(sc.mapped?(' · <b>🔗 '+sc.mapped+'</b> by crosswalk'):'')+' · <b style="color:var(--muted)">— '+sc.none+'</b> not yet evidenced.</div>';
+    (function(){var sc=c5fwSrcCounts(T);
+      var line=T.native
+        ? ('<div class="c5fw-refresh" style="margin-top:4px">These '+T.total+' controls are assessed <b>framework-natively</b> (no crosswalk): <b style="color:var(--good)">🧪 '+sc.native+'</b> natively assessed · <b style="color:var(--muted)">— '+sc.none+'</b> not yet tested (require the control-specific API evidence). CSF ids shown per control are <b>related mappings, informational only</b>.</div>')
+        : ('<div class="c5fw-refresh" style="margin-top:4px">How these '+T.total+' controls are evidenced: <b style="color:var(--good)">📄 '+sc.doc+'</b> by document review · <b style="color:var(--blue)">🔌 '+sc.sys+'</b> by connected tool'+(sc.mapped?(' · <b>🔗 '+sc.mapped+'</b> by crosswalk'):'')+' · <b style="color:var(--muted)">— '+sc.none+'</b> not yet evidenced.</div>');
+      if(T.native)return line;
       if(sc.none>0){var gaps=c5fwGaps(T);if(gaps.length){var docg=gaps.filter(function(x){return x.kind==='d';}),tg=gaps.filter(function(x){return x.kind==='t';});
         line+='<div class="c5fw-refresh" style="margin-top:3px">To close the gap: '+
           (docg.length?('upload <b>'+docg.map(function(x){return c5esc(x.label)+' ('+x.n+')';}).join('</b>, <b>')+'</b>'):'')+
@@ -3926,7 +3996,7 @@ function c5FrameworksClassic(host){
     peerBox+
     xnote+
     '<div class="c5fw-wrap"><div class="c5fw-right">'+tree+'</div><div class="c5fw-left" id="c5fw-detail">'+c5fwFinding(sel,selNode)+'</div></div>'+
-    '<div class="c5foot">CMMI 0 None · 1 Initial · 2 Managed · 3 Defined · 4 Quant. Managed · 5 Optimizing. Meets target ≥ '+C5FW_TARGET.toFixed(1)+' (green) · Observation ≥ '+C5FW_FLOOR+' (amber) · Deficiency &lt; '+C5FW_FLOOR+' (red). CIS by number/title/mapping only; SOC 2 by criterion ID.'+(sel==='r53'?' NIST SP 800-53 Rev 5 is assessed by crosswalk from your CSF 2.0 assessment (a readiness indicator, per-family): the ~20 controls Nerion scores directly show 📄/🔌; the rest inherit their family’s governing-policy maturity.':'')+'</div>';
+    '<div class="c5foot">CMMI 0 None · 1 Initial · 2 Managed · 3 Defined · 4 Quant. Managed · 5 Optimizing. Meets target ≥ '+C5FW_TARGET.toFixed(1)+' (green) · Observation ≥ '+C5FW_FLOOR+' (amber) · Deficiency &lt; '+C5FW_FLOOR+' (red).'+((sel==='cis'||sel==='soc2'||sel==='hipaa')?' '+((typeof FW_NAMES!=='undefined'&&FW_NAMES[sel])||'This framework')+' is assessed <b>framework-natively</b> — each control is concluded from its OWN machine-verifiable API evidence, never derived from the CSF assessment. Controls without that evidence are shown as “Not tested / Not enough evidence”, not scored. The CSF ids per control are related mappings for navigation only.':'')+(sel==='r53'?' NIST SP 800-53 Rev 5 is assessed by crosswalk from your CSF 2.0 assessment (a readiness indicator, per-family): the ~20 controls Nerion scores directly show 📄/🔌; the rest inherit their family’s governing-policy maturity.':'')+'</div>';
   // record cadence snapshot
   if(typeof fwRecord==='function'){try{fwRecord(T.overall);}catch(_){}}
   var _pb=document.getElementById('c5fwPeerBox');if(_pb)_pb.onclick=function(){c5fwPeerOpen();};
@@ -4320,7 +4390,15 @@ function c5fwPeerRender(){
   if(b=g('c5peerOptout'))b.onclick=function(){if(typeof peerSetOptin==='function')peerSetOptin(false);C5FW_PEER=null;C5PEER_PREVIEW=false;c5fwPeerRender();};
   host.querySelectorAll('[data-c5peercat]').forEach(function(x){x.onclick=function(){C5PEER_CAT=x.getAttribute('data-c5peercat');c5fwPeerFetch();};});
 }
-function c5fwCtlRow(c){var col=c5fwCol(c.score),selc=(C5FW_CTRL===c.id)?' sel':'';
+function c5fwCtlRow(c){var selc=(C5FW_CTRL===c.id)?' sel':'';
+  // Framework-native (CIS/SOC2/HIPAA): show the native assessment STATUS, and
+  // the CSF ids only as "related" (informational), never as the score source.
+  if(c.src==='native'||c.src==='native-pending'){
+    var rel=(c.related&&c.related.length)?('<div class="c5fw-map">related (informational) · '+c.related.slice(0,6).join(' · ')+'</div>'):'';
+    var dcol=c.tested?c5fwCol(c.score):'muted';
+    return '<div class="c5fw-crow'+selc+'" data-c5fwctl="'+c.id+'"><span class="c5fw-tw"></span><span class="c5fw-dot" style="background:var(--'+dcol+')"></span><span class="c5fw-id">'+c.id+'</span><span class="c5fw-nm">'+c.name+rel+'</span>'+caStatusPill(c.status)+'</div>';
+  }
+  var col=c5fwCol(c.score);
   var mapped=(c.mapped&&c.mapped.length)?('<div class="c5fw-map">mapped ← '+c.mapped.slice(0,6).map(function(id){return id;}).join(' · ')+'</div>'):'';
   return '<div class="c5fw-crow'+selc+'" data-c5fwctl="'+c.id+'"><span class="c5fw-tw"></span><span class="c5fw-dot" style="background:var(--'+col+')"></span><span class="c5fw-id">'+c.id+'</span><span class="c5fw-nm">'+c.name+mapped+'</span><span class="c5fw-lvl">'+c5fwLvl(c.score)+'</span><span class="c5fw-sc" style="color:var(--'+col+')">'+c.score.toFixed(1)+'</span></div>';
 }
