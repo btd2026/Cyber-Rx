@@ -346,6 +346,10 @@ app.use('/api/integrations',      [apiGetLimiter, apiPostLimiter], require('./ro
 // (CSF, 800-53, CIS, HIPAA, SOC 2 — each assessed independently, no crosswalk).
 app.use('/api/control-assessment', [apiGetLimiter], require('./routes/controlAssessment'));
 
+// Framework-native DOCUMENT control assessment (policies/standards/plans/records)
+// — design vs operating evidence kept separate, citations, versioning, reassessment.
+app.use('/api/document-assessment', [apiGetLimiter, apiPostLimiter], require('./routes/documentAssessment'));
+
 // Platform value realized — renewal-justification rollup over real activity.
 app.use('/api/value',             [apiGetLimiter], require('./routes/value'));
 
