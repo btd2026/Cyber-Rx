@@ -131,25 +131,30 @@
     '.c5mc{background:var(--surface-2);border-radius:8px;padding:12px 14px;cursor:pointer}',
     '.c5mc-l{font-size:12px;color:var(--ink-2)}',
     '.c5mc-v{font-size:22px;font-weight:500;margin-top:2px;color:var(--ink)}',
-    '.c5statgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:16px;margin-bottom:18px}',
-    '.c5seclab{font-size:12px;color:var(--ink-2);margin-bottom:4px}',
-    '.c5erow{display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:.5px solid var(--line);cursor:pointer}',
-    '.c5erow:hover{background:var(--surface-2)}',
-    '.c5exp{font-size:14px;font-weight:500;line-height:1.3;color:var(--ink)}',
-    '.c5esub{font-size:12px;color:var(--ink-2);margin-top:1px}',
-    '.c5etrack{width:88px;height:8px;background:var(--surface-2);border-radius:4px;overflow:hidden;flex-shrink:0}',
-    '.c5emult{font-size:14px;font-weight:500;width:48px;text-align:right;color:var(--ink)}',
+    '.c5statgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-top:18px;margin-bottom:20px}',
+    '.c5seclab{font-size:11.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}',
+    '.c5erow{display:flex;align-items:center;gap:13px;padding:12px 10px;margin:0 -10px;border-radius:10px;border-bottom:.5px solid var(--line);cursor:pointer;transition:background .14s ease,box-shadow .14s ease}',
+    '.c5erow:hover{background:var(--surface-2);box-shadow:inset 3px 0 0 var(--blue)}',
+    '.c5erow:last-child{border-bottom:none}',
+    '.c5exp{font-size:14px;font-weight:600;line-height:1.3;color:var(--ink);letter-spacing:-.005em}',
+    '.c5esub{font-size:12px;color:var(--ink-2);margin-top:2px}',
+    '.c5etrack{width:104px;height:7px;background:var(--surface-2);border-radius:6px;overflow:hidden;flex-shrink:0;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--line) 60%,transparent)}',
+    '.c5etrack>div{border-radius:6px;transition:width .5s cubic-bezier(.2,.7,.3,1)}',
+    '.c5emult{font-size:15px;font-weight:700;width:58px;text-align:right;color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:-.01em}',
+    '.c5rank{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:7px;background:var(--surface-2);color:var(--muted);font-size:11.5px;font-weight:700;flex:none;font-variant-numeric:tabular-nums}',
+    '.c5rank.top{background:color-mix(in srgb,var(--good) 16%,var(--surface));color:var(--good)}',
     '.c5opgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px;margin-bottom:6px}',
-    '.c5opc{position:relative;background:var(--surface-2);background:linear-gradient(180deg,var(--surface),var(--surface-2));border-radius:14px;padding:16px 18px 15px;cursor:pointer;border:1px solid var(--line);box-shadow:0 1px 2px rgba(16,24,40,.05);transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease;overflow:hidden}',
-    '.c5opc::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--ac,var(--line));opacity:.95}',
-    '.c5opc:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(16,24,40,.11);border-color:var(--ac,var(--line-2))}',
-    '.c5opc-h{display:flex;align-items:center;gap:10px;margin-bottom:11px}',
-    '.c5opc-ic{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:9px;background:var(--surface);background:color-mix(in srgb,var(--ac,var(--muted)) 15%,var(--surface));color:var(--ink-2);color:var(--ac,var(--ink-2));flex:none}',
-    '.c5opc-ic svg{width:17px;height:17px}',
-    '.c5opc-t{font-size:12.5px;font-weight:600;color:var(--ink-2);line-height:1.25;letter-spacing:.01em}',
-    '.c5opc-v{font-size:25px;font-weight:700;color:var(--ink);line-height:1.05;letter-spacing:-.01em}',
-    '.c5opc-s{font-size:12px;color:var(--ink-2);margin-top:6px;line-height:1.45}',
-    '.c5opc-go{position:absolute;right:15px;top:16px;font-size:11px;font-weight:600;color:var(--muted);opacity:0;transition:opacity .16s}',
+    '.c5opc{position:relative;background:linear-gradient(155deg,var(--surface) 0%,var(--surface-2) 100%);border-radius:16px;padding:17px 19px 17px;cursor:pointer;border:1px solid var(--line);box-shadow:0 1px 2px rgba(16,24,40,.05),0 8px 20px -14px rgba(16,24,40,.18);transition:transform .18s cubic-bezier(.2,.7,.3,1),box-shadow .18s ease,border-color .18s ease;overflow:hidden}',
+    '.c5opc::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--ac,var(--line)),color-mix(in srgb,var(--ac,var(--line)) 55%,transparent));opacity:1}',
+    '.c5opc::after{content:"";position:absolute;right:-30px;top:-30px;width:110px;height:110px;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--ac,var(--muted)) 12%,transparent),transparent 68%);pointer-events:none}',
+    '.c5opc:hover{transform:translateY(-3px);box-shadow:0 14px 34px -12px rgba(16,24,40,.28);border-color:color-mix(in srgb,var(--ac,var(--line-2)) 55%,var(--line))}',
+    '.c5opc-h{display:flex;align-items:center;gap:10px;margin-bottom:12px;position:relative}',
+    '.c5opc-ic{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:10px;background:color-mix(in srgb,var(--ac,var(--muted)) 15%,var(--surface));color:var(--ac,var(--ink-2));flex:none;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ac,var(--muted)) 22%,transparent)}',
+    '.c5opc-ic svg{width:18px;height:18px}',
+    '.c5opc-t{font-size:12px;font-weight:600;color:var(--ink-2);line-height:1.25;letter-spacing:.01em}',
+    '.c5opc-v{font-size:29px;font-weight:760;color:var(--ink);line-height:1.0;letter-spacing:-.02em;font-variant-numeric:tabular-nums;position:relative}',
+    '.c5opc-s{font-size:12px;color:var(--ink-2);margin-top:7px;line-height:1.45;position:relative}',
+    '.c5opc-go{position:absolute;right:15px;top:16px;font-size:11px;font-weight:600;color:var(--ac,var(--muted));opacity:0;transition:opacity .16s}',
     '.c5opc:hover .c5opc-go{opacity:1}',
     '.c5opc.alarm{animation:tileAlarm 1.15s ease-in-out infinite}',
     '.c5opc.alarm::before{background:var(--crit);width:4px;opacity:1}',
@@ -1602,6 +1607,32 @@ document.addEventListener('click',function(e){if(e.target.closest('[data-c5onb]'
 document.addEventListener('click',function(e){var el=e.target.closest('[data-c5onb]');if(el){e.stopPropagation();c5Connect(el.getAttribute('data-c5onb'));}});
 /* Protection summary-card detail inspector — opens the list behind each count. */
 document.addEventListener('click',function(e){var el=e.target.closest('[data-c5pc]');if(el&&el.getAttribute('data-c5pc'))c5protInspect(el.getAttribute('data-c5pc'));});
+/* Per-business-area inspector — click an area row to see the controls, gaps,
+   exposure and open risks behind its protection score. */
+document.addEventListener('click',function(e){var el=e.target.closest('[data-c5area]');if(el&&el.getAttribute('data-c5area'))c5areaInspect(el.getAttribute('data-c5area'));});
+function c5areaInspect(name){
+  var P=(typeof window!=='undefined'&&window.C5PROT)||{all:[],target:75};
+  var a=null,all=P.all||[];for(var i=0;i<all.length;i++){if(all[i].name===name){a=all[i];break;}}
+  if(!a)return;
+  var target=P.target||75, ok=(a.score>=target&&(a.gaps||0)===0);
+  var col=ok?'good':(a.score<50?'crit':'warn');
+  var status=ok?'Well protected — clears the '+target+'-point bar with no open gaps':(a.gaps>0?(a.gaps+' open control gap'+(a.gaps>1?'s':'')+' · below the '+target+'-point bar'):'Below the '+target+'-point protection bar');
+  // Show the capabilities that guard this area (protection = their mean health).
+  var caps=[];try{var keys=(typeof CAP_TOOLKEYS!=='undefined'&&a.k&&CAP_TOOLKEYS[a.k])||null;}catch(_){}
+  var inputs=[{name:'Protection score',value:a.score+' / 100 · '+(ok?'✓ clears bar':'below bar'),color:col,source:(a.grc?('GRC '+a.grc):'business function × control posture')}];
+  if((a.gaps||0)>0)inputs.push({name:'Open control gaps',value:String(a.gaps),color:'warn',source:'GRC · unremediated control gaps for this area'});
+  if(a.exp>0)inputs.push({name:'Exposure carried',value:usd(a.exp)+(a.measured?'':' · illustrative'),color:(a.score<50?'crit':'warn'),source:'risk register × asset value for this area'});
+  (a.risks||[]).slice(0,6).forEach(function(r){var sv=String(r.severity||'').toLowerCase();inputs.push({name:'Open risk · '+r.title,value:r.severity||'—',color:/crit/.test(sv)?'crit':/high/.test(sv)?'warn':'muted',source:'risk register'});});
+  var m=c5obj({name:a.name+' · protection detail',
+    why:'How well this business area is protected, and why. Protection is the mean health of the security capabilities guarding the area; it clears the bar at ≥ '+target+' with no open control gaps. This is where you see the controls, gaps, exposure and open risks behind the single score.',
+    displayValue:a.score+' / 100',label:'computed',color:col,
+    formula:'protection = mean maturity of the controls guarding this area (0–5 → 0–100); well-protected = score ≥ '+target+' AND 0 open control gaps',
+    method:status+'. From your business function joined to the live control posture'+(a.grc?(' (GRC coverage: '+a.grc+')'):'')+'.'+(a.measured?'':' Figures are illustrative until this area’s sources are fully connected.'),
+    inputs:inputs,
+    sources:[{tool:'Business functions (value chain)',connector:'capmap',field:'business area',lastRefresh:c5ago()},{tool:'Live control posture',connector:'grc',field:'control maturity · gaps · open risks'}],
+    note:ok?'A defensible base — hold the posture and keep evidencing it.':'Where the next dollar of protection should go for this area.'});
+  c5InspectObj(m);
+}
 /* Per-control business-value inspector — professionally backs each "$X" claim
    in the "Controls delivering the most business value" list. */
 document.addEventListener('click',function(e){var el=e.target.closest('[data-c5cv]');if(el&&el.getAttribute('data-c5cv'))c5ctrlValueInspect(el.getAttribute('data-c5cv'));});
@@ -2053,13 +2084,10 @@ function c5Exposure(){
             ?('Most of the business is well protected — '+weak.length+' area'+(weak.length>1?'s':'')+' carr'+(weak.length>1?'y':'ies')+' the residual exposure, and your highest-value controls are the ones to extend to them.')
             :('More of the business needs strengthening than is fully covered — the exposure concentrates in a handful of areas, addressable with your highest-value controls.')))
     :'Where the business is protected, where it isn’t, and which controls buy down the most risk.';
-  // Plain-language intro: name what a "business area" is (the core functions that
-  // define the crown jewels), say what "protected" means here (each area sits
-  // behind the top cyber capabilities, and how healthy those capabilities are is
-  // how well the area is protected), then give the live read.
-  var intro=haveAreas
-    ?('These are the core business areas that carry the company and define your crown jewels. Each one sits behind your top cybersecurity capabilities — identity, access, backup, monitoring and the rest — and how healthy those capabilities are is how well the area is protected. '+(well.length?(well.length+' area'+(well.length>1?'s are':' is')+' fully covered. '):'')+(topWeak?(weak.length+' still need'+(weak.length>1?'':'s')+' work, with the most exposure in '+topWeak.name+((topWeak.gaps||0)>0?(' ('+topWeak.gaps+' open control gap'+(topWeak.gaps>1?'s':'')+')'):'')+'.'):''))
-    :'These are the core business areas that carry the company and define your crown jewels. Each sits behind your top cybersecurity capabilities, and how healthy those capabilities are is how well the area is protected. Connect your tools to see the live read.';
+  // Short, plain intro — the three boxes and the verdict carry the live numbers,
+  // so the intro just says what these areas are and what "protected" means. Click
+  // any area for its detail.
+  var intro='The business areas that carry the company — each sits behind your top security capabilities, and how healthy those are is how well the area is protected. Click any area for detail.';
   var tone=(haveAreas&&weak.length&&well.length<weak.length)?'warn':null;
   // Summary as premium icon cards — clickable to a detail inspector, with a hover tooltip.
   var scard=function(ic,lbl,val,sub,col,pc,tip){col=col||'muted';return '<div class="c5opc" data-c5pc="'+pc+'" style="--ac:var(--'+col+')" title="'+c5esc(tip||'')+'"><span class="c5opc-go">details ›</span><div class="c5opc-h"><span class="c5opc-ic">'+c5icon(ic)+'</span><span class="c5opc-t">'+lbl+'</span></div><div class="c5opc-v" style="color:var(--'+(col==='muted'?'ink':col)+')">'+val+'</div><div class="c5opc-s">'+sub+'</div></div>';};
@@ -2071,15 +2099,15 @@ function c5Exposure(){
       :((a.gaps>0?(a.gaps+' open control gap'+(a.gaps>1?'s':'')):'below its protection target')+(a.exp>0?(' · '+usd(a.exp)+' of exposure carried'):'')+(a.measured?'':' · illustrative'));
     // Name the actual open risks driving a to-strengthen area — the CISO sees WHY.
     var rl=(mode!=='well'&&a.risks&&a.risks.length)?('<div class="c5esub" style="margin-top:3px;color:var(--ink-2)">Open risks: '+a.risks.slice(0,3).map(function(r){var sv=String(r.severity||'').toLowerCase(),sc=/crit/.test(sv)?'crit':/high/.test(sv)?'warn':'muted';return c5esc(r.title)+(r.severity?(' <b style="color:var(--'+sc+')">'+c5esc(r.severity)+'</b>'):'');}).join(' · ')+(a.risks.length>3?(' · +'+(a.risks.length-3)+' more'):'')+'</div>'):'';
-    return '<div class="c5erow"><div style="flex:1;min-width:0"><div class="c5exp">'+a.name+' <span class="c5pill '+(mode==='well'?'g':a.score<50?'r':'a')+'" style="margin-left:4px">'+(mode==='well'?'Protected':(a.score<50?'Priority':'Strengthen'))+'</span></div><div class="c5esub">'+sub+'</div>'+rl+'</div>'+
-      '<div class="c5etrack"><div style="width:'+a.score+'%;height:100%;background:var(--'+cls+')"></div></div>'+
+    return '<div class="c5erow" data-c5area="'+c5esc(a.name)+'" title="'+c5esc(a.name+' — protection detail. Click for the controls, gaps and exposure behind this score.')+'"><div style="flex:1;min-width:0"><div class="c5exp">'+a.name+' <span class="c5pill '+(mode==='well'?'g':a.score<50?'r':'a')+'" style="margin-left:4px">'+(mode==='well'?'Protected':(a.score<50?'Priority':'Strengthen'))+'</span></div><div class="c5esub">'+sub+'</div>'+rl+'</div>'+
+      '<div class="c5etrack"><div style="width:'+a.score+'%;height:100%;background:linear-gradient(90deg,color-mix(in srgb,var(--'+cls+') 62%,transparent),var(--'+cls+'))"></div></div>'+
       '<div class="c5emult" style="color:var(--'+cls+')">'+a.score+'</div></div>';
   };
   var w1=well.length?well.map(function(a){return areaRow(a,'well');}).join(''):'<div class="c5foot" style="margin-top:0;padding:12px 4px">No area clears its protection target yet — every area is in the list below.</div>';
   var w2=weak.length?weak.map(function(a){return areaRow(a,'weak');}).join(''):'<div class="c5foot" style="margin-top:0;padding:12px 4px">No area is below its protection target or carrying an open control gap.</div>';
-  var w3=ctrlConn.map(function(o){var c=o.c,pct=maxV>0?Math.round(o.usd/maxV*100):0;if(pct<6&&o.usd>0)pct=6;
-      return '<div class="c5erow" data-c5cv="'+c.k+'" title="'+c5esc(nm(c)+' — how its '+usd(o.usd)+' of business value is computed. Click for the full breakdown.')+'"><div style="flex:1;min-width:0"><div class="c5exp">'+nm(c)+' <span class="c5pill b" style="margin-left:4px">'+o.p+'% deployed</span></div><div class="c5esub">Protects '+(CAP_PROTECTS[c.k]||c.name.toLowerCase())+'</div></div>'+
-        '<div class="c5etrack"><div style="width:'+pct+'%;height:100%;background:var(--good)"></div></div>'+
+  var w3=ctrlConn.map(function(o,idx){var c=o.c,pct=maxV>0?Math.round(o.usd/maxV*100):0;if(pct<6&&o.usd>0)pct=6;
+      return '<div class="c5erow" data-c5cv="'+c.k+'" title="'+c5esc(nm(c)+' — how its '+usd(o.usd)+' of business value is computed. Click for the full breakdown.')+'"><span class="c5rank'+(idx===0?' top':'')+'">'+(idx+1)+'</span><div style="flex:1;min-width:0"><div class="c5exp">'+nm(c)+' <span class="c5pill b" style="margin-left:4px">'+o.p+'% deployed</span></div><div class="c5esub">Protects '+(CAP_PROTECTS[c.k]||c.name.toLowerCase())+'</div></div>'+
+        '<div class="c5etrack"><div style="width:'+pct+'%;height:100%;background:linear-gradient(90deg,color-mix(in srgb,var(--good) 62%,transparent),var(--good))"></div></div>'+
         '<div class="c5emult" style="color:var(--good)">'+usd(o.usd)+'</div></div>';
     }).join('');
 
