@@ -7,14 +7,17 @@
 
 const M = require('../evidenceModel');
 const { makeTest } = require('../testKit');
+const { COPYRIGHT_FLAGS } = require('../native/copyrightSafety');
 const { EVIDENCE_LAYER, ASSESSMENT_TYPE } = M;
 const FRAMEWORK = 'SOC 2 (2017 TSC)';
-const def = (o) => Object.assign({ framework: FRAMEWORK, assessment_type: ASSESSMENT_TYPE.AUTOMATED, validation_status: 'documented_not_live_validated', live_tenant_validated: false, last_validated_at: null, evidence_freshness_requirement: 30, exception_handling: 'Unapproved exceptions block Effective.', optional_signals: [], required_time_period: 'review period (SOC 2 Type II window)', required_scope: 'system boundary in scope' }, o);
+// Copyright-safe: control_name / control_objective are Nerion-AUTHORED descriptions
+// of Nerion's own evidence test — never the official AICPA Trust Services Criteria text.
+const def = (o) => Object.assign({ framework: FRAMEWORK, assessment_type: ASSESSMENT_TYPE.AUTOMATED, validation_status: 'documented_not_live_validated', live_tenant_validated: false, last_validated_at: null, evidence_freshness_requirement: 30, exception_handling: 'Unapproved exceptions block Effective.', optional_signals: [], required_time_period: 'review period (Type II window)', required_scope: 'system boundary in scope' }, COPYRIGHT_FLAGS, o);
 
 const REGISTRY = {
   'CC6.1': def({
-    control_id: 'CC6.1', control_name: 'Logical access security', category: 'Common Criteria',
-    control_objective: 'Implement logical access security software, infrastructure and architectures over protected information assets.',
+    control_id: 'CC6.1', control_name: 'Logical access controls (Nerion test)', category: 'Common Criteria',
+    control_objective: 'Nerion test: logical access is enforced (authentication / MFA / privileged access), access is reviewed, and exceptions are governed over the review period.',
     evidence_layer_supported: [EVIDENCE_LAYER.DESIGN, EVIDENCE_LAYER.OPERATING_EFFECTIVENESS],
     required_signals: [], optional_signals: ['mfa_pct', 'pam_pct'],
     required_api_fields: ['access_control_policy', 'authentication_enforced', 'access_review_records', 'access_exceptions'],
@@ -29,8 +32,8 @@ const REGISTRY = {
   }),
 
   'CC6.2': def({
-    control_id: 'CC6.2', control_name: 'User registration and authorization', category: 'Common Criteria',
-    control_objective: 'Register and authorize new internal and external users before granting access credentials.',
+    control_id: 'CC6.2', control_name: 'User provisioning & authorization (Nerion test)', category: 'Common Criteria',
+    control_objective: 'Nerion test: users are authorized before access is granted, and provisioning/deprovisioning is evidenced over the review period.',
     evidence_layer_supported: [EVIDENCE_LAYER.OPERATING_EFFECTIVENESS],
     required_signals: [], optional_signals: [],
     required_api_fields: ['provisioning_approval_records', 'new_user_events', 'deprovisioning_events', 'unapproved_provisioning_count'],
@@ -45,8 +48,8 @@ const REGISTRY = {
   }),
 
   'CC7.1': def({
-    control_id: 'CC7.1', control_name: 'Vulnerability and configuration monitoring', category: 'Common Criteria',
-    control_objective: 'Detect changes to configurations and susceptibility to newly discovered vulnerabilities.',
+    control_id: 'CC7.1', control_name: 'Vulnerability & configuration monitoring (Nerion test)', category: 'Common Criteria',
+    control_objective: 'Nerion test: configuration drift and newly discovered vulnerabilities are detected and remediated within SLA over the review period.',
     evidence_layer_supported: [EVIDENCE_LAYER.RELEVANCE, EVIDENCE_LAYER.OPERATING_EFFECTIVENESS],
     required_signals: [], optional_signals: ['critical_vuln_free_pct', 'vuln_sla_pct', 'cspm_pct'],
     required_api_fields: ['scan_coverage_denominator', 'vuln_scan_cadence', 'config_monitoring_enabled', 'open_critical_vulns', 'remediation_sla_met'],
@@ -61,8 +64,8 @@ const REGISTRY = {
   }),
 
   'CC8.1': def({
-    control_id: 'CC8.1', control_name: 'Change management', category: 'Common Criteria',
-    control_objective: 'Authorize, design, develop, test, approve and implement changes to infrastructure, data, software and procedures.',
+    control_id: 'CC8.1', control_name: 'Change management (Nerion test)', category: 'Common Criteria',
+    control_objective: 'Nerion test: changes are authorized, tested and approved, with no unauthorized changes over the review period.',
     evidence_layer_supported: [EVIDENCE_LAYER.OPERATING_EFFECTIVENESS],
     required_signals: [], optional_signals: ['change_pass_pct'],
     required_api_fields: ['change_records', 'change_approvals', 'change_testing_evidence', 'unauthorized_changes'],
@@ -78,8 +81,8 @@ const REGISTRY = {
 
   // Privacy criterion — only assessable with real privacy evidence, never from a security signal.
   'P5.1': def({
-    control_id: 'P5.1', control_name: 'Data-subject access to personal information', category: 'Privacy', assessment_type: ASSESSMENT_TYPE.SEMI_AUTOMATED,
-    control_objective: 'Grant identified and authenticated data subjects access to their personal information.',
+    control_id: 'P5.1', control_name: 'Data-subject access requests (Nerion test)', category: 'Privacy', assessment_type: ASSESSMENT_TYPE.SEMI_AUTOMATED,
+    control_objective: 'Nerion test: data-subject access requests are fulfilled within the required window, with none overdue over the review period.',
     evidence_layer_supported: [EVIDENCE_LAYER.OPERATING_EFFECTIVENESS],
     required_signals: [], optional_signals: ['dsar_open', 'dsar_overdue'],
     required_api_fields: ['dsar_request_records', 'dsar_fulfilled', 'dsar_overdue', 'identity_verification_on_dsar'],
