@@ -2082,15 +2082,13 @@ function c5Exposure(){
   var nm=function(c){return c.name.replace(/ *\(.*\)/,'');};
   var verdict=haveAreas
     ?(weak.length===0
-        ?'Every business area clears its protection bar — the program is strong across the board.'
+        ?'Every business area is well protected.'
         :(well.length>=weak.length
-            ?('Most of the business is well protected — '+weak.length+' area'+(weak.length>1?'s':'')+' carr'+(weak.length>1?'y':'ies')+' the residual exposure, and your highest-value controls are the ones to extend to them.')
-            :('More of the business needs strengthening than is fully covered — the exposure concentrates in a handful of areas, addressable with your highest-value controls.')))
-    :'Where the business is protected, where it isn’t, and which controls buy down the most risk.';
-  // Short, plain intro — the three boxes and the verdict carry the live numbers,
-  // so the intro just says what these areas are and what "protected" means. Click
-  // any area for its detail.
-  var intro='The business areas that carry the company — each sits behind your top security capabilities, and how healthy those are is how well the area is protected. Click any area for detail.';
+            ?('Most of the business is well protected. '+weak.length+' area'+(weak.length>1?'s':'')+' still need'+(weak.length>1?'':'s')+' work — listed below.')
+            :('Several business areas still need work. Your exposure is concentrated in a few of them — listed below, worst first.')))
+    :'Where the business is protected, where it isn’t, and where to act first.';
+  // Plain, assistant-style intro — what these areas are, and what "protected" means.
+  var intro='These are the business areas that keep the company running. Each one depends on your security controls — the stronger those controls, the safer the area. Click any area for the detail.';
   var tone=(haveAreas&&weak.length&&well.length<weak.length)?'warn':null;
   // Summary as premium icon cards — clickable to a detail inspector, with a hover tooltip.
   var scard=function(ic,lbl,val,sub,col,pc,tip){col=col||'muted';return '<div class="c5opc" data-c5pc="'+pc+'" style="--ac:var(--'+col+')" title="'+c5esc(tip||'')+'"><span class="c5opc-go">details ›</span><div class="c5opc-h"><span class="c5opc-ic">'+c5icon(ic)+'</span><span class="c5opc-t">'+lbl+'</span></div><div class="c5opc-v" style="color:var(--'+(col==='muted'?'ink':col)+')">'+val+'</div><div class="c5opc-s">'+sub+'</div></div>';};
@@ -2156,7 +2154,7 @@ function c5Exposure(){
   } else if(haveAreas&&weak.length===0){
     bodyA+=c5bl('Bottom line','The business is protected across every area.',null,'Every area clears its protection bar. Hold the posture and evidence it — this is the read the board wants to see sustained.',null);
   } else {
-    bodyA+=c5bl('Bottom line','Protection is where the next dollar of security gets decided.',null,'This view separates the parts of the business that are safe to defend to the board from the parts still carrying exposure — and names the control that closes the gap most efficiently.',null);
+    bodyA+=c5bl('Bottom line','Protection, seen by business area.',null,'This shows which parts of the business are well protected and which still carry exposure, and the control that closes each gap. Connect your capability map to see it live.',null);
   }
   bodyA+='<div class="c5foot">Every figure traces to its source'+(anyDerived?'; figures marked “illustrative” are not yet fully evidenced':'')+'.</div>';
   // TAB B — control value (which controls buy down the most risk?)
@@ -4010,8 +4008,9 @@ function c5FrameworksClassic(host){
   var T=c5fwTree(sel,cov);
   // Stash for the community-benchmark panel (compares THIS framework's maturity).
   window.C5FW_OVERALL=T.overall;window.C5FW_GROUPS=T.groups;
-  // default deep-link: identity path expanded, PR.AA-03 selected (CSF only)
-  if(C5FW_EXP==null){if(sel==='csf'){C5FW_EXP={PR:1,'PR.AA':1};}else{C5FW_EXP={};if(T.groups[0])C5FW_EXP[T.groups[0].id]=1;}}
+  // Open folded to the highest root level — every function (GV/ID/PR/DE/RS/RC)
+  // collapsed. The CISO expands the one they want; expansions persist for the session.
+  if(C5FW_EXP==null){C5FW_EXP={};}
   if(C5FW_CTRL==null&&sel==='csf'){C5FW_CTRL='PR.AA-03';}
   // find selected node
   var selNode=null;
@@ -4049,7 +4048,7 @@ function c5FrameworksClassic(host){
       '<div style="font-size:12px;color:var(--ink-2);margin-top:1px">See how your '+((typeof FW_NAMES!=='undefined'&&FW_NAMES[sel])||'framework')+' maturity compares to the DTNKShield community — anonymously.</div></div>'+
     '</div><span class="peer-badge">DTNKShield ›</span></div>';
   host.innerHTML=c5header()+
-    c5shell('Program health · how is the security program performing?','Assessed against the framework your program is built on — refreshed on your cadence.',null,'Attackers moved to AI. Your assessment moved to real time — live telemetry, always-current posture, zero blind spots.')+
+    c5shell('Program health · how is the security program performing?','Your security program, scored against the framework you follow.',null,'Each function is scored from your live control evidence and kept current. Open a function to see the controls behind its score.')+
     cadCtrl+
     '<div class="c5fw-refresh" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"><span>Refreshed <b>'+cad+'</b> · last assessed <b>'+fmt(now)+'</b> · next refresh <b>'+fmt(nextD)+'</b></span>'+
       '<span style="display:flex;gap:8px">'+
