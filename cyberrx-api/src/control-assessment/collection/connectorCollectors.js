@@ -190,4 +190,23 @@ async function sailpoint(ctx) {
 
 const CONNECTOR_COLLECTORS = { okta, entra, crowdstrike, rubrik, sailpoint };
 
+// Auto-load per-connector collectors from ./collectors (one file per connector,
+// each exporting { key, collect }). Keeps the registry conflict-free as new
+// vendors are added, and lets each collector be authored/validated in isolation.
+try {
+  const fs = require('fs');
+  const path = require('path');
+  const dir = path.join(__dirname, 'collectors');
+  if (fs.existsSync(dir)) {
+    fs.readdirSync(dir).filter((f) => f.endsWith('.js')).forEach((f) => {
+      try {
+        const mod = require(path.join(dir, f));
+        if (mod && mod.key && typeof mod.collect === 'function' && !CONNECTOR_COLLECTORS[mod.key]) {
+          CONNECTOR_COLLECTORS[mod.key] = mod.collect;
+        }
+      } catch (_) { /* skip a broken collector rather than crash the engine */ }
+    });
+  }
+} catch (_) {}
+
 module.exports = { CONNECTOR_COLLECTORS };
