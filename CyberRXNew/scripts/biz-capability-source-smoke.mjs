@@ -15,6 +15,10 @@ ok('derived coverage comes from live control posture (controlCmmi)', /controlCmm
 ok('c5CapSource derives by default, overrides only for a business map', /function c5CapSource\(\)/.test(ciso) && /!c5CapIsSecurity\(c\.name\)/.test(ciso) && /return derived\|\|raw/.test(ciso));
 ok('exposure tile uses c5CapSource', /var caps=\(typeof c5CapSource==='function'\)\?c5CapSource\(\)/.test(ciso));
 ok('capability drill uses c5CapSource', /var caps2=\(typeof c5CapSource==='function'\)\?c5CapSource\(\)/.test(ciso));
+// The actual open risks are carried + named (so "N open risks" is legible to the CISO).
+ok('derivation carries the actual register risks (open_risk = risk count)', /open_risk:risks\.length,risks:risks/.test(ciso));
+ok('drill names each area’s open risks with severity + exposure', /c\.risks\.slice\(0,5\)\.map/.test(ciso) && /c5esc\(r\.title\)/.test(ciso) && /usd\(r\.exposure\)/.test(ciso));
+ok('to-strengthen rows name the top open risks', /Open risks: '\+a\.risks\.slice\(0,3\)/.test(ciso));
 
 // The detector must catch the demo's old security-domain names and pass business ones.
 const det = new Function(ciso.match(/function c5CapIsSecurity\(name\)\{[\s\S]*?\n\}/)[0] + '\nreturn c5CapIsSecurity;')();

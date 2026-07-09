@@ -347,14 +347,18 @@ function c5get(id){
       //       OUTPUT [capability, control_gaps, open_risk, exposure]; sort exposure desc.
       var TW={critical:1.0,high:0.75,medium:0.5,low:0.25};
       var rowsC=caps2.map(function(c){var exp=Number(c.exposure_usd)||0;var tw=TW[String(c.grc_status||c.tier||'').toLowerCase()]||1;
-        return {name:c.name,exposure:exp,gaps:(c.control_gaps!=null?Number(c.control_gaps):null),open_risk:(c.open_risk!=null?Number(c.open_risk):null),grc:c.grc_status,tw:tw};}).sort(function(a,b){return b.exposure-a.exposure;});
+        return {name:c.name,exposure:exp,gaps:(c.control_gaps!=null?Number(c.control_gaps):null),open_risk:(c.open_risk!=null?Number(c.open_risk):null),grc:c.grc_status,tw:tw,risks:(c.risks||[])};}).sort(function(a,b){return b.exposure-a.exposure;});
       var topc=rowsC[0]||null;
       return c5obj({id:id,name:'Business capabilities with highest exposure',connected:conn,
         displayValue:conn?(topc?(topc.name+(topc.exposure>0?(' · '+usd(topc.exposure)):'')):(caps2.length+' capabilities mapped')):'—',
         label:'computed',color:conn?((topc&&topc.exposure>0)?'warn':'good'):'muted',
         formula:'exposure = (open control-gaps + open risk) × capability-tier weight; ranked exposure-desc',
         method:'By default these are the business functions you mapped at onboarding (the crown-jewel value chain), and each one’s coverage is computed from your live control posture: protection = the mean maturity of the NIST controls guarding that function’s systems (0–5 → 0–100), open control-gaps = its controls below Defined. Business exposure ($) is the at-risk value carried by that function. You can OVERRIDE this with a real Business Capability Map + GRC control-coverage (Archer / ServiceNow GRC / LeanIX, or an Excel with columns capability · exposure · grc_status · control_gaps · open_risk) — a map filled with security domains is ignored so this stays a business view. Exposure is ranked (open gaps + open risks) × capability-tier weight (Critical 1.0 · High 0.75 · Medium 0.5 · Low 0.25).',
-        inputs:rowsC.slice(0,6).map(function(c){return {name:c.name+(c.grc?(' · GRC '+c.grc):''),value:(c.exposure>0?usd(c.exposure):'mapped')+'  ·  '+(c.gaps!=null?c.gaps:'—')+' gaps · '+(c.open_risk!=null?c.open_risk:'—')+' open risks',color:(c.exposure>0?'warn':'good'),source:(caps2[0]&&caps2[0].derived)?'Business functions + control posture':'Capability Map + GRC (or Excel)'};}),
+        inputs:rowsC.slice(0,6).map(function(c){
+          // Name the ACTUAL open risks under this business area, so "N open risks" is
+          // legible — each with its severity and $ exposure, worst first.
+          var rl=(c.risks&&c.risks.length)?('<div style="margin-top:5px;display:flex;flex-direction:column;gap:2px">'+c.risks.slice(0,5).map(function(r){var sv=String(r.severity||'').toLowerCase(),sc=/crit/.test(sv)?'crit':/high/.test(sv)?'warn':'muted';return '<span style="font-size:11px;color:var(--ink-2);line-height:1.35">↳ '+c5esc(r.title)+(r.severity?(' <b style="color:var(--'+sc+')">'+c5esc(r.severity)+'</b>'):'')+((r.exposure>0)?(' <span style="color:var(--muted)">· '+usd(r.exposure)+'</span>'):'')+'</span>';}).join('')+(c.risks.length>5?('<span style="font-size:11px;color:var(--muted)">↳ + '+(c.risks.length-5)+' more</span>'):'')+'</div>'):'';
+          return {name:'<b>'+c5esc(c.name)+'</b>'+(c.grc?(' · GRC '+c.grc):'')+rl,value:(c.exposure>0?usd(c.exposure):'mapped')+'  ·  '+(c.gaps!=null?c.gaps:'—')+' gaps · '+(c.open_risk!=null?c.open_risk:'—')+' open risks',color:(c.exposure>0?'warn':'good'),source:(caps2[0]&&caps2[0].derived)?'Business functions + control posture':'Capability Map + GRC (or Excel)'};}),
         sources:(caps2[0]&&caps2[0].derived)
           ?[{tool:'Business functions (value chain)',connector:'capmap',field:'function · at-risk exposure',lastRefresh:c5ago()},{tool:'Live control posture',connector:'grc',field:'control maturity → coverage · gaps'}]
           :[{tool:'Business Capability Map',connector:'capmap',field:'capability · tier · exposure',lastRefresh:c5ago()},{tool:'GRC (Archer / ServiceNow GRC / LeanIX) — or Excel/CSV upload',connector:'grc',field:'control_coverage (Adequate/Watch/Gap) · control_gaps · open_risk'}],
@@ -1930,15 +1934,19 @@ function c5BizCapAreas(){
   var vc=(typeof LIVE!=='undefined'&&LIVE&&LIVE.value_chain);if(!vc||!vc.functions||!vc.functions.length)return null;
   var cov=(typeof fwDeployedIds==='function')?fwDeployedIds():{};
   var out=vc.functions.map(function(f){
-    var codes={},exp=0,rev=0;
+    var codes={},exp=0,rev=0,rk={};
     (f.processes||[]).forEach(function(p){rev+=Number(p.annual_usd)||0;
-      (p.assets||[]).forEach(function(a){(a.risks||[]).forEach(function(r){exp+=Number(r.exposure_usd)||0;
+      (p.assets||[]).forEach(function(a){(a.risks||[]).forEach(function(r){var re=Number(r.exposure_usd)||0;exp+=re;
+        // The ACTUAL open risks threatening this function (from the risk register),
+        // deduped by title — so "N open risks" can name exactly which risks they are.
+        var t=String(r.title||'Risk').trim();if(!rk[t]||re>(rk[t].exposure||0))rk[t]={title:t,severity:r.severity||'',exposure:re,asset:(a.name||'')};
         var caps=(typeof riskCaps==='function')?riskCaps(r.title,r.severity):[];
         caps.forEach(function(k){var fw=(typeof CAP_FRAMEWORK!=='undefined')?CAP_FRAMEWORK[k]:null;if(fw&&fw.csf)fw.csf.forEach(function(c){codes[c]=1;});});});});});
     var ids=Object.keys(codes),scores=ids.map(function(id){return (typeof controlCmmi==='function')?controlCmmi(id,cov).score:0;});
     var mean=scores.length?scores.reduce(function(a,b){return a+b;},0)/scores.length:0,cov100=Math.round(mean/5*100);
+    var risks=Object.keys(rk).map(function(t){return rk[t];}).sort(function(a,b){return (b.exposure||0)-(a.exposure||0);});
     return {name:f.name||'Business function',exposure_usd:(exp>0?exp:rev),grc_status:(cov100>=75?'Adequate':cov100>=50?'Watch':'Gap'),
-      control_gaps:scores.filter(function(s){return s<3;}).length,open_risk:scores.filter(function(s){return s<2;}).length,
+      control_gaps:scores.filter(function(s){return s<3;}).length,open_risk:risks.length,risks:risks,
       control_coverage:(ids.length?cov100:null),derived:true};
   }).filter(function(a){return a.name;});
   return out.length?out:null;
@@ -1986,7 +1994,7 @@ function c5Exposure(){
   var host=document.getElementById('c5-exposure');if(!host)return;
   var TARGET=75; // the platform's healthy-coverage bar, consistent with capability scoring
   var caps=(typeof c5CapSource==='function')?c5CapSource():((typeof LIVE!=='undefined'&&LIVE&&LIVE.capabilities)||[]);
-  var areas=caps.map(function(c){return {name:c.name,score:c5protScore(c),gaps:c5protGaps(c),grc:c.grc_status||null,exp:Number(c.exposure_usd)||0,measured:(c.control_coverage!=null)};}).filter(function(a){return a.name&&a.score!=null;});
+  var areas=caps.map(function(c){return {name:c.name,score:c5protScore(c),gaps:c5protGaps(c),grc:c.grc_status||null,exp:Number(c.exposure_usd)||0,measured:(c.control_coverage!=null),risks:(c.risks||[])};}).filter(function(a){return a.name&&a.score!=null;});
   var anyDerived=areas.some(function(a){return !a.measured;});
   var well=areas.filter(function(a){return a.score>=TARGET&&(a.gaps||0)===0;}).sort(function(a,b){return b.score-a.score;});
   var weak=areas.filter(function(a){return a.score<TARGET||(a.gaps||0)>0;}).sort(function(a,b){return a.score-b.score;});
@@ -2020,7 +2028,9 @@ function c5Exposure(){
     var sub=(mode==='well')
       ?((a.grc?('GRC '+a.grc+' · '):'')+'no open control gaps'+(a.measured?'':' · illustrative'))
       :((a.gaps>0?(a.gaps+' open control gap'+(a.gaps>1?'s':'')):'below its protection target')+(a.exp>0?(' · '+usd(a.exp)+' of exposure carried'):'')+(a.measured?'':' · illustrative'));
-    return '<div class="c5erow"><div style="flex:1;min-width:0"><div class="c5exp">'+a.name+' <span class="c5pill '+(mode==='well'?'g':a.score<50?'r':'a')+'" style="margin-left:4px">'+(mode==='well'?'Protected':(a.score<50?'Priority':'Strengthen'))+'</span></div><div class="c5esub">'+sub+'</div></div>'+
+    // Name the actual open risks driving a to-strengthen area — the CISO sees WHY.
+    var rl=(mode!=='well'&&a.risks&&a.risks.length)?('<div class="c5esub" style="margin-top:3px;color:var(--ink-2)">Open risks: '+a.risks.slice(0,3).map(function(r){var sv=String(r.severity||'').toLowerCase(),sc=/crit/.test(sv)?'crit':/high/.test(sv)?'warn':'muted';return c5esc(r.title)+(r.severity?(' <b style="color:var(--'+sc+')">'+c5esc(r.severity)+'</b>'):'');}).join(' · ')+(a.risks.length>3?(' · +'+(a.risks.length-3)+' more'):'')+'</div>'):'';
+    return '<div class="c5erow"><div style="flex:1;min-width:0"><div class="c5exp">'+a.name+' <span class="c5pill '+(mode==='well'?'g':a.score<50?'r':'a')+'" style="margin-left:4px">'+(mode==='well'?'Protected':(a.score<50?'Priority':'Strengthen'))+'</span></div><div class="c5esub">'+sub+'</div>'+rl+'</div>'+
       '<div class="c5etrack"><div style="width:'+a.score+'%;height:100%;background:var(--'+cls+')"></div></div>'+
       '<div class="c5emult" style="color:var(--'+cls+')">'+a.score+'</div></div>';
   };
