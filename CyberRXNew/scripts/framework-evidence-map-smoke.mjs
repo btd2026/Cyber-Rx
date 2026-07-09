@@ -54,5 +54,18 @@ if (toolMismatch.length) console.error('  tool-declared but not in CAP_FRAMEWORK
 const nd = ids.filter((id) => SRC[id].k === 'd').length, nt = ids.filter((id) => SRC[id].k === 't').length;
 console.log(`mapping — ${ids.length} controls · ${nd} document-sourced · ${nt} telemetry-sourced · 0 orphan`);
 
+// 800-53 is assessed by crosswalk from CSF — every family must declare a governing policy.
+ok('cockpit declares R53_FAM_SRC + r53FamEvidence', /var R53_FAM_SRC=\{/.test(cockpit) && /function r53FamEvidence\(fam,cov\)/.test(cockpit));
+const R53FAM = new Function(cockpit.match(/var R53_FAM_SRC=\{[\s\S]*?\};/)[0] + '\nreturn R53_FAM_SRC;')();
+const R53_RAW = new Function(cockpit.match(/var R53_RAW=\[[\s\S]*?\];/)[0] + '\nreturn R53_RAW;')();
+const fams = R53_RAW.map((f) => f[0]);
+const unmappedFams = fams.filter((f) => !R53FAM[f] || !R53FAM[f].length);
+ok('every 800-53 family maps to a governing document', unmappedFams.length === 0);
+if (unmappedFams.length) console.error('  families with no source: ' + unmappedFams.join(', '));
+ok('800-53 tree inherits family CSF maturity by crosswalk', /r53FamEvidence\(fam,cov\)/.test(ciso) && /src:'mapped',mapped:fe\.csfIds,r53fam:fam/.test(ciso));
+ok('800-53 controls name the crosswalk / awaited policy', /Assessed by <b>800-53 ↔ CSF crosswalk<\/b>/.test(ciso) && /assessed via <b>800-53 ↔ CSF crosswalk<\/b>/.test(ciso));
+ok('800-53 view is honestly labelled a crosswalk readiness indicator', /assessed by crosswalk from your CSF 2\.0 assessment/.test(ciso));
+console.log(`800-53 — ${fams.length} families all mapped to a governing policy (crosswalk from CSF)`);
+
 if (fail) { console.error(`\nframework-evidence-map-smoke: ${pass} passed, ${fail} FAILED`); process.exit(1); }
 console.log(`framework-evidence-map-smoke OK — ${pass} checks pass (every control mapped to a real source; frontend registry in sync with backend).`);

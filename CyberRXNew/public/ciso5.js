@@ -3009,7 +3009,18 @@ function c5fwTree(sel,cov){
         catNodes.push({type:'cat',id:cid,name:catName.replace(/ *\(.*/,''),score:cScore,children:ctls});});
       groups.push({type:'grp',id:fid,name:fnName.replace(/ *\(.*/,''),score:c5fwMean(fnScores),children:catNodes,rollup:catNodes.map(function(c){return {id:c.id,score:c.score};})});});
   } else if(sel==='r53'&&typeof R53_RAW!=='undefined'){
-    R53_RAW.forEach(function(f){var fam=f[0],nm=f[1],n=f[2],ctls=[];for(var i=1;i<=n;i++)ctls.push(ctl(fam+'-'+i,nm));
+    R53_RAW.forEach(function(f){var fam=f[0],nm=f[1],n=f[2],ctls=[];
+      // Family maturity inherited from the CSF assessment of the same governing policy.
+      var fe=(typeof r53FamEvidence==='function')?r53FamEvidence(fam,cov):{score:0,csfIds:[]};
+      var docLbl=(typeof r53FamDocLabel==='function')?r53FamDocLabel(fam):'';
+      for(var i=1;i<=n;i++){var id=fam+'-'+i,cc=controlCmmi(id,cov),node;
+        if(cc.src!=='none'){ // Nerion scores this 800-53 control directly (policy / tool)
+          node={type:'ctl',id:id,name:nm,score:cc.score,src:cc.src,toolPct:cc.toolPct,doc:cc.doc};all.push(cc.score);evidenced++;}
+        else if(fe.score>0){ // inherit the family's crosswalk maturity from CSF
+          var s=Math.round(fe.score*10)/10;node={type:'ctl',id:id,name:nm,score:s,src:'mapped',mapped:fe.csfIds,r53fam:fam,r53doc:docLbl};all.push(s);evidenced++;}
+        else { // not evidenced — declare the governing policy it awaits
+          node={type:'ctl',id:id,name:nm,score:0,src:'none',r53fam:fam,r53doc:docLbl};all.push(0);}
+        ctls.push(node);}
       groups.push({type:'grp',id:fam,name:fam+' · '+nm,score:c5fwMean(ctls.map(function(c){return c.score;})),children:ctls,rollup:ctls.map(function(c){return {id:c.id,score:c.score};})});});
   } else if(typeof fwXmap==='function'){
     fwXmap(sel).forEach(function(g){var gid=g[0],gname=g[1],items=g[2]||[];
@@ -3036,11 +3047,14 @@ function c5fwSrcCounts(T){
 function c5fwGaps(T){
   if(typeof FW_CTRL_SRC==='undefined')return [];
   var by={};
-  function need(id,src){if(src&&src!=='none')return;var d=FW_CTRL_SRC[id];if(!d)return;
-    var label=d.k==='d'?((typeof FW_DOC_LABEL!=='undefined'&&FW_DOC_LABEL[d.s])||'policy'):((typeof CAP_BY_KEY!=='undefined'&&CAP_BY_KEY[d.s]&&CAP_BY_KEY[d.s].tool)||'tool');
-    var key=d.k+':'+label;(by[key]=by[key]||{kind:d.k,label:label,n:0}).n++;}
+  function need(node){if(node.src&&node.src!=='none')return;var kind,label;
+    var d=FW_CTRL_SRC[node.id];
+    if(d){kind=d.k;label=d.k==='d'?((typeof FW_DOC_LABEL!=='undefined'&&FW_DOC_LABEL[d.s])||'policy'):((typeof CAP_BY_KEY!=='undefined'&&CAP_BY_KEY[d.s]&&CAP_BY_KEY[d.s].tool)||'tool');}
+    else if(node.r53doc){kind='d';label=node.r53doc;} // 800-53 control awaiting its governing policy
+    else return;
+    var key=kind+':'+label;(by[key]=by[key]||{kind:kind,label:label,n:0}).n++;}
   (T.groups||[]).forEach(function(g){(g.children||[]).forEach(function(c){
-    if(c.type==='cat')(c.children||[]).forEach(function(x){need(x.id,x.src);});else need(c.id,c.src);});});
+    if(c.type==='cat')(c.children||[]).forEach(function(x){need(x);});else need(c);});});
   return Object.keys(by).map(function(k){return by[k];}).sort(function(a,b){return b.n-a.n;});
 }
 /* Left panel — auditor finding for the selected node. Public-standard text is fine
@@ -3090,7 +3104,12 @@ function c5fwSource(node){
     h+='<div class="c5fw-src"><span class="c5fw-srcic">📄</span><div><b>'+c5esc(fn)+'</b>'+att+
       '<div class="c5fw-srcsub">Document review <button type="button" class="c5fw-jump" data-c5docjump="'+c5esc(node.id)+'" title="Open the document review at this control">→ view in document review</button></div></div></div>';
   } else if(node.src==='mapped'){
-    h+='<div class="c5fw-src"><span class="c5fw-srcic">🔗</span><div>Framework crosswalk — inherits the maturity of <b>'+c5esc((node.mapped||[]).join(', ')||'the mapped CSF controls')+'</b></div></div>';
+    if(node.r53fam){ // 800-53 control inheriting its family's CSF crosswalk maturity
+      var few=(node.mapped||[]).slice(0,6).join(', ')+((node.mapped||[]).length>6?', …':'');
+      h+='<div class="c5fw-src"><span class="c5fw-srcic">🔗</span><div>Assessed by <b>800-53 ↔ CSF crosswalk</b> — inherits the maturity of your <b>'+c5esc(node.r53doc||'governing policy')+'</b> (CSF '+c5esc(few||'controls')+').</div></div>';
+    } else {
+      h+='<div class="c5fw-src"><span class="c5fw-srcic">🔗</span><div>Framework crosswalk — inherits the maturity of <b>'+c5esc((node.mapped||[]).join(', ')||'the mapped CSF controls')+'</b></div></div>';
+    }
   } else {
     // Not evidenced yet — name the EXACT source this control is mapped to, so the
     // fix is unambiguous (never a bare "Non-existent").
@@ -3099,6 +3118,8 @@ function c5fwSource(node){
       h+='<div class="c5fw-src c5fw-src-none"><span class="c5fw-srcic">📄</span><div>Not evidenced yet · evidenced by <b>document review</b> of your <b>'+c5esc(dl)+'</b>. Upload it in onboarding, then press <b>↻ Re-score documents</b>.</div></div>';}
     else if(decl&&decl.k==='t'){var c=(typeof CAP_BY_KEY!=='undefined')?CAP_BY_KEY[decl.s]:null,tn=(c&&c.tool)||'the source tool';
       h+='<div class="c5fw-src c5fw-src-none"><span class="c5fw-srcic">🔌</span><div>Not evidenced yet · evidenced by <b>telemetry</b> from <b>'+c5esc(tn)+'</b>. Connect it under “Connect your systems”.</div></div>';}
+    else if(node.r53fam){ // 800-53 control whose governing policy isn't evidenced yet
+      h+='<div class="c5fw-src c5fw-src-none"><span class="c5fw-srcic">📄</span><div>Not evidenced yet · assessed via <b>800-53 ↔ CSF crosswalk</b> of your <b>'+c5esc(node.r53doc||'governing policy')+'</b>. Upload it in onboarding, then press <b>↻ Re-score documents</b>.</div></div>';}
     else h+='<div class="c5fw-src c5fw-src-none"><span class="c5fw-srcic">—</span><div>No evidence source declared for this control.</div></div>';
   }
   return h;
@@ -3807,7 +3828,7 @@ function c5FrameworksClassic(host){
     peerBox+
     xnote+
     '<div class="c5fw-wrap"><div class="c5fw-right">'+tree+'</div><div class="c5fw-left" id="c5fw-detail">'+c5fwFinding(sel,selNode)+'</div></div>'+
-    '<div class="c5foot">CMMI 0 None · 1 Initial · 2 Managed · 3 Defined · 4 Quant. Managed · 5 Optimizing. Meets target ≥ '+C5FW_TARGET.toFixed(1)+' (green) · Observation ≥ '+C5FW_FLOOR+' (amber) · Deficiency &lt; '+C5FW_FLOOR+' (red). CIS by number/title/mapping only; SOC 2 by criterion ID.</div>';
+    '<div class="c5foot">CMMI 0 None · 1 Initial · 2 Managed · 3 Defined · 4 Quant. Managed · 5 Optimizing. Meets target ≥ '+C5FW_TARGET.toFixed(1)+' (green) · Observation ≥ '+C5FW_FLOOR+' (amber) · Deficiency &lt; '+C5FW_FLOOR+' (red). CIS by number/title/mapping only; SOC 2 by criterion ID.'+(sel==='r53'?' NIST SP 800-53 Rev 5 is assessed by crosswalk from your CSF 2.0 assessment (a readiness indicator, per-family): the ~20 controls Nerion scores directly show 📄/🔌; the rest inherit their family’s governing-policy maturity.':'')+'</div>';
   // record cadence snapshot
   if(typeof fwRecord==='function'){try{fwRecord(T.overall);}catch(_){}}
   var _pb=document.getElementById('c5fwPeerBox');if(_pb)_pb.onclick=function(){c5fwPeerOpen();};

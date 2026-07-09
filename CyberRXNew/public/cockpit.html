@@ -1771,6 +1771,24 @@ function controlEvidence(id,cov){
   return {status:'awaiting',kind:'none',label:'evidence',score:0,cc:cc};
 }
 function avg(a){return a.length?a.reduce(function(s,x){return s+x;},0)/a.length:0;}
+/* ---- NIST SP 800-53 Rev 5 is assessed by crosswalk from your CSF 2.0 assessment.
+   Each 800-53 control FAMILY is governed by the same policy document(s) as its CSF
+   counterpart, so a family inherits the maturity of the CSF controls evidenced by
+   that policy. This is the same "readiness by crosswalk" model used for CIS / SOC 2
+   / HIPAA — a control is never left without a declared source, and 800-53 tracks the
+   CSF posture instead of showing 300 unexplained "Non-existent" controls. The ~20
+   800-53 controls Nerion scores directly (CONTROL_MAP / connected tools) keep their
+   own real score; the rest inherit their family's crosswalk maturity. ---- */
+var R53_FAM_SRC={AC:['d4','d5'],AT:['d1'],AU:['d9'],CA:['d2'],CM:['d9','d8'],CP:['d7'],IA:['d5'],IR:['d6'],MA:['d9'],MP:['d10'],PE:['d4'],PL:['d1'],PM:['d1'],PS:['d1'],PT:['d10'],RA:['d2'],SA:['d8','d3'],SC:['d10','d9'],SI:['d9','d6'],SR:['d3']};
+/* The CSF sub-categories that share an 800-53 family's governing document(s). */
+function r53CsfIds(fam){var docs=R53_FAM_SRC[fam]||[],out=[];for(var id in FW_CTRL_SRC){var d=FW_CTRL_SRC[id];if(d&&d.k==='d'&&docs.indexOf(d.s)>=0)out.push(id);}return out;}
+/* A family's maturity inherited from the CSF assessment of the same policy — the
+   mean CMMI of those CSF controls (0 when the governing policy isn't evidenced). */
+function r53FamEvidence(fam,cov){var ids=r53CsfIds(fam);if(!ids.length)return {score:0,csfIds:[],docs:R53_FAM_SRC[fam]||[]};
+  var sc=ids.map(function(id){return controlCmmi(id,cov).score;}),m=sc.length?sc.reduce(function(a,b){return a+b;},0)/sc.length:0;
+  return {score:m,csfIds:ids,docs:R53_FAM_SRC[fam]||[]};}
+/* Human label for an 800-53 family's governing document(s). */
+function r53FamDocLabel(fam){return (R53_FAM_SRC[fam]||[]).map(function(k){return FW_DOC_LABEL[k]||k;}).join(' + ');}
 function fwRow(id,name,cov){var cc=controlCmmi(id,cov);
   return {score:cc.score,html:'<div class="fwrow drill" data-fid="'+id+'" data-fname="'+String(name).replace(/"/g,'&quot;')+'">'+cmmiBadge(cc.score)+'<span class="fwid2">'+id+'</span><span class="fwname">'+name+'</span>'+fwProvIcon(cc.src)+'</div>'};
 }
