@@ -15,6 +15,10 @@ const enrichment = require('./enrichment');
 const history = require('./history');
 const exportCsv = require('./exportCsv');
 const design = require('./design');
+const resultEngine = require('./resultEngine');
+const collection = require('./collection/collectEvidence');
+const { CONNECTOR_COLLECTORS } = require('./collection/connectorCollectors');
+const validation = require('./validation');
 const { REGISTRIES, FRAMEWORK_KEYS } = require('./registries');
 
 module.exports = {
@@ -24,6 +28,11 @@ module.exports = {
   history,
   exportCsv,
   design, // DESIGN-effectiveness (auditor document review)
+  runAssessment: resultEngine.runAssessment, // continuous RESULT engine
+  collectEvidence: collection.collectEvidence,
+  requiredFields: collection.requiredFields,
+  CONNECTOR_COLLECTORS,
+  validation,
   REGISTRIES,
   FRAMEWORK_KEYS,
 };
