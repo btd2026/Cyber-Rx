@@ -8,8 +8,11 @@ var SEATS = {
   sub:'Every figure opens to its basis and source, reconciles across seats, and is traceable to SEC Item 106 — governance-grade, plain language.',
   brief:'Bottom line: cyber is a managed risk this quarter, and nothing crosses the disclosure threshold. Residual risk is trending down, the program returns more than it costs, and the one exposure that matters is already funded by management. The board’s job here isn’t to fix anything — it’s to confirm the materiality process is sound and that every above-appetite risk has a named owner. On both counts, it is: one item to note, nothing to approve.',
   body:function(){return (
-   sec('01','Your cyber picture','',(typeof c5briefHead==='function'?c5briefHead(this.brief):'')+'<div id="bd-health"></div><div id="bd-material"></div><div id="bd-trend"></div><div id="bd-governance"></div>')
-   +sec('02','What I need from you','','<div id="board-asks"></div>')
+   sec('01','Is cyber a managed risk this quarter?','','<div id="bd-health"></div>')
+   +sec('02','Must we disclose anything?','','<div id="bd-material"></div>')
+   +sec('03','Is our residual risk trending down?','','<div id="bd-trend"></div>')
+   +sec('04','Is our oversight sound?','','<div id="bd-governance"></div>')
+   +sec('05','What should the board note?','','<div id="board-asks"></div>')
   );}
  },
 
@@ -19,8 +22,9 @@ var SEATS = {
   sub:'Every figure opens to its basis, inputs and source, and the shared numbers reconcile exactly across seats.',
   brief:'In plain terms, cyber is protecting growth this quarter, not slowing it. Six of your seven strategic objectives are clear; only the customer platform carries a real exposure — an identity gap — and its fix is already scoped and funded. Modeled loss sits inside the board’s appetite, customer trust is intact, and one decision is worth your signature now. Every figure is your own data, and it reconciles with what your CISO and CFO see.',
   body:function(){return (
-   sec('01','Your cyber picture','',(typeof c5briefHead==='function'?c5briefHead(this.brief):'')+'<div id="ce-strategic"></div><div id="ce-trust"></div>')
-   +sec('02','What I need from you','','<div id="ceo-asks"></div><div id="ce-decisions"></div>')
+   sec('01','Which of our objectives are exposed?','','<div id="ce-strategic"></div>')
+   +sec('02','Are we protecting customer trust?','','<div id="ce-trust"></div>')
+   +sec('03','What needs my sign-off?','','<div id="ceo-asks"></div><div id="ce-decisions"></div>')
   );}
  },
 
@@ -30,8 +34,10 @@ var SEATS = {
   sub:'Every figure opens to its model, inputs and sources — one source of truth across seats.',
   brief:'The financial read: your modeled cyber loss is within the board’s appetite, with headroom, and your security spend returns more than it costs. Your best dollar closes one identity gap — it removes the most risk per dollar and trims your insurance tail, which is where you’re thin. There’s redeployable spend to fund it, so this is close to self-funding. Three priced decisions are on your desk; one is a clear yes.',
   body:function(){return (
-   sec('01','Your cyber picture','',(typeof c5briefHead==='function'?c5briefHead(this.brief):'')+'<div id="cf-exposure"></div><div id="cf-roi"></div><div id="cf-insurance"></div>')
-   +sec('02','What I need from you','','<div id="cfo-asks"></div><div id="cf-decisions"></div>')
+   sec('01','Are we within the board’s appetite?','','<div id="cf-exposure"></div>')
+   +sec('02','Is our security spend paying off?','','<div id="cf-roi"></div>')
+   +sec('03','Are we insured efficiently?','','<div id="cf-insurance"></div>')
+   +sec('04','What decision needs me — and what does it cost?','','<div id="cfo-asks"></div><div id="cf-decisions"></div>')
   );}
  },
 
@@ -41,8 +47,11 @@ var SEATS = {
   sub:'Every figure opens to its source system and evidence, and the shared identity, vendor and platform numbers reconcile across seats. Not legal advice.',
   brief:'From a legal standpoint your exposure is contained, but it concentrates in one place. If a breach hit today you could meet your notification clocks — provided the forensic evidence is ready, and identity is the thin spot there. A cluster of enterprise contracts warrant uptime an identity-driven outage could breach, and your privacy operations are on SLA with access hygiene the soft point. One action reduces your disclosure, contractual and privacy exposure at once. I’m surfacing obligations here, not making the legal call — that stays yours.',
   body:function(){return (
-   sec('01','Your cyber picture','',(typeof c5briefHead==='function'?c5briefHead(this.brief):'')+'<div id="cl-regulatory"></div><div id="cl-notification"></div><div id="cl-contracts"></div><div id="cl-privacy"></div>')
-   +sec('02','What I need from you','','<div id="clo-asks"></div><div id="cl-decisions"></div>')
+   sec('01','Where are we exposed by jurisdiction?','','<div id="cl-regulatory"></div>')
+   +sec('02','Could we meet our breach-notification clocks?','','<div id="cl-notification"></div>')
+   +sec('03','Which contracts are at risk?','','<div id="cl-contracts"></div>')
+   +sec('04','Are we handling privacy requests on time?','','<div id="cl-privacy"></div>')
+   +sec('05','What needs my sign-off?','','<div id="clo-asks"></div><div id="cl-decisions"></div>')
   );}
  },
 
@@ -52,8 +61,10 @@ var SEATS = {
   sub:'Every figure opens to its basis, inputs and source, and the shared cyber numbers reconcile exactly across seats.',
   brief:'On one enterprise scale, cyber sits mid-pack among your principal risks — and its direction, not its size, is what to watch. You’re within appetite overall, but the identity category is over its share, and identity and third-party are where control assurance thins. Every top risk has a named owner; identity is the one that needs your governance push. Three calls: one risk to treat, one to monitor, one to accept.',
   body:function(){return (
-   sec('01','Your cyber picture','',(typeof c5briefHead==='function'?c5briefHead(this.brief):'')+'<div id="cr-scale"></div><div id="cr-appetite"></div><div id="cr-trend"></div>')
-   +sec('02','What I need from you','','<div id="cro-asks"></div><div id="cr-decisions"></div>')
+   sec('01','How does cyber compare to our other principal risks?','','<div id="cr-scale"></div>')
+   +sec('02','Are we within risk appetite?','','<div id="cr-appetite"></div>')
+   +sec('03','Which way is cyber risk trending?','','<div id="cr-trend"></div>')
+   +sec('04','What call is mine to make?','','<div id="cro-asks"></div><div id="cr-decisions"></div>')
   );}
  },
 
@@ -63,8 +74,10 @@ var SEATS = {
   sub:'Every figure opens to its basis, inputs and source, and the shared identity, platform and vendor numbers reconcile across seats.',
   brief:'Your technology estate is largely secure and on its modernization path. The one architectural gap that matters is the customer platform’s identity and access model — it is your biggest reliability risk, your AI-data-access dependency, and the drag on your software supply chain, all at once. There is also a high-severity auth-library advisory on the critical path worth patching now. Two decisions: fund the identity fix, patch the library.',
   body:function(){return (
-   sec('01','Your cyber picture','',(typeof c5briefHead==='function'?c5briefHead(this.brief):'')+'<div id="ct-tech"></div><div id="ct-ai"></div><div id="ct-supply"></div>')
-   +sec('02','What I need from you','','<div id="cio-asks"></div><div id="ct-decisions"></div>')
+   sec('01','Is our technology estate secure and modern?','','<div id="ct-tech"></div>')
+   +sec('02','Are we shipping AI safely?','','<div id="ct-ai"></div>')
+   +sec('03','Is our software supply chain sound?','','<div id="ct-supply"></div>')
+   +sec('04','What needs my decision?','','<div id="cio-asks"></div><div id="ct-decisions"></div>')
   );}
  },
 
@@ -74,8 +87,10 @@ var SEATS = {
   sub:'Every figure opens to its basis, inputs and source, and the shared cyber and vendor numbers reconcile across seats.',
   brief:'Operationally, you’re resilient and continuity-ready. Of your critical processes, one — the customer platform — carries a real cyber exposure, and a payments process is on watch through a single Tier-1 vendor that is a point of failure. Recovery is tested and within targets, with one weak link: restoring identity and access quickly. Two calls: fund the resilience fix, shore up the vendor.',
   body:function(){return (
-   sec('01','Your cyber picture','',(typeof c5briefHead==='function'?c5briefHead(this.brief):'')+'<div id="co-resilience"></div><div id="co-recovery"></div><div id="co-supply"></div>')
-   +sec('02','What I need from you','','<div id="coo-asks"></div><div id="co-decisions"></div>')
+   sec('01','Can the business keep running through a disruption?','','<div id="co-resilience"></div>')
+   +sec('02','Can we recover within our targets?','','<div id="co-recovery"></div>')
+   +sec('03','Which vendors could stop us?','','<div id="co-supply"></div>')
+   +sec('04','What needs my decision?','','<div id="coo-asks"></div><div id="co-decisions"></div>')
   );}
  },
 
@@ -101,8 +116,10 @@ var SEATS = {
   sub:'Every figure opens to its basis and source, and the shared identity, auth-library and platform numbers reconcile across seats.',
   brief:'On the product, it ships secure by design and customers trust it. The one real exposure is the customer-platform identity and access model — and it is three problems in one: a security gap, a source of user friction, and a recurring release blocker. Fix it once and you get all three back: safer, smoother, faster. It leads your backlog and it is funded — one decision lands it.',
   body:function(){return (
-   sec('01','Your cyber picture','',(typeof c5briefHead==='function'?c5briefHead(this.brief):'')+'<div id="cp-security"></div><div id="cp-velocity"></div><div id="cp-backlog"></div>')
-   +sec('02','What I need from you','','<div id="cpo-asks"></div><div id="cp-decisions"></div>')
+   sec('01','Does our product ship secure by design?','','<div id="cp-security"></div>')
+   +sec('02','Is security slowing our releases?','','<div id="cp-velocity"></div>')
+   +sec('03','What’s top of the security backlog?','','<div id="cp-backlog"></div>')
+   +sec('04','What needs my decision?','','<div id="cpo-asks"></div><div id="cp-decisions"></div>')
   );}
  },
 
@@ -112,8 +129,10 @@ var SEATS = {
   sub:'Every figure opens to its source system and evidence, and the shared cyber numbers reconcile exactly across seats.',
   brief:'Your cyber audit universe is well covered, with one area out of step: identity and access — simultaneously your overdue review, your outstanding test, a repeat finding, and an evidence gap. Internal Audit doesn’t fund or fix; it schedules, tests, escalates and assures. The action is to escalate identity for follow-up and give the board the assurance that the rest of the universe is sound.',
   body:function(){return (
-   sec('01','Your cyber picture','',(typeof c5briefHead==='function'?c5briefHead(this.brief):'')+'<div id="ia-coverage"></div><div id="ia-findings"></div><div id="ia-attention"></div>')
-   +sec('02','What I need from you','','<div id="audit-asks"></div>')
+   sec('01','Is our cyber audit universe covered?','','<div id="ia-coverage"></div>')
+   +sec('02','What findings are open?','','<div id="ia-findings"></div>')
+   +sec('03','What needs escalation?','','<div id="ia-attention"></div>')
+   +sec('04','What should Internal Audit action?','','<div id="audit-asks"></div>')
   );}
  }
 };
