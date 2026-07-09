@@ -68,6 +68,54 @@ describe('Okta collector maps API → evidence fields', () => {
   });
 });
 
+const CS_ROUTES = [
+  ['/oauth2/token', { access_token: 'tk' }],
+  ["last_seen:>'", { meta: { pagination: { total: 940 } } }],          // active sensors (must precede generic devices)
+  ['/devices/queries/devices/v1?limit=1', { meta: { pagination: { total: 940 } } }], // total endpoints
+  ['/detects/queries/detects/v1', { meta: { pagination: { total: 17 } } }], // detection_events
+];
+
+describe('CrowdStrike collector → DE.CM-09 evidence', () => {
+  test('maps device + detection API to endpoint monitoring fields', async () => {
+    const out = await CONNECTOR_COLLECTORS.crowdstrike({ creds: { client_id: 'a', client_secret: 'b' }, http: mockHttp(CS_ROUTES), period: { start: '2026-04-01', end: '2026-06-30' } });
+    expect(out.endpoint_denominator).toBe(940);
+    expect(out.active_sensor_count).toBe(940);
+    expect(out.stale_sensor_count).toBe(0);
+    expect(out.detection_events).toBe(17);
+  });
+  test('collected + validated → DE.CM-09 Effective', async () => {
+    const collectors = { crowdstrike: (ctx) => CONNECTOR_COLLECTORS.crowdstrike(Object.assign({}, ctx, { http: mockHttp(CS_ROUTES) })) };
+    const out = await CA.runAssessment('org_test', { noPersist: true, now: 1751000000000, connectors: ['crowdstrike'], creds: { crowdstrike: { client_id: 'a', client_secret: 'b' } }, validation: { crowdstrike: { live_tenant_validated: true } }, reviewPeriod: { start: '2026-04-01', end: '2026-06-30' }, freshnessDays: 5, collectors });
+    const de = out.frameworks.nist_csf_2_0.results.find((r) => r.control_id === 'DE.CM-09');
+    expect(de.assessment_status).toBe(STATUS.EFFECTIVE);
+  });
+});
+
+const RB_ROUTES = [
+  ['event_type=Recovery', { data: [{ time: '2026-06-01T00:00:00Z', eventStatus: 'Success', integrityVerified: true }] }],
+  ['/api/v2/sla_domain', { data: [{ frequencies: { hourly: { frequency: 4 } } }] }],   // rpo_target 240 min
+  ['/api/v1/snapshot', { data: [{ date: new Date(Date.now() - 30 * 60000).toISOString() }] }], // rpo_actual ~30 min
+];
+
+describe('Rubrik collector → CP-10 / RC.RP-03 restore-integrity evidence', () => {
+  test('maps recovery + SLA + snapshot API to restore fields', async () => {
+    const out = await CONNECTOR_COLLECTORS.rubrik({ creds: { baseUrl: 'https://rbk', token: 't' }, http: mockHttp(RB_ROUTES) });
+    expect(out.restore_test_result).toBe('pass');
+    expect(out.restore_integrity_verification).toBe(true);
+    expect(out.last_restore_test).toBe('2026-06-01T00:00:00Z');
+    expect(out.rpo_target).toBe(240);
+    expect(typeof out.rpo_actual).toBe('number');
+  });
+  test('collected + validated → CP-10 Effective; a failed restore is not', async () => {
+    const mk = (routes) => ({ rubrik: (ctx) => CONNECTOR_COLLECTORS.rubrik(Object.assign({}, ctx, { http: mockHttp(routes) })) });
+    const good = await CA.runAssessment('org_test', { noPersist: true, now: 1751000000000, connectors: ['rubrik'], creds: { rubrik: { baseUrl: 'https://rbk', token: 't' } }, validation: { rubrik: { live_tenant_validated: true } }, reviewPeriod: { start: '2026-04-01', end: '2026-06-30' }, freshnessDays: 5, collectors: mk(RB_ROUTES) });
+    expect(good.frameworks.nist_800_53_rev5.results.find((r) => r.control_id === 'CP-10').assessment_status).toBe(STATUS.EFFECTIVE);
+    const failRoutes = RB_ROUTES.slice(); failRoutes[0] = ['event_type=Recovery', { data: [{ time: '2026-06-01T00:00:00Z', eventStatus: 'Failed', integrityVerified: false }] }];
+    const bad = await CA.runAssessment('org_test', { noPersist: true, now: 1751000000000, connectors: ['rubrik'], creds: { rubrik: { baseUrl: 'https://rbk', token: 't' } }, validation: { rubrik: { live_tenant_validated: true } }, reviewPeriod: { start: '2026-04-01', end: '2026-06-30' }, freshnessDays: 5, collectors: mk(failRoutes) });
+    expect(bad.frameworks.nist_800_53_rev5.results.find((r) => r.control_id === 'CP-10').assessment_status).not.toBe(STATUS.EFFECTIVE);
+  });
+});
+
 describe('collected + validated Okta evidence → IA-2 Effective end to end', () => {
   test('runAssessment with the okta collector + live validation concludes IA-2 Effective', async () => {
     const collectors = { okta: (ctx) => CONNECTOR_COLLECTORS.okta(Object.assign({}, ctx, { http: mockHttp(OKTA_ROUTES) })) };

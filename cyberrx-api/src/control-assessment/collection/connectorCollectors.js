@@ -107,14 +107,73 @@ async function entra(ctx) {
   return out;
 }
 
-// --- Rubrik: restore-integrity evidence for CP-10 / RC.RP-03 -----------------
+// ============================ CrowdStrike Falcon (DE.CM-09 / SI-4) ============
+async function crowdstrike(ctx) {
+  const c = ctx.creds || {};
+  const H = ctx.http || defaultHttp;
+  if (!(c.client_id || c.clientId) || !(c.client_secret || c.clientSecret)) return {};
+  const base = String(c.base_url || c.baseUrl || 'https://api.crowdstrike.com').replace(/\/+$/, '');
+  const since = sinceOf(ctx.period);
+  const out = {};
+  let tk;
+  try {
+    const body = new URLSearchParams({ client_id: c.client_id || c.clientId, client_secret: c.client_secret || c.clientSecret });
+    const j = await jsonOrThrow(await H(base + '/oauth2/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body }), 'CrowdStrike');
+    tk = j.access_token; if (!tk) return {};
+  } catch (_) { return {}; }
+  const headers = { Authorization: 'Bearer ' + tk, Accept: 'application/json' };
+  const total = async (path) => { const j = await jsonOrThrow(await H(base + path, { headers }), 'CrowdStrike'); return (j && j.meta && j.meta.pagination && j.meta.pagination.total); };
+  try {
+    const all = await total('/devices/queries/devices/v1?limit=1');
+    if (all != null) out.endpoint_denominator = all;
+    // sensors seen since the review-period start = active; the rest are stale.
+    const active = await total('/devices/queries/devices/v1?limit=1&filter=' + encodeURIComponent("last_seen:>'" + since + "'"));
+    if (active != null) { out.active_sensor_count = active; if (all != null) out.stale_sensor_count = Math.max(0, all - active); }
+  } catch (_) {}
+  try { const d = await total('/detects/queries/detects/v1?limit=1&filter=' + encodeURIComponent("created_timestamp:>'" + since + "'")); if (d != null) out.detection_events = d; } catch (_) {}
+  return out;
+}
+
+// ============================ Rubrik (CP-10 / RC.RP-03) =======================
 async function rubrik(ctx) {
-  const c = ctx.creds || {}; const H = ctx.http || defaultHttp;
-  if (!c.baseUrl) return {};
-  const base = String(c.baseUrl).replace(/\/+$/, '');
+  const c = ctx.creds || {};
+  const H = ctx.http || defaultHttp;
+  if (!(c.baseUrl || c.base_url)) return {};
+  const base = String(c.baseUrl || c.base_url).replace(/\/+$/, '');
   const headers = { Authorization: 'Bearer ' + (c.token || c.apiKey || ''), Accept: 'application/json' };
   const out = {};
-  try { await jsonOrThrow(await H(base + '/api/v1/restore', { headers }), 'Rubrik'); out.last_restore_test = c.last_restore_test || undefined; } catch (_) {}
+  const get = async (path) => jsonOrThrow(await H(base + path, { headers }), 'Rubrik');
+  // Most recent recovery/restore event → restore test + integrity verification.
+  try {
+    const j = await get('/api/v1/event?event_type=Recovery&limit=1&sort_by=time&sort_order=desc');
+    const ev = (j && (j.data || j.events || []))[0];
+    if (ev) {
+      out.last_restore_test = ev.time || ev.eventDate || null;
+      const status = String(ev.eventStatus || ev.status || '').toLowerCase();
+      if (status) out.restore_test_result = /success|succeeded|pass/.test(status) ? 'pass' : 'fail';
+      // Rubrik Recovery Validation / Test Failover sets an integrity-verified flag.
+      const verified = ev.integrityVerified === true || /validation.*succeed|integrity.*verified/i.test(ev.eventInfo || ev.message || '');
+      if (out.restore_test_result != null) out.restore_integrity_verification = !!verified;
+    }
+  } catch (_) {}
+  // RPO target from the SLA domain; actual from the latest snapshot age (minutes).
+  try {
+    const s = await get('/api/v2/sla_domain?limit=1');
+    const dom = (s && (s.data || [])[0]);
+    if (dom && dom.frequencies) {
+      const hourly = (dom.frequencies.hourly && dom.frequencies.hourly.frequency);
+      if (hourly != null) out.rpo_target = Number(hourly) * 60;
+    }
+    if (out.rpo_target == null && c.rpo_target != null) out.rpo_target = Number(c.rpo_target);
+  } catch (_) {}
+  try {
+    const snap = await get('/api/v1/snapshot?limit=1&sort_by=date&sort_order=desc');
+    const sn = (snap && (snap.data || [])[0]);
+    if (sn && (sn.date || sn.time)) {
+      const ageMin = Math.round((Date.now() - Date.parse(sn.date || sn.time)) / 60000);
+      if (Number.isFinite(ageMin)) out.rpo_actual = ageMin;
+    }
+  } catch (_) {}
   return out;
 }
 
@@ -129,6 +188,6 @@ async function sailpoint(ctx) {
   return out;
 }
 
-const CONNECTOR_COLLECTORS = { okta, entra, rubrik, sailpoint };
+const CONNECTOR_COLLECTORS = { okta, entra, crowdstrike, rubrik, sailpoint };
 
 module.exports = { CONNECTOR_COLLECTORS };
