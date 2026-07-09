@@ -3142,7 +3142,7 @@ function c5fwMean(arr){if(!arr.length)return 0;return arr.reduce(function(a,b){r
    (informational), never used for the score.
    ============================================================================ */
 var C5_CA_RESULTS=null, C5_CA_BUSY=false;
-var C5_CA_FWKEY={csf:'nist_csf_2_0',r53:'nist_800_53_rev5',cis:'cis_v8_1',soc2:'soc2_2017_tsc',hipaa:'hipaa_164'};
+var C5_CA_FWKEY={csf:'nist_csf_2_0',r53:'nist_800_53_rev5',cis:'cis_v8_1',soc2:'soc2_2017_tsc',hipaa:'hipaa_164',iso:'iso_27001_2022'};
 /* Native assessment status → the 0–5 maturity scale for display. Derived ONLY
    from this framework's own result (effectiveness score), never inherited. Not
    Tested / Not Enough / Not API-Testable / Out of Scope return null (excluded). */
@@ -3413,7 +3413,7 @@ function c5fwFindingData(sel,node){
 function c5fwPayload(){
   var sel=FW_SEL,cov=(typeof fwDeployedIds==='function')?fwDeployedIds():{},T=c5fwTree(sel,cov);
   var controls=[];T.groups.forEach(function(g){(g.children||[]).forEach(function(c){if(c.type==='cat'){(c.children||[]).forEach(function(x){controls.push(x);});}else controls.push(c);});});
-  var nm=(typeof FW_NAMES!=='undefined'&&FW_NAMES[sel])||sel;var mapped=(sel==='cis'||sel==='soc2'||sel==='hipaa');
+  var nm=(typeof FW_NAMES!=='undefined'&&FW_NAMES[sel])||sel;var mapped=(sel==='cis'||sel==='soc2'||sel==='hipaa'||sel==='iso');
   var register=controls.map(function(c){var st=c5fwStatus(c.score);return {ref:c.id,name:c.name,derivedFrom:(c.mapped&&c.mapped.length)?('CSF '+c.mapped.slice(0,3).join(', ')):nm,score:c.score,target:C5FW_TARGET,classification:st.t};});
   var findings=controls.filter(function(c){return c.score<C5FW_TARGET;}).sort(function(a,b){return a.score-b.score;}).map(function(c){var F=c5fwFindingData(sel,c);return {ref:F.ref,name:F.name,classification:F.classification,condition:F.condition,criteria:F.criteria,cause:F.cause,effect:F.effect,recommendation:F.recommendation,targetUplift:F.targetUplift,mappings:F.mappings,evidence:(F.evidence||[]).map(function(e){return e[0]+': '+e[1];})};});
   var groups=T.groups.map(function(g){var st=c5fwStatus(g.score);return {id:g.id,name:g.name,score:g.score,level:c5fwLvl(g.score),status:st.t};});
@@ -4004,7 +4004,7 @@ function c5FrameworksClassic(host){
   if(typeof FW_SEL==='undefined'){window.FW_SEL='csf';}
   var sel=FW_SEL,cov=(typeof fwDeployedIds==='function')?fwDeployedIds():{};
   // CIS / SOC 2 / HIPAA are scored by the framework-native engine — fetch once.
-  if(sel==='cis'||sel==='soc2'||sel==='hipaa'){try{caFetch();}catch(_){}}
+  if(sel==='cis'||sel==='soc2'||sel==='hipaa'||sel==='iso'){try{caFetch();}catch(_){}}
   var T=c5fwTree(sel,cov);
   // Stash for the community-benchmark panel (compares THIS framework's maturity).
   window.C5FW_OVERALL=T.overall;window.C5FW_GROUPS=T.groups;
@@ -4025,7 +4025,7 @@ function c5FrameworksClassic(host){
     '<div class="c5card" data-c5fwcard="trend"><div class="c5card-top"><span class="c5card-l">Trend · vs last refresh</span><span class="c5chip c5-computed">computed</span></div><div class="c5card-v">'+(function(){var h=(typeof fwHistory==='function')?fwHistory():[];if(h.length>=2){var d=h[h.length-1].v-h[0].v;return (d>=0?'+':'')+d.toFixed(1);}return 'Baseline';})()+'</div><div class="cn">CMMI across '+cad+' refreshes</div></div>'+
     '<div class="c5card" data-c5fwcard="failing"><div class="c5card-top"><span class="c5card-l">Controls failing</span><span class="c5chip c5-computed">computed</span></div><div class="c5card-v" style="color:var(--'+(T.failing>0?'crit':'good')+')">'+T.failing+'</div><div class="cn">deficiencies (below CMMI '+C5FW_FLOOR+')</div></div>'+
     '</div>';
-  var pills='<div class="c5fw-pills">'+[['csf','NIST CSF 2.0'],['r53','NIST 800-53'],['soc2','SOC 2'],['hipaa','HIPAA'],['cis','CIS v8 (mapped)']].map(function(o){return '<button class="c5fw-pill'+(sel===o[0]?' on':'')+'" data-c5fwsel="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div>';
+  var pills='<div class="c5fw-pills">'+[['csf','NIST CSF 2.0'],['r53','NIST 800-53'],['soc2','SOC 2'],['hipaa','HIPAA'],['cis','CIS v8'],['iso','ISO 27001']].map(function(o){return '<button class="c5fw-pill'+(sel===o[0]?' on':'')+'" data-c5fwsel="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div>';
   var cadCtrl='<div class="c5fw-controls"><div class="c5fw-cad"><span style="font-size:11px;color:var(--muted);margin-right:2px">Reassess:</span>'+[['weekly','Weekly'],['monthly','Monthly'],['quarterly','Quarterly']].map(function(o){return '<button class="c5fw-cadb'+(cad===o[0]?' on':'')+'" data-c5fwcad="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div><div style="display:flex;gap:8px"><button class="c5btn" onclick="c5fwExport()">Auditor pack (PPTX)</button><button class="c5btn" onclick="c5fwExportXlsx()" style="background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line)">Control scorecard + POA&amp;M (XLSX)</button></div></div>';
   // tree
   var tree='<div class="c5fw-tree">'+T.groups.map(function(g){var open=!!C5FW_EXP[g.id];var gc=c5fwCol(g.score),gs=c5fwStatus(g.score);
@@ -4071,7 +4071,7 @@ function c5FrameworksClassic(host){
     peerBox+
     xnote+
     '<div class="c5fw-wrap"><div class="c5fw-right">'+tree+'</div><div class="c5fw-left" id="c5fw-detail">'+c5fwFinding(sel,selNode)+'</div></div>'+
-    '<div class="c5foot">CMMI 0 None · 1 Initial · 2 Managed · 3 Defined · 4 Quant. Managed · 5 Optimizing. Meets target ≥ '+C5FW_TARGET.toFixed(1)+' (green) · Observation ≥ '+C5FW_FLOOR+' (amber) · Deficiency &lt; '+C5FW_FLOOR+' (red).'+((sel==='cis'||sel==='soc2'||sel==='hipaa')?' '+((typeof FW_NAMES!=='undefined'&&FW_NAMES[sel])||'This framework')+' is assessed <b>framework-natively</b> — each control is concluded from its OWN machine-verifiable API evidence, never derived from the CSF assessment. Controls without that evidence are shown as “Not tested / Not enough evidence”, not scored. The CSF ids per control are related mappings for navigation only.':'')+(sel==='r53'?' NIST SP 800-53 Rev 5 is assessed by crosswalk from your CSF 2.0 assessment (a readiness indicator, per-family): the ~20 controls Nerion scores directly show 📄/🔌; the rest inherit their family’s governing-policy maturity.':'')+'</div>';
+    '<div class="c5foot">CMMI 0 None · 1 Initial · 2 Managed · 3 Defined · 4 Quant. Managed · 5 Optimizing. Meets target ≥ '+C5FW_TARGET.toFixed(1)+' (green) · Observation ≥ '+C5FW_FLOOR+' (amber) · Deficiency &lt; '+C5FW_FLOOR+' (red).'+((sel==='cis'||sel==='soc2'||sel==='hipaa'||sel==='iso')?' '+((typeof FW_NAMES!=='undefined'&&FW_NAMES[sel])||'This framework')+' is assessed <b>framework-natively</b> — each control is concluded from its OWN machine-verifiable API evidence, never derived from the CSF assessment. Controls without that evidence are shown as “Not tested / Not enough evidence”, not scored. The CSF ids per control are related mappings for navigation only.':'')+(sel==='r53'?' NIST SP 800-53 Rev 5 is assessed by crosswalk from your CSF 2.0 assessment (a readiness indicator, per-family): the ~20 controls Nerion scores directly show 📄/🔌; the rest inherit their family’s governing-policy maturity.':'')+'</div>';
   // record cadence snapshot
   if(typeof fwRecord==='function'){try{fwRecord(T.overall);}catch(_){}}
   var _pb=document.getElementById('c5fwPeerBox');if(_pb)_pb.onclick=function(){c5fwPeerOpen();};
@@ -4152,7 +4152,7 @@ function c5DocXwalk(id){
   return out;
 }
 function c5DocChips(x){
-  var FW=[['csf','CSF 2.0'],['r53','800-53'],['cis','CIS v8'],['soc2','SOC 2'],['hipaa','HIPAA']];
+  var FW=[['csf','CSF 2.0'],['r53','800-53'],['cis','CIS v8'],['soc2','SOC 2'],['hipaa','HIPAA'],['iso','ISO 27001']];
   var parts=FW.map(function(f){var ids=x[f[0]]||[];if(!ids.length)return '';
     return '<span style="display:inline-flex;align-items:center;gap:5px;font-size:10.5px"><span style="color:var(--muted);font-weight:600">'+f[1]+'</span>'+ids.map(function(i){return '<span class="c5fw-chip" style="cursor:default">'+c5esc(i)+'</span>';}).join('')+'</span>';
   }).filter(Boolean);

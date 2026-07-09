@@ -25,7 +25,14 @@ const COPYRIGHT_FLAGS = Object.freeze({
   official_text_displayed: false,
   license_required_for_official_text: true,
   source_type: 'Nerion-authored assessment logic',
+  customer_licensed_content_allowed: true,   // a customer who licensed the official text may upload it
+  tenant_only_customer_content: true,        // and it stays inside their tenant only
 });
+
+// How reports must refer to a native assessment — by ID, never by official language.
+function reportLabel(framework, controlId) {
+  return 'Nerion assessment for ' + framework + ' control ID ' + controlId;
+}
 
 // Nerion's assessment STATE model (the user-facing states, replacing a bare score).
 const STATE = Object.freeze({
@@ -64,6 +71,16 @@ const FORBIDDEN_HASHES = new Set([
   h('Register and authorize new internal and external users before granting access credentials'),
   h('The entity demonstrates a commitment to integrity and ethical values'),
   h('The board of directors demonstrates independence from management'),
+  // ISO/IEC 27001:2022 — distinctive official Annex A / clause phrasings. Nerion
+  // never stores these; the hashes only exist to fail the build if the official
+  // wording is reintroduced. (Generated once, sources discarded.)
+  h('Information security policies shall be defined approved by management published and communicated'),
+  h('Access to information and other associated assets shall be restricted in accordance with the established topic-specific policy on access control'),
+  h('Information shall be classified according to the information security needs of the organization'),
+  h('Rules for the effective use of cryptography including cryptographic key management shall be defined and implemented'),
+  h('Protection against malware shall be implemented and supported by appropriate user awareness'),
+  h('Information about technical vulnerabilities of information systems in use shall be obtained'),
+  h('Networks and network devices shall be secured managed and controlled to protect information in systems and applications'),
 ]);
 
 // Slide over a candidate string's word-windows (3..12 words) and hash each; report
@@ -79,4 +96,4 @@ function containsOfficialText(s) {
   return false;
 }
 
-module.exports = { COPYRIGHT_FLAGS, STATE, containsOfficialText, FORBIDDEN_HASHES, _hash: h };
+module.exports = { COPYRIGHT_FLAGS, STATE, containsOfficialText, reportLabel, FORBIDDEN_HASHES, _hash: h };
