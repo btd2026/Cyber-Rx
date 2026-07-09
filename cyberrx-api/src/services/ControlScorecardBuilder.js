@@ -160,7 +160,7 @@ async function buildXlsxBuffer(payload) {
       ['Open weaknesses (POA&M)', String(findings.length)],
       ['Classification', 'CONFIDENTIAL — prepared for the named client'],
       ['Assurance basis', 'Continuous management self-assessment — not an independent audit opinion.'],
-      ['Notices', S((arr(payload.licensing)[0]) || 'NIST CSF 2.0 / 800-53 and the HIPAA Security Rule are public-domain. CIS Controls are referenced by number/title and the public CSF crosswalk only; no Safeguard text is reproduced. SOC 2 is referenced by Trust Services Criteria ID.')],
+      ['Notices', S((arr(payload.licensing)[0]) || 'NIST CSF 2.0 / 800-53 and the HIPAA Security Rule are public-domain. CIS Controls, ISO/IEC 27001 and SOC 2 are assessed natively by Nerion-authored evidence tests referenced by control ID only — no official CIS Safeguard, ISO clause or AICPA Trust Services Criteria text is stored, reproduced, paraphrased or crosswalked from CSF. Any licensed official text you upload stays tenant-only.')],
     ];
     rows.forEach((r, i) => {
       const row = ws.addRow(r);

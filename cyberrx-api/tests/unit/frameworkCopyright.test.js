@@ -4,31 +4,46 @@
  * Copyright safety for CIS Controls, SOC 2 (AICPA TSC) and ISO/IEC 27001.
  *
  * Nerion assesses each control id with its OWN Nerion-authored evidence test. It
- * must never store or display the official CIS / AICPA / ISO text. These tests FAIL
- * if a distinctive official phrase reappears in the assessment registries, the
- * cockpit UI, or seed data — and assert the copyright flags, the report phrasing,
- * the tenant-only customer-content isolation, and the state model.
+ * must never store, reproduce, display, paraphrase or summarize the official CIS /
+ * AICPA / ISO text — anywhere: source, registries, seed data, frontend UI, report
+ * templates, exports, tests, or documentation.
+ *
+ * These tests walk the WHOLE repo and FAIL if a distinctive official phrase (matched
+ * by SHA-256 hash — the guard stores no official text) reappears. They also assert
+ * the copyright flags, the ID-only report phrasing, and the tenant-only isolation of
+ * customer-uploaded licensed content. The detector is proven to fire using a
+ * synthetic CANARY, so this test file itself contains no official text either.
  */
 
 const fs = require('fs');
 const path = require('path');
-const { containsOfficialText, reportLabel, COPYRIGHT_FLAGS, STATE } = require('../../src/control-assessment/native/copyrightSafety');
+const { containsOfficialText, reportLabel, COPYRIGHT_FLAGS, STATE, CANARY } = require('../../src/control-assessment/native/copyrightSafety');
 const { stateOf } = require('../../src/control-assessment/native/state');
 const tenantContent = require('../../src/control-assessment/native/tenantFrameworkContent');
 const { REGISTRIES } = require('../../src/control-assessment/registries');
 
 const COPYRIGHTED = ['cis_v8_1', 'soc2_2017_tsc', 'iso_27001_2022'];
-const REPO = path.join(__dirname, '../..', '..');
-// Files most at risk of embedding official framework text.
-const SCAN_FILES = [
-  'cyberrx-api/src/control-assessment/registries/cis_v8_1.js',
-  'cyberrx-api/src/control-assessment/registries/soc2_2017_tsc.js',
-  'cyberrx-api/src/control-assessment/registries/iso_27001_2022.js',
-  'CyberRXNew/public/cockpit.html',
-].map((p) => path.join(REPO, p)).filter((p) => fs.existsSync(p));
+const REPO = path.resolve(__dirname, '../../..');
 
-describe('no official CIS / AICPA / ISO text in the product', () => {
-  test('registry control_name / control_objective are Nerion-authored (no official text)', () => {
+// Walk the repo (skipping deps/build) and return source/UI/doc/data/test files.
+function repoFiles() {
+  const EXT = new Set(['.js', '.html', '.md', '.json', '.txt', '.csv', '.hbs', '.ejs']);
+  const SKIP = /node_modules|\.git|dist|build|coverage|pw-browsers/;
+  const out = [];
+  (function walk(d) {
+    let ents; try { ents = fs.readdirSync(d, { withFileTypes: true }); } catch (_) { return; }
+    for (const e of ents) {
+      const p = path.join(d, e.name);
+      if (SKIP.test(p)) continue;
+      if (e.isDirectory()) walk(p);
+      else if (EXT.has(path.extname(e.name))) out.push(p);
+    }
+  })(REPO);
+  return out;
+}
+
+describe('no official CIS / AICPA / ISO text anywhere in the repo', () => {
+  test('registry control_name / control_objective / assessment objective are Nerion-authored', () => {
     COPYRIGHTED.forEach((k) => {
       const reg = REGISTRIES[k] && REGISTRIES[k].REGISTRY;
       expect(reg).toBeTruthy();
@@ -40,55 +55,55 @@ describe('no official CIS / AICPA / ISO text in the product', () => {
     });
   });
 
-  test('scanned source files contain no distinctive official framework phrase', () => {
+  test('whole repo — no distinctive official framework phrase in any string literal', () => {
+    const files = repoFiles();
+    expect(files.length).toBeGreaterThan(100);
     const hits = [];
-    SCAN_FILES.forEach((f) => {
-      const text = fs.readFileSync(f, 'utf8');
-      // check each quoted string literal (cheap + targets displayed/stored text)
-      (text.match(/'[^'\n]{6,120}'|"[^"\n]{6,120}"/g) || []).forEach((lit) => {
+    files.forEach((f) => {
+      let text; try { text = fs.readFileSync(f, 'utf8'); } catch (_) { return; }
+      (text.match(/'[^'\n]{6,180}'|"[^"\n]{6,180}"|`[^`\n]{6,180}`/g) || []).forEach((lit) => {
         const s = lit.slice(1, -1);
-        if (containsOfficialText(s)) hits.push(path.basename(f) + ' :: ' + s);
+        if (s === CANARY) return; // the guard's own synthetic detector fixture — not official text
+        if (containsOfficialText(s)) hits.push(path.relative(REPO, f) + ' :: ' + s.slice(0, 70));
       });
     });
+    if (hits.length) console.error('OFFICIAL TEXT FOUND:\n' + hits.join('\n'));
     expect(hits).toEqual([]);
   });
 });
 
-describe('copyright flags + state model', () => {
-  test('every CIS / SOC 2 / ISO registry entry carries the copyright-safe flags (incl. tenant-content flags)', () => {
+describe('copyright flags + report phrasing + tenant isolation + state model', () => {
+  test('every CIS / SOC 2 / ISO registry entry carries the copyright-safe flags', () => {
     COPYRIGHTED.forEach((k) => {
       Object.values(REGISTRIES[k].REGISTRY).forEach((c) => {
         expect(c.official_text_stored).toBe(false);
         expect(c.official_text_displayed).toBe(false);
         expect(c.license_required_for_official_text).toBe(true);
-        expect(c.source_type).toBe(COPYRIGHT_FLAGS.source_type);
+        expect(c.source_type).toBe('Nerion-authored assessment logic');
         expect(c.customer_licensed_content_allowed).toBe(true);
         expect(c.tenant_only_customer_content).toBe(true);
       });
     });
   });
 
-  test('the detector fires on official CIS / AICPA / ISO phrases and passes Nerion labels', () => {
-    expect(containsOfficialText('Inventory and Control of Enterprise Assets')).toBe(true); // CIS
-    expect(containsOfficialText('Inventory & Control of Enterprise Assets')).toBe(true);
-    expect(containsOfficialText('The entity demonstrates a commitment to integrity and ethical values')).toBe(true); // AICPA
-    expect(containsOfficialText('Protection against malware shall be implemented and supported by appropriate user awareness')).toBe(true); // ISO
+  test('the detector fires (via synthetic canary) and passes Nerion labels — no official text needed', () => {
+    expect(containsOfficialText(CANARY)).toBe(true);
     expect(containsOfficialText('Secure authentication (Nerion test)')).toBe(false);
+    expect(containsOfficialText('Ethics & integrity program (Nerion test)')).toBe(false);
     expect(containsOfficialText('ISMS scope defined (Nerion test)')).toBe(false);
+    // and the & / and normalization is handled
+    expect(containsOfficialText('Enterprise asset inventory')).toBe(false);
   });
 
-  test('reports refer to controls by Nerion phrasing + ID only (no official language)', () => {
-    const label = reportLabel('ISO/IEC 27001:2022', 'A.8.5');
-    expect(label).toBe('Nerion assessment for ISO/IEC 27001:2022 control ID A.8.5');
-    expect(containsOfficialText(label)).toBe(false);
-    expect(reportLabel('CIS Controls v8.1', '5.1')).toContain('Nerion assessment for CIS Controls v8.1 control ID 5.1');
+  test('reports refer to controls by Nerion phrasing + ID only', () => {
+    expect(reportLabel('ISO/IEC 27001:2022', 'A.8.5')).toBe('Nerion assessment for ISO/IEC 27001:2022 control ID A.8.5');
+    expect(reportLabel('CIS Controls v8.1', '5.1')).toBe('Nerion assessment for CIS Controls v8.1 control ID 5.1');
+    expect(containsOfficialText(reportLabel('ISO/IEC 27001:2022', 'A.8.5'))).toBe(false);
   });
 
   test('customer-licensed content is tenant-scoped, marked, and export-gated', async () => {
-    // org_id is mandatory on every read/write — no cross-tenant path
     await expect(tenantContent.forTenant('', 'iso_27001_2022')).rejects.toThrow(/org_id/);
     await expect(tenantContent.upload('', { framework_key: 'iso_27001_2022', content: 'x' })).rejects.toThrow(/org_id/);
-    // tenant-only export must be explicitly requested
     await expect(tenantContent.exportForTenant('org_a', 'iso_27001_2022')).rejects.toThrow(/explicit/);
     const out = await tenantContent.exportForTenant('org_a', 'iso_27001_2022', true);
     expect(out.tenant_only).toBe(true);
