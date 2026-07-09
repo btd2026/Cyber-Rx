@@ -11,6 +11,7 @@ const REGISTRIES = {
   cis_v8_1: require('./cis_v8_1'),
   hipaa_164: require('./hipaa_164'),
   soc2_2017_tsc: require('./soc2_2017_tsc'),
+  iso_27001_2022: require('./iso_27001_2022'),
 };
 
 const FRAMEWORK_KEYS = Object.keys(REGISTRIES);

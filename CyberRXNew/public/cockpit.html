@@ -2140,11 +2140,31 @@ var HIPAA_MAP=[
   ['§164.316','§164.316 · Policies, Procedures & Documentation',[
     ['316(a)','Policies & procedures',['GV.PO-01']],
     ['316(b)(1)','Documentation',['GV.PO-02']]]]];
+// ISO/IEC 27001:2022 — IDs + Nerion-authored labels only (no official ISO text).
+// Assessed by Nerion-authored evidence tests; not derived from CSF.
+var ISO_MAP=[
+  ['ISO clauses','ISMS clauses (4–10)',[
+    ['4.3','ISMS scope defined',[]],['5.2','Security policy approved',[]],['6.1.2','Risk assessment operated',[]],
+    ['6.1.3','Risk treatment & Statement of Applicability',[]],['7.5','Documented information controlled',[]],
+    ['9.1','Monitoring & measurement',[]],['9.2','Internal audit performed',[]],['9.3','Management review conducted',[]],
+    ['10.1','Nonconformity & corrective action',[]],['10.2','Continual improvement',[]]]],
+  ['ISO A.5','Annex A.5 · Organizational',[
+    ['A.5.1','Security policies set',[]],['A.5.9','Asset inventory maintained',[]],['A.5.15','Access control enforced',[]],
+    ['A.5.23','Cloud service security',[]],['A.5.24','Incident management planned',[]],['A.5.30','ICT continuity readiness',[]]]],
+  ['ISO A.6','Annex A.6 · People',[
+    ['A.6.3','Awareness & training delivered',[]]]],
+  ['ISO A.7','Annex A.7 · Physical',[
+    ['A.7.1','Physical perimeter controls',[]]]],
+  ['ISO A.8','Annex A.8 · Technological',[
+    ['A.8.5','Secure authentication',[]],['A.8.7','Malware protection',[]],['A.8.8','Technical vulnerability management',[]],
+    ['A.8.12','Data leakage prevention',[]],['A.8.13','Information backup',[]],['A.8.15','Logging enabled',[]],
+    ['A.8.16','Monitoring activities',[]],['A.8.24','Use of cryptography',[]],['A.8.28','Secure coding',[]]]]];
 var FW_XNOTE={
   cis:'Each CIS Safeguard is assessed by its own <b>Nerion-authored evidence test</b> — not derived from your CSF score and not by reproducing the CIS control text. CIS IDs are referenced by number only; the official CIS text is licensed and never stored or shown here.',
   soc2:'Each SOC 2 criterion is assessed by its own <b>Nerion-authored evidence test</b> — not derived from your CSF score and not by reproducing the AICPA Trust Services Criteria text. This is a readiness indicator, not a SOC 2 opinion; your auditor issues the report.',
-  hipaa:'HIPAA Security Rule safeguards (45 CFR §164, public domain) are assessed by their own <b>Nerion-authored evidence tests</b> — not derived from your CSF score.'};
-function fwXmap(sel){return sel==='cis'?CIS_MAP:sel==='soc2'?SOC2_MAP:HIPAA_MAP;}
+  hipaa:'HIPAA Security Rule safeguards (45 CFR §164, public domain) are assessed by their own <b>Nerion-authored evidence tests</b> — not derived from your CSF score.',
+  iso:'Each ISO/IEC 27001:2022 clause and Annex A control is assessed by its own <b>Nerion-authored evidence test</b> — not derived from your CSF score and not by reproducing the official ISO text. ISO IDs are referenced by number only; if you have licensed the ISO text you can upload it and it stays inside your tenant.'};
+function fwXmap(sel){return sel==='cis'?CIS_MAP:sel==='soc2'?SOC2_MAP:sel==='iso'?ISO_MAP:HIPAA_MAP;}
 /* A crosswalk framework's rows: each control's maturity = avg of its mapped CSF
    controls' CMMI, with the mapped CSF ids shown as the evidence trail. */
 function fwXwalk(map,cov){var all=[];
@@ -2173,7 +2193,7 @@ function renderFrameworks(){
   var host=document.getElementById('cisoFrameworks');if(!host)return;
   seedDemoDocScores();
   var cov=fwDeployedIds(),all=[],body='';
-  var sel='<div class="fwseg">'+[['csf','NIST CSF 2.0'],['r53','NIST SP 800-53 Rev 5'],['cis','CIS Controls v8'],['soc2','SOC 2 (TSC)'],['hipaa','HIPAA Security Rule']].map(function(o){return '<button class="fwsegb'+(FW_SEL===o[0]?' on':'')+'" data-fw="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div>';
+  var sel='<div class="fwseg">'+[['csf','NIST CSF 2.0'],['r53','NIST SP 800-53 Rev 5'],['cis','CIS Controls v8'],['soc2','SOC 2 (TSC)'],['hipaa','HIPAA Security Rule'],['iso','ISO/IEC 27001']].map(function(o){return '<button class="fwsegb'+(FW_SEL===o[0]?' on':'')+'" data-fw="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div>';
   var xnote='';
   if(FW_SEL==='cis'||FW_SEL==='soc2'||FW_SEL==='hipaa'){var xw=fwXwalk(fwXmap(FW_SEL),cov);body=xw.body;all=xw.all;xnote='<div class="cn" style="margin:6px 0;padding:8px 10px;background:var(--blue-soft);border-radius:8px">🔗 '+FW_XNOTE[FW_SEL]+'</div>';}
   else if(FW_SEL==='csf'){
@@ -2254,7 +2274,7 @@ function downloadAuditPdf(){
     '</body></html>';
   var w=window.open('','_blank');if(!w)return;w.document.write(doc);w.document.close();w.focus();setTimeout(function(){try{w.print();}catch(_){}},300);
 }
-var FW_NAMES={csf:'NIST CSF 2.0',r53:'NIST SP 800-53 Rev 5',cis:'CIS Controls v8',soc2:'SOC 2 (TSC)',hipaa:'HIPAA Security Rule'};
+var FW_NAMES={csf:'NIST CSF 2.0',r53:'NIST SP 800-53 Rev 5',cis:'CIS Controls v8',soc2:'SOC 2 (TSC)',hipaa:'HIPAA Security Rule',iso:'ISO/IEC 27001:2022'};
 function drillFwControl(id,name){
   var cov=fwDeployedIds(),cc=controlCmmi(id,cov),fwName=FW_NAMES[FW_SEL]||'Framework',method,findings,rec,auto=false,ev=[];
   if(cc.src==='system'){auto=true;
