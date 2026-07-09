@@ -2141,12 +2141,18 @@ function c5Exposure(){
     bodyA+='<div class="c5seclab">Where the business is well protected</div><div>'+w1+'</div>'+
           '<div class="c5seclab" style="margin-top:18px">Where to concentrate next</div><div>'+w2+'</div>';
   }
-  if(haveAreas&&topWeak&&topCtrl){
+  if(haveAreas&&topWeak){
+    // Plain, friendly bottom line: name the most exposed area and its exposure in
+    // dollars, say exactly what to do (close its gaps, drive down its risks — both
+    // named in the rows above), and clarify that the figure is modeled loss, not
+    // revenue. Numbers are the live counts for that area.
+    var blExp=(topWeak.exp>0)?(' at '+usd(topWeak.exp)+' of exposure'):'';
+    var blGaps=(topWeak.gaps||0), blRisks=(topWeak.risks&&topWeak.risks.length)||0;
     bodyA+=c5bl('Bottom line',
-      'Extend '+nm(topCtrl.c)+' to '+topWeak.name+' — your best-value control against your least-protected area.',
+      'Your most exposed business area is '+topWeak.name+blExp+'.',
       tone,
-      'The exposure concentrates in '+topWeak.name+', where protection is thinnest, and '+nm(topCtrl.c)+' is the highest-value control you run. Extending it there removes the most business risk for the least incremental spend — and it is already funded.',
-      {mid:topCtrl.c.k==='mfa'?'exp_identity':'exp_total',txt:'Extend '+nm(topCtrl.c)+' — removes '+usd(topCtrl.usd)});
+      'Close its open control-gaps ('+blGaps+') and drive down its open risks ('+blRisks+') — each named in the rows above — then work down the exposure-ranked list.'+(topWeak.exp>0?(' That '+usd(topWeak.exp)+' is the modeled loss that would land here if its protection fails — not the revenue it earns.'):''),
+      (topWeak.exp>0?{mid:'exp_total',txt:'Where the '+usd(topWeak.exp)+' comes from'}:null));
   } else if(haveAreas&&weak.length===0){
     bodyA+=c5bl('Bottom line','The business is protected across every area.',null,'Every area clears its protection bar. Hold the posture and evidence it — this is the read the board wants to see sustained.',null);
   } else {
