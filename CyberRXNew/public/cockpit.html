@@ -824,7 +824,17 @@ var TAB_LABELS={
  // CRO
  'Enterprise Risk Portfolio View':'Risk Portfolio','Threat Exposure Intelligence Map':'Threat Exposure','Live Risk Intelligence Board':'Live Risk','Risk Appetite Control Panel':'Risk Appetite','Risk Remediation Tracker':'Remediation','Board Risk Intelligence Pack':'Board Pack',
  // CLO
- 'Legal Risk & Compliance Tracker':'Legal & Compliance','Governance Control Center':'Governance','Contract Risk Intelligence Engine':'Contract Risk','Unified Compliance Command Center':'Compliance','Cyber Legal Response Hub':'Legal Response','Intellectual Property Protection System':'IP Protection'
+ 'Legal Risk & Compliance Tracker':'Legal & Compliance','Governance Control Center':'Governance','Contract Risk Intelligence Engine':'Contract Risk','Unified Compliance Command Center':'Compliance','Cyber Legal Response Hub':'Legal Response','Intellectual Property Protection System':'IP Protection',
+ // Executive seats — one question per tab (leader asks, CISO answers)
+ 'Is cyber a managed risk this quarter?':'Managed risk','Must we disclose anything?':'Disclosure','Is our residual risk trending down?':'Trend','Is our oversight sound?':'Oversight','What should the board note?':'To note',
+ 'Which of our objectives are exposed?':'Objectives','Are we protecting customer trust?':'Customer trust','What needs my sign-off?':'Decisions',
+ 'Are we within the board’s appetite?':'Within appetite','Is our security spend paying off?':'Spend ROI','Are we insured efficiently?':'Insurance','What decision needs me — and what does it cost?':'Decisions',
+ 'Where are we exposed by jurisdiction?':'Jurisdictions','Could we meet our breach-notification clocks?':'Notification','Which contracts are at risk?':'Contracts','Are we handling privacy requests on time?':'Privacy',
+ 'How does cyber compare to our other principal risks?':'Vs other risks','Are we within risk appetite?':'Appetite','Which way is cyber risk trending?':'Trend','What call is mine to make?':'Decisions',
+ 'Is our technology estate secure and modern?':'Tech estate','Are we shipping AI safely?':'AI','Is our software supply chain sound?':'Supply chain','What needs my decision?':'Decisions',
+ 'Can the business keep running through a disruption?':'Resilience','Can we recover within our targets?':'Recovery','Which vendors could stop us?':'Vendors',
+ 'Does our product ship secure by design?':'Secure by design','Is security slowing our releases?':'Velocity','What’s top of the security backlog?':'Backlog',
+ 'Is our cyber audit universe covered?':'Coverage','What findings are open?':'Findings','What needs escalation?':'Escalate','What should Internal Audit action?':'Actions'
 };
 function tabLabel(title){var raw=String(title||'').trim();if(TAB_LABELS[raw])return TAB_LABELS[raw];var t=raw.replace(/\?+\s*$/,'').trim();if(TAB_LABELS[t])return TAB_LABELS[t];t=t.split(/\s+[—–-]\s+/)[0].trim();if(t.length>26)t=t.slice(0,24).replace(/\s+\S*$/,'')+'…';return t;}
 function buildTabs(){
