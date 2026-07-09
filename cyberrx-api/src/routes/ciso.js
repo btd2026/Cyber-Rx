@@ -115,8 +115,9 @@ router.post('/auditor-pack.pptx', optionalJWT, express.json({ limit: '4mb' }), a
     }
     const buf = await AuditorPackBuilder.buildPptxBuffer(payload);
     const fw = String(payload.fw || 'framework').replace(/[^a-z0-9]/gi, '').toLowerCase() || 'framework';
+    const tag = payload.draft === false ? 'final' : 'draft';
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.presentationml.presentation');
-    res.setHeader('Content-Disposition', `attachment; filename="nerion-auditor-pack-${fw}.pptx"`);
+    res.setHeader('Content-Disposition', `attachment; filename="nerion-auditor-pack-${fw}-${tag}.pptx"`);
     res.end(buf);
   } catch (err) { logger.error('CISO auditor-pack error', { error: err.message }); res.status(500).json({ error: 'Failed to build auditor pack', message: err.message }); }
 });

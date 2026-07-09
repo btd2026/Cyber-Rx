@@ -3472,8 +3472,9 @@ function c5fwDownload(path,fname,body){
     .then(function(blob){var u=URL.createObjectURL(blob);var a=document.createElement('a');a.href=u;a.download=fname;document.body.appendChild(a);a.click();setTimeout(function(){try{URL.revokeObjectURL(u);a.remove();}catch(_){}},1000);})
     .catch(function(){});
 }
-/* PPTX auditor pack. */
-function c5fwExport(){var P=c5fwPayload();if(!P)return;c5fwDownload('/api/ciso/auditor-pack.pptx','nerion-auditor-pack-'+P.sel+'.pptx',P.payload);}
+/* PPTX auditor pack. Draft by default (DRAFT watermark on every slide); pass
+   final=true to issue a clean, unwatermarked copy for handing to auditors. */
+function c5fwExport(final){var P=c5fwPayload();if(!P)return;var pl=Object.assign({},P.payload,{draft:!final});var tag=final?'final':'draft';c5fwDownload('/api/ciso/auditor-pack.pptx','nerion-auditor-pack-'+P.sel+'-'+tag+'.pptx',pl);}
 /* Excel control scorecard + POA&M. */
 function c5fwExportXlsx(){var P=c5fwPayload();if(!P)return;c5fwDownload('/api/ciso/control-scorecard.xlsx','nerion-control-scorecard-'+P.sel+'.xlsx',P.payload);}
 /* ============================================================================
@@ -4026,7 +4027,7 @@ function c5FrameworksClassic(host){
     '<div class="c5card" data-c5fwcard="failing"><div class="c5card-top"><span class="c5card-l">Controls failing</span><span class="c5chip c5-computed">computed</span></div><div class="c5card-v" style="color:var(--'+(T.failing>0?'crit':'good')+')">'+T.failing+'</div><div class="cn">deficiencies (below CMMI '+C5FW_FLOOR+')</div></div>'+
     '</div>';
   var pills='<div class="c5fw-pills">'+[['csf','NIST CSF 2.0'],['r53','NIST 800-53'],['soc2','SOC 2'],['hipaa','HIPAA'],['cis','CIS v8'],['iso','ISO 27001']].map(function(o){return '<button class="c5fw-pill'+(sel===o[0]?' on':'')+'" data-c5fwsel="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div>';
-  var cadCtrl='<div class="c5fw-controls"><div class="c5fw-cad"><span style="font-size:11px;color:var(--muted);margin-right:2px">Reassess:</span>'+[['weekly','Weekly'],['monthly','Monthly'],['quarterly','Quarterly']].map(function(o){return '<button class="c5fw-cadb'+(cad===o[0]?' on':'')+'" data-c5fwcad="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div><div style="display:flex;gap:8px"><button class="c5btn" onclick="c5fwExport()">Auditor pack (PPTX)</button><button class="c5btn" onclick="c5fwExportXlsx()" style="background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line)">Control scorecard + POA&amp;M (XLSX)</button></div></div>';
+  var cadCtrl='<div class="c5fw-controls"><div class="c5fw-cad"><span style="font-size:11px;color:var(--muted);margin-right:2px">Reassess:</span>'+[['weekly','Weekly'],['monthly','Monthly'],['quarterly','Quarterly']].map(function(o){return '<button class="c5fw-cadb'+(cad===o[0]?' on':'')+'" data-c5fwcad="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div><div style="display:flex;gap:8px"><button class="c5btn" onclick="c5fwExport(false)" title="Draft — DRAFT watermark on every slide">Auditor pack (PPTX · Draft)</button><button class="c5btn" onclick="c5fwExport(true)" title="Final — no watermark, ready to hand to auditors" style="background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line)">· Final (no watermark)</button><button class="c5btn" onclick="c5fwExportXlsx()" style="background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line)">Control scorecard + POA&amp;M (XLSX)</button></div></div>';
   // tree
   var tree='<div class="c5fw-tree">'+T.groups.map(function(g){var open=!!C5FW_EXP[g.id];var gc=c5fwCol(g.score),gs=c5fwStatus(g.score);
     var inner='';
