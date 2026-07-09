@@ -11,10 +11,13 @@
     --ink:#1E2A4A; --ink-2:#44546A; --muted:#8A93A2;
     --blue:#4A6FA5; --blue-soft:#E8F0FB; --good:#2E8B6B; --good-soft:rgba(46,139,107,.12); --warn:#C9A227; --warn-soft:rgba(201,162,39,.16); --crit:#B23A3A; --crit-soft:rgba(178,58,58,.12); --gold:#C9A227; --gold-soft:rgba(201,162,39,.13);
     --mono:"SFMono-Regular",Consolas,Menlo,monospace;
-    --serif:Cambria,Georgia,"Times New Roman",serif;
+    --sans:'Inter',system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --serif:'Inter',system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   }
+  /* Inter — one clean UI typeface, self-hosted, matching the cockpit. */
+  @font-face{font-family:'Inter';font-style:normal;font-weight:100 900;font-display:swap;src:url('fonts/inter-var.woff2') format('woff2');}
   *{box-sizing:border-box;margin:0;padding:0}
-  body{background:var(--plane);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased}
+  body{background:var(--plane);color:var(--ink);font-family:var(--sans);line-height:1.55;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
   h1,h2,h3,.st{font-family:var(--serif)}
   .wrap{max-width:900px;margin:0 auto;padding:0 24px}
   .top{border-bottom:1px solid var(--line);background:var(--surface)}

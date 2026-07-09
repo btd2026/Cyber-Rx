@@ -102,11 +102,12 @@ var SEATS = {
   body:function(){return (
    sec('01','Program health','','<div id="c5-frameworks"></div>')
    +sec('02','Cyber exposure','','<div id="c5-health"></div>')
-   +sec('03','Protection','','<div id="c5-exposure"></div>')
-   +sec('04','Cyber operations','','<div id="c5-effect"></div>')
-   +sec('05','Threats','','<div id="c5-threats"></div>')
-   +sec('06','AI &amp; supply chain','','<div id="c5-aisupply"></div>')
-   +sec('07','Decisions &amp; projections','','<div id="c5-decproj"></div>')
+   +sec('03','Where are we protected?','','<div id="c5-exposure"></div>')
+   +sec('04','Which controls buy down the most risk?','','<div id="c5-exposure2"></div>')
+   +sec('05','Cyber operations','','<div id="c5-effect"></div>')
+   +sec('06','Threats','','<div id="c5-threats"></div>')
+   +sec('07','AI &amp; supply chain','','<div id="c5-aisupply"></div>')
+   +sec('08','Decisions &amp; projections','','<div id="c5-decproj"></div>')
   );}
  },
 
