@@ -1061,7 +1061,7 @@
         '<span style="color:var(--good,#0ca30c);font-weight:700;flex:0 0 auto">✓</span>'+
         '<span style="font-weight:600;flex:0 0 auto">'+t.l+'</span>'+
         '<span style="color:var(--ink-2,#516074);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+d.name+'</span>'+
-        '<span style="font-weight:600;color:var(--good,#0ca30c);flex:0 0 auto">CMMI '+d.cmmi+' · '+(CMMI_LBL[d.cmmi]||'')+'</span></div>';}
+        '<span style="font-weight:600;color:var(--good,#0ca30c);flex:0 0 auto">Uploaded</span></div>';}
       return '<div style="'+base+'">'+
         '<span style="opacity:.4;flex:0 0 auto">○</span>'+
         '<span style="font-weight:600;flex:0 0 auto">'+t.l+'</span>'+
@@ -1085,7 +1085,8 @@
         try{if(res.text){var tx=JSON.parse(localStorage.getItem('cyberrx_doc_text')||'{}')||{};tx[dt]={text:res.text,filename:file.name};localStorage.setItem('cyberrx_doc_text',JSON.stringify(tx));}}catch(_){}
         var docs=obDocDocs(),lbl=(OB_DOC_TYPES.filter(function(d){return d.k===dt;})[0]||{}).l||dt;
         docs.unshift({name:file.name,type:lbl,cmmi:res.cmmi,matched:res.matched||0,total:res.total||0,engine:res.engine||'keyword'});obSaveDocs(docs);
-        if(msg){msg.textContent='✓ '+file.name+' — CMMI '+res.cmmi+' ('+(CMMI_LBL[res.cmmi]||'')+')';msg.style.color='var(--good)';}
+        // The AI-governance uploader just confirms the file is in — no score at this level.
+        if(msg){msg.textContent=(msgId==='aiGovDocMsg'?'✓ '+file.name+' uploaded':'✓ '+file.name+' — CMMI '+res.cmmi+' ('+(CMMI_LBL[res.cmmi]||'')+')');msg.style.color='var(--good)';}
         updateDocBadge();obRenderDocList();if(typeof renderAiGovDocList==='function')renderAiGovDocList();if(typeof computeAiGov==='function')computeAiGov();})
       .catch(function(e){if(msg){msg.textContent='✗ '+e.message;msg.style.color='var(--warn)';}});}
   function obSeedSampleDocScores(){if(Object.keys(obDocScores()).length)return;
