@@ -3845,8 +3845,19 @@ var CAPS=[
 var CAP_BY_KEY={};CAPS.forEach(function(c){CAP_BY_KEY[c.k]=c;});
 /* The live signal that scores each capability + the connector keys that produce it —
    so the CISO detail can name the exact source of every number (no hardcoding). */
-var CAP_SIGKEY={edr:'edr_pct',mfa:'mfa_pct',pam:'pam_pct',vuln:'patch_pct',aware:'training_pct',siem:'siem_coverage_pct',cspm:'cspm_pct',backup:'backup_immutable_pct'};
-var CAP_TOOLKEYS={edr:['defender','crowdstrike','sentinel'],mfa:['okta','entra'],pam:['cyberark','beyondtrust','delinea'],vuln:['qualys','tenable'],aware:['knowbe4','proofpoint'],siem:['splunk','sentinel'],cspm:['wiz','prisma','aws','azure','gcp'],backup:['rubrik','veeam','cohesity','commvault'],dlp:['purview','forcepoint'],seg:['illumio']};
+var CAP_SIGKEY={edr:'edr_pct',mfa:'mfa_pct',pam:'pam_pct',vuln:'patch_pct',aware:'training_pct',siem:'siem_coverage_pct',cspm:'cspm_pct',backup:'backup_immutable_pct',dlp:'dlp_pct',seg:'seg_pct'};
+var CAP_TOOLKEYS={
+  edr:['defender','crowdstrike','sentinelone','cortexxdr','trendmicro'],
+  mfa:['okta','entra','ping','duo','onelogin'],
+  pam:['cyberark','beyondtrust','delinea','hashivault','oneidentity'],
+  vuln:['qualys','tenable','rapid7','defender_vm','ivanti'],
+  aware:['knowbe4','proofpoint','abnormal','mimecast','mdo365'],
+  siem:['splunk','sentinel','elastic','qradar','chronicle'],
+  cspm:['wiz','prisma','aws','azure','gcp','orca'],
+  backup:['rubrik','veeam','cohesity','commvault','dell_powerprotect'],
+  dlp:['purview','forcepoint','symantec_dlp','zscaler_dlp','netskope'],
+  seg:['illumio','zscaler_zpa','paloalto_seg','cisco_workload','guardicore']
+};
 /* Where a capability's number comes from: the connected tool (real vendor name if
    connected), whether it's live or demo telemetry, and the signal key it reads. */
 function capSource(c){
@@ -3896,7 +3907,9 @@ function capDeploy(c){
   if(c.k==='siem')return siemCoverage(); // real log-source coverage; derived, never fabricated
   if(c.k==='cspm')return sig('cspm_pct');
   if(c.k==='backup')return sig('backup_immutable_pct');
-  return null; // dlp, seg — no live signal yet
+  if(c.k==='dlp')return sig('dlp_pct'); // enforced DLP coverage % across channels/endpoints
+  if(c.k==='seg')return sig('seg_pct'); // workloads/segments in enforced segmentation
+  return null;
 }
 /* User's color scale: green ≥90, blue ≥75, yellow ≥50, red <50, grey = not connected. */
 function capColor(p){return p==null?'muted':p>=90?'good':p>=75?'blue':p>=50?'warn':'crit';}
