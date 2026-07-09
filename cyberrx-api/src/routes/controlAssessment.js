@@ -18,36 +18,49 @@ const { optionalJWT, demoOrg } = require('../middleware/auth');
 const logger = require('../utils/logger');
 const CA = require('../control-assessment');
 const Integrations = require('../services/IntegrationService');
+const vault = require('../utils/vault');
 
 router.use(optionalJWT, demoOrg);
 const orgOf = (req) => req.orgId || req.headers['x-org-id'] || req.query.org_id || req.query.orgId || 'demo';
 
+// Run the full continuous assessment pipeline for the org: collect required API
+// fields from connected connectors → validate → assess → snapshot. Controls
+// stay Not Enough Evidence until their connector is live-tenant-validated and
+// the evidence is actually collected.
 router.get('/', async (req, res) => {
   const orgId = orgOf(req);
   try {
+    // connected connectors
+    let connected = new Set();
+    try { (await Integrations.listForOrg(orgId)).forEach((c) => { if (c.connected) connected.add(c.key); }); } catch (_) {}
+    // live-tenant validation status
+    let validation = {};
+    try { validation = await CA.validation.getValidation(orgId); } catch (_) {}
+    // creds only for connected connectors that have a collector
+    const creds = {};
+    for (const k of connected) {
+      if (CA.CONNECTOR_COLLECTORS[k]) { try { creds[k] = await vault.get(orgId, 'integration:' + k); } catch (_) {} }
+    }
     let signals = [];
     try { signals = await Integrations.signalsForOrg(orgId); } catch (_) { signals = []; }
-    // Enrich raw telemetry into an evidence bundle. Operating-effectiveness
-    // fields (sign-in logs, restore-integrity verification, ePHI scope, review
-    // period) are not yet pulled, so they stay absent — which the framework-
-    // native tests read as Not Enough Evidence. Never fabricated.
-    const ev = CA.buildEvidence(signals, {
-      scope: { ephi_systems_known: false, ephi_in_scope: null },
-      reviewPeriod: null,
-      connectorValidation: {},
-      freshnessDays: Infinity,
-    });
-    const all = CA.assessAll(ev);
-    const frameworks = {};
-    Object.keys(all).forEach((k) => {
-      frameworks[k] = { framework: all[k].framework, framework_key: k, score: all[k].score, results: all[k].results };
-    });
-    try { await CA.history.record(orgId, all, {}); } catch (_) { /* best effort */ }
-    res.json({ org_id: orgId, generated_at: new Date().toISOString(), engine: 'framework-native (no crosswalk)', frameworks });
+    const run = await CA.runAssessment(orgId, { connectors: connected, validation, creds, signals });
+    res.json(run);
   } catch (e) {
     if (logger && logger.warn) logger.warn('control-assessment failed', { error: e.message });
     res.status(500).json({ error: 'assessment failed' });
   }
+});
+
+// Mark a connector live-tenant-validated (or not) — a control cannot be Effective
+// unless its connector is validated here.
+router.post('/validate', express.json(), async (req, res) => {
+  const orgId = orgOf(req);
+  try {
+    const b = req.body || {};
+    if (!b.connector) return res.status(400).json({ error: 'connector required' });
+    const out = await CA.validation.setValidation(orgId, b.connector, b.validated !== false, b.validated_by || null);
+    res.json(out);
+  } catch (e) { res.status(500).json({ error: 'validate failed' }); }
 });
 
 // The auditor design-effectiveness checklists — what the engine looks for in a

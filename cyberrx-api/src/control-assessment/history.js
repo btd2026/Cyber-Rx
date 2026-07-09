@@ -74,4 +74,40 @@ async function trend(orgId, frameworkKey, controlId, limit) {
   } catch (_) { return []; }
 }
 
-module.exports = { ensureTable, record, trend };
+// ---- evidence snapshots — the raw evidence a run was concluded from ----------
+let _snapReady = null;
+async function ensureSnapTable() {
+  if (!db) return;
+  if (_snapReady) return _snapReady;
+  _snapReady = db.query(`CREATE TABLE IF NOT EXISTS control_evidence_snapshots (
+    id BIGSERIAL PRIMARY KEY,
+    org_id TEXT NOT NULL,
+    snapshot_id TEXT NOT NULL,
+    taken_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    review_period_start TIMESTAMPTZ,
+    review_period_end TIMESTAMPTZ,
+    evidence JSONB,
+    report JSONB
+  )`).then(() => db.query(
+    'CREATE INDEX IF NOT EXISTS ces_org_snap ON control_evidence_snapshots(org_id, snapshot_id)'
+  )).catch(() => {});
+  return _snapReady;
+}
+
+// Store the exact evidence bundle + collection report a run was based on, so the
+// assessment is reproducible and auditable over time.
+async function recordSnapshot(orgId, snapshotId, evidence, report) {
+  if (!db) return { persisted: false, note: 'no database' };
+  await ensureSnapTable();
+  try {
+    const rp = evidence && evidence.review_period;
+    await db.query(
+      `INSERT INTO control_evidence_snapshots (org_id, snapshot_id, review_period_start, review_period_end, evidence, report)
+       VALUES ($1,$2,$3,$4,$5,$6)`,
+      [orgId, snapshotId, rp && rp.start, rp && rp.end, JSON.stringify(evidence || {}), JSON.stringify(report || {})]
+    );
+    return { persisted: true, snapshot_id: snapshotId };
+  } catch (_) { return { persisted: false }; }
+}
+
+module.exports = { ensureTable, record, trend, ensureSnapTable, recordSnapshot };
