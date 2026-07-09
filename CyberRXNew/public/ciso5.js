@@ -344,7 +344,7 @@ function c5get(id){
       // adapter, scored by config/scoring.js). Fall back to the crown-jewel services view.
       var CJR=(typeof LIVE!=='undefined'&&LIVE&&LIVE.crown_jewel_risk)||null;
       if(CJR&&CJR.items&&CJR.items.length){var it=CJR.items,esc=it.filter(function(x){return x.escalate;}).length,top=it[0];
-        return c5obj({id:id,name:'Crown jewels at greatest risk',connected:true,
+        return c5obj({id:id,name:'Crown jewels requiring CISO attention',connected:true,
           displayValue:(esc>0?(esc+' above escalation'):(it.length+' scored'))+(top?(' · top '+top.risk):''),
           label:'computed',color:(esc>0?'crit':(top&&top.risk>=15?'warn':'good')),
           formula:'risk = norm(criticality) × exploitability(EPSS or max_cvss/10) × exposure(EDR; active-threat floor 0.7) × 100; escalate at residual ≥ 25',
@@ -354,7 +354,7 @@ function c5get(id){
           action:top?('Your highest-risk crown jewel is '+top.asset+' (risk '+top.risk+'). Drive its residual below the 25 escalation line: patch its '+top.high_crit_vuln_count+' high/critical vuln'+(top.high_crit_vuln_count===1?'':'s')+(top.active_threat?' and contain the active EDR threat now':'')+', then work down the ranked list. '+(esc>0?(esc+' asset'+(esc>1?'s are':' is')+' above escalation and need action this week.'):'')):'Crown jewels are scored and none are above the escalation line — hold posture and re-score as VM/EDR data refreshes.',note:top?('Your highest-risk crown jewel is '+top.asset+' (risk '+top.risk+').'):'The crown-jewel systems carrying the most composite risk.',
           connectTool:'your Crown Jewel Register · CMDB · EDR · VM'});}
       var Scr=(typeof c5Services==='function')?c5Services():{list:[],total:0,atRisk:0};var conn=Scr.total>0;var topcj=(Scr.list&&Scr.list[0])||null;var atr=Scr.atRisk;
-      return c5obj({id:id,name:'Crown jewels at greatest risk',connected:conn,
+      return c5obj({id:id,name:'Crown jewels requiring CISO attention',connected:conn,
         displayValue:conn?(atr>0?(atr+' of '+Scr.total+' at risk'):(Scr.total+' crown jewels · all secure')):'—',
         label:'computed',color:conn?(atr>0?'warn':'good'):'muted',
         formula:'crown jewels at greatest risk = crown-jewel systems whose live exposure path is currently material',
@@ -374,7 +374,7 @@ function c5get(id){
       var rowsC=caps2.map(function(c){var exp=Number(c.exposure_usd)||0;var tw=TW[String(c.grc_status||c.tier||'').toLowerCase()]||1;
         return {name:c.name,exposure:exp,gaps:(c.control_gaps!=null?Number(c.control_gaps):null),open_risk:(c.open_risk!=null?Number(c.open_risk):null),grc:c.grc_status,tw:tw,risks:(c.risks||[])};}).sort(function(a,b){return b.exposure-a.exposure;});
       var topc=rowsC[0]||null;
-      return c5obj({id:id,name:'Business capabilities with highest exposure',connected:conn,
+      return c5obj({id:id,name:'Business capability most exposed',connected:conn,
         displayValue:conn?(topc?(topc.name+(topc.exposure>0?(' · '+usd(topc.exposure)):'')):(caps2.length+' capabilities mapped')):'—',
         label:'computed',color:conn?((topc&&topc.exposure>0)?'warn':'good'):'muted',
         formula:'exposure = (open control-gaps + open risk) × capability-tier weight; ranked exposure-desc',
@@ -400,7 +400,7 @@ function c5get(id){
       var srows=scing.slice(0,6).map(function(s,i){var t=(s.techniques&&s.techniques.length)?s.techniques.join(', '):'mapped on connect';
         var l=(s.likelihood!=null)?String(s.likelihood):'pending threat-intel';var im=Number(s.worst_case_usd)||0;
         return [{text:(s.scenario||'')+(s.target?(' → '+s.target):''),bold:true},t,{text:l,color:(s.likelihood!=null?null:'muted')},{text:(im>0?usd(im):'—'),color:'blue'},{text:'#'+(i+1),bold:true}];});
-      return c5obj({id:id,name:'Most likely business disruption scenarios',connected:conn,
+      return c5obj({id:id,name:'Most likely material disruption scenario',connected:conn,
         displayValue:conn?(stz.scenario+(stz.target?(' → '+stz.target):'')):'—',
         label:'modeled',color:conn?'warn':'muted',
         formula:'priority = technique_likelihood × business_impact; scenarios ranked priority-desc',
@@ -425,7 +425,7 @@ function c5get(id){
         return {name:nm,value:(v.score!=null?(v.score+'/100'):'—')+(v.service_criticality?(' · '+v.service_criticality+' service'):''),color:(v.color||capColor(v.score)),source:(svc?('open findings in '+svc):'security rating')};
       });
       if(sbom.length)rowsV.push({name:'Software components',value:sbomVuln+' critical vuln'+(sbomVuln===1?'':'s')+' across '+sbom.length+' component'+(sbom.length===1?'':'s'),color:(sbomVuln>0?'warn':'good'),source:'SBOM'});
-      return c5obj({id:id,name:'Third-party / supply-chain cyber exposure',connected:conn,
+      return c5obj({id:id,name:'Vendors requiring action',connected:conn,
         displayValue:conn?((ntp>0?(ntp+' vendor'+(ntp>1?'s':'')+' flagged'):'Vendors adequate')+(sbomVuln>0?(' · '+sbomVuln+' SBOM vuln'+(sbomVuln===1?'':'s')):'')):'—',
         label:(Vtp.p&&Vtp.p.any_live)?'live':'modeled',color:conn?((ntp>0||sbomVuln>0)?'warn':'good'):'muted',
         formula:'exposure = vendor rating / TPRM finding / SBOM vulnerable-component, each weighted by the criticality of the service it supports; ranked exposure-desc',
@@ -1938,24 +1938,55 @@ function c5Health(){
     {id:'er_capability',ic:'store',onb:'business capability map'},
     {id:'er_scenarios',ic:'trend',onb:'threat intelligence'},
     {id:'er_thirdparty',ic:'store',onb:'vendor risk'}]);
-  // Bottom line — synthesized from the four reads, pointing to the single most
-  // exposed thing (the top-ranked crown jewel), so it stays consistent with tile 1.
+  // Bottom line — points at the single most exposed thing and the decision needed.
+  // Never claims the decision removes risk; only that it REDUCES the top exposure.
   var CJRk=(typeof LIVE!=='undefined'&&LIVE&&LIVE.crown_jewel_risk)||null;var topCj=(CJRk&&CJRk.items&&CJRk.items.length)?CJRk.items[0]:null;
+  var demoExp=((typeof signalsAreDemo==='function')&&signalsAreDemo())||!!(CJRk&&CJRk.mocked);
+  var mLbl=(typeof TrustLogic!=='undefined')?TrustLogic.MODELED_EXPOSURE_LABEL:'Modeled business exposure';
+  var mBasis=(typeof TrustLogic!=='undefined')?TrustLogic.EXPOSURE_BASIS:'Estimated business value tied to affected customer-platform dependencies.';
   var blHead,blPara,blMid,blBtn;
   if(topCj){blMid='er_crown';blHead='Act on your highest-risk crown jewel first.';
-    blPara='Across the four reads, your highest-risk crown jewel is <b>'+c5esc(topCj.asset)+'</b> (risk '+topCj.risk+(topCj.active_threat?', active threat':'')+', '+topCj.high_crit_vuln_count+' high/critical vulns)'+(CJRk.mocked?' — VM/EDR figures illustrative until those tools are connected':'')+'. Harden it before it becomes an incident.';
-    blBtn='Prioritize '+c5esc(topCj.asset);}
+    blPara='Across the four reads, your highest-risk crown jewel is <b>'+c5esc(topCj.asset)+'</b> (risk '+topCj.risk+(topCj.active_threat?', active threat':'')+', '+topCj.high_crit_vuln_count+' high/critical vulns)'+(CJRk.mocked?' — VM/EDR figures illustrative until those tools are connected':'')+'. Harden it to reduce its exposure before it becomes an incident. This reduces the top exposure; it does not remove all cyber risk.';
+    blBtn='Prioritize '+c5esc(topCj.asset)+' — reduce exposure';}
   else if(ec.connected){blMid='exp_identity';blHead='One decision reduces the top exposure.';
-    blPara='Your largest exposure driver is <b>'+ec.name.toLowerCase()+'</b> — '+ec.displayValue+' modeled, threatening '+ec.threatens+'. The fix is scoped and funded and waiting for your sign-off.';
-    blBtn='Approve — removes '+ec.displayValue+' of risk';}
+    blPara='The largest exposure driver is <b>cloud identity sprawl</b> affecting customer-platform services. '+(demoExp?('Nerion currently shows a <b>modeled demo exposure of '+ec.displayValue+'</b>'):('Nerion models <b>'+mLbl.toLowerCase()+' of '+ec.displayValue+'</b>'))+' — '+mBasis+' The remediation plan is scoped; approval is needed to accelerate execution ahead of lower-risk work. Approval reduces the top exposure; it does not remove all cyber risk.';
+    blBtn='Approve identity remediation — reduce top exposure';}
   else {blMid='exp_identity';blHead='Connect your tools to surface the top fix.';
-    blPara='Connect your identity, control and crown-jewel sources and Nerion surfaces your most exposed asset here, with the scoped fix ready for sign-off.';
-    blBtn='Approve the top fix';}
+    blPara='Connect your identity, control and crown-jewel sources and Nerion surfaces your most exposed asset here, with the scoped remediation ready to prioritize.';
+    blBtn='Approve the top remediation';}
+  var ans=(ec.connected||topCj)?'Exposure is concentrated in customer-platform identity risk; one decision can reduce the top exposure.':'Connect your identity, asset and control sources to rank where the business is most exposed.';
   host.innerHTML=c5header()+
-    c5shell('Cyber exposure · where is the business most exposed?','Where cyber exposure concentrates — and what to act on first.',anyRisk?'warn':null,'The enterprise’s material cyber exposure, ranked across the four dimensions that move it. Every figure traces to its source — drill any tile to defend it to the board.')+
+    c5shell('Cyber exposure · where is the business most exposed?',ans,anyRisk?'warn':null,'The enterprise’s material cyber exposure, ranked across the four dimensions that move it. Every figure traces to its source — drill any tile to defend it to the board.')+
     tiles+
+    c5ExposureEvidencePanel()+
     c5bl('Bottom line',blHead,null,blPara,{mid:blMid,txt:blBtn})+
     '<div class="c5foot">Each tile traces to its exact sources. Figures shown are illustrative until the sources are connected.</div>';
+}
+/* Evidence confidence for the Cyber-Exposure tab: gathers the six source reads,
+   computes an overall confidence that can never read "High" when a critical source
+   is missing, and renders a compact, secondary panel. Demo/seed data is labelled. */
+function c5ExposureEvidence(){
+  function capConn(k){try{return !!(typeof CAP_BY_KEY!=='undefined'&&CAP_BY_KEY[k]&&typeof capDeploy==='function'&&capDeploy(CAP_BY_KEY[k])!=null);}catch(_){return false;}}
+  var demo=(typeof signalsAreDemo==='function')&&signalsAreDemo();
+  var sources=[
+    {key:'cmdb',   label:'CMDB / asset inventory',         connected:c5get('er_crown').connected,      critical:true},
+    {key:'iam',    label:'Cloud IAM / identity source',    connected:(capConn('mfa')||capConn('pam')), critical:true},
+    {key:'vuln',   label:'Vulnerability / exposure source',connected:capConn('vuln'),                  critical:true},
+    {key:'capmap', label:'Business capability mapping',    connected:c5get('er_capability').connected, critical:true, computed:true},
+    {key:'vendor', label:'Vendor risk source',             connected:c5get('er_thirdparty').connected, critical:true},
+    {key:'scen',   label:'Disruption scenario source',     connected:c5get('er_scenarios').connected,  critical:false, partial:!c5get('er_scenarios').connected}
+  ];
+  var conf=(typeof TrustLogic!=='undefined')?TrustLogic.evidenceConfidence(sources):{level:'—',connected:0,total:sources.length};
+  return {sources:sources,conf:conf,demo:demo};
+}
+function c5ExposureEvidencePanel(){
+  var E=c5ExposureEvidence();
+  var SL=(typeof TrustLogic!=='undefined')?TrustLogic.sourceStatus:function(o){return o&&o.connected?{label:'Connected',cls:'g'}:{label:'Not Connected',cls:'n'};};
+  var lvlCls={'High':'g','Medium':'a','Low':'a','Not Enough Evidence':'n'}[E.conf.level]||'n';
+  var chips=E.sources.map(function(s){var st=SL({connected:s.connected,computed:s.computed,partial:s.partial});return '<span class="c5pill '+st.cls+'" style="display:inline-block;margin:2px 5px 2px 0">'+s.label+': '+st.label+'</span>';}).join('');
+  return '<div style="margin-top:14px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)">'+
+    '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:12px;font-weight:600;color:var(--ink-2)">Evidence confidence</span><span class="c5pill '+lvlCls+'">'+E.conf.level+'</span>'+(E.demo?'<span class="c5pill n">Demo data — values illustrative</span>':'')+'</div>'+
+    '<div style="margin-top:7px;line-height:2">'+chips+'</div></div>';
 }
 
 /* Reusable graphical status-ring tile grid (the AI & supply-chain look): a

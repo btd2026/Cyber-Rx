@@ -72,6 +72,27 @@
 
   // Label that MUST accompany any dollar figure shown to the CEO — never a bare number.
   var EXPOSURE_LABEL = 'Estimated customer-platform exposure (modeled)';
+  // Labels + basis explanation for the CISO Cyber-Exposure tab's modeled dollar figure.
+  var MODELED_EXPOSURE_LABEL = 'Modeled business exposure';
+  var EXPOSURE_BASIS = 'Estimated business value associated with customer-platform services dependent on affected cloud identities.';
+
+  // Overall evidence confidence from a source set. Rule: a missing CRITICAL source can
+  // never read "High". Level ∈ High · Medium · Low · Not Enough Evidence.
+  //   sources: [{ label, connected, critical, computed, partial, stale }]
+  function evidenceConfidence(sources) {
+    sources = sources || [];
+    var crit = sources.filter(function (s) { return s && s.critical; });
+    var critConnected = crit.filter(function (s) { return s.connected; }).length;
+    var connected = sources.filter(function (s) { return s && s.connected; }).length;
+    var frac = sources.length ? connected / sources.length : 0;
+    var allCritical = crit.length > 0 && critConnected === crit.length;
+    var level;
+    if (!sources.length || frac < 0.4) level = 'Not Enough Evidence';
+    else if (!allCritical) level = 'Low';       // a critical source is missing → never High
+    else if (frac >= 0.8) level = 'High';
+    else level = 'Medium';
+    return { level: level, connected: connected, total: sources.length, criticalMissing: crit.length - critConnected };
+  }
 
   // Evidence-source status, mapped to a pill class. Statuses:
   //   Connected · Computed · Partially Connected · Stale · Not Enough Evidence · Not Connected
@@ -92,6 +113,9 @@
     trustAnswer: trustAnswer,
     bottomLineHead: bottomLineHead,
     sourceStatus: sourceStatus,
+    evidenceConfidence: evidenceConfidence,
     EXPOSURE_LABEL: EXPOSURE_LABEL,
+    MODELED_EXPOSURE_LABEL: MODELED_EXPOSURE_LABEL,
+    EXPOSURE_BASIS: EXPOSURE_BASIS,
   };
 });

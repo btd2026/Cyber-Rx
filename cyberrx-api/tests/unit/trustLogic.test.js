@@ -128,3 +128,50 @@ describe('bottom-line headline is decision-oriented and honest', () => {
     expect(TL.bottomLineHead({ incidentsConnected: true, incidents: 1 })).toMatch(/act now/i);
   });
 });
+
+describe('evidenceConfidence (CISO Cyber-Exposure tab)', () => {
+  const allCritical = [
+    { label: 'CMDB', connected: true, critical: true },
+    { label: 'IAM', connected: true, critical: true },
+    { label: 'Vuln', connected: true, critical: true },
+    { label: 'Capmap', connected: true, critical: true },
+    { label: 'Vendor', connected: true, critical: true },
+  ];
+  it('is High when every critical source is connected and coverage is broad', () => {
+    const sources = allCritical.concat([{ label: 'Scenario', connected: true, critical: false }]);
+    expect(TL.evidenceConfidence(sources).level).toBe('High');
+  });
+  it('can never be High when a critical source is missing', () => {
+    const sources = allCritical.slice();
+    sources[1] = { label: 'IAM', connected: false, critical: true }; // drop a critical source
+    sources.push({ label: 'Scenario', connected: true, critical: false });
+    const c = TL.evidenceConfidence(sources);
+    expect(c.level).not.toBe('High');
+    expect(c.level).toBe('Low');
+    expect(c.criticalMissing).toBe(1);
+  });
+  it('is Not Enough Evidence when fewer than 40% of sources are connected', () => {
+    const sources = [
+      { label: 'a', connected: true, critical: true },
+      { label: 'b', connected: false, critical: true },
+      { label: 'c', connected: false, critical: true },
+      { label: 'd', connected: false, critical: false },
+      { label: 'e', connected: false, critical: false },
+    ];
+    expect(TL.evidenceConfidence(sources).level).toBe('Not Enough Evidence');
+  });
+  it('only ever returns one of the four allowed confidence levels', () => {
+    ['High', 'Medium', 'Low', 'Not Enough Evidence'].some((lvl) => lvl); // allowed set
+    [[], allCritical].forEach((s) => {
+      expect(['High', 'Medium', 'Low', 'Not Enough Evidence']).toContain(TL.evidenceConfidence(s).level);
+    });
+  });
+});
+
+describe('modeled-exposure labels are present and explanatory', () => {
+  it('exposes a business label and a basis explanation', () => {
+    expect(TL.MODELED_EXPOSURE_LABEL).toMatch(/exposure/i);
+    expect(TL.EXPOSURE_BASIS).toMatch(/business value/i);
+    expect(TL.EXPOSURE_BASIS.length).toBeGreaterThan(20);
+  });
+});
