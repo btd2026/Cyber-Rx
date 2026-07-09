@@ -341,7 +341,7 @@ function c5get(id){
         sources:[{tool:'Crown Jewel Register + CMDB',connector:'cmdb',field:'crown_jewels',lastRefresh:c5ago()},{tool:'EDR',connector:'edr',field:'detections'},{tool:'Vulnerability mgmt (VM)',connector:'vuln',field:'critical_vulns'}],
         note:topcj?('Your most exposed crown jewel is '+topcj.name+' — '+String(topcj.sub||'').toLowerCase()+'.'):'The crown-jewel systems carrying the most risk right now.',
         connectTool:'your Crown Jewel Register · CMDB · EDR · VM'});}
-    case 'er_capability':{var caps2=(typeof LIVE!=='undefined'&&LIVE&&LIVE.capabilities)||[];var conn=caps2.length>0;
+    case 'er_capability':{var caps2=(typeof c5CapSource==='function')?c5CapSource():((typeof LIVE!=='undefined'&&LIVE&&LIVE.capabilities)||[]);var conn=caps2.length>0;
       // Spec: JOIN Capability Map → GRC control_coverage/gaps + open_risk.
       //       exposure = (open_gaps + open_risk) × capability_tier_weight.
       //       OUTPUT [capability, control_gaps, open_risk, exposure]; sort exposure desc.
@@ -353,11 +353,13 @@ function c5get(id){
         displayValue:conn?(topc?(topc.name+(topc.exposure>0?(' · '+usd(topc.exposure)):'')):(caps2.length+' capabilities mapped')):'—',
         label:'computed',color:conn?((topc&&topc.exposure>0)?'warn':'good'):'muted',
         formula:'exposure = (open control-gaps + open risk) × capability-tier weight; ranked exposure-desc',
-        method:'For each business capability this needs four fields: its GRC control-coverage status (Adequate / Watch / Gap), its count of open control gaps, its count of open risks, and its business exposure ($). Capability names come from your Business Capability Map; the three GRC fields come from your GRC platform (Archer / ServiceNow GRC / LeanIX) — or, if you have no GRC tool, from an Excel/CSV you upload at onboarding (columns: capability · exposure · grc_status · control_gaps · open_risk). Exposure is then ranked as (open gaps + open risks) × capability-tier weight (Critical 1.0 · High 0.75 · Medium 0.5 · Low 0.25).',
-        inputs:rowsC.slice(0,6).map(function(c){return {name:c.name+(c.grc?(' · GRC '+c.grc):''),value:(c.exposure>0?usd(c.exposure):'mapped')+'  ·  '+(c.gaps!=null?c.gaps:'—')+' gaps · '+(c.open_risk!=null?c.open_risk:'—')+' open risks',color:(c.exposure>0?'warn':'good'),source:'Capability Map + GRC (or Excel)'};}),
-        sources:[{tool:'Business Capability Map',connector:'capmap',field:'capability · tier · exposure',lastRefresh:c5ago()},{tool:'GRC (Archer / ServiceNow GRC / LeanIX) — or Excel/CSV upload',connector:'grc',field:'control_coverage (Adequate/Watch/Gap) · control_gaps · open_risk'}],
-        note:topc?('Your most exposed capability is '+topc.name+'.'):'Which business capabilities carry the most cyber exposure. No GRC tool? Upload an Excel with control_coverage, control_gaps and open_risk per capability.',
-        connectTool:'your Business Capability Map + GRC (or an Excel upload) at onboarding'});}
+        method:'By default these are the business functions you mapped at onboarding (the crown-jewel value chain), and each one’s coverage is computed from your live control posture: protection = the mean maturity of the NIST controls guarding that function’s systems (0–5 → 0–100), open control-gaps = its controls below Defined. Business exposure ($) is the at-risk value carried by that function. You can OVERRIDE this with a real Business Capability Map + GRC control-coverage (Archer / ServiceNow GRC / LeanIX, or an Excel with columns capability · exposure · grc_status · control_gaps · open_risk) — a map filled with security domains is ignored so this stays a business view. Exposure is ranked (open gaps + open risks) × capability-tier weight (Critical 1.0 · High 0.75 · Medium 0.5 · Low 0.25).',
+        inputs:rowsC.slice(0,6).map(function(c){return {name:c.name+(c.grc?(' · GRC '+c.grc):''),value:(c.exposure>0?usd(c.exposure):'mapped')+'  ·  '+(c.gaps!=null?c.gaps:'—')+' gaps · '+(c.open_risk!=null?c.open_risk:'—')+' open risks',color:(c.exposure>0?'warn':'good'),source:(caps2[0]&&caps2[0].derived)?'Business functions + control posture':'Capability Map + GRC (or Excel)'};}),
+        sources:(caps2[0]&&caps2[0].derived)
+          ?[{tool:'Business functions (value chain)',connector:'capmap',field:'function · at-risk exposure',lastRefresh:c5ago()},{tool:'Live control posture',connector:'grc',field:'control maturity → coverage · gaps'}]
+          :[{tool:'Business Capability Map',connector:'capmap',field:'capability · tier · exposure',lastRefresh:c5ago()},{tool:'GRC (Archer / ServiceNow GRC / LeanIX) — or Excel/CSV upload',connector:'grc',field:'control_coverage (Adequate/Watch/Gap) · control_gaps · open_risk'}],
+        note:topc?('Your most exposed business area is '+topc.name+'.'):'Which business areas carry the most cyber exposure — derived from your business functions and live control posture. Upload a Business Capability Map + GRC data to override.',
+        connectTool:'derived from your business functions — or upload a Business Capability Map + GRC to override'});}
     case 'er_scenarios':{var stz=(typeof LIVE!=='undefined'&&LIVE&&LIVE.stress)||{};var conn=!!(stz&&stz.scenario);
       // Spec: PULL Threat Intel → MAP to MITRE ATT&CK techniques matching your stack →
       //       JOIN BIA target impact. priority = technique_likelihood × business_impact.
@@ -1914,6 +1916,43 @@ function c5AiSupply(){
 /* Protection score for a business area. Prefer a real GRC control-coverage figure;
    otherwise map the GRC status (Adequate / Watch / Gap) to a representative band —
    marked illustrative wherever it is derived rather than measured. */
+/* Is a capability-map entry actually a SECURITY domain (CSPM, IAM, EDR, vuln mgmt…)
+   rather than a business capability? Used to reject a capability map that was filled
+   with security domains, so the "business capabilities" tile stays business. */
+function c5CapIsSecurity(name){var s=String(name||'').toLowerCase();
+  return /cloud security posture|\bcspm\b|identity & access|\biam\b|endpoint|\bedr\b|\bxdr\b|vulnerabilit|patch manage|threat detection|threat intel|\bsiem\b|\bdlp\b|data loss|network security|firewall|awareness|phishing|penetration|red team|privileged access|\bpam\b|encryption|key management|third.?party.*risk|supply.?chain.*risk|application.*security|product security|\bot\b.*security|data protection & encryption/.test(s);}
+/* DERIVE the business-capability view from the business functions the customer
+   already mapped (value_chain), so the tile shows genuine business capabilities
+   (Server, Hybrid Cloud, …) with GRC-style coverage computed from the live control
+   posture — never security domains, and no separate upload required. Returns
+   capability-shaped objects so the existing scorer/drill consume them unchanged. */
+function c5BizCapAreas(){
+  var vc=(typeof LIVE!=='undefined'&&LIVE&&LIVE.value_chain);if(!vc||!vc.functions||!vc.functions.length)return null;
+  var cov=(typeof fwDeployedIds==='function')?fwDeployedIds():{};
+  var out=vc.functions.map(function(f){
+    var codes={},exp=0,rev=0;
+    (f.processes||[]).forEach(function(p){rev+=Number(p.annual_usd)||0;
+      (p.assets||[]).forEach(function(a){(a.risks||[]).forEach(function(r){exp+=Number(r.exposure_usd)||0;
+        var caps=(typeof riskCaps==='function')?riskCaps(r.title,r.severity):[];
+        caps.forEach(function(k){var fw=(typeof CAP_FRAMEWORK!=='undefined')?CAP_FRAMEWORK[k]:null;if(fw&&fw.csf)fw.csf.forEach(function(c){codes[c]=1;});});});});});
+    var ids=Object.keys(codes),scores=ids.map(function(id){return (typeof controlCmmi==='function')?controlCmmi(id,cov).score:0;});
+    var mean=scores.length?scores.reduce(function(a,b){return a+b;},0)/scores.length:0,cov100=Math.round(mean/5*100);
+    return {name:f.name||'Business function',exposure_usd:(exp>0?exp:rev),grc_status:(cov100>=75?'Adequate':cov100>=50?'Watch':'Gap'),
+      control_gaps:scores.filter(function(s){return s<3;}).length,open_risk:scores.filter(function(s){return s<2;}).length,
+      control_coverage:(ids.length?cov100:null),derived:true};
+  }).filter(function(a){return a.name;});
+  return out.length?out:null;
+}
+/* The capability set that feeds the "business capabilities" tile: derive from
+   business functions by DEFAULT; let a genuinely business-oriented uploaded
+   Capability Map OVERRIDE (a map filled with security domains does not). */
+function c5CapSource(){
+  var raw=(typeof LIVE!=='undefined'&&LIVE&&LIVE.capabilities)||[];
+  var biz=raw.filter(function(c){return c&&c.name&&!c5CapIsSecurity(c.name);});
+  if(raw.length&&biz.length>=Math.max(2,Math.ceil(raw.length/2)))return biz; // real business-capability map → override
+  var derived=c5BizCapAreas();
+  return derived||raw;
+}
 function c5protScore(c){
   if(c.control_coverage!=null)return Math.max(0,Math.min(100,Math.round(Number(c.control_coverage))));
   var g=String(c.grc_status||'').toLowerCase();
@@ -1946,7 +1985,7 @@ var CAP_PROTECTS={edr:'every endpoint & server',mfa:'all identities & access',pa
 function c5Exposure(){
   var host=document.getElementById('c5-exposure');if(!host)return;
   var TARGET=75; // the platform's healthy-coverage bar, consistent with capability scoring
-  var caps=(typeof LIVE!=='undefined'&&LIVE&&LIVE.capabilities)||[];
+  var caps=(typeof c5CapSource==='function')?c5CapSource():((typeof LIVE!=='undefined'&&LIVE&&LIVE.capabilities)||[]);
   var areas=caps.map(function(c){return {name:c.name,score:c5protScore(c),gaps:c5protGaps(c),grc:c.grc_status||null,exp:Number(c.exposure_usd)||0,measured:(c.control_coverage!=null)};}).filter(function(a){return a.name&&a.score!=null;});
   var anyDerived=areas.some(function(a){return !a.measured;});
   var well=areas.filter(function(a){return a.score>=TARGET&&(a.gaps||0)===0;}).sort(function(a,b){return b.score-a.score;});
