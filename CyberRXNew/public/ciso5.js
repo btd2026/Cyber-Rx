@@ -529,14 +529,25 @@ function c5get(id){
       var sys=Number(AS.aimlSystems)||Number(G.systems)||0;var spmOn=aisOn(['aispm']);var conn=(sys>0||spmOn||AS.inventoryLoaded||AS.aiSpm!=null||G.inventory!=null);
       var gaps=[];if(/^no/i.test(G.inventory||'')||/partial/i.test(G.inventory||''))gaps.push('inventory');if(/none|drafted/i.test(G.policy||''))gaps.push('policy');if(!spmOn&&!/connected|yes/i.test(AS.aiSpm||''))gaps.push('AI-SPM posture');
       var col=conn?(gaps.length>=2?'crit':gaps.length===1?'warn':'good'):'muted';
+      // Every posture gap named, with what it means and the concrete step to close it —
+      // so "2 posture gaps" is never an unexplained number.
+      var AI_GAP={
+        'inventory':['AI asset inventory incomplete','Not every deployed model & LLM app — with the data it can reach and its owner — is catalogued, so unknown AI is unmanaged.','Complete the AI inventory / model registry (upload the CMDB export or connect the registry); tag each system’s data access + owner.'],
+        'policy':['AI use policy not in force','No approved acceptable-use policy or risk-management framework governs how AI is built, procured and used.','Approve & publish the AI Acceptable-Use policy and adopt a framework (NIST AI RMF / ISO 42001); route it through the security steering committee.'],
+        'AI-SPM posture':['AI security posture not measured','Prompt-injection exposure, data leakage, model access and guardrails are self-reported — not continuously verified.','Connect an AI-SPM tool so posture is measured live per system, replacing the self-report with evidence.']
+      };
+      var aiRows=gaps.map(function(g){var r=AI_GAP[g]||[g,'—','—'];return [{text:'⚠ '+r[0],color:'crit',bold:true},r[1],{text:r[2],color:'blue'}];});
+      var aiAction=gaps.length?('Close '+gaps.length+' posture gap'+(gaps.length>1?'s':'')+' to reach a governed, continuously-monitored AI posture. Start with '+((AI_GAP[gaps[0]]||[])[2]||'the first gap below')+(gaps.length>1?(' Then: '+gaps.slice(1).map(function(g){return (AI_GAP[g]||[])[2]||g;}).join(' ')):'')):'AI/ML systems are inventoried and governed — hold the posture and keep AI-SPM monitoring live.';
       return c5obj({id:id,name:'AI/ML systems the business runs',connected:conn,
         displayValue:conn?(sys>0?(sys+' AI/ML system'+(sys>1?'s':'')+(gaps.length?(' · '+gaps.length+' posture gap'+(gaps.length>1?'s':'')):' · governed')):(gaps.length?gaps.length+' posture gaps':'governed')):'—',
         label:'self-reported',color:col,
+        action:aiAction,
         formula:'ai_risk per system = posture_gaps (prompt-injection · data-leakage · model-access · guardrails) × data_sensitivity; from AI asset inventory / model registry joined to AI-SPM + adversarial-ML threat intel; ranked risk-desc',
         method:'Deployed AI/ML systems and LLM apps come from your AI asset inventory / model registry, joined to AI-SPM for prompt-injection exposure, data leakage, model access and guardrail posture, and to threat intel for adversarial-ML activity. Posture is self-reported until AI-SPM is connected.',
+        table:(conn&&aiRows.length)?{title:'Open posture gaps · what each is and how to close it',cols:['Gap','What it means','To close it'],rows:aiRows}:null,
         inputs:[{name:'AI/ML systems in production',value:conn?sys:'—',source:'AI inventory (uploaded / CMDB)'},{name:'Data sensitivity',value:AS.aiDataSensitivity||'—',source:'AI inventory'},{name:'Inventory & monitoring',value:G.inventory||'—',source:'AI governance'},{name:'AI-SPM posture',value:spmOn?'connected':(AS.aiSpm||'not connected'),source:'AI-SPM'}],
         sources:[{tool:'AI asset inventory / model registry',connector:'ai_inventory',field:'ai_systems',lastRefresh:c5ago()},{tool:'AI-SPM',connector:'aispm',field:'posture_gaps'},{tool:'Threat intelligence',connector:'threat_intel',field:'adversarial_ml'}],
-        note:conn?(gaps.length?('Your AI systems carry '+gaps.length+' open posture gap'+(gaps.length>1?'s':'')+' ('+gaps.join(', ')+') — the model, training-data and LLM-application risk to close.'):'Your AI/ML systems are inventoried and governed.'):'The security posture of the AI/ML and LLM systems the business runs.',
+        note:conn?(gaps.length?('Your AI systems carry '+gaps.length+' open posture gap'+(gaps.length>1?'s':'')+' — see the table below for each and how to close it.'):'Your AI/ML systems are inventoried and governed.'):'The security posture of the AI/ML and LLM systems the business runs.',
         connectTool:'your AI asset inventory + AI-SPM'});}
     case 'ais_genai':{var AS=(typeof LIVE!=='undefined'&&LIVE&&LIVE.aiSupplyChain)||{};
       var casbOn=aisOn(['casb']);var gapps=Number(AS.genaiSanctioned)||0;
