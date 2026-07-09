@@ -3021,6 +3021,16 @@ function c5fwTree(sel,cov){
   var failing=all.filter(function(s){return s<C5FW_FLOOR;}).length;
   return {groups:groups,overall:c5fwMean(all),coverage:all.length?Math.round(evidenced/all.length*100):0,failing:failing,total:all.length,evidenced:evidenced};
 }
+/* How the framework's controls are currently evidenced — so "24 of 106" is broken
+   down by SOURCE (document review vs connected tool vs not-yet), which is what
+   tells you WHY controls are unevidenced and what to do about it. */
+function c5fwSrcCounts(T){
+  var d=0,s=0,m=0,n=0;
+  function tally(v){if(v==='document')d++;else if(v==='system')s++;else if(v==='mapped')m++;else n++;}
+  (T.groups||[]).forEach(function(g){(g.children||[]).forEach(function(c){
+    if(c.type==='cat')(c.children||[]).forEach(function(x){tally(x.src);});else tally(c.src);});});
+  return {doc:d,sys:s,mapped:m,none:n};
+}
 /* Left panel — auditor finding for the selected node. Public-standard text is fine
    for CSF/800-53/HIPAA; CIS/SOC2 render numbers/titles/mappings only (no proprietary text). */
 function c5fwFinding(sel,node){
@@ -3762,7 +3772,10 @@ function c5FrameworksClassic(host){
     c5shell('Program health · how is the security program performing?','Assessed against the framework your program is built on — refreshed on your cadence.',null,'Attackers moved to AI. Your assessment moved to real time — live telemetry, always-current posture, zero blind spots.')+
     cadCtrl+
     '<div class="c5fw-refresh" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"><span>Refreshed <b>'+cad+'</b> · last assessed <b>'+fmt(now)+'</b> · next refresh <b>'+fmt(nextD)+'</b></span>'+
-      '<button id="c5docsBtn" type="button" style="border:1px solid var(--line);background:var(--surface);color:var(--blue);font-weight:600;font-size:12px;padding:6px 12px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:6px">📄 Documents reviewed'+(function(){var n=(typeof c5DocCount==="function")?c5DocCount():0;return n?(' · '+n):"";})()+'</button></div>'+
+      '<span style="display:flex;gap:8px">'+
+      '<button id="c5reanalyzeBtn" type="button" style="border:1px solid var(--line);background:var(--surface);color:var(--ink-2);font-weight:600;font-size:12px;padding:6px 12px;border-radius:8px;cursor:pointer">↻ Re-score documents</button>'+
+      '<button id="c5docsBtn" type="button" style="border:1px solid var(--line);background:var(--surface);color:var(--blue);font-weight:600;font-size:12px;padding:6px 12px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:6px">📄 Documents reviewed'+(function(){var n=(typeof c5DocCount==="function")?c5DocCount():0;return n?(' · '+n):"";})()+'</button></span></div>'+
+    (function(){var sc=c5fwSrcCounts(T);return '<div class="c5fw-refresh" style="margin-top:4px">How these '+T.total+' controls are evidenced: <b style="color:var(--good)">📄 '+sc.doc+'</b> by document review · <b style="color:var(--blue)">🔌 '+sc.sys+'</b> by connected tool'+(sc.mapped?(' · <b>🔗 '+sc.mapped+'</b> by crosswalk'):'')+' · <b style="color:var(--muted)">— '+sc.none+'</b> not yet evidenced. '+(sc.none>0?'Upload the governing policy or connect the tool for the '+sc.none+' unevidenced control'+(sc.none===1?'':'s')+' — then <b>↻ Re-score documents</b>.':'Every control is evidenced.')+'</div>';})()+
     pills+
     cards+
     peerBox+
@@ -3773,6 +3786,15 @@ function c5FrameworksClassic(host){
   if(typeof fwRecord==='function'){try{fwRecord(T.overall);}catch(_){}}
   var _pb=document.getElementById('c5fwPeerBox');if(_pb)_pb.onclick=function(){c5fwPeerOpen();};
   var _db=document.getElementById('c5docsBtn');if(_db)_db.onclick=function(){c5OpenDocsReview();};
+  var _ra=document.getElementById('c5reanalyzeBtn');if(_ra)_ra.onclick=function(){
+    if(typeof window.reanalyzeStoredDocs!=='function'){c5OpenDocsReview();return;}
+    var o=_ra.textContent;_ra.disabled=true;_ra.textContent='↻ Re-scoring…';
+    window.reanalyzeStoredDocs(function(nScores,nDocs){
+      _ra.textContent=nScores?('✓ Re-scored '+nDocs+' doc'+(nDocs===1?'':'s')):'No stored documents';
+      c5Frameworks();
+      var b=document.getElementById('c5reanalyzeBtn');if(b){b.disabled=false;setTimeout(function(){if(document.getElementById('c5reanalyzeBtn')===b)b.textContent=o;},1600);}
+    });
+  };
   // wiring
   host.querySelectorAll('[data-c5fwsel]').forEach(function(b){b.onclick=function(){window.FW_SEL=b.getAttribute('data-c5fwsel');C5FW_EXP=null;C5FW_CTRL=null;c5Frameworks();};});
   host.querySelectorAll('[data-c5fwcad]').forEach(function(b){b.onclick=function(){try{localStorage.setItem('cyberrx_audit_cadence',b.getAttribute('data-c5fwcad'));}catch(_){}c5Frameworks();};});

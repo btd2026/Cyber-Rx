@@ -1051,6 +1051,9 @@
     fetch(apiBase()+'/api/documents/analyze',{method:'POST',headers:oid?{'X-Org-Id':oid}:{},body:fd})
       .then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.error||('HTTP '+r.status));return j;});})
       .then(function(res){(res.controls||[]).forEach(function(c){obSaveDocScore(c.id,{cmmi:c.cmmi,doc:file.name,matched:c.matched,total:c.total,attrs:c.attrs||[],narrative:c.narrative||'',gap:c.gap||''});});
+        // Keep the server-extracted text so the cockpit can RE-SCORE this document
+        // against a future (expanded) control map without asking for a re-upload.
+        try{if(res.text){var tx=JSON.parse(localStorage.getItem('cyberrx_doc_text')||'{}')||{};tx[dt]={text:res.text,filename:file.name};localStorage.setItem('cyberrx_doc_text',JSON.stringify(tx));}}catch(_){}
         var docs=obDocDocs(),lbl=(OB_DOC_TYPES.filter(function(d){return d.k===dt;})[0]||{}).l||dt;
         docs.unshift({name:file.name,type:lbl,cmmi:res.cmmi,matched:res.matched||0,total:res.total||0,engine:res.engine||'keyword'});obSaveDocs(docs);
         if(msg){msg.textContent='✓ '+file.name+' — CMMI '+res.cmmi+' ('+(CMMI_LBL[res.cmmi]||'')+')';msg.style.color='var(--good)';}
