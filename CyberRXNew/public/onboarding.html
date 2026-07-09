@@ -153,8 +153,6 @@
   .cred-bar{height:9px;background:var(--line-2);border-radius:99px;overflow:hidden}
   .cred-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--blue),var(--good));border-radius:99px;transition:width .6s}
   .cred-meta{font-size:11px;color:var(--muted);margin-top:8px}.cred-meta b{color:var(--ink)}
-  #toolGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  @media (max-width:720px){#toolGrid{grid-template-columns:1fr}}
   .conn{background:var(--surface);border:1px solid var(--line-2);border-radius:12px;padding:14px 16px}
   .conn-h{display:flex;align-items:center;gap:12px}
   .conn-ic{width:34px;height:34px;border-radius:9px;background:var(--blue-soft);color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:15px;flex:none}
@@ -557,7 +555,7 @@
     <div class="cred"><div class="cred-top"><span class="ct">Evidence credibility</span><span class="cv l0" id="credLabel">Not yet credible</span></div><div class="cred-bar"><i id="credBar"></i></div><div class="cred-meta"><b id="credSig">0</b> live signals · <b id="credSys">0</b> systems connected · <b id="credCov">0%</b> coverage</div></div>
     <div class="note" style="margin-top:2px;margin-bottom:8px"><b>✦ Control-aware setup</b> — pick a tool below; Nerion asks only for what it needs (auth, scope, denominator), then shows exactly which controls are ready for continuous assessment. <a id="caFullScreen" href="connector-setup.html" target="_blank" style="color:var(--blue);font-weight:600;text-decoration:none">Open full screen ↗</a></div>
     <iframe id="caSetup" title="Control-aware connector setup" style="width:100%;height:760px;border:1px solid var(--line);border-radius:14px;background:var(--panel,#fff)"></iframe>
-    <script>(function(){
+    <script id="caSetupBoot">(function(){
       // Pass the resolved API base + org into the embedded setup so its catalog
       // fetch hits the real API and not the static host it is served from.
       function base(){try{return (window.CYBERRX_API||localStorage.getItem('cyberrx_api_base')||'https://cyber-rx.onrender.com').replace(/\/+$/,'');}catch(_){return 'https://cyber-rx.onrender.com';}}
@@ -566,9 +564,7 @@
       var f=document.getElementById('caSetup');if(f)f.src='connector-setup.html'+q;
       var a=document.getElementById('caFullScreen');if(a)a.href='connector-setup.html'+q;
     })();</script>
-    <details style="margin-top:14px"><summary style="cursor:pointer;color:var(--muted);font-size:13px;font-weight:600">Quick connect (legacy vendor list)</summary>
-    <div id="toolGrid" style="margin-top:10px"></div></details>
-    <div class="note" style="margin-top:12px">Expand a tool, pick your vendor and enter a key to connect now — or leave blank and finish in the cockpit’s <b>“Live data — connected sources”</b> panel after go-live. Real connections show <b>“Connected”</b>; demo-mode tools show <b>“Demo”</b> and are never counted as real.</div>
+    <div class="note" style="margin-top:12px">Pick a tool above, connect it, and Nerion collects the evidence for the controls it supports. Prefer to explore first? Turn on <b>Demo mode</b> to see a fully-connected cockpit with clearly-labeled simulated signals — never counted as real.</div>
   </div>
 
   <div class="wrap" id="obNav" style="display:none;margin-top:20px;text-align:right">
@@ -1450,19 +1446,11 @@
     // If everything came back as demo, reflect the demo-mode button state too.
     try{var allDemo=Object.keys(saved).length&&Object.keys(saved).every(function(k){return saved[k]&&saved[k].demo;});var db=document.getElementById('demoToggle');if(allDemo&&db){db.classList.add('active');db.textContent='✓ Demo mode active';}}catch(_){}
   }
-  (function renderTools(){
-    var g=document.getElementById('toolGrid');if(!g)return;
-    g.className='';g.innerHTML=TOOLS.map(function(t,i){
-      return '<div class="conn" id="conn'+i+'"><div class="conn-h"><div class="conn-ic">'+t.ic+'</div><div class="conn-t"><div class="cn">'+t.cat+'</div><div class="cc">'+t.vendors.length+' supported · pulls '+t.sig+' signals</div></div><span class="conn-st no" id="ts'+i+'">not connected</span><span class="conn-toggle" data-tog="'+i+'">details ▾</span></div>'+
-        '<div class="conn-body"><div class="conn-row"><div class="field"><label>Vendor</label><select class="tv">'+t.vendors.map(function(vn){return '<option>'+vn+'</option>';}).join('')+'</select></div><div class="field"><label>'+(t.itsm?'Instance / token':'API key / token')+'</label><input class="tk" placeholder="'+(t.itsm?'https://yourorg.service-now.com · token':'API key, tenant ID, or OAuth')+'"></div><button class="tb" data-ti="'+i+'">Connect</button></div>'+
-        '<div class="conn-info"><span class="pl">Pulls:</span> '+t.pulls+'<br><span class="an">Answers:</span> '+t.ans+'</div></div></div>';
-    }).join('');
-    document.querySelectorAll('[data-tog]').forEach(function(tg){tg.addEventListener('click',function(){document.getElementById('conn'+tg.dataset.tog).classList.toggle('open');});});
-    document.querySelectorAll('.tb').forEach(function(b){b.addEventListener('click',function(){
-      var i=b.dataset.ti,card=b.closest('.conn'),vend=card.querySelector('.tv').value,key=card.querySelector('.tk').value.trim(),t=TOOLS[i];
-      if(SELTOOLS[(t.map&&t.map[vend])||t.key]&&SELTOOLS[(t.map&&t.map[vend])||t.key].on)return;
-      var realKey=(t.map&&t.map[vend])||t.key;markConnected(t,i,realKey,vend,key,false);
-    });});
+  // The manual per-vendor "quick connect" grid was removed — the control-aware
+  // setup above is the single connection path. Demo mode is retained: it connects
+  // the full demo toolset directly into SELTOOLS → cyberrx_tools (the state the
+  // cockpit reads). markConnected/restoreTools now no-op on the (absent) grid DOM.
+  (function wireDemo(){
     var demoBtn=document.getElementById('demoToggle');
     if(demoBtn)demoBtn.addEventListener('click',async function(){
       if(demoBtn.classList.contains('active'))return;
