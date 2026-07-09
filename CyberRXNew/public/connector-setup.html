@@ -15,8 +15,11 @@
   h1{font-size:23px;margin:6px 0 2px;font-weight:740;letter-spacing:-.02em}
   .sub{color:var(--ink2);max-width:70ch;margin:0}
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin-top:22px}
-  .card{border:1px solid var(--line);background:var(--panel);border-radius:13px;padding:14px;cursor:pointer;transition:border-color .15s,transform .1s}
-  .card:hover{border-color:var(--accent);transform:translateY(-1px)}
+  .card{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--line);background:var(--panel);border-radius:13px;padding:14px;cursor:pointer;transition:border-color .15s,transform .1s,box-shadow .15s}
+  .card:hover{border-color:var(--accent);transform:translateY(-1px);box-shadow:0 6px 18px rgba(30,45,90,.10)}
+  .ctile{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;flex:none;box-shadow:0 2px 7px rgba(20,30,60,.18)}
+  .ctile svg{width:23px;height:23px;fill:none;stroke:#fff;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+  .cbody{min-width:0;flex:1}
   .card .cn{font-weight:700}.card .cc{color:var(--muted);font-size:12px;margin-top:2px}
   .card .ca{margin-top:9px;font-size:12px;color:var(--ink2)}
   .catlbl{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:22px 0 2px;grid-column:1/-1}
@@ -73,6 +76,41 @@
     api('/api/connectors/manifests').then(function(d){MANIFESTS=(d&&d.connectors)||[];renderCatalog();})
       .catch(function(){view.innerHTML='<p class="muted" style="margin-top:20px">Could not load connector catalog. Confirm the API is reachable.</p>';});
   }
+  // Category-aligned icon tiles. No external logos (Nerion can run air-gapped, and a
+  // strict CSP would block CDN images anyway) — each category gets a crafted inline
+  // glyph on a color-coded tile so the catalog reads at a glance by what the tool does.
+  var GLYPH={
+    key:'<circle cx="8" cy="12" r="4"/><path d="M12 12h9M17 12v4M20.5 12v3"/>',
+    lock:'<rect x="4" y="10.5" width="16" height="10" rx="2"/><path d="M7.5 10.5V7a4.5 4.5 0 0 1 9 0v3.5"/>',
+    users:'<circle cx="9" cy="8" r="3.6"/><path d="M2.5 20a6.5 6.5 0 0 1 11.5-4.1M15.5 16.5l2 2 4-4"/>',
+    laptop:'<rect x="4" y="5" width="16" height="11" rx="2"/><path d="M2 20h20"/><path d="M12 8.5l2.4 1.4v2.2L12 13.5l-2.4-1.4V9.9z"/>',
+    bug:'<rect x="8" y="7.5" width="8" height="11" rx="4"/><path d="M8 11.5H4M20 11.5h-4M8 15.5H4M20 15.5h-4M9.2 7.6L7.5 4.8M14.8 7.6l1.7-2.8M12 7.5v11"/>',
+    activity:'<path d="M2.5 12.5h4l3 7 4.5-15 3 8h4.5"/>',
+    cloud:'<path d="M7 18.5a4.2 4.2 0 0 1-.4-8.4A5.2 5.2 0 0 1 16.6 9 4.3 4.3 0 0 1 17.5 18.5H7z"/>',
+    drive:'<rect x="3" y="12" width="18" height="8.5" rx="2"/><path d="M6 12l2.4-6.2A2 2 0 0 1 10.3 4.5h3.4a2 2 0 0 1 1.9 1.3L18 12M7.5 16.3h.01M11 16.3h5.5"/>',
+    filelock:'<path d="M13.5 3H7.5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V8.5z"/><path d="M13.5 3v5.5h5"/><rect x="9" y="12.5" width="6" height="5" rx="1"/><path d="M10.4 12.5v-1a1.6 1.6 0 0 1 3.2 0v1"/>',
+    nodes:'<circle cx="6" cy="6" r="2.2"/><circle cx="18" cy="6" r="2.2"/><circle cx="12" cy="18" r="2.2"/><path d="M6 8.2v1.8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8.2M12 12v3.8"/>',
+    mail:'<rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="M3.5 7.5l8.5 5.5 8.5-5.5"/>',
+    plug:'<path d="M9 2.5v5M15 2.5v5M7 7.5h10v3a5 5 0 0 1-10 0zM12 15.5v6"/>'};
+  // key → [glyph, tile gradient]. Ordered keyword match runs most-specific first.
+  var CATICON=[
+    [/privileged|pam/i,        ['lock','linear-gradient(135deg,#a78bfa,#7c3aed)']],
+    [/governance|iga|identity governance/i, ['users','linear-gradient(135deg,#2dd4bf,#0d9488)']],
+    [/identity|sso/i,          ['key','linear-gradient(135deg,#818cf8,#4f46e5)']],
+    [/endpoint|edr|xdr/i,      ['laptop','linear-gradient(135deg,#60a5fa,#2563eb)']],
+    [/vulnerab/i,              ['bug','linear-gradient(135deg,#fb923c,#ea580c)']],
+    [/siem|log|monitor|detection/i, ['activity','linear-gradient(135deg,#22d3ee,#0891b2)']],
+    [/cloud|cspm|posture/i,    ['cloud','linear-gradient(135deg,#38bdf8,#0284c7)']],
+    [/backup|recovery|disaster/i, ['drive','linear-gradient(135deg,#34d399,#059669)']],
+    [/loss prevention|dlp|data/i, ['filelock','linear-gradient(135deg,#f472b6,#db2777)']],
+    [/network|segment|zero.?trust/i, ['nodes','linear-gradient(135deg,#6366f1,#4338ca)']],
+    [/awareness|email|phish/i, ['mail','linear-gradient(135deg,#fbbf24,#d97706)']]];
+  function iconFor(cat,area){
+    var s=String(cat||'')+' '+String(area||'');
+    for(var i=0;i<CATICON.length;i++){if(CATICON[i][0].test(s))return CATICON[i][1];}
+    return ['plug','linear-gradient(135deg,#94a3b8,#475569)'];
+  }
+  function tile(cat,area){var ic=iconFor(cat,area);return '<div class="ctile" style="background:'+ic[1]+'"><svg viewBox="0 0 24 24" aria-hidden="true">'+GLYPH[ic[0]]+'</svg></div>';}
   function renderCatalog(){
     document.getElementById('hdr').textContent='Connect a tool';
     var byCat={};MANIFESTS.forEach(function(m){(byCat[m.connector_category]=byCat[m.connector_category]||[]).push(m);});
@@ -81,9 +119,10 @@
       html+='<div class="catlbl">'+esc(cat)+'</div>';
       byCat[cat].forEach(function(m){
         var n=(m.supported_framework_controls||[]).length;
-        html+='<div class="card" data-id="'+esc(m.connector_id)+'"><div class="cn">'+esc(m.connector_name)+'</div>'+
+        html+='<div class="card" data-id="'+esc(m.connector_id)+'">'+tile(cat,m.control_area)+
+          '<div class="cbody"><div class="cn">'+esc(m.connector_name)+'</div>'+
           '<div class="cc">'+esc(m.control_area||cat)+'</div>'+
-          '<div class="ca">'+(n?('Supports <b>'+n+'</b> control'+(n>1?'s':'')+' · '+esc((m.supported_control_areas||[]).slice(0,2).join(', '))):'Design-evidence connector')+'</div></div>';
+          '<div class="ca">'+(n?('Supports <b>'+n+'</b> control'+(n>1?'s':'')+' · '+esc((m.supported_control_areas||[]).slice(0,2).join(', '))):'Design-evidence connector')+'</div></div></div>';
       });
     });
     html+='</div>';view.innerHTML=html;
