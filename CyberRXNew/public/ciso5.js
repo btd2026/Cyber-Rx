@@ -3960,8 +3960,23 @@ function c5FrameworksClassic(host){
 function c5DocScoresSafe(){try{return (typeof docScores==='function')?docScores():{};}catch(_){return {};}}
 function c5DocListSafe(){try{return (typeof docList==='function')?docList():[];}catch(_){return [];}}
 function c5DocCount(){try{return c5DocListSafe().length;}catch(_){return 0;}}
-/* One-time reverse crosswalk: CSF subcategory id → {cis:[],soc2:[],hipaa:[]}. Built
-   from the same public maps the Frameworks tab scores from. */
+/* ============================================================================
+   related_control_mapping — INFORMATIONAL ONLY. NOT authoritative assessment.
+   ----------------------------------------------------------------------------
+   c5RevX / c5DocXwalk are a crosswalk (CSF subcategory → related CIS/SOC2/HIPAA
+   ids). Per the continuous-control-assessment architecture, a crosswalk may be
+   used ONLY for navigation, related-control suggestions and "related framework"
+   display. It MUST NOT determine pass/fail, effective/ineffective, control
+   operating effectiveness, a compliance score, framework coverage, or any audit
+   evidence claim.
+
+   The authoritative pass/fail logic is assessment_control_logic — the
+   framework-native engine in cyberrx-api/src/control-assessment/, where every
+   control (CSF, 800-53, CIS, HIPAA, SOC 2) is assessed independently from its
+   OWN machine-verifiable evidence. Nothing there derives one framework from
+   another. The Frameworks-tab display migration onto that engine is tracked as
+   the next phase; until then these crosswalk outputs are labelled informational.
+   ============================================================================ */
 var C5_REVX=null;
 function c5RevX(){
   if(C5_REVX)return C5_REVX;
