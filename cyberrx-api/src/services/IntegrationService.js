@@ -69,8 +69,10 @@ async function sync(orgId, key) {
   await ensureTables();
   const c = Connectors.get(key);
   if (!c) throw new Error(`Unknown connector: ${key}`);
-  const creds = c.demoMode ? {} : await vault.get(orgId, `integration:${key}`).catch(() => null);
+  let creds = c.demoMode ? {} : await vault.get(orgId, `integration:${key}`).catch(() => null);
   if (!creds && !c.demoMode) throw new Error(`${c.label} is not connected.`);
+  // If connected via one-click OAuth, refresh an expired access token before pulling.
+  try { creds = await require('./oauth/token').ensureFresh(orgId, key, creds); } catch (_) {}
   try {
     const { signals } = await c.fetchSignals(creds || {});
     for (const s of signals) { await upsertInput(orgId, s.key, s.value); await upsertSignal(orgId, s.key, c.label, s.value, s.asOf); }
