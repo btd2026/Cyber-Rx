@@ -56,6 +56,12 @@ router.post('/:id/validate', express.json(), async (req, res) => {
       check.permissions_sufficient = !!(r && r.ok); // vendor test call succeeded with the granted scopes
       check.detail = (r && r.detail) || '';
     } catch (e) { check.detail = e.message; }
+    // Bridge to the cockpit: once creds validate, collect this connector's signals
+    // into signal_sync (best-effort, in the background) so the tool actually lights
+    // up its controls in the Frameworks view instead of staying document-only.
+    if (check.credentials_valid) {
+      Promise.resolve().then(() => Integrations.sync(orgId, key)).catch(() => {});
+    }
     res.json({ connector_id: key, checks: check });
   } catch (e) {
     if (logger && logger.warn) logger.warn('connector validate failed', { error: e.message });
