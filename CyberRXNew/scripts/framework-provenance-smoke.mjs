@@ -26,7 +26,7 @@ ok('c5fwSource helper exists', /function c5fwSource\(node\)/.test(ciso));
 ok('finding detail renders the source block', /h\+=c5fwSource\(node\);/.test(ciso));
 ok('system source names the connected tool + live/demo', /node\.src==='system'[\s\S]{0,320}capSource\(tool\)/.test(ciso) && /live telemetry/.test(ciso) && /demo telemetry/.test(ciso));
 ok('document source names the document', /node\.src==='document'[\s\S]{0,320}node\.doc&&node\.doc\.doc/.test(ciso));
-ok('none source is honest (no evidence yet)', /No evidence on file yet/.test(ciso));
+ok('unevidenced control names the source it awaits (doc or tool)', /Not evidenced yet · evidenced by <b>document review<\/b>/.test(ciso) && /Not evidenced yet · evidenced by <b>telemetry<\/b>/.test(ciso));
 
 // 3. Jump-to-document arrow.
 ok('document finding carries a → jump arrow', /data-c5docjump="'\+c5esc\(node\.id\)/.test(ciso));

@@ -3031,6 +3031,18 @@ function c5fwSrcCounts(T){
     if(c.type==='cat')(c.children||[]).forEach(function(x){tally(x.src);});else tally(c.src);});});
   return {doc:d,sys:s,mapped:m,none:n};
 }
+/* The unevidenced controls grouped by the SOURCE they await — so the gap reads as
+   "upload these 5 documents / connect these 2 tools", not "90 deficiencies". */
+function c5fwGaps(T){
+  if(typeof FW_CTRL_SRC==='undefined')return [];
+  var by={};
+  function need(id,src){if(src&&src!=='none')return;var d=FW_CTRL_SRC[id];if(!d)return;
+    var label=d.k==='d'?((typeof FW_DOC_LABEL!=='undefined'&&FW_DOC_LABEL[d.s])||'policy'):((typeof CAP_BY_KEY!=='undefined'&&CAP_BY_KEY[d.s]&&CAP_BY_KEY[d.s].tool)||'tool');
+    var key=d.k+':'+label;(by[key]=by[key]||{kind:d.k,label:label,n:0}).n++;}
+  (T.groups||[]).forEach(function(g){(g.children||[]).forEach(function(c){
+    if(c.type==='cat')(c.children||[]).forEach(function(x){need(x.id,x.src);});else need(c.id,c.src);});});
+  return Object.keys(by).map(function(k){return by[k];}).sort(function(a,b){return b.n-a.n;});
+}
 /* Left panel — auditor finding for the selected node. Public-standard text is fine
    for CSF/800-53/HIPAA; CIS/SOC2 render numbers/titles/mappings only (no proprietary text). */
 function c5fwFinding(sel,node){
@@ -3080,7 +3092,14 @@ function c5fwSource(node){
   } else if(node.src==='mapped'){
     h+='<div class="c5fw-src"><span class="c5fw-srcic">🔗</span><div>Framework crosswalk — inherits the maturity of <b>'+c5esc((node.mapped||[]).join(', ')||'the mapped CSF controls')+'</b></div></div>';
   } else {
-    h+='<div class="c5fw-src c5fw-src-none"><span class="c5fw-srcic">—</span><div>No evidence on file yet — neither connected-tool telemetry nor an analyzed policy. Connect the control’s tool or upload its governing policy and the score fills in from real evidence.</div></div>';
+    // Not evidenced yet — name the EXACT source this control is mapped to, so the
+    // fix is unambiguous (never a bare "Non-existent").
+    var decl=(typeof FW_CTRL_SRC!=='undefined')?FW_CTRL_SRC[node.id]:null;
+    if(decl&&decl.k==='d'){var dl=(typeof FW_DOC_LABEL!=='undefined'&&FW_DOC_LABEL[decl.s])||'the governing policy';
+      h+='<div class="c5fw-src c5fw-src-none"><span class="c5fw-srcic">📄</span><div>Not evidenced yet · evidenced by <b>document review</b> of your <b>'+c5esc(dl)+'</b>. Upload it in onboarding, then press <b>↻ Re-score documents</b>.</div></div>';}
+    else if(decl&&decl.k==='t'){var c=(typeof CAP_BY_KEY!=='undefined')?CAP_BY_KEY[decl.s]:null,tn=(c&&c.tool)||'the source tool';
+      h+='<div class="c5fw-src c5fw-src-none"><span class="c5fw-srcic">🔌</span><div>Not evidenced yet · evidenced by <b>telemetry</b> from <b>'+c5esc(tn)+'</b>. Connect it under “Connect your systems”.</div></div>';}
+    else h+='<div class="c5fw-src c5fw-src-none"><span class="c5fw-srcic">—</span><div>No evidence source declared for this control.</div></div>';
   }
   return h;
 }
@@ -3775,7 +3794,14 @@ function c5FrameworksClassic(host){
       '<span style="display:flex;gap:8px">'+
       '<button id="c5reanalyzeBtn" type="button" style="border:1px solid var(--line);background:var(--surface);color:var(--ink-2);font-weight:600;font-size:12px;padding:6px 12px;border-radius:8px;cursor:pointer">↻ Re-score documents</button>'+
       '<button id="c5docsBtn" type="button" style="border:1px solid var(--line);background:var(--surface);color:var(--blue);font-weight:600;font-size:12px;padding:6px 12px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:6px">📄 Documents reviewed'+(function(){var n=(typeof c5DocCount==="function")?c5DocCount():0;return n?(' · '+n):"";})()+'</button></span></div>'+
-    (function(){var sc=c5fwSrcCounts(T);return '<div class="c5fw-refresh" style="margin-top:4px">How these '+T.total+' controls are evidenced: <b style="color:var(--good)">📄 '+sc.doc+'</b> by document review · <b style="color:var(--blue)">🔌 '+sc.sys+'</b> by connected tool'+(sc.mapped?(' · <b>🔗 '+sc.mapped+'</b> by crosswalk'):'')+' · <b style="color:var(--muted)">— '+sc.none+'</b> not yet evidenced. '+(sc.none>0?'Upload the governing policy or connect the tool for the '+sc.none+' unevidenced control'+(sc.none===1?'':'s')+' — then <b>↻ Re-score documents</b>.':'Every control is evidenced.')+'</div>';})()+
+    (function(){var sc=c5fwSrcCounts(T);var line='<div class="c5fw-refresh" style="margin-top:4px">How these '+T.total+' controls are evidenced: <b style="color:var(--good)">📄 '+sc.doc+'</b> by document review · <b style="color:var(--blue)">🔌 '+sc.sys+'</b> by connected tool'+(sc.mapped?(' · <b>🔗 '+sc.mapped+'</b> by crosswalk'):'')+' · <b style="color:var(--muted)">— '+sc.none+'</b> not yet evidenced.</div>';
+      if(sc.none>0){var gaps=c5fwGaps(T);if(gaps.length){var docg=gaps.filter(function(x){return x.kind==='d';}),tg=gaps.filter(function(x){return x.kind==='t';});
+        line+='<div class="c5fw-refresh" style="margin-top:3px">To close the gap: '+
+          (docg.length?('upload <b>'+docg.map(function(x){return c5esc(x.label)+' ('+x.n+')';}).join('</b>, <b>')+'</b>'):'')+
+          (docg.length&&tg.length?' · ':'')+
+          (tg.length?('connect <b>'+tg.map(function(x){return c5esc(x.label)+' ('+x.n+')';}).join('</b>, <b>')+'</b>'):'')+
+          ' — then press <b>↻ Re-score documents</b>.</div>';}}
+      return line;})()+
     pills+
     cards+
     peerBox+
