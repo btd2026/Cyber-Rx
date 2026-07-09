@@ -413,6 +413,8 @@ app.use('/api/frameworks',        [apiGetLimiter, apiPostLimiter], require('./ro
 
 // Onboarding UI endpoints: connector validation, document analysis, SIEM polling
 app.use('/api/connectors',        [apiPostLimiter], require('./routes/connectorTest'));
+// Control-aware connector onboarding — manifests, validation, readiness.
+app.use('/api/connectors',        [apiGetLimiter, apiPostLimiter], require('./routes/connectorOnboarding'));
 app.use('/api/documents',         [apiPostLimiter], require('./routes/documents'));
 app.use('/api/notify',            [apiGetLimiter, apiPostLimiter], require('./routes/notify'));
 app.use('/api/siem',              [apiGetLimiter], require('./routes/siemIncidents'));
