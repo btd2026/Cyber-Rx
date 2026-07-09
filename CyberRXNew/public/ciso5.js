@@ -1320,16 +1320,19 @@ function c5Services(){
   // from rather than a vague "within posture".
   var vmTxt=(patch!=null?('VM: '+(100-patch)+'% critical open'):'VM: not connected');
   var edrTxt=(edr!=null?('EDR '+edr+'% deployed'):'EDR: not connected');
-  // Reconcile with the onboarding map: select the SAME number of crown jewels it
-  // does — top max(2, ceil(15% of assets)) — so the cockpit count always matches
-  // the crown-jewels-preview the user confirmed at onboarding.
-  var assetN=(typeof LIVE!=='undefined'&&LIVE&&LIVE.counts&&Number(LIVE.counts.assets))||cj.length;
-  var cjN=Math.min(cj.length,12,Math.max(2,Math.ceil(assetN*0.15)));
-  var list=cj.slice(0,cjN).map(function(c,i){var o={name:c.name,tier:c.tier};
+  // The authoritative crown-jewel set is exactly what onboarding derived and the
+  // user confirmed (LIVE.crown_jewels = apps that clear the criticality threshold).
+  // Use ALL of them — never re-truncate here, or the cockpit count drifts from the
+  // onboarding preview (the "2 here, 6 there" bug). The denominator must equal the
+  // onboarding crown-jewel count.
+  var list=cj.map(function(c,i){var o={name:c.name,tier:c.tier};
     if(i===0&&idMat){o.status='At risk';o.c='warn';o.sub='Identity / access path is exposed';o.src='EDR + identity/access telemetry';o.why='exp_identity';}
     else{o.status='Secure';o.c='good';o.sub='No active detection';o.src=edrTxt+' · '+vmTxt;}
     return o;});
-  return {list:list,total:list.length,atRisk:list.filter(function(x){return x.status==='At risk';}).length};
+  // Denominator = the authoritative onboarding crown-jewel count (counts.crown_jewels),
+  // so "X of N at risk" always traces to the onboarding crown-jewel set.
+  var total=(typeof LIVE!=='undefined'&&LIVE&&LIVE.counts&&Number(LIVE.counts.crown_jewels))||list.length;
+  return {list:list,total:total,atRisk:list.filter(function(x){return x.status==='At risk';}).length};
 }
 /* Critical processes from the operations model; at-risk status computed from whether
    a material exposure driver / flagged vendor maps to the process. */
