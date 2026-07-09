@@ -154,8 +154,9 @@
        '<div class="prove"><div class="box can"><b>What this connector can prove</b><div class="muted" style="margin-top:4px">'+esc(m.what_this_connector_can_prove)+'</div></div>'+
        '<div class="box cant"><b>What it cannot prove alone</b><div class="muted" style="margin-top:4px">'+esc(m.what_this_connector_cannot_prove_alone)+'</div></div></div>'+
        '<div class="chips" style="margin-top:10px">'+ctrls.map(function(c){return '<span class="chip"><b>'+esc(c.control_id)+'</b> '+esc(c.framework.split(' ')[0])+'</span>';}).join('')+'</div></div>';
-    // Step 3 — connect (auth + tenant)
-    h+='<div class="sec"><h3>Connect</h3><p class="why">Read-only. Your secret is encrypted and never shown again.</p><div class="cols">';
+    // Step 3 — connect (auth + tenant). OAuth "one-click" appears above the manual
+    // form when this connector's provider is configured on the instance.
+    h+='<div class="sec"><h3>Connect</h3><div id="oauthBox"></div><p class="why" id="manualWhy">Read-only. Your secret is encrypted and never shown again.</p><div class="cols">';
     (m.required_auth_fields||[]).forEach(function(f){h+=fieldInput('auth',f);});
     (m.required_tenant_fields||[]).forEach(function(f){if(!(m.required_auth_fields||[]).some(function(a){return a.key===f.key;}))h+=fieldInput('tenant',f);});
     h+='</div><p class="why" style="margin-top:2px">Grant these <b>read-only</b> permissions to the credential:</p><div class="chips">'+(m.required_permissions||[]).map(function(p){return '<span class="perm">'+esc(p)+'</span>';}).join('')+'</div></div>';
@@ -174,6 +175,40 @@
     document.getElementById('back').onclick=renderCatalog;
     view.querySelectorAll('input,select').forEach(function(el){el.oninput=function(){var p=el.getAttribute('data-p'),k=el.getAttribute('data-k');if(p==='review'){FORM.review=el.value;return;}var v=el.value;if(el.getAttribute('type')!=='password'){/* keep */}FORM[p][k]=v;};});
     document.getElementById('validate').onclick=runValidate;
+    maybeRenderOauth(m.connector_id);
+  }
+
+  // Which connectors have an OAuth "one-click connect" provider.
+  var OAUTH_MAP={entra:'microsoft',okta:'okta',google_workspace:'google',google:'google',gws:'google',github:'github'};
+  function maybeRenderOauth(connectorId){
+    var provider=OAUTH_MAP[connectorId];var box=document.getElementById('oauthBox');if(!provider||!box)return;
+    api('/api/oauth/'+provider+'/status').then(function(s){
+      if(!s||!s.configured)return; // not wired on this instance → manual form only
+      var dom=s.needsDomain?'<input id="oauthDomain" placeholder="your-org.okta.com" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:var(--panel2);color:var(--ink);font-size:13.5px;margin-bottom:8px">':'';
+      box.innerHTML='<div style="margin-bottom:10px">'+dom+
+        '<button class="btn" id="oauthBtn" style="width:100%;background:#2f6fe0">🔒 Connect with '+esc(s.label)+' — one click, read-only</button>'+
+        '<p class="why" style="margin-top:8px;text-align:center">Grant read-only consent — no keys to paste.</p>'+
+        '<div style="display:flex;align-items:center;gap:10px;margin:10px 0"><div style="flex:1;height:1px;background:var(--line)"></div><span class="muted" style="font-size:11px">or enter credentials manually</span><div style="flex:1;height:1px;background:var(--line)"></div></div></div>';
+      document.getElementById('oauthBtn').onclick=function(){startOauth(provider,connectorId,s);};
+    }).catch(function(){});
+  }
+  function startOauth(provider,connectorId,status){
+    var q='?connector='+encodeURIComponent(connectorId);
+    if(status&&status.needsDomain){var d=(document.getElementById('oauthDomain')||{}).value||'';if(!d){alert('Enter your '+status.label+' org domain first.');return;}q+='&domain='+encodeURIComponent(d.trim());}
+    var btn=document.getElementById('oauthBtn');if(btn){btn.disabled=true;btn.textContent='Opening consent…';}
+    api('/api/oauth/'+provider+'/start'+q).then(function(r){
+      if(!r||!r.authorize_url){throw new Error((r&&r.message)||'could not start');}
+      var w=window.open(r.authorize_url,'nerion_oauth','width=540,height=720');
+      function onMsg(ev){var d=ev&&ev.data;if(!d||!d.nerion_oauth)return;window.removeEventListener('message',onMsg);
+        if(d.nerion_oauth==='ok'){var rd=document.getElementById('readiness');if(rd)rd.innerHTML='<p class="muted" style="margin-top:14px">✅ Connected. Checking what Nerion can pull…</p>';
+          api('/api/connectors/'+connectorId+'/test-collection',{method:'POST',body:JSON.stringify({})}).catch(function(){return null;})
+            .then(function(){return api('/api/connectors/'+connectorId+'/readiness');}).then(renderReadiness).catch(function(){});
+        } else { if(btn){btn.disabled=false;btn.textContent='🔒 Connect with '+(status?status.label:provider);} alert('Connection failed: '+(d.message||'unknown error')); }
+      }
+      window.addEventListener('message',onMsg);
+      // Safety: re-enable the button if the popup is closed without completing.
+      var iv=setInterval(function(){if(w&&w.closed){clearInterval(iv);if(btn&&btn.disabled){btn.disabled=false;btn.textContent='🔒 Connect with '+(status?status.label:provider);}}},800);
+    }).catch(function(e){if(btn){btn.disabled=false;btn.textContent='🔒 Connect with '+(status?status.label:provider);}alert((e&&e.message)||'Could not start one-click connect — use the form below.');});
   }
 
   function nonEmpty(o){var r={};Object.keys(o||{}).forEach(function(k){if(o[k]!=='' && o[k]!=null)r[k]=o[k];});return r;}
