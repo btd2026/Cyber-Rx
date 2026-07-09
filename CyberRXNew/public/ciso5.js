@@ -185,6 +185,23 @@ function c5ago(){try{return new Date().toLocaleString();}catch(_){return 'last r
 function aisOn(keys){try{if(typeof connectedTools!=='function')return false;var t=connectedTools()||{};return (keys||[]).some(function(k){return t[k]&&t[k].on;});}catch(_){return false;}}
 function c5obj(o){o=o||{};o.inputs=o.inputs||[];o.sources=o.sources||[];o.asOf=c5now();if(o.color==null)o.color='ink';if(o.label==null)o.label='computed';if(o.connected==null)o.connected=true;return o;}
 function c5capSrc(k){var c=(typeof CAP_BY_KEY!=='undefined')?CAP_BY_KEY[k]:null;return {tool:c?c.tool:k,connector:k,field:((typeof CAP_SIGKEY!=='undefined'&&CAP_SIGKEY[k])||k),lastRefresh:c5ago()};}
+/* Evidence inputs for the CEO Customer-Trust surfaces, gathered once so the cards,
+   the answer sentence and the evidence-confidence panel can never disagree. Every
+   field is a live signal or a modeled driver — nothing typed here. */
+function c5TrustInputs(){
+  var oi=(typeof sig==='function')?sig('open_incidents'):null;
+  var incidentsConnected=oi!=null;
+  var M=(typeof c5expModel==='function')?c5expModel():{drivers:[]};
+  var identityMaterial=(M.drivers||[]).some(function(d){return d.id==='exp_identity'&&d.usd>0;});
+  var dlpC=false;try{dlpC=(typeof CAP_BY_KEY!=='undefined'&&CAP_BY_KEY.dlp&&typeof capDeploy==='function')?(capDeploy(CAP_BY_KEY.dlp)!=null):false;}catch(_){ }
+  var availabilityConnected=false;try{availabilityConnected=!!(sig('platform_uptime')!=null);}catch(_){ }
+  return {
+    incidentsConnected:incidentsConnected, incidents:oi,
+    disclosures:incidentsConnected?0:null, disclosuresConnected:incidentsConnected,
+    identityMaterial:identityMaterial, dlpConnected:dlpC,
+    incidentTouchingData:incidentsConnected?oi:0, availabilityConnected:availabilityConnected
+  };
+}
 function c5sqClass(colorName){return colorName==='good'?'g':colorName==='warn'?'a':colorName==='blue'?'b':colorName==='crit'?'r':'n';}
 function c5avgDeploy(caps){var v=(caps||[]).filter(function(k){return k!=='__vendor';}).map(function(k){return capDeploy(CAP_BY_KEY[k]);}).filter(function(x){return x!=null;});return v.length?Math.round(v.reduce(function(s,x){return s+x;},0)/v.length):null;}
 function c5vendors(){var seed=(typeof vendorSeed==='function')?vendorSeed():[];var vs=(typeof vendorService==='function')?vendorService():null;
@@ -786,23 +803,30 @@ function c5get(id){
         inputs:[{name:'Open incidents',value:conn?oi3:'—',source:'SIEM · open_incidents'}],sources:[c5capSrc('siem')],
         action:conn?(oi3>0?(oi3+' open incident'+(oi3>1?'s':'')+' affecting customer-facing services - contain, brief the incident commander, and assess customer/regulator disclosure now.'):'No customer-impacting incidents open - hold SIEM coverage on customer-facing services.'):'Connect your SIEM to count customer-impacting incidents.',note:'Whether anything reached customers this quarter — the trust question in one number.',connectTool:'your SIEM'});}
     case 'ceo_disclosures':{var oi4=sig('open_incidents');var conn=oi4!=null;
-      return c5obj({id:id,name:'Breach disclosures',connected:conn,displayValue:conn?'0':'—',label:'computed',color:conn?'good':'muted',
-        formula:'disclosures = material cyber events requiring notification to customers or regulators this quarter',
+      return c5obj({id:id,name:'Customer-notified breach/privacy events',connected:conn,displayValue:conn?'0':'—',label:'computed',color:conn?'good':'muted',
+        formula:'events = cyber/privacy events that required notification to customers or regulators this quarter',
         inputs:[{name:'Material reportable events',value:conn?'0':'—',source:'materiality workbench + SIEM'}],
         sources:[{tool:'Nerion engine',connector:'nerion',field:'disclosures',lastRefresh:c5ago()}],
-        note:'Nothing material to disclose keeps the story clean — for customers, regulators and the board.',connectTool:'your SIEM + materiality inputs'});}
-    case 'ceo_trust_signal':{var oi5=sig('open_incidents');var conn=oi5!=null;var steady=(oi5==null||oi5===0);
-      return c5obj({id:id,name:'Trust signal',connected:conn,displayValue:conn?(steady?'Steady':'At risk'):'—',label:'computed',color:conn?(steady?'good':'warn'):'muted',
-        formula:'trust signal = steady when there are no customer-impacting incidents or disclosures',
-        method:'A proxy from incidents/disclosures; a brand-monitoring feed sharpens it.',
-        inputs:[{name:'Customer incidents',value:conn?oi5:'—',source:'ceo_cust_incidents'},{name:'Disclosures',value:'0',source:'ceo_disclosures'}],
-        sources:[{tool:'Nerion engine',connector:'nerion',field:'trust_signal',lastRefresh:c5ago()}],
-        action:conn?(steady?'Trust signal is Steady - no customer-impacting incidents or disclosures; add a brand-monitoring feed to sharpen the read.':'Trust is At risk - driven by '+oi5+' customer-impacting incident'+(oi5>1?'s':'')+'; close it and get ahead of customer messaging before sentiment turns.'):'Connect a brand-monitoring / sentiment feed to read trust.',note:'Whether customer trust is holding — the moat a breach would erode.',connectTool:'a brand-monitoring / sentiment feed'});}
-    case 'ceo_customer_data':{var oi6=sig('open_incidents');var conn=oi6!=null;var ok=(oi6==null||oi6===0);
-      return c5obj({id:id,name:'Customer data',connected:conn,displayValue:conn?(ok?'No exposure':'Exposure'):'—',label:'computed',color:conn?(ok?'good':'crit'):'muted',
-        formula:'customer-data exposure = any open incident touching customer data this quarter',
-        inputs:[{name:'Open incidents',value:conn?oi6:'—',source:'SIEM · open_incidents'}],sources:[c5capSrc('siem')],
-        action:conn?(ok?'No open incident touches customer data - keep DLP and SIEM coverage on customer datastores.':oi6+' open incident'+(oi6>1?'s':'')+' touching customer data - invoke breach response, scope the exposed records, and assess notification duties immediately.'):'Connect your SIEM + DLP to see customer-data exposure.',note:'Whether customer data is at risk right now.',connectTool:'your SIEM + DLP'});}
+        note:'Whether customers or regulators had to be notified — the disclosure the board tracks.',connectTool:'your SIEM + materiality inputs'});}
+    case 'ceo_trust_signal':{var TI=c5TrustInputs();
+      var tp=(typeof TrustLogic!=='undefined')?TrustLogic.trustPosture(TI):{label:(TI.incidentsConnected?'Stable':'—'),cls:TI.incidentsConnected?'g':'n',connected:TI.incidentsConnected};
+      var tpcol={g:'good',a:'warn',r:'crit',n:'muted'}[tp.cls]||'muted';
+      return c5obj({id:id,name:'Customer trust posture',connected:TI.incidentsConnected,displayValue:TI.incidentsConnected?tp.label:'—',label:'computed',color:tpcol,
+        formula:'customer trust posture = worst of: customer-impacting incidents, customer-notified breach/privacy events, and any unresolved material trust exposure. Values: Stable · Stable — Watch · At Risk · Critical',
+        method:'A computed proxy from incidents, notified events and your top trust exposure; a brand-monitoring feed sharpens it.',
+        inputs:[{name:'Customer-impacting incidents',value:TI.incidentsConnected?TI.incidents:'—',source:'ceo_cust_incidents'},{name:'Customer-notified breach/privacy events',value:TI.incidentsConnected?TI.disclosures:'—',source:'ceo_disclosures'},{name:'Unresolved material trust exposure',value:TI.identityMaterial?'Customer-platform identity exposure (under watch)':'none material',source:'exp_identity'}],
+        sources:[{tool:'Nerion engine',connector:'nerion',field:'trust_posture',lastRefresh:c5ago()}],
+        action:!TI.incidentsConnected?'Connect your SIEM (and a brand-monitoring feed) to read customer trust posture.':(tp.label==='Stable'?'Posture is Stable — no customer-impacting incidents or notified events; add a brand-monitoring feed to sharpen the read.':tp.label==='Stable — Watch'?'Posture is Stable — Watch: no active customer impact, but a material identity exposure in the customer platform is unresolved. Approve the identity remediation to clear the watch.':'Posture is '+tp.label+' — driven by active customer impact; contain and get ahead of customer messaging now.'),
+        note:'Whether customer trust is holding — the moat a breach would erode.',connectTool:'a brand-monitoring / sentiment feed'});}
+    case 'ceo_customer_data':{var TI2=c5TrustInputs();
+      var cd=(typeof TrustLogic!=='undefined')?TrustLogic.customerDataExposure(TI2):{label:'Evidence incomplete',cls:TI2.incidentsConnected?'a':'n',connected:TI2.incidentsConnected,complete:false};
+      var cdcol={g:'good',a:'warn',r:'crit',n:'muted'}[cd.cls]||'muted';
+      return c5obj({id:id,name:'Customer data exposure',connected:TI2.incidentsConnected,displayValue:cd.label,label:'computed',color:cdcol,
+        formula:'customer-data exposure is confirmed only with BOTH incident data (SIEM) and data-loss monitoring (DLP) connected and no open incident touching customer data; otherwise the evidence is incomplete',
+        method:'"No confirmed customer data exposure" is shown only when SIEM and DLP are both connected and clean. Without DLP the honest read is "Evidence incomplete" — never "no exposure".',
+        inputs:[{name:'Open incidents (SIEM)',value:TI2.incidentsConnected?TI2.incidents:'not connected',source:'SIEM · open_incidents'},{name:'Data-loss monitoring (DLP)',value:TI2.dlpConnected?'connected':'not connected',source:'DLP'}],sources:[c5capSrc('siem'),c5capSrc('dlp')],
+        action:!TI2.incidentsConnected?'Connect your SIEM + DLP to read customer-data exposure.':(cd.complete?(cd.cls==='g'?'Evidence is complete and shows no confirmed customer-data exposure — hold SIEM + DLP coverage on customer datastores.':'Open incident(s) could touch customer data — invoke breach response, scope the records, and assess notification duties.'):'Connect DLP alongside your SIEM to confirm customer-data exposure — until then the honest read is "Evidence incomplete", not "no exposure".'),
+        note:'Whether customer data is at risk right now — stated only as strongly as the evidence allows.',connectTool:'your SIEM + DLP'});}
     case 'ceo_uptime':{
       return c5obj({id:id,name:'Service availability',connected:false,displayValue:'—',label:'live',color:'muted',
         formula:'availability = uptime of the customer platform from your monitoring / SRE tooling',
@@ -2450,19 +2474,55 @@ function c5ceFinancial(){
     c5bl('Bottom line','The one number that moves the headline down.',null,(ec.connected?('A single identity gap drives '+ec.displayValue+' of the total — the largest single share. Funding its fix lowers both the everyday cost and the severe-year tail, and it’s already scoped.'):'Connect your controls and the single largest loss driver — an identity gap — surfaces here with its funded fix.'),{mid:'exp_identity',txt:ec.connected?('Back the identity fix — cuts '+ec.displayValue):'Back the identity fix'})+
     '<div class="c5foot">Loss figures are modeled (ALE and tail); every input traces to its source.</div>';
 }
-/* Tab 04 — Brand & customer trust */
+/* Tab 04 — Brand & customer trust. A CISO's briefing to the CEO: are customers
+   protected, can we prove it, what's the one exposure that could change that, and
+   what decision is needed. Safer-than-mockup wording, evidence-aware. */
 function c5ceTrust(){
   var host=document.getElementById('ce-trust');if(!host)return;
+  var TI=c5TrustInputs();var ec=c5get('exp_identity');
+  var ans=(typeof TrustLogic!=='undefined')?TrustLogic.trustAnswer(TI):'';
+  var blHead=(typeof TrustLogic!=='undefined')?TrustLogic.bottomLineHead(TI):'Customer trust';
+  var demo=(typeof signalsAreDemo==='function')&&signalsAreDemo();
   host.innerHTML=c5header()+
-    c5shell('Brand & customer trust · are we protecting trust?','Customer trust is intact — one exposure could test it.',null,'Trust is your moat. This quarter: no customer-impacting incidents, no breach disclosures, signal steady. The one exposure that could dent trust is the customer-platform identity gap. Every figure traces to its source.')+
+    c5shell('Brand & customer trust · are we protecting trust?',ans,null,'The one question: are customers protected, and can we prove it? Below — whether customers were affected, whether anyone had to be notified, the trust posture, the one exposure under watch, and how complete the evidence is. Every figure traces to its source.')+
+    (demo?'<div class="c5foot" style="color:var(--warn);margin:2px 0 6px">Demo data — some signals are sample values until your tools are connected.</div>':'')+
     '<div class="c5cards">'+c5card('ceo_cust_incidents')+c5card('ceo_disclosures')+c5card('ceo_trust_signal')+'</div>'+
     '<div class="c5tiles">'+
-      c5tile('ceo_customer_data','g','Protected','No customer data at risk this quarter')+
-      c5tile('ceo_uptime','g','Healthy','Customer platform uptime · connect monitoring')+
-      c5tile('exp_identity','a','Watch','The one exposure to the customer platform')+
+      c5tile('ceo_customer_data','a','Evidence-gated','Confirmed only with SIEM + DLP connected')+
+      c5TrustRiskTile(ec)+
+      c5TrustEvidence(TI)+
     '</div>'+
-    c5bl('Bottom line','Protect the moat before it’s tested.',null,'Trust is intact today, but the identity gap is the one thing that could put customer data or platform uptime — and the trust that depends on them — at risk. The fix is funded.',{mid:'exp_identity',txt:'Back the identity fix — protects trust'})+
-    '<div class="c5foot">Incident, availability, and disclosure data trace to source.</div>';
+    c5bl('Bottom line',blHead,null,'The risk is not an active breach; it is an unresolved identity exposure in the customer platform — the one thing that could put customer data or platform uptime, and the trust that depends on them, at risk. CEO action: approve or accelerate the customer-platform identity remediation plan. The fix is funded.',{mid:'exp_identity',txt:'Approve identity remediation'})+
+    '<div class="c5foot">Incident, breach/privacy and identity-exposure figures trace to source; availability is not yet connected — see Evidence confidence.</div>';
+}
+/* "Top trust risk" tile — the identity exposure in plain business language, with the
+   dollar figure always carrying a label that explains what it means. */
+function c5TrustRiskTile(ec){
+  var lbl=(typeof TrustLogic!=='undefined')?TrustLogic.EXPOSURE_LABEL:'Estimated customer-platform exposure (modeled)';
+  var ic='<span class="c5tile-ic" style="--ac:var(--warn)">'+c5icon('lock')+'</span>';
+  return '<div class="c5tile'+(ec.connected?'':' c5off')+'" data-c5m="exp_identity" title="'+c5tip(ec)+'">'+
+    '<div class="c5tile-top"><span class="c5tile-l">'+ic+'Top trust risk</span><span class="c5pill a">Watch</span></div>'+
+    '<div class="c5tile-h'+(ec.connected?'':' c5muted')+'">'+(ec.connected?ec.displayValue:'Not connected')+'</div>'+
+    '<div class="c5tile-s">Customer-platform identity exposure · could increase risk of customer data exposure or platform disruption.</div>'+
+    (ec.connected?('<div class="c5tile-s" style="color:var(--muted);margin-top:2px">'+lbl+'</div>'):'')+
+    '</div>';
+}
+/* Evidence confidence — visually secondary. Shows the CEO where the trust answer is
+   proven and where evidence is still incomplete (this is where connector gaps live,
+   not the primary cards). */
+function c5TrustEvidence(TI){
+  var SL=(typeof TrustLogic!=='undefined')?TrustLogic.sourceStatus:function(o){return o&&o.connected?{label:'Connected',cls:'g'}:{label:'Not Connected',cls:'n'};};
+  function row(name,st){return '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:3px 0"><span style="font-size:12px;color:var(--ink-2)">'+name+'</span><span class="c5pill '+st.cls+'" style="flex:none">'+st.label+'</span></div>';}
+  var rows=[
+    ['Customer incident source',            SL({connected:TI.incidentsConnected})],
+    ['Breach/privacy event source',         SL({connected:TI.incidentsConnected,computed:true})],
+    ['Customer-data exposure source',       SL({connected:TI.incidentsConnected&&TI.dlpConnected,partial:TI.incidentsConnected&&!TI.dlpConnected})],
+    ['Customer-platform identity risk',     SL({connected:TI.identityMaterial,computed:true})],
+    ['Service availability source',         SL({connected:TI.availabilityConnected})]
+  ];
+  return '<div class="c5tile"><div class="c5tile-top"><span class="c5tile-l"><span class="c5tile-ic" style="--ac:var(--ink-2)">'+c5icon('checklist')+'</span>Evidence confidence</span></div>'+
+    '<div style="margin-top:6px">'+rows.map(function(r){return row(r[0],r[1]);}).join('')+'</div>'+
+    '<div class="c5tile-s" style="margin-top:6px;color:var(--muted)">Where the trust answer is proven — and where evidence is still incomplete.</div></div>';
 }
 /* Tab 05 — Decisions for the CEO */
 function c5ceDecisions(){
@@ -3025,7 +3085,7 @@ function c5cpTrust(){
     c5shell('Customer trust in the product · are users safe and confident?','Users trust the product — the access experience is the one soft spot.',null,'How secure and confident your users are. No customer-impacting incidents, strong security-feature adoption, trust signals steady. The one soft spot is the identity/access experience — friction and risk in the same place. Every figure traces to its source.')+
     '<div class="c5cards">'+c5card('ceo_cust_incidents')+c5card('cp_mfa')+c5card('ceo_trust_signal')+'</div>'+
     '<div class="c5tiles">'+
-      c5tile('ceo_customer_data','g','Protected','No customer data at risk this quarter')+
+      c5tile('ceo_customer_data','a','Evidence-gated','Confirmed only with SIEM + DLP connected')+
       c5tile('exp_identity','a','Watch','The identity gap shows up here — friction + risk')+
     '</div>'+
     c5bl('Bottom line','Turn the access pain point into a trust win.',null,(ec.connected?('The identity gap is both a security risk and a source of user friction. Fixing it ('+ec.displayValue+') removes the exposure and smooths the access experience — safer and better for customers at once.'):'Connect your controls and the access pain point — both risk and friction — surfaces here, with the fix that improves both.'),{mid:'exp_identity',txt:'Fund the identity fix — improves trust'})+
