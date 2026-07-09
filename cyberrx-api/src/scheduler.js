@@ -55,6 +55,27 @@ async function refreshAssessments() {
   }
 }
 
+// Continuous monitoring: re-pull signals from every org's CONNECTED integrations
+// (the ones whose API credentials were vaulted at connect) on a cadence, so the
+// live tool data stays fresh without anyone pressing "sync". This is what makes a
+// saved connection an actually-monitored one.
+async function refreshIntegrations() {
+  try {
+    const Integrations = require('./services/IntegrationService');
+    await Integrations.ensureTables();
+    let rows = [];
+    try { rows = await db.query("SELECT org_id, connector FROM integrations WHERE status='connected'"); } catch (_) { rows = []; }
+    let ok = 0, fail = 0;
+    for (const r of rows) {
+      try { await Integrations.sync(r.org_id, r.connector); ok += 1; }
+      catch (err) { fail += 1; logger.warn('[scheduler] integration re-sync failed', { orgId: r.org_id, connector: r.connector, error: err.message }); }
+    }
+    logger.info('[scheduler] Connected integrations re-synced (continuous monitoring)', { connected: rows.length, ok, fail });
+  } catch (err) {
+    logger.warn('[scheduler] Integration refresh skipped', { error: err.message });
+  }
+}
+
 // Existing tool sync schedule (legacy metric sync)
 const SYNC_SCHEDULE = {
   okta:        { metric: 'mfaPct',      intervalHrs: 24 },
@@ -449,6 +470,13 @@ async function runScheduler() {
   cron.schedule(assessCron, refreshAssessments, { scheduled: true, timezone: process.env.TZ || 'UTC' });
   await refreshAssessments();
 
+  // Continuous monitoring — re-pull live signals from every connected integration
+  // (vaulted API creds) on a cadence, so a saved connection stays actively monitored.
+  const integCron = process.env.INTEGRATION_REFRESH_CRON || '*/15 * * * *';
+  logger.info('[scheduler] Starting connected-integration re-sync', { schedule: integCron });
+  cron.schedule(integCron, refreshIntegrations, { scheduled: true, timezone: process.env.TZ || 'UTC' });
+  await refreshIntegrations();
+
   logger.info('[scheduler] All scheduler components started');
 }
 
@@ -473,7 +501,8 @@ module.exports = {
   getScheduledTasks,
   stopVendorSyncs,
   syncOrg,
-  refreshAssessments
+  refreshAssessments,
+  refreshIntegrations
 };
 
 // Start scheduler if run directly
