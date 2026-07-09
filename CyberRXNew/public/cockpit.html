@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nerion · Executive Cockpit</title>
 <style>
+  /* Inter — one clean, consistent UI typeface across every platform (self-hosted,
+     no external dependency). Variable weight axis, so all weights come from one file. */
+  @font-face{font-family:'Inter';font-style:normal;font-weight:100 900;font-display:swap;src:url('fonts/inter-var.woff2') format('woff2');}
   :root{
     /* Nerion cockpit — mockbook design tokens (warm neutrals, bright accent, all-sans) */
     --plane:#FFFFFF; --surface:#FFFFFF; --surface-2:#F6F5F2; --line:#E6E4DE; --line-2:#D6D4CC;
@@ -13,10 +16,11 @@
     --good:#1E8E5A; --warn:#B7791F; --serious:#C4703A; --crit:#C0392B; --gold:#B7791F;
     --good-soft:rgba(30,142,90,.12); --warn-soft:rgba(183,121,31,.14); --crit-soft:rgba(192,57,43,.10);
     --mono:"SFMono-Regular",Consolas,Menlo,monospace;
-    --serif:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --sans:'Inter',system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --serif:'Inter',system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{background:var(--plane);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased}
+  body{background:var(--plane);color:var(--ink);font-family:var(--sans);line-height:1.55;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
   h1,h2,h3,.verdict,.rubric .rt,.ai-verdict,.drill-hero{font-family:var(--serif)}
   .wrap{max-width:1120px;margin:0 auto;padding:0 26px}
   .top{border-bottom:1px solid var(--line);background:var(--surface)}
@@ -834,7 +838,9 @@ var TAB_LABELS={
  'Is our technology estate secure and modern?':'Tech estate','Are we shipping AI safely?':'AI','Is our software supply chain sound?':'Supply chain','What needs my decision?':'Decisions',
  'Can the business keep running through a disruption?':'Resilience','Can we recover within our targets?':'Recovery','Which vendors could stop us?':'Vendors',
  'Does our product ship secure by design?':'Secure by design','Is security slowing our releases?':'Velocity','What’s top of the security backlog?':'Backlog',
- 'Is our cyber audit universe covered?':'Coverage','What findings are open?':'Findings','What needs escalation?':'Escalate','What should Internal Audit action?':'Actions'
+ 'Is our cyber audit universe covered?':'Coverage','What findings are open?':'Findings','What needs escalation?':'Escalate','What should Internal Audit action?':'Actions',
+ // CISO Protection split
+ 'Where are we protected?':'Protection','Which controls buy down the most risk?':'Control value'
 };
 function tabLabel(title){var raw=String(title||'').trim();if(TAB_LABELS[raw])return TAB_LABELS[raw];var t=raw.replace(/\?+\s*$/,'').trim();if(TAB_LABELS[t])return TAB_LABELS[t];t=t.split(/\s+[—–-]\s+/)[0].trim();if(t.length>26)t=t.slice(0,24).replace(/\s+\S*$/,'')+'…';return t;}
 function buildTabs(){
@@ -2219,7 +2225,7 @@ function downloadAuditPdf(){
   var badge={good:'#0ca30c',blue:'#2563eb',serious:'#d98324',crit:'#e5484d',muted:'#888'}[r.cls]||'#888';
   var ev=(o.evidence||[]).map(function(e){return '<tr><td>'+e[0]+'</td><td>'+e[1]+'</td></tr>';}).join('');
   var doc='<!doctype html><html><head><meta charset="utf-8"><title>'+o.id+' — control workpaper</title>'+
-    '<style>body{font-family:Georgia,\'Times New Roman\',serif;color:#111;margin:44px;line-height:1.55}'+
+    '<style>body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#111;margin:44px;line-height:1.55;-webkit-font-smoothing:antialiased}'+
     'h1{font-size:19px;margin:2px 0 0}h2{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#555;border-bottom:1px solid #ccc;padding-bottom:4px;margin:24px 0 8px}'+
     '.eyebrow{font-size:10px;letter-spacing:.14em;color:#999}.badge{display:inline-block;padding:4px 12px;border-radius:5px;font-weight:bold;color:#fff;font-family:Arial,sans-serif;font-size:12px}'+
     '.meta{font-size:12px;color:#333;margin:12px 0 4px}.meta b{color:#111}p{font-size:13px}table{border-collapse:collapse;font-size:12px;margin-top:4px}td{border:1px solid #ddd;padding:6px 10px}'+

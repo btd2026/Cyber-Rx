@@ -11,9 +11,11 @@
     --shadow:0 1px 2px rgba(14,31,54,.06),0 6px 20px rgba(14,31,54,.07);
     --t-data:#2F6DB5; --t-app:#0E7C86; --t-infra:#9A4A2F;
   }
+  /* Inter — one clean UI typeface, self-hosted, matching the cockpit. */
+  @font-face{font-family:'Inter';font-style:normal;font-weight:100 900;font-display:swap;src:url('fonts/inter-var.woff2') format('woff2');}
   *{box-sizing:border-box} html,body{margin:0}
-  body{background:var(--paper);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-size:15px;-webkit-font-smoothing:antialiased}
-  .serif{font-family:Georgia,"Times New Roman",serif}
+  body{background:var(--paper);color:var(--text);font-family:'Inter',system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-size:15px;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  .serif{font-family:'Inter',system-ui,-apple-system,"Segoe UI",sans-serif}
   .wrap{max-width:1180px;margin:0 auto;padding:0 22px}
   header{background:var(--ink);color:#EAF0F8}
   .head-top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:15px 0;border-bottom:1px solid #ffffff1a}
@@ -36,7 +38,7 @@
   .risklegend h3{margin:0 0 10px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
   .rlgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:8px 20px}
   .rlitem{display:flex;gap:9px;align-items:flex-start;font-size:13px;color:var(--text)}
-  .rid{flex:0 0 auto;background:var(--ink);color:#fff;font-family:Georgia,serif;font-weight:700;font-size:12px;border-radius:6px;padding:2px 7px}
+  .rid{flex:0 0 auto;background:var(--ink);color:#fff;font-family:'Inter',system-ui,-apple-system,"Segoe UI",sans-serif;font-weight:700;font-size:12px;border-radius:6px;padding:2px 7px}
 
   .bar-legend{display:flex;gap:16px;flex-wrap:wrap;align-items:center;padding:14px 0 2px;color:var(--muted);font-size:12.5px}
   .bar-legend .grp{display:flex;align-items:center;gap:7px}
@@ -70,10 +72,10 @@
   .node .ttl{font-weight:650;font-size:13px;line-height:1.25}
   .node .sub{color:var(--muted);font-size:11px;margin-top:2px}
   .node .nums{display:flex;gap:12px;margin-top:8px;align-items:baseline}
-  .node .val{font-family:Georgia,serif;font-size:14px}
-  .node .rk{font-family:Georgia,serif;font-size:14px;color:var(--risk)}
-  .node .mf{color:#3f8a4f;font-size:.82em;font-family:Georgia,serif}
-  .node .lf{color:var(--risk);font-family:Georgia,serif}
+  .node .val{font-family:'Inter',system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px}
+  .node .rk{font-family:'Inter',system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;color:var(--risk)}
+  .node .mf{color:#3f8a4f;font-size:.82em;font-family:'Inter',system-ui,-apple-system,"Segoe UI",sans-serif}
+  .node .lf{color:var(--risk);font-family:'Inter',system-ui,-apple-system,"Segoe UI",sans-serif}
   .node .nlab{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;display:block}
   .minibar{height:6px;border-radius:4px;background:#e9edf3;margin-top:8px;overflow:hidden}
   .minibar i{display:block;height:100%;border-radius:4px}
@@ -81,7 +83,7 @@
   .expander{position:absolute;bottom:-11px;left:50%;transform:translateX(-50%);width:20px;height:20px;border-radius:50%;background:#fff;border:2px solid var(--conn);color:var(--muted);font-size:12px;display:grid;place-items:center;z-index:2;font-weight:700}
   .node.haschild:hover{border-color:var(--accent)}
 
-  .node.org{width:320px}.node.org .accent{background:var(--accent)}.node.org .big{font-family:Georgia,serif;font-size:22px}
+  .node.org{width:320px}.node.org .accent{background:var(--accent)}.node.org .big{font-family:'Inter',system-ui,-apple-system,"Segoe UI",sans-serif;font-size:22px}
   .node.fn{width:190px}
   .node.proc{width:170px;background:#f7f9fc}.node.proc .ttl{font-size:12px}
   .node.proc .tag{font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700}
@@ -95,27 +97,27 @@
 
   .node.risk{width:116px;text-align:center}
   .node.risk .pad{padding:9px 10px;text-align:center}
-  .node.risk .rid{display:inline-block;font-family:Georgia,serif;font-weight:700;color:#fff;border-radius:6px;padding:2px 9px;font-size:14px}
+  .node.risk .rid{display:inline-block;font-family:'Inter',system-ui,-apple-system,"Segoe UI",sans-serif;font-weight:700;color:#fff;border-radius:6px;padding:2px 9px;font-size:14px}
   .node.risk .rname{font-size:10px;color:var(--muted);margin-top:6px;line-height:1.2}
-  .node.risk .rrisk{font-family:Georgia,serif;font-size:12.5px;margin-top:5px;color:var(--risk)}
+  .node.risk .rrisk{font-family:'Inter',system-ui,-apple-system,"Segoe UI",sans-serif;font-size:12.5px;margin-top:5px;color:var(--risk)}
 
   .node.ct{width:96px;text-align:center}
   .node.ct .pad{padding:8px;text-align:center}
   .node.ct .code{font-weight:700;font-size:11px;font-family:ui-monospace,Menlo,Consolas,monospace}
   .node.ct .cname{font-size:9.5px;color:var(--muted);line-height:1.2;margin-top:2px}
-  .node.ct .score{margin:6px auto 0;width:30px;height:30px;border-radius:8px;display:grid;place-items:center;color:#fff;font-weight:700;font-family:Georgia,serif;font-size:15px}
+  .node.ct .score{margin:6px auto 0;width:30px;height:30px;border-radius:8px;display:grid;place-items:center;color:#fff;font-weight:700;font-family:'Inter',system-ui,-apple-system,"Segoe UI",sans-serif;font-size:15px}
   .node.ct .cfunc{display:inline-block;font-size:8px;letter-spacing:.04em;text-transform:uppercase;font-weight:700;color:#fff;padding:1px 5px;border-radius:4px;margin-top:5px}
   .node.ct{width:106px}
   .node.ct.atrisk{border-color:#e6b7ae;box-shadow:0 0 0 2px #b23a2e14,var(--shadow)}
   .node.ct.mitig{background:#f4faf5}
-  .node.ct .cmoney{margin-top:5px;font-family:Georgia,serif;font-size:11px;line-height:1.2}
+  .node.ct .cmoney{margin-top:5px;font-family:'Inter',system-ui,-apple-system,"Segoe UI",sans-serif;font-size:11px;line-height:1.2}
   .node.ct .cmoney s{color:#3f8a4f}
   .node.ct .mtag{display:block;color:#3f8a4f;font-family:system-ui;font-weight:800;font-size:8px;text-transform:uppercase;letter-spacing:.05em;margin-top:1px}
   .node.ct .atag{color:#b23a2e;font-family:system-ui;font-weight:700;font-size:9px}
   .node.ct .hintdot{position:absolute;top:6px;right:7px;width:14px;height:14px;border-radius:50%;border:1px solid var(--line);color:var(--muted);font-size:9px;display:grid;place-items:center;font-weight:700}
 
   .scope{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:16px 20px;margin-top:4px;display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center}
-  .scope .big{font-family:Georgia,serif;font-size:38px;color:var(--accent);line-height:1;text-align:center}
+  .scope .big{font-family:'Inter',system-ui,-apple-system,"Segoe UI",sans-serif;font-size:38px;color:var(--accent);line-height:1;text-align:center}
   .scope .big small{display:block;font-family:system-ui;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:3px}
   .scope p{margin:0;font-size:14.5px}.scope p b{color:var(--ink)}
   footer{color:var(--muted);font-size:12px;padding:22px 0 40px;border-top:1px solid var(--line);margin-top:20px}
@@ -149,7 +151,7 @@
       <div class="grp"><span class="sw" style="background:#B23A2E"></span>exposed</div>
       <div class="grp" style="margin-left:6px"><span style="font-size:15px">👑</span> crown jewel:</div>
       <div class="grp"><span class="tpill" style="background:var(--t-app)">APP</span><span class="tpill" style="background:var(--t-infra)">INFRA</span></div>
-      <div class="grp"><s style="color:#3f8a4f;font-family:Georgia,serif">$</s>&nbsp;risk mitigated (control ≥ 3)</div>
+      <div class="grp"><s style="color:#3f8a4f;font-family:'Inter',system-ui,-apple-system,"Segoe UI",sans-serif">$</s>&nbsp;risk mitigated (control ≥ 3)</div>
       <div class="grp" style="margin-left:auto">hover a name for details · hover any $ for the math</div>
     </div>
   </div>

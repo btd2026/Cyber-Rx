@@ -1619,12 +1619,15 @@ function c5protInspect(kind){
   var P=(typeof window!=='undefined'&&window.C5PROT)||{well:[],weak:[],ctrl:[],target:75};
   var m;
   if(kind==='well'){
-    m=c5obj({name:'Business areas well protected',why:'Lists the business areas that are demonstrably well protected — clearing their control-coverage bar with no open gaps. It matters because it is the defensible base you present to the board: the parts of the business you can prove are covered.',displayValue:String((P.well||[]).length),label:'computed',color:(P.well&&P.well.length)?'good':'muted',
-      formula:'business areas whose GRC control-coverage clears the '+P.target+'-point bar with no open control gaps',
-      method:'From your Business Capability Map joined to GRC control-coverage. An area qualifies when its protection score is at or above the bar and it carries no open control gaps.',
-      inputs:(P.well&&P.well.length)?P.well.map(function(a){return {name:a.name,value:a.score+(a.measured?'':' (illustrative)'),color:'good',source:(a.grc?('GRC '+a.grc):'Capability Map × GRC')};}):[{name:'No area yet clears the bar',value:'—',source:'connect your Capability Map + GRC'}],
-      sources:[{tool:'Business Capability Map',connector:'capmap',field:'capabilities',lastRefresh:c5ago()},{tool:'GRC',connector:'grc',field:'control_coverage · gaps'}],
-      note:'The defensible base you take to the board — the parts of the business that are demonstrably protected.'});
+    // Rank ALL business areas best-protected first (top 10) so the CISO sees which
+    // are stronger and which are catching up — not just the ones that clear the bar.
+    var allA=(P.all&&P.all.length)?P.all:(P.well||[]);var topA=allA.slice(0,10);
+    m=c5obj({name:'Business areas ranked by protection',why:'Ranks your business areas by how well protected each is — best first. An area is “well protected” when it clears the '+P.target+'-point coverage bar with no open control gaps. It matters because you see at a glance which parts of the business you can defend to the board and which are catching up.',displayValue:String((P.well||[]).length)+' of '+allA.length+' clear the bar',label:'computed',color:(P.well&&P.well.length)?'good':'muted',
+      formula:'business areas ranked by protection score (0–100), best first; “well protected” = score ≥ '+P.target+' AND no open control gaps',
+      method:'From your business functions joined to the live control posture. Protection = the mean maturity of the NIST controls guarding that area (0–5 → 0–100); it clears the bar at ≥ '+P.target+' with zero open control gaps.',
+      inputs:topA.length?topA.map(function(a,i){var okA=(a.score>=P.target&&(a.gaps||0)===0);return {name:'#'+(i+1)+'  '+a.name,value:a.score+' / 100 · '+(okA?'✓ well protected':(a.gaps>0?(a.gaps+' open gap'+(a.gaps>1?'s':'')):'below bar'))+(a.measured?'':' · illustrative'),color:(okA?'good':(a.score<50?'crit':'warn')),source:(a.grc?('GRC '+a.grc):'functions × control posture')};}):[{name:'No business areas yet',value:'—',source:'add your business functions / capability map'}],
+      sources:[{tool:'Business functions (value chain)',connector:'capmap',field:'business areas',lastRefresh:c5ago()},{tool:'Live control posture',connector:'grc',field:'control maturity → coverage · gaps'}],
+      note:'Ranked best-protected first — the top is your defensible base; the bottom is where the next dollar of protection should go.'});
   } else if(kind==='weak'){
     m=c5obj({name:'Business areas to strengthen',why:'Lists the business areas carrying the residual cyber exposure — below their protection bar or with open control gaps. It matters because this is exactly where the next dollar of protection should go.',displayValue:String((P.weak||[]).length),label:'computed',color:(P.weak&&P.weak.length)?'warn':'good',
       formula:'business areas below the '+P.target+'-point bar OR carrying one or more open control gaps; ranked weakest-first',
@@ -2059,32 +2062,44 @@ function c5Exposure(){
       '<div class="c5opc" data-c5onb="business capability map" style="--ac:var(--blue)"><span class="c5opc-go">connect ›</span><div class="c5opc-h"><span class="c5opc-ic">'+c5icon('store')+'</span><span class="c5opc-t">Protection by business area</span></div><div class="c5opc-v" style="color:var(--blue);font-size:15px">Connect capability map →</div><div class="c5opc-s">Rank protection by business function once your Business Capability Map is added.</div></div>';
   }
   summary+='</div>';
-  var body=c5header()+
-    c5shell('Protection effectiveness · is the business protected where it counts?',verdict,tone,intro)+
-    summary;
   // Stash for the summary-card detail inspector (opened on click).
-  try{window.C5PROT={well:well,weak:weak,ctrl:ctrlConn,target:TARGET,anyDerived:anyDerived};}catch(_){}
+  try{window.C5PROT={well:well,weak:weak,ctrl:ctrlConn,target:TARGET,anyDerived:anyDerived,all:areas.slice().sort(function(a,b){return b.score-a.score;})};}catch(_){}
+  // TAB A — protection by business area (where are we protected?)
+  var bodyA=c5header()+
+    c5shell('Protection · where are we protected, and where is the exposure?',verdict,tone,intro)+
+    summary;
   if(haveAreas){
-    body+='<div class="c5seclab">Where the business is well protected</div><div>'+w1+'</div>'+
+    bodyA+='<div class="c5seclab">Where the business is well protected</div><div>'+w1+'</div>'+
           '<div class="c5seclab" style="margin-top:18px">Where to concentrate next</div><div>'+w2+'</div>';
   }
-  if(haveCtrls){
-    body+='<div class="c5seclab" style="margin-top:18px">Controls delivering the most business value · '+ctrlConn.length+' control'+(ctrlConn.length>1?'s':'')+' · '+usd(rr.total)+' removed</div><div>'+w3+'</div>';
-  }
-  // Conclusion — always present, like the other tabs.
   if(haveAreas&&topWeak&&topCtrl){
-    body+=c5bl('Bottom line',
+    bodyA+=c5bl('Bottom line',
       'Extend '+nm(topCtrl.c)+' to '+topWeak.name+' — your best-value control against your least-protected area.',
       tone,
       'The exposure concentrates in '+topWeak.name+', where protection is thinnest, and '+nm(topCtrl.c)+' is the highest-value control you run. Extending it there removes the most business risk for the least incremental spend — and it is already funded.',
       {mid:topCtrl.c.k==='mfa'?'exp_identity':'exp_total',txt:'Extend '+nm(topCtrl.c)+' — removes '+usd(topCtrl.usd)});
   } else if(haveAreas&&weak.length===0){
-    body+=c5bl('Bottom line','The business is protected across every area.',null,'Every area clears its protection bar. Hold the posture and evidence it — this is the read the board wants to see sustained.',null);
+    bodyA+=c5bl('Bottom line','The business is protected across every area.',null,'Every area clears its protection bar. Hold the posture and evidence it — this is the read the board wants to see sustained.',null);
   } else {
-    body+=c5bl('Bottom line','Protection is where the next dollar of security gets decided.',null,'This view separates the parts of the business that are safe to defend to the board from the parts still carrying exposure — and names the control that closes the gap most efficiently. It is the CISO’s allocation call, on one screen.',null);
+    bodyA+=c5bl('Bottom line','Protection is where the next dollar of security gets decided.',null,'This view separates the parts of the business that are safe to defend to the board from the parts still carrying exposure — and names the control that closes the gap most efficiently.',null);
   }
-  body+='<div class="c5foot">Every figure traces to its source'+(anyDerived?'; figures marked “illustrative” are not yet fully evidenced':'')+'.</div>';
-  host.innerHTML=body;
+  bodyA+='<div class="c5foot">Every figure traces to its source'+(anyDerived?'; figures marked “illustrative” are not yet fully evidenced':'')+'.</div>';
+  // TAB B — control value (which controls buy down the most risk?)
+  var bodyB=c5header()+
+    c5shell('Control value · which controls buy down the most risk?',
+      haveCtrls?('Your controls buy down '+usd(rr.total)+' of modeled expected loss — ranked by which returns the most.'):'Connect your security tools to rank each control by the business value it returns.',
+      null,
+      'Each control’s business value = its live deployment × the framework-weighted risk it removes across the assets it protects. The highest-value control is the one to extend to your least-protected area first.');
+  if(haveCtrls){
+    bodyB+='<div class="c5seclab">Controls delivering the most business value · '+ctrlConn.length+' control'+(ctrlConn.length>1?'s':'')+' · '+usd(rr.total)+' removed</div><div>'+w3+'</div>'+
+      (topCtrl?c5bl('Bottom line','Your highest-value control is '+nm(topCtrl.c)+' — '+usd(topCtrl.usd)+' removed at '+topCtrl.p+'% deployed.',null,'It returns more modeled risk-removed per dollar than any other control you run; extending its coverage is the most efficient next spend.',null):'')+
+      '<div class="c5foot">Ranked by modeled expected-loss removed · click any control for its full calculation.</div>';
+  } else {
+    bodyB+='<div class="c5foot" style="padding:16px 4px">No controls connected yet — connect EDR, MFA, PAM, SIEM and the rest so Nerion can rank each by the business value it returns.</div>';
+  }
+  var host2=document.getElementById('c5-exposure2');
+  if(host2){host.innerHTML=bodyA;host2.innerHTML=bodyB;}
+  else{host.innerHTML=bodyA+bodyB;} // single-tab fallback
 }
 
 /* ---------- Tab 03 — Control effectiveness ---------- */
