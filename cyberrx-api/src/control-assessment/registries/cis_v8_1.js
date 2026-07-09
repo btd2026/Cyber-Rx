@@ -6,14 +6,17 @@
 
 const M = require('../evidenceModel');
 const { makeTest } = require('../testKit');
+const { COPYRIGHT_FLAGS } = require('../native/copyrightSafety');
 const { EVIDENCE_LAYER, ASSESSMENT_TYPE } = M;
 const FRAMEWORK = 'CIS Controls v8.1';
-const def = (o) => Object.assign({ framework: FRAMEWORK, assessment_type: ASSESSMENT_TYPE.AUTOMATED, validation_status: 'documented_not_live_validated', live_tenant_validated: false, last_validated_at: null, evidence_freshness_requirement: 30, exception_handling: 'Unapproved exceptions block Effective.', optional_signals: [], required_time_period: 'review period', required_scope: 'enterprise assets in scope' }, o);
+// Copyright-safe: control_name / control_objective are Nerion-AUTHORED descriptions
+// of Nerion's own evidence test — never the official CIS Safeguard text.
+const def = (o) => Object.assign({ framework: FRAMEWORK, assessment_type: ASSESSMENT_TYPE.AUTOMATED, validation_status: 'documented_not_live_validated', live_tenant_validated: false, last_validated_at: null, evidence_freshness_requirement: 30, exception_handling: 'Unapproved exceptions block Effective.', optional_signals: [], required_time_period: 'review period', required_scope: 'enterprise assets in scope' }, COPYRIGHT_FLAGS, o);
 
 const REGISTRY = {
   '5.1': def({
-    control_id: '5.1', control_name: 'Establish and Maintain an Inventory of Accounts',
-    control_objective: 'Establish and maintain an inventory of all accounts managed in the enterprise.',
+    control_id: '5.1', control_name: 'Account inventory & reconciliation (Nerion test)',
+    control_objective: 'Nerion test: an authoritative account inventory exists and is reconciled on cadence over the review period.',
     evidence_layer_supported: [EVIDENCE_LAYER.DESIGN, EVIDENCE_LAYER.OPERATING_EFFECTIVENESS],
     required_signals: [], optional_signals: ['dormant_accounts'],
     required_api_fields: ['account_inventory', 'account_inventory_source', 'inventory_last_reviewed', 'accounts_reconciled'],
@@ -28,8 +31,8 @@ const REGISTRY = {
   }),
 
   '5.2': def({
-    control_id: '5.2', control_name: 'Use Unique Passwords',
-    control_objective: 'Use unique passwords for all enterprise assets, with a strong password policy.',
+    control_id: '5.2', control_name: 'Password policy enforcement (Nerion test)',
+    control_objective: 'Nerion test: a strong, unique-password policy is enforced with no non-compliant accounts over the review period.',
     evidence_layer_supported: [EVIDENCE_LAYER.DESIGN, EVIDENCE_LAYER.OPERATING_EFFECTIVENESS],
     required_signals: [], optional_signals: [],
     required_api_fields: ['password_policy', 'min_length', 'complexity_enforced', 'reuse_prevention', 'accounts_noncompliant'],
@@ -44,8 +47,8 @@ const REGISTRY = {
   }),
 
   '6.3': def({
-    control_id: '6.3', control_name: 'Require MFA for Externally-Exposed Applications',
-    control_objective: 'Require MFA for all externally-exposed enterprise or third-party applications.',
+    control_id: '6.3', control_name: 'MFA on external applications (Nerion test)',
+    control_objective: 'Nerion test: MFA is enforced on every externally-exposed application, with no non-MFA external sign-ins over the review period.',
     evidence_layer_supported: [EVIDENCE_LAYER.RELEVANCE, EVIDENCE_LAYER.DESIGN, EVIDENCE_LAYER.OPERATING_EFFECTIVENESS],
     required_signals: [], optional_signals: ['mfa_pct'],
     required_api_fields: ['external_app_inventory', 'external_apps_with_mfa', 'external_apps_total', 'signin_logs', 'external_signins_without_mfa'],

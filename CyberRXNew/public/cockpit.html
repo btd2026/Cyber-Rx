@@ -2020,24 +2020,24 @@ function vcByControl(fns,cvv){
    crosswalks. */
 // CIS Controls v8 — all 18 Controls expanded to their 153 Safeguards (v8 counts).
 var CIS_CTRLS=[
-  ['CIS 1','Inventory & Control of Enterprise Assets',['ID.AM-01','ID.AM-05'],5],
-  ['CIS 2','Inventory & Control of Software Assets',['ID.AM-02'],7],
-  ['CIS 3','Data Protection',['PR.DS-01','PR.DS-02','PR.DS-10'],14],
-  ['CIS 4','Secure Configuration of Assets & Software',['PR.PS-01'],12],
-  ['CIS 5','Account Management',['PR.AA-01'],6],
-  ['CIS 6','Access Control Management',['PR.AA-05'],8],
-  ['CIS 7','Continuous Vulnerability Management',['ID.RA-01'],7],
-  ['CIS 8','Audit Log Management',['PR.PS-04','DE.CM-01'],12],
-  ['CIS 9','Email & Web Browser Protections',['PR.PS-05'],7],
-  ['CIS 10','Malware Defenses',['DE.CM-01','RS.MI-01'],7],
-  ['CIS 11','Data Recovery',['PR.DS-11','RC.RP-03'],5],
-  ['CIS 12','Network Infrastructure Management',['PR.IR-01'],8],
-  ['CIS 13','Network Monitoring & Defense',['DE.CM-01','DE.AE-03'],11],
-  ['CIS 14','Security Awareness & Skills Training',['PR.AT-01','PR.AT-02'],9],
-  ['CIS 15','Service Provider Management',['GV.SC-01','GV.SC-04','GV.SC-07'],7],
-  ['CIS 16','Application Software Security',['PR.PS-06'],14],
-  ['CIS 17','Incident Response Management',['RS.MA-01','RS.MA-02'],9],
-  ['CIS 18','Penetration Testing',['ID.IM-02'],5]];
+  ['CIS 1','Enterprise asset inventory',['ID.AM-01','ID.AM-05'],5],
+  ['CIS 2','Software asset inventory',['ID.AM-02'],7],
+  ['CIS 3','Data protection & handling',['PR.DS-01','PR.DS-02','PR.DS-10'],14],
+  ['CIS 4','Configuration hardening',['PR.PS-01'],12],
+  ['CIS 5','Account lifecycle',['PR.AA-01'],6],
+  ['CIS 6','Access enforcement',['PR.AA-05'],8],
+  ['CIS 7','Vulnerability remediation',['ID.RA-01'],7],
+  ['CIS 8','Log management & retention',['PR.PS-04','DE.CM-01'],12],
+  ['CIS 9','Email & web threat filtering',['PR.PS-05'],7],
+  ['CIS 10','Endpoint malware defense',['DE.CM-01','RS.MI-01'],7],
+  ['CIS 11','Backup & recovery',['PR.DS-11','RC.RP-03'],5],
+  ['CIS 12','Network device management',['PR.IR-01'],8],
+  ['CIS 13','Network detection & response',['DE.CM-01','DE.AE-03'],11],
+  ['CIS 14','Workforce security training',['PR.AT-01','PR.AT-02'],9],
+  ['CIS 15','Third-party management',['GV.SC-01','GV.SC-04','GV.SC-07'],7],
+  ['CIS 16','Application security testing',['PR.PS-06'],14],
+  ['CIS 17','Incident response capability',['RS.MA-01','RS.MA-02'],9],
+  ['CIS 18','Offensive testing',['ID.IM-02'],5]];
 var CIS_MAP=CIS_CTRLS.map(function(c){var num=c[0].split(' ')[1],sgs=[];for(var i=1;i<=c[3];i++)sgs.push([num+'.'+i,'Safeguard '+num+'.'+i,c[2]]);return [c[0],c[0]+' · '+c[1],sgs];});
 // SOC 2 — AICPA Trust Services Criteria (2017, rev. 2022): Common Criteria + A/C/PI/P.
 var SOC2_MAP=[
@@ -2141,9 +2141,9 @@ var HIPAA_MAP=[
     ['316(a)','Policies & procedures',['GV.PO-01']],
     ['316(b)(1)','Documentation',['GV.PO-02']]]]];
 var FW_XNOTE={
-  cis:'Scored by the official <b>CIS Controls v8 ↔ NIST CSF</b> mapping — each CIS Safeguard inherits the maturity of the CSF subcategories it maps to. We reference CIS by mapping and do not reproduce the CIS control text.',
-  soc2:'Readiness against the <b>AICPA Trust Services Categories</b>, scored by crosswalk from your CSF posture. This is a readiness indicator, not a SOC 2 opinion, and does not reproduce the copyrighted TSC text — your auditor issues the report.',
-  hipaa:'HIPAA Security Rule safeguards (45 CFR §164) scored via the <b>NIST SP 800-66 Rev 2</b> crosswalk to CSF (both public domain). Maps to the Rule’s citations directly.'};
+  cis:'Each CIS Safeguard is assessed by its own <b>Nerion-authored evidence test</b> — not derived from your CSF score and not by reproducing the CIS control text. CIS IDs are referenced by number only; the official CIS text is licensed and never stored or shown here.',
+  soc2:'Each SOC 2 criterion is assessed by its own <b>Nerion-authored evidence test</b> — not derived from your CSF score and not by reproducing the AICPA Trust Services Criteria text. This is a readiness indicator, not a SOC 2 opinion; your auditor issues the report.',
+  hipaa:'HIPAA Security Rule safeguards (45 CFR §164, public domain) are assessed by their own <b>Nerion-authored evidence tests</b> — not derived from your CSF score.'};
 function fwXmap(sel){return sel==='cis'?CIS_MAP:sel==='soc2'?SOC2_MAP:HIPAA_MAP;}
 /* A crosswalk framework's rows: each control's maturity = avg of its mapped CSF
    controls' CMMI, with the mapped CSF ids shown as the evidence trail. */
