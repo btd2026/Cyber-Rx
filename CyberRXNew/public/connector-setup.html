@@ -166,7 +166,7 @@
     // reveals the button for OAuth-capable connectors and, when no OAuth provider is
     // configured, auto-opens the manual form (the only path) and hides the toggle.
     h+='<div class="sec"><h3>Connect</h3><div id="oauthBox"></div>';
-    h+='<button class="back" id="manualToggle" style="margin-top:4px">Enter credentials manually instead</button>';
+    h+='<button class="back" id="manualToggle" style="display:block;margin-top:4px">Enter credentials manually instead</button>';
     h+='<div id="manualWrap" style="display:none;margin-top:8px">';
     h+='<p class="why" id="manualWhy">Read-only. Your secret is encrypted and never shown again.</p><div class="cols">';
     (m.required_auth_fields||[]).forEach(function(f){h+=fieldInput('auth',f);});
@@ -174,7 +174,7 @@
     h+='</div><p class="why" style="margin-top:2px">Grant these <b>read-only</b> permissions to the credential:</p><div class="chips">'+(m.required_permissions||[]).map(function(p){return '<span class="perm">'+esc(p)+'</span>';}).join('')+'</div>';
     // Scope / denominator / review — advanced, collapsed so connecting stays simple.
     var hasAdv=(m.required_scope_fields||[]).length||(m.required_denominator_fields||[]).length;
-    h+='<button class="back" id="advToggle" style="margin-top:12px">Advanced: scope, denominator &amp; review period</button>';
+    h+='<button class="back" id="advToggle" style="display:block;margin-top:12px;margin-bottom:4px">Advanced: scope, denominator &amp; review period</button>';
     h+='<div id="advWrap" style="display:none;margin-top:8px">';
     if((m.required_scope_fields||[]).length){h+='<div class="sec" style="margin-top:8px"><h3>Confirm scope</h3><p class="why">Only what the controls this tool supports actually need.</p><div class="cols">';
       (m.required_scope_fields||[]).forEach(function(f){h+=fieldInput('scope',f);});h+='</div></div>';}
