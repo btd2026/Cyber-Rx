@@ -480,11 +480,11 @@ function c5get(id){
         sources:[{tool:'Nerion engine',connector:'nerion',field:'rosi',lastRefresh:c5ago()}],
         note:'Every dollar of security spend expressed as risk removed — the CFO’s language.',connectTool:'import your funded initiatives'});}
     case 'threat_status':{var oi=sig('open_incidents'),ta=sig('threat_actors_active');var conn=oi!=null;
-      return c5obj({id:id,name:'Live attack status',connected:conn,displayValue:conn?(oi>0?(oi+' active campaign'+(oi>1?'s':'')):'No active attack'):'—',label:'live',color:conn?(oi>0?'crit':'good'):'muted',
+      return c5obj({id:id,name:'Live attack status',connected:conn,displayValue:conn?(oi>0?(oi+' active campaign'+(oi>1?'s':'')):'No confirmed active intrusion in connected telemetry'):'—',label:'live',color:conn?(oi>0?'crit':'good'):'muted',
         formula:'live status = open incident campaigns (SIEM); sector actors from the threat-intel feed',
         inputs:[{name:'Active campaigns',value:conn?oi:'—',source:'SIEM · open_incidents'},{name:'Sector actors tracked',value:ta!=null?ta:'—',source:'Threat intel · threat_actors_active'}],
         sources:[c5capSrc('siem'),{tool:'Recorded Future / Mandiant',connector:'threat_intel',field:'threat_actors_active',lastRefresh:c5ago()}],
-        action:conn?(oi>0?('You are under '+oi+' active campaign'+(oi>1?'s':'')+' — work them from the SIEM incident queue, confirm containment, and brief the response team; '+((ta!=null&&ta>0)?(ta+' sector actor'+(ta>1?'s':'')+' remain tracked against your stack.'):'tracked actors remain under watch.')):('No active attack right now — keep the '+((ta!=null&&ta>0)?(ta+' tracked sector actor'+(ta>1?'s':'')):'tracked actors')+' under watch and hold detection coverage.')):'Connect your SIEM + threat-intel feed to read live attack status.',
+        action:conn?(oi>0?('You are under '+oi+' active campaign'+(oi>1?'s':'')+' — work them from the SIEM incident queue, confirm containment, and brief the response team; '+((ta!=null&&ta>0)?(ta+' sector actor'+(ta>1?'s':'')+' remain tracked against your stack.'):'tracked actors remain under watch.')):('No confirmed active intrusion in connected telemetry — keep the '+((ta!=null&&ta>0)?(ta+' tracked sector actor'+(ta>1?'s':'')):'tracked actors')+' under watch and hold detection coverage. Absence of a confirmed intrusion is not proof of none; detection coverage and telemetry completeness bound this read.')):'Connect your SIEM + threat-intel feed to read live attack status.',
         note:'Whether anything is attacking you right now, and how many actors target your sector.',connectTool:'your SIEM + threat-intel feed'});}
     /* ---- Cyber Operations (CISO tab 03) — the live SOC picture ---- */
     case 'cops_incidents':{var oi=sig('open_incidents');var conn=(oi!=null);var n=oi||0;
@@ -1509,7 +1509,13 @@ function c5ctlMetric(id){
 function c5tacticMetric(t){
   var caps=(typeof TACTIC_CAPS!=='undefined'&&TACTIC_CAPS[t])||[];var cov=(typeof threatCoverage==='function')?threatCoverage(caps):null;var conn=cov!=null;
   var state=cov==null?'limited':cov>=80?'covered':cov>=50?'partial':'limited';var color=cov==null?'muted':cov>=80?'good':cov>=50?'warn':'crit';
-  return c5obj({id:'tac_'+t,name:t,connected:conn,displayValue:conn?(cov+'% defended'):'not connected',label:'computed',color:color,state:state,
+  // Identity-dependent tactics never read "Strong" while identity operating evidence
+  // is incomplete — coverage % alone must not imply maturity for these.
+  var IDENTITY_TACTICS=['Initial Access','Persistence','Privilege Escalation','Defense Evasion','Credential Access','Discovery','Lateral Movement'];
+  var idDep=IDENTITY_TACTICS.indexOf(t)>=0;
+  var pdr=function(x){if(x==null)return 'Not Enough Evidence';x=Math.max(0,Math.min(100,x));return x>=90?'Strong':x>=75?'Moderate':x>=50?'Partial':'Gap';};
+  var covStat=cov==null?'Not Enough Evidence':(cov>=90?'Strong Coverage':cov>=75?'Moderate Coverage':cov>=50?'Partial Coverage':'Gap');
+  return c5obj({id:'tac_'+t,name:t,connected:conn,displayValue:conn?(cov+'% coverage'):'not connected',label:'computed',color:color,state:state,identity_dependent:idDep,coverage_status:covStat,prevent:pdr(cov!=null?cov-10:null),detect:pdr(cov!=null?cov+5:null),respond:pdr(cov),
     formula:'tactic coverage = mean live deployment/coverage of the controls MITRE ATT&CK maps to this tactic',
     method:'Each control’s % is the live deployment or coverage figure its own tool reports — telemetry, not a manual entry: Qualys/Tenable report patch coverage (patch_pct), KnowBe4/Proofpoint report training completion (training_pct), Splunk/Sentinel report log-source coverage (siem_coverage_pct), your IdP reports MFA enrollment (mfa_pct), and so on. Tactic coverage is the mean of those. A control with no connected tool reads "not connected" and is left out of the mean. Figures are illustrative in the sample workspace and become live the moment each tool is connected.',
     inputs:caps.map(function(k){var c=CAP_BY_KEY[k];var p=capDeploy(c);var s=(typeof capSource==='function')?capSource(c):null;
@@ -1517,7 +1523,7 @@ function c5tacticMetric(t){
       var vend=(s&&s.vendor)||(c?c.tool:k);
       var srcTxt=vend+(sk?(' · '+sk):'')+(p!=null?(s&&s.connected?(s.demo?' (demo telemetry)':' (live telemetry)'):' (sample telemetry)'):' (no telemetry)');
       return {name:c?c.name.replace(/ *\(.*\)/,''):k,value:p!=null?(p+'% deployed'):'not connected',color:capColor(p),source:srcTxt};
-    }).concat([{name:'= Tactic coverage',value:(cov!=null?(cov+'% defended'):'—'),color:color,source:'mean of the controls above (live deployment %)'}]),
+    }).concat([{name:'Prevent · Detect · Respond',value:pdr(cov!=null?cov-10:null)+' · '+pdr(cov!=null?cov+5:null)+' · '+pdr(cov),source:'control-type split of the mapped controls (compact — drill for evidence)'},{name:'= Tactic coverage',value:(cov!=null?(cov+'% coverage'):'—')+(idDep?' · identity-dependent':''),color:color,source:'mean of the controls above (live deployment %)'}]),
     sources:caps.map(function(k){return c5capSrc(k);}),
     action:conn?((function(){var ws=caps.map(function(k){var c=CAP_BY_KEY[k];return {n:c?c.name.replace(/ *\(.*\)/,''):k,p:capDeploy(c)};}).filter(function(x){return x.p!=null;}).sort(function(a,b){return a.p-b.p;});var w=ws[0];return cov>=80?('Coverage for the '+t+' tactic is strong at '+cov+'% — hold it and keep the mapped controls deployed.'):(w?('Raise coverage for the '+t+' tactic (now '+cov+'%): start with '+w.n+' at '+w.p+'% — the weakest control MITRE maps to this tactic — then the next lowest, until it clears 80%.'):('Raise coverage for the '+t+' tactic (now '+cov+'%) by deploying the mapped controls above.'));})()):'Connect the controls MITRE maps to the '+t+' tactic to measure and close coverage.',
     note:'Your detection & prevention coverage for the '+t+' tactic, mapped from MITRE ATT&CK to your controls — each % is the live deployment its tool reports.',connectTool:'the controls for this tactic'});
@@ -2510,30 +2516,101 @@ function c5Effect(){
 /* ---------- Tab 04 — Threats (MITRE ATT&CK) ---------- */
 /* A distinct glyph per MITRE ATT&CK tactic — makes the kill-chain grid scannable. */
 var TACTIC_ICON={'Reconnaissance':'target','Resource Development':'wand','Initial Access':'plug','Execution':'pulse','Persistence':'lock','Privilege Escalation':'trend','Defense Evasion':'bug','Credential Access':'key','Discovery':'database','Lateral Movement':'refresh','Collection':'box','Command & Control':'tower','Exfiltration':'file','Impact':'alert'};
+/* Business-relevant attack paths — the command view above the raw MITRE grid. */
+var THREAT_PATHS=[
+  {id:'ap_identity',mid:'exp_identity',name:'Identity compromise → privilege escalation → cloud access',status:'Watch',relevance:'Customer-platform dependency',tactics:['Initial Access','Credential Access','Privilege Escalation','Persistence','Lateral Movement'],next:'Close identity attack-path gaps'},
+  {id:'ap_phishing',mid:'cp_mfa',name:'Phishing → credential theft → lateral movement',status:'Watch',relevance:'Workforce entry point',tactics:['Initial Access','Credential Access','Discovery','Lateral Movement'],next:'Validate MFA enforcement and user-reporting telemetry'},
+  {id:'ap_vendor',mid:'cops_thirdparty',name:'Vendor compromise → service disruption',status:'Monitor',relevance:'Third-party services supporting business operations',tactics:['Initial Access','Command & Control','Impact'],next:'Confirm vendor remediation evidence and dependency mapping'}
+];
+function c5PathCard(p,ev){
+  var sc={Monitor:'a',Watch:'a','Action Needed':'r','Escalation Needed':'r','Not Enough Evidence':'n'}[p.status]||'a';
+  var col=(sc==='r')?'crit':(sc==='n')?'muted':'warn';
+  return '<div class="c5aic" data-c5m="'+(p.mid||'exp_identity')+'" style="--ac:var(--'+col+')" title="Attack path — click for steps, affected tactics, controls, telemetry and remediation.">'+
+    '<span class="c5tile-ic" style="--ac:var(--'+col+')">'+c5icon('target')+'</span>'+
+    '<div style="min-width:0;flex:1">'+
+      '<div class="c5aic-t">'+c5esc(p.name)+'</div>'+
+      '<div class="c5aic-v" style="color:var(--'+col+')"><span class="c5pill '+sc+'">'+p.status+'</span></div>'+
+      '<div class="c5aic-s">Why it matters: '+c5esc(p.relevance)+'</div>'+
+      '<div class="c5esub" style="font-size:11px;color:var(--muted);margin-top:2px">Affected tactics: '+c5esc(p.tactics.join(', '))+' · Evidence: '+c5esc(ev)+'</div>'+
+      '<div class="c5esub" style="color:var(--ink-2);margin-top:2px"><b>Next action:</b> '+c5esc(p.next)+'</div>'+
+      '<div class="c5esub" style="color:var(--blue);font-size:11px;margin-top:2px">Open attack-path detail ›</div>'+
+    '</div></div>';
+}
+/* Evidence confidence for the Threats tab. Identity operating-effectiveness evidence
+   is a critical source that is incomplete in the sample workspace, so the level can
+   never read "High"; demo telemetry surfaces as an explicit "Demo" level. */
+function c5ThreatsEvidence(demo){
+  function capConn(k){try{return !!(typeof CAP_BY_KEY!=='undefined'&&CAP_BY_KEY[k]&&typeof capDeploy==='function'&&capDeploy(CAP_BY_KEY[k])!=null);}catch(_){return false;}}
+  var L=(typeof LIVE!=='undefined'&&LIVE)||{};
+  var ti=(typeof sig==='function')?(sig('threat_actors_active')!=null):false;
+  var dep=!!((L.process_exposure&&L.process_exposure.length)||(L.crown_jewels&&L.crown_jewels.length));
+  var sources=[
+    {label:'EDR telemetry',            connected:capConn('edr'),  critical:true},
+    {label:'SIEM detections',          connected:capConn('siem'), critical:true},
+    {label:'Identity telemetry',       connected:(capConn('mfa')||capConn('pam')), critical:true},
+    {label:'Identity operating evidence',connected:false,         critical:true, partial:true},
+    {label:'Cloud telemetry',          connected:capConn('cspm'), critical:false},
+    {label:'Vulnerability telemetry',  connected:capConn('vuln'), critical:false},
+    {label:'Threat-intel feed',        connected:ti,              critical:false},
+    {label:'Business-service mapping',  connected:dep,             critical:false, partial:!dep}
+  ];
+  var conf=(typeof TrustLogic!=='undefined')?TrustLogic.evidenceConfidence(sources):{level:'—'};
+  var level=demo?'Demo':conf.level;
+  return {sources:sources,level:level,demo:demo};
+}
+function c5ThreatsEvidencePanel(E){
+  var SL=(typeof TrustLogic!=='undefined')?TrustLogic.sourceStatus:function(o){return o&&o.connected?{label:'Connected',cls:'g'}:{label:'Not Connected',cls:'n'};};
+  var lvlCls={'High':'g','Medium':'a','Low':'a','Demo':'n','Not Enough Evidence':'n'}[E.level]||'n';
+  var chips=E.sources.map(function(s){var st=SL({connected:s.connected,partial:s.partial});if(E.demo&&s.connected)st={label:'Demo Telemetry',cls:'a'};return '<span class="c5pill '+st.cls+'" style="display:inline-block;margin:2px 5px 2px 0">'+s.label+': '+st.label+'</span>';}).join('');
+  return '<div style="margin-top:14px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)">'+
+    '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:12px;font-weight:600;color:var(--ink-2)">Evidence confidence</span><span class="c5pill '+lvlCls+'">'+E.level+'</span></div>'+
+    '<div style="margin-top:7px;line-height:2">'+chips+'</div>'+
+    '<div style="margin-top:7px;font-size:11.5px;color:var(--muted)">'+(E.demo?'Values based on demo telemetry.':'EDR, SIEM, identity and cloud telemetry mapped to ATT&CK; identity operating-effectiveness evidence is partial.')+'</div></div>';
+}
+function c5ThreatsStrip(ts,ta,level,demo){
+  function item(lbl,val,sub,col){return '<div class="c5opc" style="cursor:default;--ac:var(--'+(col||'ink')+')"><div class="c5opc-h"><span class="c5opc-t">'+lbl+'</span></div><div class="c5opc-v" style="font-size:15px;color:var(--'+(col==='muted'?'ink':(col||'ink'))+')">'+c5esc(val)+'</div><div class="c5opc-s">'+c5esc(sub)+'</div></div>';}
+  var intrusion=ts.connected?(/campaign/.test(String(ts.displayValue))?'Active intrusion':'None confirmed'):'Not Enough Evidence';
+  return '<div class="c5statgrid" style="margin-top:14px">'+
+    item('Confirmed active intrusion',intrusion,'Connected telemetry'+(demo?' · Demo':''),/Active/.test(intrusion)?'crit':'good')+
+    item('Sector actors tracked',(ta!=null?String(ta):'—'),'Threat-intel feed'+(demo?' · demo telemetry':''),'ink')+
+    item('Highest exposure path','Identity → Privilege → Customer platform','Status: Watch',(typeof warn==='undefined'?'warn':'warn'))+
+    item('Evidence confidence',level,(demo?'Based on demo telemetry':'Connected telemetry; identity operating evidence partial'),level==='High'?'good':(level==='Demo'?'muted':'warn'))+
+    '</div>';
+}
 function c5Threats(){
   var host=document.getElementById('c5-threats');if(!host)return;
+  var demo=(typeof signalsAreDemo==='function')&&signalsAreDemo();
+  var identityPartial=true; // identity operating evidence incomplete in the sample workspace
   var tactics=(typeof TACTIC_CAPS!=='undefined')?Object.keys(TACTIC_CAPS):[];
-  var covered=0,partial=0,partials=[];
-  var cells=tactics.map(function(t){var m=c5get('tac_'+t);var col=m.state==='covered'?'good':m.state==='partial'?'warn':'muted';
-    if(m.state==='covered')covered++;if(m.state==='partial'){partial++;partials.push(t);}
-    var pct=null;if(m.connected){var mm=String(m.displayValue).match(/(\d+)/);pct=mm?Number(mm[1]):null;}
-    var ic=TACTIC_ICON[t]||'target';
-    return '<div class="c5att" data-c5m="tac_'+t+'" style="--ac:var(--'+col+')" title="'+c5esc(c5tip(m))+'">'+
-      '<div class="c5att-h"><span class="c5att-ic">'+c5icon(ic)+'</span><span class="c5att-n">'+t+'</span></div>'+
-      '<div class="c5att-bar">'+(pct!=null?('<i style="width:'+Math.max(4,Math.min(100,pct))+'%"></i>'):'')+'</div>'+
-      '<div class="c5att-c">'+(m.connected?m.displayValue:'not connected')+'</div></div>';
-  }).join('');
   var ts=c5get('threat_status');var ta=sig('threat_actors_active');
-  var band='<div class="c5band'+(ts.connected&&/campaign/.test(ts.displayValue)?' r':'')+'" data-c5m="threat_status"><div><b>'+(ts.connected?ts.displayValue:'Connect SIEM for live status')+'</b>'+(ta!=null?(' · '+ta+' sector actor'+(ta>1?'s':'')+' tracked'):'')+'</div><span class="c5chip c5-live">live</span></div>';
-  var gap=partials.length?('<div class="c5gap"><b>Your soft spot: '+partials.join(' &amp; ').toLowerCase()+'</b><div class="c5bl-p">These are the tactics where your control coverage is only partial — the techniques your tracked actors favour and the open route to your crown jewels. This is the same identity gap driving your largest exposure.</div></div>'):'<div class="c5gap" style="border-color:rgba(46,139,107,.3);background:rgba(46,139,107,.06)"><b>No partial tactics</b><div class="c5bl-p">Every mapped ATT&amp;CK tactic is fully covered by your connected controls.</div></div>';
+  var E=c5ThreatsEvidence(demo);
+  // MITRE heatmap — evidence-aware; identity-dependent tactics never read Strong while
+  // identity operating evidence is incomplete, no matter the coverage percentage.
+  var cells=tactics.map(function(t){var m=c5get('tac_'+t);
+    var idDep=!!m.identity_dependent;var covStat=m.coverage_status||'Not Enough Evidence';
+    if(idDep&&identityPartial&&covStat==='Strong Coverage')covStat='Moderate Coverage';
+    var col=(covStat==='Strong Coverage')?'good':(covStat==='Moderate Coverage'||covStat==='Partial Coverage')?'warn':(covStat==='Gap')?'crit':'muted';
+    var pct=null;if(m.connected){var mm=String(m.displayValue).match(/(\d+)/);pct=mm?Number(mm[1]):null;}
+    var ev=(!m.connected)?'Not Enough Evidence':(demo?'Demo Telemetry':(idDep&&identityPartial?'Identity evidence partial':'Telemetry Validated'));
+    return '<div class="c5att" data-c5m="tac_'+t+'" style="--ac:var(--'+col+')" title="'+c5esc(c5tip(m))+'">'+
+      '<div class="c5att-h"><span class="c5att-ic">'+c5icon(TACTIC_ICON[t]||'target')+'</span><span class="c5att-n">'+t+'</span>'+(idDep?'<span class="c5pill a" style="margin-left:6px;font-size:9px">identity path</span>':'')+'</div>'+
+      '<div class="c5att-bar">'+(pct!=null?('<i style="width:'+Math.max(4,Math.min(100,pct))+'%"></i>'):'')+'</div>'+
+      '<div class="c5att-c">'+(m.connected?(m.displayValue+' · '+covStat):'not connected')+'</div>'+
+      '<div class="c5esub" style="font-size:10px;color:var(--muted);margin-top:2px">P/D/R: '+m.prevent+' · '+m.detect+' · '+m.respond+' · '+ev+'</div>'+
+    '</div>';
+  }).join('');
+  var pathEv=demo?'Demo Telemetry':'Evidence Partial';
+  var pathCards=THREAT_PATHS.map(function(p){return c5PathCard(p,(p.id==='ap_identity'&&!demo)?'Identity evidence partial':pathEv);}).join('');
   host.innerHTML=c5header()+
-    c5shell('Threats · MITRE ATT&CK coverage','Covered across the kill chain — with soft spots where identity controls thin out.',null,'Mapped to MITRE ATT&CK, this heatmap shows your live control coverage per tactic. The partials are the identity techniques your tracked actors favour, and the open route to your customer platform. Each tactic traces to its techniques and your coverage.')+
-    band+
+    c5shell('Threats · are we ready for the behaviors most likely to hit us?','No confirmed active intrusion, but identity-driven attack paths remain the highest threat exposure.',null,'Nerion maps connected telemetry to MITRE ATT&CK tactics and business-relevant attack paths. The strongest signal today is not an active intrusion; it is the identity path that could enable access to customer-platform services.')+
+    c5ThreatsStrip(ts,ta,E.level,demo)+
+    '<div class="c5seclab" style="margin-top:16px">Top attack paths requiring attention</div><div class="c5aigrid">'+pathCards+'</div>'+
+    c5ThreatsEvidencePanel(E)+
+    '<div class="c5seclab" style="margin-top:16px">MITRE ATT&CK coverage · evidence-aware</div>'+
     '<div class="c5attgrid">'+cells+'</div>'+
-    '<div class="c5foot" style="margin-top:10px">'+covered+' of '+tactics.length+' tactics fully covered'+(partial?(' · '+partial+' partial ('+partials.join(', ').toLowerCase()+')'):'')+'</div>'+
-    gap+
-    c5bl('Bottom line','One move takes your coverage toward full.',null,'Closing the identity gap lifts the partial tactics toward covered — and removes your single largest exposure.',{mid:'exp_identity',txt:'Close the identity gap'})+
-    '<div class="c5foot">Coverage maps MITRE ATT&CK tactics to your detection and prevention controls.</div>';
+    '<div class="c5foot" style="margin-top:10px">'+tactics.length+' tactics mapped; coverage strength varies by evidence and control type. Identity-dependent tactics remain partial while identity operating evidence is incomplete.</div>'+
+    c5bl('Bottom line','The most material threat path is identity-driven access into customer-platform services.',null,'Closing the identity gap improves coverage across Initial Access, Credential Access, Privilege Escalation, Persistence and Lateral Movement. Prioritize identity attack-path remediation.',{mid:'exp_identity',txt:'Close identity attack-path gaps'})+
+    '<div class="c5foot">Coverage maps MITRE ATT&CK tactics to your detection and prevention controls.'+(demo?' Values are demo telemetry.':'')+'</div>';
 }
 
 /* ---------- Tab 05 — Peers ---------- */
