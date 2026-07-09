@@ -19,6 +19,7 @@ const resultEngine = require('./resultEngine');
 const collection = require('./collection/collectEvidence');
 const { CONNECTOR_COLLECTORS } = require('./collection/connectorCollectors');
 const validation = require('./validation');
+const documents = require('./documents');
 const { REGISTRIES, FRAMEWORK_KEYS } = require('./registries');
 
 module.exports = {
@@ -33,6 +34,7 @@ module.exports = {
   requiredFields: collection.requiredFields,
   CONNECTOR_COLLECTORS,
   validation,
+  documents, // DOCUMENT control assessment (framework-native doc evidence)
   REGISTRIES,
   FRAMEWORK_KEYS,
 };
