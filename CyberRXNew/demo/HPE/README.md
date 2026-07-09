@@ -30,6 +30,8 @@ vs **⤓ Upload**, switch to **Upload a file** and drop the CSV.
 | 11 | **Tier-1/2 vendors** (Third-party risk) | `11_vendors.csv` | Third-party risk section, top-5 vendor scores |
 | 12 | **AI inventory** (AI risk & governance §1c, and AI & supply-chain) | `12_ai_inventory.csv` | AI/ML system count, GenAI apps, machine identities, crypto assets, decisioning read, EU AI Act scope |
 | 13 | **Strategic initiatives** (CEO/Board) | `13_strategic_initiatives.csv` | Per-initiative go/no-go safety check & decision briefs |
+| 14 | **Enterprise risk portfolio** (§2b, CRO — "⤓ Upload a file") | `14_erm_portfolio.csv` | Credit/market, operational, third-party & compliance risk in $ — cyber on one scale beside them |
+| 15 | **Security as a growth engine** (§2c, CISO — "⤓ Upload a file") | `15_growth_signals.csv` | Pipeline in review, review-cycle before/now, deals gated, trust reviews, certifications |
 
 ## 2. Policy documents → "Policy & document evidence" + AI governance
 

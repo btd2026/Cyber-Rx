@@ -359,7 +359,12 @@
   <!-- 2b · Enterprise risk portfolio (CRO) -->
   <div class="sec">
     <div class="sh"><div class="sn">✦</div><div><div class="st">Enterprise risk portfolio <span style="color:var(--muted)">(for the CRO)</span></div><div class="sd">Your other principal risks in dollars, so cyber sits on one scale beside them. Pull them from your ERM / GRC platform, or enter manually — leave blank to keep the CRO comparison illustrative.</div></div><div class="badge" id="berm">optional</div></div>
-    <div class="srcchoice"><div class="srcopt sel" data-choice="erm" data-mode="upload"><div class="so-h">✎ Enter manually</div><div class="so-d">from your ERM / risk register</div></div><div class="srcopt" data-choice="erm" data-mode="connect"><div class="so-h">⚡ Pull from ERM / GRC</div><div class="so-d">Archer / ServiceNow GRC / SAP GRC / LogicManager — live</div></div></div>
+    <div class="srcchoice"><div class="srcopt sel" data-choice="erm" data-mode="upload"><div class="so-h">✎ Enter manually</div><div class="so-d">from your ERM / risk register</div></div><div class="srcopt" data-choice="erm" data-mode="file"><div class="so-h">⤓ Upload a file</div><div class="so-d">CSV — metric, value</div></div><div class="srcopt" data-choice="erm" data-mode="connect"><div class="so-h">⚡ Pull from ERM / GRC</div><div class="so-d">Archer / ServiceNow GRC / SAP GRC / LogicManager — live</div></div></div>
+    <div id="ermFile" style="display:none">
+      <div class="drop" id="dropErm"><div class="ic">⤓</div><div class="t">Upload your principal-risk portfolio (CSV)</div><div class="s">click to browse or drop a file</div><input type="file" id="fileErm" accept=".csv,.tsv,.txt" style="display:none"></div>
+      <div class="tmpl">columns: <b>metric</b>, value &nbsp;·&nbsp; e.g. &nbsp;Credit / market risk, $210M &nbsp;·&nbsp; Operational risk, $140M &nbsp;·&nbsp; Third-party risk, $54M &nbsp;·&nbsp; Compliance / legal risk, $30M<br><span style="color:var(--muted)">values accept $, K / M / B suffixes or raw dollars. Loaded values fill the fields below — edit any before continuing.</span></div>
+      <div class="conn-msg" id="ermFileMsg"></div>
+    </div>
     <div id="ermConnect" style="display:none">
       <div class="conn-row"><div class="field" style="min-width:200px"><label>ERM / GRC platform</label><select id="ermSys"><option>RSA Archer</option><option>ServiceNow GRC (IRM)</option><option>SAP GRC</option><option>LogicManager</option><option>MetricStream</option><option>AuditBoard</option></select></div><div class="field" style="flex:1;min-width:220px"><label>Instance URL / API token</label><input id="ermCred" placeholder="https://yourorg.archer.com · token"></div><button class="conn-go" data-conn="erm">Connect &amp; pull</button></div>
       <div class="conn-msg" id="ermConnMsg"></div>
@@ -375,7 +380,12 @@
   <!-- 2c · Security as a growth engine (CISO revenue-enablement) -->
   <div class="sec">
     <div class="sh"><div class="sn">✦</div><div><div class="st">Security as a growth engine <span style="color:var(--muted)">(for the CISO)</span></div><div class="sd">The revenue your security program unlocks — pipeline in security review, how fast you clear deals, and the certifications that are the price of admission. Pull it from your CRM &amp; compliance-automation platforms, or enter manually. Powers the CISO growth view — leave blank to keep it illustrative.</div></div><div class="badge" id="bgrowth">optional</div></div>
-    <div class="srcchoice"><div class="srcopt sel" data-choice="growth" data-mode="upload"><div class="so-h">✎ Enter manually</div><div class="so-d">pipeline · review time · deals · certs</div></div><div class="srcopt" data-choice="growth" data-mode="connect"><div class="so-h">⚡ Pull from CRM / compliance</div><div class="so-d">Salesforce / HubSpot + Vanta / Drata / SecureFrame — live</div></div></div>
+    <div class="srcchoice"><div class="srcopt sel" data-choice="growth" data-mode="upload"><div class="so-h">✎ Enter manually</div><div class="so-d">pipeline · review time · deals · certs</div></div><div class="srcopt" data-choice="growth" data-mode="file"><div class="so-h">⤓ Upload a file</div><div class="so-d">CSV — metric, value</div></div><div class="srcopt" data-choice="growth" data-mode="connect"><div class="so-h">⚡ Pull from CRM / compliance</div><div class="so-d">Salesforce / HubSpot + Vanta / Drata / SecureFrame — live</div></div></div>
+    <div id="growthFile" style="display:none">
+      <div class="drop" id="dropGrowth"><div class="ic">⤓</div><div class="t">Upload your security-as-growth signals (CSV)</div><div class="s">click to browse or drop a file</div><input type="file" id="fileGrowth" accept=".csv,.tsv,.txt" style="display:none"></div>
+      <div class="tmpl">columns: <b>metric</b>, value &nbsp;·&nbsp; e.g. &nbsp;Pipeline in security review, $48M &nbsp;·&nbsp; Review time before, 6 &nbsp;·&nbsp; Review time now, 2 &nbsp;·&nbsp; Deals gated per quarter, 11 &nbsp;·&nbsp; Trust reviews passed, 34 &nbsp;·&nbsp; Certifications, "SOC 2 Type II; ISO 27001"<br><span style="color:var(--muted)">quote or semicolon-separate the certifications list. Loaded values fill the fields below — edit any before continuing.</span></div>
+      <div class="conn-msg" id="growthFileMsg"></div>
+    </div>
     <div id="growthConnect" style="display:none">
       <div class="conn-row"><div class="field" style="min-width:200px"><label>CRM / compliance platform</label><select id="growthSys"><option>Salesforce + Vanta</option><option>HubSpot + Drata</option><option>Salesforce + SecureFrame</option><option>Salesforce + OneTrust</option><option>HubSpot + Vanta</option></select></div><div class="field" style="flex:1;min-width:220px"><label>Instance URL / API token</label><input id="growthCred" placeholder="https://yourorg.my.salesforce.com · token"></div><button class="conn-go" data-conn="growth">Connect &amp; pull</button></div>
       <div class="conn-msg" id="growthConnMsg"></div>
@@ -786,6 +796,45 @@
     RISK=p.rows.map(function(c){return {title:get(c,tc)||c[0],severity:get(c,sc)||'High',asset:get(c,ac)||'',exposure:get(c,ec)||'',status:get(c,stc)||'open'};}).filter(function(x){return x.title;});
     showRows(document.getElementById('resRisk'),RISK,function(x){return '<div class="xrow"><span class="nm">'+x.title+'</span><span class="mt">'+(x.asset||'')+(x.exposure?(' · '+x.exposure):'')+' · '+(x.severity||'')+'</span></div>';});
     var b=document.getElementById('b6');b.dataset.n=RISK.length;badgeDone('b6');updateSummary();});});
+  // ---- ERM & growth: file upload populates the same $ fields as manual entry ----
+  // A money cell → millions. Accepts "$210M", "3.1B", "54000000", or a bare "210"
+  // (treated as $M to match the placeholders); a large bare number is raw dollars.
+  function moneyToM(s){var t=String(s==null?'':s).trim().toLowerCase().replace(/[$,\s]/g,'');if(!t)return null;
+    var mult=1;if(/b$/.test(t)){mult=1000;t=t.slice(0,-1);}else if(/m$/.test(t)){mult=1;t=t.slice(0,-1);}else if(/k$/.test(t)){mult=0.001;t=t.slice(0,-1);}
+    var n=parseFloat(t);if(!isFinite(n))return null;
+    if(mult===1&&n>=100000)return Math.round(n/1e4)/100; // raw dollars → $M
+    return Math.round(n*mult*100)/100;}
+  // Reduce parsed rows to {label, value} pairs (first cell = metric, last non-empty = value).
+  function rowLabelVal(p){var out=[];(p.rows||[]).forEach(function(c){if(!c||!c.length)return;var val=null;for(var i=c.length-1;i>=1;i--){if(String(c[i]==null?'':c[i]).trim()){val=c[i];break;}}out.push({label:String(c[0]||'').toLowerCase(),val:val});});return out;}
+  function setMoneyM(id,m){if(m==null)return;var u=document.getElementById(id+'_u');if(u)u.value='1000000';setNum(id,m);}
+  wireDrop('dropErm','fileErm',function(file){readFile(file,function(p){var lv=rowLabelVal(p),n=0;
+    lv.forEach(function(r){var L=r.label,m=moneyToM(r.val);if(m==null)return;
+      if(/credit|market/.test(L)){setMoneyM('ermCredit',m);n++;}
+      else if(/oper/.test(L)){setMoneyM('ermOps',m);n++;}
+      else if(/third|vendor|tpr|supply/.test(L)){setMoneyM('ermTP',m);n++;}
+      else if(/compli|legal|regulat/.test(L)){setMoneyM('ermComp',m);n++;}});
+    var msg=document.getElementById('ermFileMsg');
+    if(n){var be=document.getElementById('berm');if(be){be.textContent='✓ loaded';be.classList.add('done');}
+      if(msg){msg.innerHTML='✓ Loaded <b>'+n+'</b> principal-risk value'+(n>1?'s':'')+' from your file into the fields below. Edit any before continuing.';msg.style.color='var(--good)';}
+      updateSummary();}
+    else if(msg){msg.textContent='No recognized rows. Use two columns: metric, value (e.g. Credit / market risk, $210M).';msg.style.color='var(--warn)';}});});
+  wireDrop('dropGrowth','fileGrowth',function(file){readFile(file,function(p){var lv=rowLabelVal(p),n=0,certs=[];
+    lv.forEach(function(r){var L=r.label,val=r.val;
+      if(/cert/.test(L)){certs=String(val==null?'':val).split(/[;,|]/).map(function(x){return x.trim();}).filter(Boolean);return;}
+      if(/pipeline/.test(L)){var m=moneyToM(val);if(m!=null){setMoneyM('growthPipeline',m);n++;}return;}
+      var num=parseFloat(String(val==null?'':val).replace(/[^0-9.\-]/g,''));if(!isFinite(num))return;
+      if(/before|prior|\bwas\b/.test(L)){setNum('growthBefore',num);n++;}
+      else if(/now|after|current/.test(L)){setNum('growthNow',num);n++;}
+      else if(/deal/.test(L)){setNum('growthDeals',num);n++;}
+      else if(/trust|review/.test(L)){setNum('growthTrust',num);n++;}});
+    if(certs.length){document.querySelectorAll('#growthCerts input[type=checkbox]').forEach(function(c){
+      var hit=certs.some(function(x){var a=c.value.toLowerCase(),b=x.toLowerCase();return a.indexOf(b)>=0||b.indexOf(a)>=0;});
+      if(hit){c.checked=true;n++;}});}
+    var msg=document.getElementById('growthFileMsg');
+    if(n){var bg=document.getElementById('bgrowth');if(bg){bg.textContent='✓ loaded';bg.classList.add('done');}
+      if(msg){msg.innerHTML='✓ Loaded your growth signals from the file into the fields below. Edit any before continuing.';msg.style.color='var(--good)';}
+      updateSummary();}
+    else if(msg){msg.textContent='No recognized rows. Use two columns: metric, value (e.g. Pipeline in security review, $48M).';msg.style.color='var(--warn)';}});});
   // ---- strategic initiatives (CEO per-initiative go/no-go + decision brief) ----
   var STRAT_TYPES=['Acquisition / M&A','Cloud platform or migration','AI product or feature','Market / geographic expansion','New digital product','Outsourcing / offshoring','Data / analytics initiative'];
   function addStratRow(v){v=v||{};var wrap=document.getElementById('stratRows');if(!wrap)return;
@@ -1199,8 +1248,12 @@
   document.querySelectorAll('.srcopt').forEach(function(o){o.addEventListener('click',function(){
     var ch=o.dataset.choice,mode=o.dataset.mode;
     document.querySelectorAll('.srcopt[data-choice="'+ch+'"]').forEach(function(x){x.classList.toggle('sel',x===o);});
-    var up=document.getElementById(ch+'Upload'),cn=document.getElementById(ch+'Connect');
-    if(up)up.style.display=mode==='upload'?'':'none';if(cn)cn.style.display=mode==='connect'?'':'none';
+    var up=document.getElementById(ch+'Upload'),cn=document.getElementById(ch+'Connect'),fl=document.getElementById(ch+'File');
+    // 'file' mode shows a CSV drop AND keeps the manual fields visible, so loaded
+    // values land in editable inputs the user can review before continuing.
+    if(up)up.style.display=(mode==='upload'||mode==='file')?'':'none';
+    if(cn)cn.style.display=mode==='connect'?'':'none';
+    if(fl)fl.style.display=mode==='file'?'':'none';
   });});
   // Connect-first: representative inventory pulled by industry, so enterprise
   // customers don't hand-upload. Real ServiceNow CMDB Table API (cmdb_ci /
