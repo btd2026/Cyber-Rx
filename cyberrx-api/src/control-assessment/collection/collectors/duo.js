@@ -35,21 +35,23 @@ async function collect(ctx) {
     const url = `https://${host}${path}${cp ? `?${cp}` : ''}`;
     const j = await jsonOrThrow(await H(url, { headers: { Date: date, Authorization: auth, Accept: 'application/json' } }), 'Cisco Duo');
     if (j && j.stat && j.stat !== 'OK') throw new Error('Cisco Duo: ' + (j.message || 'API error'));
-    return (j && j.response) || [];
+    return j || {};
   };
+  const rows = (j) => (j && Array.isArray(j.response)) ? j.response : [];
 
   // Active-user denominator + MFA enrollment (noncompliant = active, no factor).
   try {
     let offset = 0; let active = 0; let noncompliant = 0;
     for (let page = 0; page < 10; page += 1) {
-      const users = await get('/admin/v1/users', { limit: '100', offset: String(offset) });
-      if (!Array.isArray(users) || !users.length) break;
+      const j = await get('/admin/v1/users', { limit: '100', offset: String(offset) });
+      const users = rows(j);
+      if (!users.length) break;
       for (const u of users) {
         const isActive = !u.status || String(u.status).toLowerCase() === 'active';
         const factor = ['phones', 'tokens', 'u2ftokens', 'webauthncredentials', 'desktoptokens'].some((k) => Array.isArray(u[k]) && u[k].length);
         if (isActive) { active += 1; if (!factor) noncompliant += 1; }
       }
-      const nx = users.metadata && users.metadata.next_offset; // paging metadata is on the parent; re-fetch guard below
+      const nx = j.metadata && j.metadata.next_offset;
       if (nx == null) break; offset = Number(nx);
     }
     if (active > 0) { out.active_user_denominator = active; out.accounts_noncompliant = noncompliant; }
@@ -57,16 +59,16 @@ async function collect(ctx) {
 
   // MFA enforcement policy (Duo Policy API — Premier/Advantage editions only).
   try {
-    const pols = await get('/admin/v1/policies', { limit: '100', offset: '0' });
-    const list = Array.isArray(pols) ? pols : (pols && pols.policies) || [];
+    const j = await get('/admin/v1/policies', { limit: '100', offset: '0' });
+    const list = Array.isArray(j.response) ? j.response : (j.response && j.response.policies) || [];
     if (Array.isArray(list)) { out.mfa_enforcement_policy = list.length > 0; out.policy_assignment_scope = 'Duo policies: ' + list.length; }
   } catch (_) {}
 
   // Protected applications (integrations) → app + external-app scope. Every
   // Duo-protected integration enforces Duo (MFA), so with-MFA == total.
   try {
-    const ints = await get('/admin/v1/integrations', { limit: '100', offset: '0' });
-    if (Array.isArray(ints)) {
+    const ints = rows(await get('/admin/v1/integrations', { limit: '100', offset: '0' }));
+    if (ints.length || Array.isArray(ints)) {
       out.app_resource_scope = 'Duo protected applications: ' + ints.length;
       out.external_app_inventory = ints.length; out.external_apps_total = ints.length; out.external_apps_with_mfa = ints.length;
     }
@@ -74,7 +76,7 @@ async function collect(ctx) {
 
   // Authentication log → sign-in / factor evidence over the review period.
   try {
-    const logs = await get('/admin/v1/logs/authentication', { mintime });
+    const logs = rows(await get('/admin/v1/logs/authentication', { mintime }));
     out.signin_logs = Array.isArray(logs);
     if (Array.isArray(logs)) {
       const res = (l) => String(l.result || '').toLowerCase();
@@ -93,7 +95,7 @@ async function collect(ctx) {
 
   // Administrator log → admin unlock / bypass-override events over the period.
   try {
-    const logs = await get('/admin/v1/logs/administrator', { mintime });
+    const logs = rows(await get('/admin/v1/logs/administrator', { mintime }));
     if (Array.isArray(logs)) {
       out.unlock_events = logs.filter((l) => /unlock/.test(JSON.stringify(l).toLowerCase())).length;
       out.override_events = logs.filter((l) => /bypass/.test(JSON.stringify(l).toLowerCase())).length;
