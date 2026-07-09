@@ -50,6 +50,41 @@ const RAW_REGISTRY = {
   contract_lifecycle: require('./contract_lifecycle'),
   data_classification: require('./data_classification'),
   internal_audit: require('./internal_audit'),
+  // Top-5-per-category expansion — one connector per market-leading vendor.
+  ping: require('./ping'),                       // Identity / SSO → mfa_pct
+  duo: require('./duo'),
+  onelogin: require('./onelogin'),
+  sentinelone: require('./sentinelone'),         // Endpoint / EDR → edr_pct
+  cortexxdr: require('./cortexxdr'),
+  trendmicro: require('./trendmicro'),
+  rapid7: require('./rapid7'),                    // Vulnerability mgmt → patch_pct / vuln_sla_pct
+  defender_vm: require('./defender_vm'),
+  ivanti: require('./ivanti'),
+  elastic: require('./elastic'),                  // SIEM / Log analytics
+  qradar: require('./qradar'),
+  chronicle: require('./chronicle'),
+  beyondtrust: require('./beyondtrust'),          // Privileged access → pam_pct
+  delinea: require('./delinea'),
+  hashivault: require('./hashivault'),
+  oneidentity: require('./oneidentity'),
+  mimecast: require('./mimecast'),                // Awareness & email → bec_blocked
+  mdo365: require('./mdo365'),
+  orca: require('./orca'),                        // CSPM → cspm_pct
+  dell_powerprotect: require('./dell_powerprotect'), // Backup → backup_immutable_pct
+  saviynt: require('./saviynt'),                  // IGA → access_review_pct, dormant_accounts
+  okta_iga: require('./okta_iga'),
+  entra_id_gov: require('./entra_id_gov'),
+  oneidentity_iga: require('./oneidentity_iga'),
+  purview: require('./purview'),                  // DLP → dlp_pct
+  forcepoint: require('./forcepoint'),
+  symantec_dlp: require('./symantec_dlp'),
+  zscaler_dlp: require('./zscaler_dlp'),
+  netskope: require('./netskope'),
+  illumio: require('./illumio'),                  // Segmentation / Zero-Trust → seg_pct
+  zscaler_zpa: require('./zscaler_zpa'),
+  paloalto_seg: require('./paloalto_seg'),
+  cisco_workload: require('./cisco_workload'),
+  guardicore: require('./guardicore'),
 };
 
 // Per-connector demo mode state. Defaults to false (live).
