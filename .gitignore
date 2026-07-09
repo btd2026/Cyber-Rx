@@ -136,3 +136,7 @@ grafana/data/
 # Python bytecode cache
 __pycache__/
 *.pyc
+
+# Generated vault encryption key (never commit)
+.cyberrx-vault-key
+**/.cyberrx-vault-key
