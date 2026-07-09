@@ -2381,6 +2381,67 @@ function c5WarAlarm(){
   var ctx=(typeof audioCtx!=='undefined'&&audioCtx)?audioCtx:null;if(!ctx)return;
   try{var t=ctx.currentTime;[0,0.32].forEach(function(off){var o=ctx.createOscillator(),g=ctx.createGain();o.type='square';o.frequency.setValueAtTime(920,t+off);o.connect(g);g.connect(ctx.destination);g.gain.setValueAtTime(0.0001,t+off);g.gain.exponentialRampToValueAtTime(0.08,t+off+0.02);g.gain.exponentialRampToValueAtTime(0.0001,t+off+0.24);o.start(t+off);o.stop(t+off+0.26);});}catch(_){}
 }
+/* Cyber-Operations command model — status/message/next-action/severity/SLA/owner per
+   front. Kept command-oriented (not "Healthy/Watch") and honest (Not Enough Evidence
+   when a source is disconnected). */
+var OPS_OWNER={cops_incidents:'Incident Response',cops_services:'SOC',cops_thirdparty:'Vendor Risk',cops_emerging:'Threat Intel'};
+var OPS_NEXT={cops_thirdparty:'Confirm service dependency and remediation evidence.',cops_emerging:'Validate exposure against current stack.',cops_incidents:'Contain, confirm business impact, and start the disclosure clock if it crosses materiality.',cops_services:'Confirm containment and the recovery runbook for each affected service.'};
+var OPS_DRILL={cops_thirdparty:'Open third-party exposure queue',cops_emerging:'Open emerging risk actions',cops_incidents:'Open incident queue',cops_services:'Open service-threat map'};
+var OPS_MSG={
+  cops_incidents:{ok:'No active business-impacting incidents detected.',act:'{n} business-impacting incident(s) active — command the response.'},
+  cops_services:{ok:'No active threat mapped to critical business services.',act:'{n} business service(s) under active threat — concentrate containment.'},
+  cops_thirdparty:{ok:'No third-party alert is impacting a business service.',act:'{n} vendors require dependency and remediation validation.'},
+  cops_emerging:{ok:'No emerging risk currently has an open path.',act:'{n} risk requires exposure validation against the current stack.'}
+};
+var OPS_FRONT={cops_thirdparty:'third-party exposure',cops_emerging:'emerging risks',cops_services:'services under threat',cops_incidents:'internal incidents'};
+function opsNum(m){return (String(m&&m.displayValue||'').match(/^(\d+)/)||[])[1]||'';}
+function opsAct(m){return !!(m&&m.connected&&(m.color==='warn'||m.color==='crit'));}
+function opsStatus(m){if(!m||!m.connected)return {t:'Not Enough Evidence',c:'muted'};if(m.color==='crit')return {t:(m.id==='cops_incidents'?'Escalation needed':'Action needed'),c:'crit'};if(m.color==='warn')return {t:'Action needed',c:'warn'};return {t:'No active issue',c:'good'};}
+function opsSeverity(m){if(!m||!m.connected)return 'Not Enough Evidence';if(m.color==='crit')return 'Critical';if(m.color==='warn')return (m.id==='cops_thirdparty'?'High':'Medium');return 'None';}
+function opsSla(m){if(!m||!m.connected)return 'Not Enough Evidence';if(m.color==='crit')return 'Breached';if(m.color==='warn')return (m.id==='cops_thirdparty'?'At risk':'On track');return 'Not applicable';}
+function opsSource(m,demo){if(!m||!m.connected)return 'Not Connected';if(demo)return 'Demo';return (m.label==='live'?'Live':(m.label==='modeled'?'Modeled':'Computed'));}
+function opsMsg(m){var s=OPS_MSG[m.id];if(!s)return m.note||'';if(!m.connected)return 'Source not connected — connect to read this front.';return (opsAct(m)?s.act:s.ok).replace('{n}',opsNum(m)||'0');}
+function c5OpsCard(m,ic,demo){
+  var st=opsStatus(m),col=st.c,act=opsAct(m);
+  var meta='Severity: '+opsSeverity(m)+' · SLA: '+opsSla(m)+' · Owner: '+OPS_OWNER[m.id]+' · '+opsSource(m,demo);
+  var next=act?('<div class="c5esub" style="margin-top:3px;color:var(--ink-2)"><b>Next action:</b> '+c5esc(OPS_NEXT[m.id]||'')+'</div>'):'';
+  var drill=act?('<div class="c5esub" style="color:var(--blue);font-size:11px;margin-top:2px;cursor:pointer">'+c5esc(OPS_DRILL[m.id]||'Open')+' ›</div>'):'<div class="c5esub" style="color:var(--muted);font-size:11px;margin-top:2px">Click for the record ›</div>';
+  return '<div class="c5aic'+((act&&m.color==='crit')?' c5aic-alarm':'')+'" data-c5m="'+m.id+'" style="--ac:var(--'+col+')" title="'+c5tip(m)+'">'+
+    '<span class="c5tile-ic" style="--ac:var(--'+col+')">'+c5icon(ic)+'</span>'+
+    '<div style="min-width:0;flex:1">'+
+      '<div class="c5aic-t">'+m.name+'</div>'+
+      '<div class="c5aic-v" style="color:var(--'+col+')">'+st.t+'</div>'+
+      '<div class="c5aic-s">'+(m.connected?(c5esc(String(m.displayValue))+' · '):'')+c5esc(opsMsg(m))+'</div>'+
+      '<div class="c5esub" style="font-size:11px;color:var(--muted);margin-top:3px">'+c5esc(meta)+'</div>'+next+drill+
+    '</div></div>';
+}
+/* Evidence confidence for the Cyber-Operations tab. Business-service dependency mapping
+   is critical: without it the operational conclusions can never read "High". */
+function c5OpsEvidence(ms,demo){
+  var by={};ms.forEach(function(x){by[x.d.id]=x.m;});
+  var L=(typeof LIVE!=='undefined'&&LIVE)||{};
+  var depMapped=!!((L.process_exposure&&L.process_exposure.length)||(by.cops_services&&by.cops_services.connected));
+  var sources=[
+    {key:'siem',  label:'SIEM / SOAR feed',                 connected:!!(by.cops_incidents&&by.cops_incidents.connected), critical:true},
+    {key:'itsm',  label:'Incident management feed',         connected:!!(by.cops_incidents&&by.cops_incidents.connected), critical:false, computed:true},
+    {key:'vend',  label:'Vendor-risk feed',                 connected:!!(by.cops_thirdparty&&by.cops_thirdparty.connected), critical:false},
+    {key:'ti',    label:'Threat-intel feed',                connected:!!(by.cops_emerging&&by.cops_emerging.connected), critical:false},
+    {key:'dep',   label:'Business-service dependency mapping',connected:depMapped, critical:true, partial:!depMapped},
+    {key:'cmdb',  label:'CMDB / service catalog freshness', connected:!!((L.crown_jewels&&L.crown_jewels.length)||(L.counts&&L.counts.assets)), critical:false}
+  ];
+  var conf=(typeof TrustLogic!=='undefined')?TrustLogic.evidenceConfidence(sources):{level:'—'};
+  return {sources:sources,conf:conf,demo:demo};
+}
+function c5OpsEvidencePanel(ms,demo){
+  var E=c5OpsEvidence(ms,demo);
+  var SL=(typeof TrustLogic!=='undefined')?TrustLogic.sourceStatus:function(o){return o&&o.connected?{label:'Connected',cls:'g'}:{label:'Not Connected',cls:'n'};};
+  var lvlCls={'High':'g','Medium':'a','Low':'a','Not Enough Evidence':'n'}[E.conf.level]||'n';
+  var chips=E.sources.map(function(s){var st=SL({connected:s.connected,computed:s.computed,partial:s.partial});return '<span class="c5pill '+st.cls+'" style="display:inline-block;margin:2px 5px 2px 0">'+s.label+': '+st.label+'</span>';}).join('');
+  return '<div style="margin-top:14px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)">'+
+    '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:12px;font-weight:600;color:var(--ink-2)">Evidence confidence</span><span class="c5pill '+lvlCls+'">'+E.conf.level+'</span>'+(E.demo?'<span class="c5pill n">Demo — replace with live feeds as sources connect</span>':'')+'</div>'+
+    '<div style="margin-top:7px;line-height:2">'+chips+'</div>'+
+    '<div style="margin-top:7px;font-size:11.5px;color:var(--muted)">Computed from SIEM/SOAR incidents, vendor-risk alerts, threat-intel and business-service mappings.</div></div>';
+}
 /* Tab 03 — Cyber Operations. The live SOC picture for the seat: active incidents,
    services under threat, third-party alerts, and emerging risks. Each box is a
    provenance metric; the QUERY/JOIN/OUTPUT spec lives in the drill-down inspector
@@ -2389,45 +2450,58 @@ function c5Effect(){
   var host=document.getElementById('c5-effect');if(!host)return;
   var defs=[{id:'cops_incidents',ic:'alert',onb:'siem'},{id:'cops_services',ic:'pulse',onb:'siem'},{id:'cops_thirdparty',ic:'store',onb:'vendor risk'},{id:'cops_emerging',ic:'target',onb:'threat intelligence'}];
   var ms=defs.map(function(d){return {d:d,m:c5get(d.id)};});
-  var active=ms.filter(function(x){return x.m.connected&&(x.m.color==='crit'||x.m.color==='warn');}).length;
+  var byId={};ms.forEach(function(x){byId[x.d.id]=x.m;});
   var anyConn=ms.some(function(x){return x.m.connected;});
-  var cards=c5RingGrid(defs,{alarm:true});
-  // War Room — a live incident (a crit incident front) makes it blink + beep to
-  // draw the CISO to click in. wrOpen() is the existing War Room modal.
-  var incident=ms.filter(function(x){return x.m.connected&&x.m.color==='crit';}).length>0;
-  if(incident){try{c5WarAlarm();}catch(_){}}else{try{window.C5_WAR_ARMED=false;}catch(_){}}
-  var warbar=incident
-    ?'<div class="c5warbar active"><div class="c5warbar-l"><span class="c5warbar-ic">⚠</span><div><div class="c5warbar-t">Active incident — the War Room is live</div><div class="c5warbar-s">Command the response, run the regulatory clocks and brief every executive from one place.</div></div></div><button class="wr-btn" data-openwar="1" style="background:var(--crit);color:#fff;animation:warpulse 1.1s infinite">⚠ Enter the War Room</button></div>'
-    :'<div class="c5warbar"><div class="c5warbar-l"><span class="c5warbar-ic">🛡️</span><div><div class="c5warbar-t">War Room — standing by</div><div class="c5warbar-s">No active incident. The moment one crosses the line this turns red, sounds, and opens the response console.</div></div></div><button class="wr-btn gh" data-openwar="1">Open War Room</button></div>';
-  var verdict=anyConn
-    ?(active>0?('The SOC has '+active+' operational front'+(active>1?'s':'')+' live right now that need command attention.'):'Nothing is actively impacting the business right now — the operational picture is clean.')
-    :'What is actively hitting the business right now — incidents, threats, third-party alerts and emerging risks — on one operational screen.';
-  var intro=anyConn
-    ?'Live cyber operations for the seat: the incidents impacting the business, the services under active threat, the third-party alerts reaching your services, and the emerging risks matched to your stack. Each box opens to the exact record behind it.'
-    :'What this seat sees at a glance: the active incidents, the business services under threat, the third-party alerts touching your services, and the emerging risks worth acting on — the operational picture the CISO runs the day from.';
-  // The single operational front that needs command attention now (crit before warn).
-  var sev={crit:2,warn:1},top=null;
-  ms.forEach(function(x){if(x.m.connected&&(x.m.color==='crit'||x.m.color==='warn')){if(!top||sev[x.m.color]>sev[top.m.color])top=x;}});
-  var acts={
-    cops_incidents:'Run it to ground — contain, confirm business impact, and start the disclosure clock the moment it crosses materiality.',
-    cops_services:'Concentrate detection and containment on the services under active detection before the threat can pivot to a crown jewel.',
-    cops_thirdparty:'Press your worst-flagged third party for remediation evidence and confirm the business services it supports are covered.',
-    cops_emerging:'Action the emerging risks that match your stack before they are weaponized — patch or compensate the matching assets.'
-  };
+  var demo=(typeof signalsAreDemo==='function')&&signalsAreDemo();
+  var mInc=byId.cops_incidents;
+  var critIncident=!!(mInc&&mInc.connected&&mInc.color==='crit');
+  // Watch fronts = connected non-incident fronts flagged "Action needed" (warn).
+  var watch=ms.filter(function(x){return x.d.id!=='cops_incidents'&&x.m.connected&&x.m.color==='warn';});
+  var watchNames=watch.map(function(x){return OPS_FRONT[x.d.id];});
+  if(critIncident){try{c5WarAlarm();}catch(_){}}else{try{window.C5_WAR_ARMED=false;}catch(_){}}
+  // War Room status card — prominent but not alarming until an incident crosses threshold.
+  var warbar=critIncident
+    ?'<div class="c5warbar active"><div class="c5warbar-l"><span class="c5warbar-ic">⚠</span><div><div class="c5warbar-t">War Room active</div><div class="c5warbar-s">Critical incident active — response console open. Command the response, run the regulatory clocks and brief every executive from one place.</div></div></div><button class="wr-btn" data-openwar="1" style="background:var(--crit);color:#fff;animation:warpulse 1.1s infinite">Open active response</button></div>'
+    :'<div class="c5warbar"><div class="c5warbar-l"><span class="c5warbar-ic">🛡️</span><div><div class="c5warbar-t">War Room status · Standby</div><div class="c5warbar-s">No active incident has crossed escalation threshold. The moment one does this turns red, sounds, and opens the response console.</div></div></div><button class="wr-btn gh" data-openwar="1">Open War Room</button></div>';
+  // Headline — answer the internal-incident question first, then name the watch fronts.
+  var wnum={1:'One',2:'Two',3:'Three',4:'Four'};
+  var verdict,intro;
+  if(!anyConn){
+    verdict='Connect your SIEM / SOAR, vendor-risk and threat-intel feeds to run the operational picture.';
+    intro='What this seat sees at a glance: active incidents, business services under threat, third-party alerts touching your services, and emerging risks worth acting on — the operational picture the CISO runs the day from.';
+  } else if(critIncident){
+    verdict='Active internal incident — command the response now.';
+    intro='A business-impacting internal incident is active. Command the response from the War Room and run the regulatory clocks; the watch fronts below are secondary until it clears.';
+  } else if(watch.length>0){
+    verdict='No active internal incident. '+(wnum[watch.length]||String(watch.length))+' watch front'+(watch.length>1?'s':'')+' need command attention'+(watchNames.length?(': '+watchNames.join(' and ')):'')+'.';
+    intro='No business-impacting internal incident is active. The command focus is validating '+watchNames.join(' and ')+' before they become service-impacting.';
+  } else {
+    verdict='No active internal incident and no watch front — the operational picture is clean.';
+    intro='No incident, active threat, third-party alert or emerging risk is currently hitting the business. Hold watch and keep the feeds live.';
+  }
+  var cards='<div class="c5aigrid">'+ms.map(function(x){return c5OpsCard(x.m,x.d.ic,demo);}).join('')+'</div>';
   var body=c5header()+
-    c5shell('Cyber operations · what needs command attention right now?',verdict,active>0?'warn':null,intro)+
+    c5shell('Cyber operations · what needs command attention right now?',verdict,(critIncident?'crit':(watch.length?'warn':null)),intro)+
     warbar+
-    cards;
-  if(top){
-    body+=c5bl('Bottom line',
-      top.m.name+' is your live front — '+top.m.displayValue+'.',
-      top.m.color,
-      top.m.note+' '+(acts[top.d.id]||''),
-      {mid:top.m.id,txt:'Open '+top.m.name.toLowerCase()});
+    cards+
+    (anyConn?c5OpsEvidencePanel(ms,demo):'');
+  // Bottom line — command-oriented; third-party is the live front when vendor alerts exist.
+  var primary=[byId.cops_thirdparty,byId.cops_emerging,byId.cops_services].filter(function(m){return m&&m.connected&&m.color==='warn';})[0]||null;
+  if(critIncident){
+    body+=c5bl('Bottom line','Active internal business-impacting incident is underway.','crit','Command the response from the War Room, run the regulatory clocks, and brief executives from one place.',{act:'try{var b=document.querySelector(\'[data-openwar]\');if(b)b.click();}catch(_){}',txt:'Open active response'});
+  } else if(primary){
+    var focus=(primary.id==='cops_thirdparty')
+      ?('The live command front is third-party exposure: '+primary.displayValue+' may affect supported business services. Confirm dependency coverage and remediation evidence before the next operating review.')
+      :(primary.id==='cops_emerging')
+        ?('The live command front is emerging risk: '+primary.displayValue+' to validate against the current stack.')
+        :('The live command front is services under threat: '+primary.displayValue+' carrying an active detection.');
+    var mEm=byId.cops_emerging;
+    var secondary=(mEm&&mEm.connected&&mEm.color==='warn'&&primary.id!=='cops_emerging')?' Emerging-risk actions should be validated against the current technology stack.':'';
+    body+=c5bl('Bottom line','No active internal business-impacting incident is underway.',null,focus+secondary,{mid:primary.id,txt:(OPS_DRILL[primary.id]||('Open '+primary.name.toLowerCase()))});
   } else if(anyConn){
     body+=c5bl('Bottom line','Nothing needs command attention right now.',null,'No incident, active threat, third-party alert or emerging risk is currently hitting the business — hold watch and keep the feeds live.',null);
   } else {
-    body+=c5bl('Bottom line','This is the screen the CISO runs the day from.',null,'Once your SIEM / SOAR, vendor-risk monitoring and threat-intel feed are live, this names the single operational front that needs command attention — an incident, an active threat, a third-party alert or an emerging risk.',null);
+    body+=c5bl('Bottom line','This is the screen the CISO runs the day from.',null,'Once your SIEM / SOAR, vendor-risk monitoring and threat-intel feed are live, this names the operational fronts that need command attention.',null);
   }
   body+='<div class="c5foot">Live from your SIEM / SOAR, vendor-risk monitoring and threat-intel feed. Every box opens to the record behind it.</div>';
   host.innerHTML=body;
