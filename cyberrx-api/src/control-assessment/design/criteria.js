@@ -116,8 +116,8 @@ const REGISTRY = {
 
   // ---- SOC 2 (2017 TSC) ----
   'CC1.1': {
-    framework: 'SOC 2 (2017 TSC)', control_id: 'CC1.1', control_name: 'Commitment to integrity and ethical values',
-    control_objective: 'The entity demonstrates a commitment to integrity and ethical values.',
+    framework: 'SOC 2 (2017 TSC)', control_id: 'CC1.1', control_name: 'Ethics & integrity program (Nerion test)',
+    control_objective: 'Nerion test: an ethics/code-of-conduct program is established, acknowledged by personnel, and enforced.',
     primary_document_types: ['Code of Conduct', 'Information Security Policy'],
     criteria: [
       crit('code_of_conduct', 'A code of conduct / ethics is established', { concepts: ['code of conduct', 'code of ethics', 'ethical'], qualifiers: [], good: 'a code of conduct exists' }),
@@ -127,8 +127,8 @@ const REGISTRY = {
     ],
   },
   'CC5.3': {
-    framework: 'SOC 2 (2017 TSC)', control_id: 'CC5.3', control_name: 'Deploys control activities through policies and procedures',
-    control_objective: 'The entity deploys control activities through policies that establish expectations and procedures that put them into action.',
+    framework: 'SOC 2 (2017 TSC)', control_id: 'CC5.3', control_name: 'Control activities via policies & procedures (Nerion test)',
+    control_objective: 'Nerion test: control activities are deployed through policies that set expectations and procedures that operationalize them, with assigned ownership.',
     primary_document_types: ['Information Security Policy', 'Standard Operating Procedures'],
     criteria: [
       crit('policies_exist', 'Policies establish control expectations', { concepts: ['policy', 'polic'], qualifiers: ['establish', 'require', 'must', 'shall'], good: 'policies set clear expectations' }),
@@ -140,8 +140,8 @@ const REGISTRY = {
 
   // ---- CIS Controls v8.1 ----
   '14.1': {
-    framework: 'CIS Controls v8.1', control_id: '14.1', control_name: 'Establish and Maintain a Security Awareness Program',
-    control_objective: 'Establish and maintain a security awareness program to influence secure behavior.',
+    framework: 'CIS Controls v8.1', control_id: '14.1', control_name: 'Security awareness program (Nerion test)',
+    control_objective: 'Nerion test: a security awareness program is established and maintained to drive secure workforce behavior.',
     primary_document_types: ['Security Awareness & Training Policy'],
     criteria: [
       crit('program', 'A documented awareness program exists', { concepts: ['awareness'], qualifiers: ['program', 'documented', 'maintain'], good: 'documents an awareness program' }),

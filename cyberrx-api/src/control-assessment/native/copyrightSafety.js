@@ -51,37 +51,39 @@ function h(s) { return crypto.createHash('sha256').update(norm(s)).digest('hex')
 // phrasings. We store ONLY the hashes — never the source strings. If any of these
 // phrases reappears verbatim in the product, containsOfficialText() flags it.
 // (Generated once from the licensed sources, then the sources were discarded.)
-// Only DISTINCTIVE official phrasings (>= 3 words — the sliding window starts at 3).
-// Generic 2-word domain terms ("data protection", "malware defenses") are industry
-// vocabulary, not protectable expression, and are intentionally NOT listed.
+// SHA-256 hashes of distinctive official CIS / AICPA / ISO phrasings — stored as
+// HEX DIGESTS ONLY, so this file (and the whole repo) contains NONE of the official
+// text itself, not even as a detection needle. The digests were generated once from
+// the licensed sources, which were then discarded. The sliding window starts at 3
+// words; generic 2-word domain terms are industry vocabulary and are not listed.
+// Each entry is annotated by framework + control ID only — never by wording.
 const FORBIDDEN_HASHES = new Set([
-  // CIS Controls v8 — distinctive official control titles
-  h('Inventory and Control of Enterprise Assets'),
-  h('Inventory and Control of Software Assets'),
-  h('Secure Configuration of Enterprise Assets and Software'),
-  h('Email and Web Browser Protections'),
-  h('Network Monitoring and Defense'),
-  h('Security Awareness and Skills Training'),
-  // distinctive official CIS Safeguard phrasings previously embedded in the registry
-  h('Establish and Maintain an Inventory of Accounts'),
-  h('Establish and maintain an inventory of all accounts managed in the enterprise'),
-  h('Require MFA for Externally-Exposed Applications'),
-  // AICPA TSC — distinctive official point-of-focus phrasings previously embedded
-  h('Implement logical access security software infrastructure and architectures over protected information assets'),
-  h('Register and authorize new internal and external users before granting access credentials'),
-  h('The entity demonstrates a commitment to integrity and ethical values'),
-  h('The board of directors demonstrates independence from management'),
-  // ISO/IEC 27001:2022 — distinctive official Annex A / clause phrasings. Nerion
-  // never stores these; the hashes only exist to fail the build if the official
-  // wording is reintroduced. (Generated once, sources discarded.)
-  h('Information security policies shall be defined approved by management published and communicated'),
-  h('Access to information and other associated assets shall be restricted in accordance with the established topic-specific policy on access control'),
-  h('Information shall be classified according to the information security needs of the organization'),
-  h('Rules for the effective use of cryptography including cryptographic key management shall be defined and implemented'),
-  h('Protection against malware shall be implemented and supported by appropriate user awareness'),
-  h('Information about technical vulnerabilities of information systems in use shall be obtained'),
-  h('Networks and network devices shall be secured managed and controlled to protect information in systems and applications'),
+  '7359db9544f895e0e22998dcab56ddab3b62dcb538c5d24df4e3e29d92aebf99', // CIS Control 1 title
+  'fffe6f690ceb9ce7b7e89e16e24a93eef16b6c967e143299d0299dc2ba9df5cd', // CIS Control 2 title
+  '08f72e5fe70f72d686ae8ac5f6245693c3b72c290948208d461c093ebd77b85e', // CIS Control 4 title
+  'a6d438c8e05077d35c631e673ea92915e94001266c01f8ff1199bf9b7b570df0', // CIS Control 9 title
+  'e3f3a967fd32a9a039eda45730f7c1936ae0aaa4693cef2b8a420f0af5cf1b8e', // CIS Control 13 title
+  'd2c1580391281d69c92e1d363de2bb7ee27dc4a3627967303d8e4971ff75213a', // CIS Control 14 title
+  'c58c7d61adaefa9f39d42ac1a1ca707316324f55b14b98e3677f322515e10c95', // CIS Safeguard 5.1 title
+  '0ba6e16858ef3f984d72331de5fe9c1095c25e97f10d5de8820c9d14d4a13368', // CIS Safeguard 5.1 description
+  '0650083f506ac288248a18feb397e99bd57bc82acede3d3befe559951a294c3b', // CIS Safeguard 6.3 title
+  '2538c6302e0223e5de43ec5888dfbe608d93f1a41fec8d9027f6403b84c501dc', // AICPA TSC CC6.1
+  '37daaeeee57ee24efbf7dc050e3e001f399d32436e26f59c8179edd98e93e55e', // AICPA TSC CC6.2
+  'cfcd3a21989321b8b4fad26145546c248adfbc003b5b33c6e2282da41ef7b591', // AICPA TSC CC1.1
+  '46bb4e06cc7a22952325f878c3ee34fff6d6cea2351c0e90d769a947a3aa693f', // AICPA TSC CC1.2
+  '7e5968881ff63eadfce3fcf578de2bb4bf0d18aaf55ecefb526b92c178975054', // AICPA TSC CC5.3
+  '35ae25bf1eb7c9b6fdbc2c6670ddae48a12accf4d335c3e88e97bf253139e013', // ISO/IEC 27001 A.5.1
+  '0990cf73f869c812f49f3a7bdd830faf1acce9ddde9989bd89bbd66cfba0005f', // ISO/IEC 27001 A.5.15
+  'aab5d3231e596c4310a3b074cc7aa552b5ad5ec7a07baa0b58972b71b2a83ae5', // ISO/IEC 27001 A.5.12
+  'c2bc339b716fe19e442ac09beafc77de1044aaf6826832c87f0768f634a271ae', // ISO/IEC 27001 A.8.24
+  '73b92352d2fbbeeda06dd808f611deb98ee22ebe346ec44c918a4b029f70ffd3', // ISO/IEC 27001 A.8.7
+  '03d48ba4cbc8f7cf13475953ecd2d9b887e38e1b266c2cafaebe38c30bc415d4', // ISO/IEC 27001 A.8.8
+  '0cd11e28197c815ffae85de8342a846d9d2dcb9c3ea184bfbf5ef182a852feaa', // ISO/IEC 27001 A.8.20
+  '8f9dee36e556bafe076fb7b077359db797c344c10b51670736045916048b09c6', // synthetic canary (proves the detector fires)
 ]);
+// A synthetic phrase whose hash is in the set above — lets tests prove the detector
+// fires WITHOUT embedding any real official text anywhere in the repo.
+const CANARY = 'NERION-CANARY do not remove this synthetic phrase proves the detector fires';
 
 // Slide over a candidate string's word-windows (3..12 words) and hash each; report
 // any that matches a forbidden official phrase. Bounded so it is cheap on tests.
@@ -96,4 +98,4 @@ function containsOfficialText(s) {
   return false;
 }
 
-module.exports = { COPYRIGHT_FLAGS, STATE, containsOfficialText, reportLabel, FORBIDDEN_HASHES, _hash: h };
+module.exports = { COPYRIGHT_FLAGS, STATE, containsOfficialText, reportLabel, FORBIDDEN_HASHES, CANARY, _hash: h };

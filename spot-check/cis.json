@@ -1,7 +1,7 @@
 [
   {
     "requirement_id": "5.3",
-    "title": "Disable Dormant Accounts",
+    "title": "CIS Safeguard 5.3 (Nerion — refer to your licensed CIS content for official text)",
     "baselines": {
       "ig1": true,
       "ig2": true,
@@ -13,7 +13,7 @@
   },
   {
     "requirement_id": "16.1",
-    "title": "Establish and Maintain a Secure Application Development Process",
+    "title": "CIS Safeguard 16.1 (Nerion — refer to your licensed CIS content for official text)",
     "baselines": {
       "ig1": false,
       "ig2": true,
@@ -25,7 +25,7 @@
   },
   {
     "requirement_id": "2.3",
-    "title": "Address Unauthorized Software",
+    "title": "CIS Safeguard 2.3 (Nerion — refer to your licensed CIS content for official text)",
     "baselines": {
       "ig1": true,
       "ig2": true,
@@ -37,7 +37,7 @@
   },
   {
     "requirement_id": "14.9",
-    "title": "Conduct Role-Specific Security Awareness and Skills Training",
+    "title": "CIS Safeguard 14.9 (Nerion — refer to your licensed CIS content for official text)",
     "baselines": {
       "ig1": false,
       "ig2": true,
@@ -49,7 +49,7 @@
   },
   {
     "requirement_id": "9.1",
-    "title": "Ensure Use of Only Fully Supported Browsers and Email Clients",
+    "title": "CIS Safeguard 9.1 (Nerion — refer to your licensed CIS content for official text)",
     "baselines": {
       "ig1": true,
       "ig2": true,
@@ -61,7 +61,7 @@
   },
   {
     "requirement_id": "3.6",
-    "title": "Encrypt Data on End-User Devices",
+    "title": "CIS Safeguard 3.6 (Nerion — refer to your licensed CIS content for official text)",
     "baselines": {
       "ig1": true,
       "ig2": true,
@@ -73,7 +73,7 @@
   },
   {
     "requirement_id": "14.8",
-    "title": "Train Workforce on the Dangers of Connecting to and Transmitting Enterprise Data Over Insecure Networks",
+    "title": "CIS Safeguard 14.8 (Nerion — refer to your licensed CIS content for official text)",
     "baselines": {
       "ig1": true,
       "ig2": true,
@@ -85,7 +85,7 @@
   },
   {
     "requirement_id": "1.2",
-    "title": "Address Unauthorized Assets",
+    "title": "CIS Safeguard 1.2 (Nerion — refer to your licensed CIS content for official text)",
     "baselines": {
       "ig1": true,
       "ig2": true,
@@ -97,7 +97,7 @@
   },
   {
     "requirement_id": "16.3",
-    "title": "Perform Root Cause Analysis on Security Vulnerabilities",
+    "title": "CIS Safeguard 16.3 (Nerion — refer to your licensed CIS content for official text)",
     "baselines": {
       "ig1": false,
       "ig2": true,
@@ -109,7 +109,7 @@
   },
   {
     "requirement_id": "4.8",
-    "title": "Uninstall or Disable Unnecessary Services on Enterprise Assets and Software",
+    "title": "CIS Safeguard 4.8 (Nerion — refer to your licensed CIS content for official text)",
     "baselines": {
       "ig1": false,
       "ig2": true,
