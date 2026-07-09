@@ -2978,7 +2978,17 @@ function c5cpDecisions(){
   '.c5fw-lvl{font-size:9px;font-weight:500;padding:1px 6px;border-radius:20px;background:var(--surface);border:1px solid var(--line);flex:0 0 auto}',
   '.c5fw-sc{font-size:13px;font-weight:500;width:30px;text-align:right;flex:0 0 auto}',
   '.c5fw-map{font-size:10px;color:var(--muted);margin-top:3px}',
-  '.c5fw-chip{font-size:9px;font-weight:500;background:var(--surface-2);color:var(--blue);border-radius:4px;padding:0 4px;margin-right:3px;cursor:pointer}'
+  '.c5fw-chip{font-size:9px;font-weight:500;background:var(--surface-2);color:var(--blue);border-radius:4px;padding:0 4px;margin-right:3px;cursor:pointer}',
+  // Evidence-source (provenance) block in the finding detail.
+  '.c5fw-src{display:flex;gap:9px;align-items:flex-start;font-size:12px;color:var(--ink-2);line-height:1.5;margin-top:4px;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2)}',
+  '.c5fw-src b{color:var(--ink);font-weight:600}',
+  '.c5fw-src-none{color:var(--muted)}',
+  '.c5fw-srcic{flex:0 0 auto;font-size:14px;line-height:1.2}',
+  '.c5fw-srcsub{font-size:11px;color:var(--muted);margin-top:2px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}',
+  '.c5fw-jump{border:1px solid color-mix(in srgb,var(--blue) 40%,var(--line));background:var(--surface);color:var(--blue);font-family:inherit;font-size:11px;font-weight:600;padding:2px 9px;border-radius:20px;cursor:pointer;transition:background .12s,border-color .12s}',
+  '.c5fw-jump:hover{background:color-mix(in srgb,var(--blue) 10%,var(--surface));border-color:var(--blue)}',
+  '.c5doc-flash{animation:c5docflash 1.6s ease-out}',
+  '@keyframes c5docflash{0%,40%{background:color-mix(in srgb,var(--blue) 16%,var(--surface));box-shadow:0 0 0 2px color-mix(in srgb,var(--blue) 45%,transparent)}100%{background:transparent;box-shadow:none}}'
 ].join('');try{var s=document.createElement('style');s.textContent=css;document.head.appendChild(s);}catch(_){}})();
 
 var C5FW_CTRL=null, C5FW_EXP=null, C5FW_TARGET=3.5, C5FW_FLOOR=2.5;
@@ -3018,6 +3028,7 @@ function c5fwFinding(sel,node){
   var st=c5fwStatus(node.score),col=c5fwCol(node.score);
   var h='<div class="c5fw-detail"><div class="c5fw-dtop"><div><div class="c5kick">Finding &amp; recommendation</div><div style="font-size:15px;font-weight:500;margin-top:4px"><b>'+node.id+'</b> — '+node.name+'</div></div><span class="c5pill '+(st.cls==='good'?'g':st.cls==='warn'?'a':'r')+'">'+st.t+'</span></div>';
   h+='<div style="display:flex;align-items:baseline;gap:8px;margin-top:10px"><div style="font-size:26px;font-weight:500;font-family:var(--serif);color:var(--'+col+')">'+node.score.toFixed(1)+'<span style="font-size:14px;color:var(--muted)"> / 5</span></div><div class="c5intro" style="margin:0">'+c5fwLvl(node.score)+' · target '+C5FW_TARGET.toFixed(1)+'</div></div>';
+  h+=c5fwSource(node);
   if(node.type!=='ctl'&&node.rollup){var parts=node.rollup.slice(0,8).map(function(r){return r.id+' ('+r.score.toFixed(1)+')';}).join(', ');
     h+='<div class="ev-sec">Score roll-up</div><div class="formula">'+node.id+' ('+node.score.toFixed(1)+') = mean of '+parts+(node.rollup.length>8?', …':'')+'</div>';
     h+='<div class="drow-need" style="margin-top:6px;font-size:12px;color:var(--muted)">A group score is the mean of its children — computed, not entered. Every child traces to its own evidence.</div>';
@@ -3034,6 +3045,47 @@ function c5fwFinding(sel,node){
   if(F.mappings&&F.mappings.length){h+='<div class="ev-sec">Cross-framework</div><div class="drill-p">'+F.mappings.map(function(id){return '<span class="c5fw-chip">'+id+'</span>';}).join('')+'</div>';}
   h+='</div>';
   return h;
+}
+/* Evidence-source (provenance) block for a control-level finding — names the exact
+   source of the score so it's defensible: which connected tool (and whether the
+   telemetry is live or demo) for a system-evidenced control, or which document for
+   a document-evidenced one. Document-evidenced controls get a → arrow that opens
+   the document review scrolled to that control's entry. */
+function c5fwSource(node){
+  if(!node||node.type!=='ctl')return '';
+  var h='<div class="ev-sec">Evidence source</div>';
+  if(node.src==='system'){
+    var tool=(typeof c5fwCtrlTool==='function')?c5fwCtrlTool(node.id):null;
+    var s=(tool&&typeof capSource==='function')?capSource(tool):null;
+    var vend=s?s.vendor:(tool?tool.tool:'connected tool');
+    var live=s?(s.connected?(s.demo?'demo telemetry':'live telemetry'):'representative telemetry'):'telemetry';
+    var pct=(node.toolPct!=null)?(' · '+node.toolPct+'% coverage'):'';
+    h+='<div class="c5fw-src"><span class="c5fw-srcic">🔌</span><div><b>'+c5esc(vend)+'</b> — '+c5esc(live)+pct+
+      (tool?('<div class="c5fw-srcsub">'+c5esc(tool.name.replace(/ *\(.*\)/,''))+' capability</div>'):'')+'</div></div>';
+  } else if(node.src==='document'){
+    var fn=(node.doc&&node.doc.doc)?node.doc.doc:'Uploaded policy';
+    var att=(node.doc&&Array.isArray(node.doc.attrs)&&node.doc.attrs.length)?(' · '+node.doc.attrs.filter(function(a){return a.found;}).length+' of '+node.doc.attrs.length+' attributes present'):'';
+    h+='<div class="c5fw-src"><span class="c5fw-srcic">📄</span><div><b>'+c5esc(fn)+'</b>'+att+
+      '<div class="c5fw-srcsub">Document review <button type="button" class="c5fw-jump" data-c5docjump="'+c5esc(node.id)+'" title="Open the document review at this control">→ view in document review</button></div></div></div>';
+  } else if(node.src==='mapped'){
+    h+='<div class="c5fw-src"><span class="c5fw-srcic">🔗</span><div>Framework crosswalk — inherits the maturity of <b>'+c5esc((node.mapped||[]).join(', ')||'the mapped CSF controls')+'</b></div></div>';
+  } else {
+    h+='<div class="c5fw-src c5fw-src-none"><span class="c5fw-srcic">—</span><div>No evidence on file yet — neither connected-tool telemetry nor an analyzed policy. Connect the control’s tool or upload its governing policy and the score fills in from real evidence.</div></div>';
+  }
+  return h;
+}
+/* Open the Documents-reviewed modal and scroll to a specific control's entry,
+   briefly highlighting it — the → arrow on a document-evidenced finding. */
+function c5OpenDocsReviewAt(cid){
+  try{
+    c5OpenDocsReview();
+    setTimeout(function(){
+      var el=document.getElementById('c5doc-'+cid);
+      if(el){try{el.scrollIntoView({behavior:'smooth',block:'center'});}catch(_){el.scrollIntoView();}
+        el.classList.remove('c5doc-flash');void el.offsetWidth;el.classList.add('c5doc-flash');
+        setTimeout(function(){el.classList.remove('c5doc-flash');},1700);}
+    },70);
+  }catch(_){}
 }
 /* Plain-text finding fields for a control — the single source used by both the tab
    (left panel) and the auditor-pack PPTX, so the deck matches the tab exactly. */
@@ -3726,6 +3778,7 @@ function c5FrameworksClassic(host){
   host.querySelectorAll('[data-c5fwcad]').forEach(function(b){b.onclick=function(){try{localStorage.setItem('cyberrx_audit_cadence',b.getAttribute('data-c5fwcad'));}catch(_){}c5Frameworks();};});
   host.querySelectorAll('[data-c5fwexp]').forEach(function(b){b.onclick=function(){var id=b.getAttribute('data-c5fwexp');C5FW_EXP[id]=!C5FW_EXP[id];c5Frameworks();};});
   host.querySelectorAll('[data-c5fwctl]').forEach(function(b){b.onclick=function(){C5FW_CTRL=b.getAttribute('data-c5fwctl');c5Frameworks();};});
+  host.querySelectorAll('[data-c5docjump]').forEach(function(b){b.onclick=function(e){e.stopPropagation();c5OpenDocsReviewAt(b.getAttribute('data-c5docjump'));};});
   host.querySelectorAll('[data-c5fwcard]').forEach(function(b){b.style.cursor='pointer';b.onclick=function(){c5fwInspect(b.getAttribute('data-c5fwcard'),T,sel,cad);};});
 }
 /* ============================================================================
@@ -3829,7 +3882,7 @@ function c5DocsReviewHtml(){
           'Assessed at <b>CMMI '+c+' — '+(CMMI_LBL[c]||'')+'</b>'+(c<3?', below the target of 3.5; strengthen the policy language above to raise maturity.':c<4?', meeting baseline; tighten the remaining attributes to reach optimized.':', a mature, well-evidenced control.'));
         var gapHtml=(r.s.gap&&String(r.s.gap).trim())?('<div style="font-size:11.5px;color:var(--crit);margin-top:6px"><b>To raise maturity:</b> '+c5esc(r.s.gap)+'</div>'):'';
         var x=c5DocXwalk(r.id);
-        return '<div style="padding:12px 0;border-top:1px solid var(--line)">'+
+        return '<div id="c5doc-'+c5esc(r.id)+'" style="padding:12px 0;border-top:1px solid var(--line)">'+
           '<div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">'+
             '<span style="font-size:11px;font-weight:700;color:#fff;background:var(--'+col+');border-radius:6px;padding:1px 7px">CMMI '+c+'</span>'+
             '<b style="font-family:var(--serif);font-size:13.5px">'+c5esc(r.id)+'</b>'+

@@ -5230,7 +5230,11 @@ document.getElementById('wrMute').addEventListener('click',function(){alarmMuted
    open the seat the user signed in as, and (re)load live data when shown. */
 window.addEventListener('message',function(e){
   var d=e.data;
-  if(d&&d.type==='cyberrx-golive'){try{if(d.orgId)localStorage.setItem('cyberrx_org_id',d.orgId);if(d.org)localStorage.setItem('cyberrx_org_name',d.org);if(d.industry)localStorage.setItem('cyberrx_industry',d.industry);}catch(_){}loadLive();fetchReadiness();}
+  if(d&&d.type==='cyberrx-golive'){try{if(d.orgId)localStorage.setItem('cyberrx_org_id',d.orgId);if(d.org)localStorage.setItem('cyberrx_org_name',d.org);if(d.industry)localStorage.setItem('cyberrx_industry',d.industry);}catch(_){}
+    // First thing a customer sees after go-live: CISO › Program health › Classic View.
+    try{saveLastSeat('ciso');saveLastTab('ciso',0);if(typeof C5_PH_TAB!=='undefined')C5_PH_TAB='classic';}catch(_){}
+    try{document.querySelectorAll('.seat').forEach(function(x){x.classList.toggle('on',x.dataset.seat==='ciso');});render('ciso');}catch(_){}
+    loadLive();fetchReadiness();}
   else if(d==='cyberrx-os-active'){loadLive();fetchReadiness();}
   else if(d&&d.type==='cyberrx-auth'){var map={ceo:'ceo',board:'ceo',cfo:'cfo',cio:'cio',clo:'clo',cro:'cro',ciso:'ciso'};var role=map[d.role]||'ceo';
     // Prefer the org's server-side position (any device); fall back to this
