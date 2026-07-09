@@ -557,8 +557,10 @@
     <div class="sh"><div class="sn">7</div><div><div class="st">Connect your tools</div><div class="sd">Most of your evidence is pulled live from here. Connect each system you run and Nerion streams the data that answers your executives’ questions — the more you connect, the more credible every answer.</div></div><div class="badge" id="b7">optional</div></div>
     <div class="demo-bar"><span class="demo-label">Demo mode<span class="demo-sub">Explore with simulated signals — no API keys. Clearly labeled “Demo”; never sent to the engine as real data.</span></span><button class="demo-btn" id="demoToggle" type="button">Enable demo mode</button></div>
     <div class="cred"><div class="cred-top"><span class="ct">Evidence credibility</span><span class="cv l0" id="credLabel">Not yet credible</span></div><div class="cred-bar"><i id="credBar"></i></div><div class="cred-meta"><b id="credSig">0</b> live signals · <b id="credSys">0</b> systems connected · <b id="credCov">0%</b> coverage</div></div>
-    <div class="note" style="margin-top:2px;margin-bottom:10px"><a href="connector-setup.html" style="color:var(--blue);font-weight:700;text-decoration:none">✦ Control-aware setup (recommended) →</a> — Nerion asks only for what it needs per tool (auth, scope, denominator), then shows exactly which controls are ready for continuous assessment.</div>
-    <div id="toolGrid"></div>
+    <div class="note" style="margin-top:2px;margin-bottom:8px"><b>✦ Control-aware setup</b> — pick a tool below; Nerion asks only for what it needs (auth, scope, denominator), then shows exactly which controls are ready for continuous assessment. <a href="connector-setup.html" target="_blank" style="color:var(--blue);font-weight:600;text-decoration:none">Open full screen ↗</a></div>
+    <iframe id="caSetup" src="connector-setup.html" title="Control-aware connector setup" style="width:100%;height:760px;border:1px solid var(--line);border-radius:14px;background:var(--panel,#fff)"></iframe>
+    <details style="margin-top:14px"><summary style="cursor:pointer;color:var(--muted);font-size:13px;font-weight:600">Quick connect (legacy vendor list)</summary>
+    <div id="toolGrid" style="margin-top:10px"></div></details>
     <div class="note" style="margin-top:12px">Expand a tool, pick your vendor and enter a key to connect now — or leave blank and finish in the cockpit’s <b>“Live data — connected sources”</b> panel after go-live. Real connections show <b>“Connected”</b>; demo-mode tools show <b>“Demo”</b> and are never counted as real.</div>
   </div>
 
