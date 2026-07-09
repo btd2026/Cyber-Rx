@@ -286,7 +286,8 @@
         <button class="conn-go" id="aiGovDocAnalyze" type="button">Analyze document</button>
         <span id="aiGovDocMsg" class="sd" style="margin:0"></span>
       </div>
-      <div class="sd" style="margin-top:6px">Nerion reads each document against the AI control catalog and records which framework and policy it evidences — the same <b>📄 document-review</b> engine used across onboarding.</div>
+      <div class="sd" style="margin-top:6px">Nerion reads each document against the AI control catalog and records which framework and policy it evidences — the same <b>📄 document-review</b> engine used across onboarding. Upload all three below; each is analyzed and kept separately.</div>
+      <div id="aiGovDocList" style="margin-top:10px"></div>
     </div></div>
     <div class="aiup-lbl">What Nerion has derived so far</div>
     <div id="aiGovDerived" style="margin-top:6px"></div>
@@ -1039,7 +1040,29 @@
   function updateDocBadge(){var n=obDocDocs().length,b=document.getElementById('bdoc');if(b){if(n){b.textContent='✓ '+n+' analyzed';b.classList.add('done');}else{b.textContent='optional';b.classList.remove('done');}}}
   function obRenderDocList(){var docs=obDocDocs(),host=document.getElementById('obDocList');if(!host)return;
     host.innerHTML=docs.length?(docs.map(function(d){return '<div class="xrow"><span class="nm">'+d.name+'</span><span class="mt">'+d.type+' · '+d.matched+'/'+d.total+' attributes · CMMI '+d.cmmi+' ('+(CMMI_LBL[d.cmmi]||'')+')</span></div>';}).join('')+'<div style="margin-top:8px"><button class="conn-go" id="obDocClear" type="button">Clear analyzed documents</button></div>'):'<div class="sd">No policies analyzed yet — upload one above to evidence controls by document review.</div>';
-    var c=document.getElementById('obDocClear');if(c)c.addEventListener('click',function(){try{localStorage.removeItem('cyberrx_doc_scores');localStorage.removeItem('cyberrx_docs');}catch(_){}updateDocBadge();obRenderDocList();if(typeof computeAiGov==='function')computeAiGov();});}
+    var c=document.getElementById('obDocClear');if(c)c.addEventListener('click',function(){try{localStorage.removeItem('cyberrx_doc_scores');localStorage.removeItem('cyberrx_docs');localStorage.removeItem('cyberrx_doc_text');}catch(_){}updateDocBadge();obRenderDocList();if(typeof renderAiGovDocList==='function')renderAiGovDocList();if(typeof computeAiGov==='function')computeAiGov();});}
+  // The AI-governance document types (derived from OB_DOC_TYPES — single source of
+  // truth), each kept and shown separately so a user can upload all of them and see
+  // every one's analysis persist, not just the latest.
+  function renderAiGovDocList(){
+    var host=document.getElementById('aiGovDocList');if(!host)return;
+    var types=(typeof OB_DOC_TYPES!=='undefined'?OB_DOC_TYPES:[]).filter(function(d){return /^AI /.test(d.l);});
+    var docs=obDocDocs();
+    var rows=types.map(function(t){
+      var d=docs.filter(function(x){return x.type===t.l;})[0]; // most recent (docs are unshifted)
+      var base='display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;font-size:12.5px';
+      if(d){return '<div style="'+base+';background:var(--surface-2,#f6f8fb)">'+
+        '<span style="color:var(--good,#0ca30c);font-weight:700;flex:0 0 auto">✓</span>'+
+        '<span style="font-weight:600;flex:0 0 auto">'+t.l+'</span>'+
+        '<span style="color:var(--ink-2,#516074);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+d.name+'</span>'+
+        '<span style="font-weight:600;color:var(--good,#0ca30c);flex:0 0 auto">CMMI '+d.cmmi+' · '+(CMMI_LBL[d.cmmi]||'')+'</span></div>';}
+      return '<div style="'+base+'">'+
+        '<span style="opacity:.4;flex:0 0 auto">○</span>'+
+        '<span style="font-weight:600;flex:0 0 auto">'+t.l+'</span>'+
+        '<span style="color:var(--muted);flex:1">not uploaded yet</span></div>';
+    }).join('');
+    host.innerHTML='<div style="display:flex;flex-direction:column;gap:6px">'+rows+'</div>';
+  }
   function obAnalyzeDoc(){obAnalyzeDocFrom('obDocFile','obDocType','obDocMsg');}
   // Shared document-review engine — used by the main Policy & document evidence
   // section and by the inline uploader in the AI risk & governance section.
@@ -1057,14 +1080,14 @@
         var docs=obDocDocs(),lbl=(OB_DOC_TYPES.filter(function(d){return d.k===dt;})[0]||{}).l||dt;
         docs.unshift({name:file.name,type:lbl,cmmi:res.cmmi,matched:res.matched||0,total:res.total||0,engine:res.engine||'keyword'});obSaveDocs(docs);
         if(msg){msg.textContent='✓ '+file.name+' — CMMI '+res.cmmi+' ('+(CMMI_LBL[res.cmmi]||'')+')';msg.style.color='var(--good)';}
-        updateDocBadge();obRenderDocList();if(typeof computeAiGov==='function')computeAiGov();})
+        updateDocBadge();obRenderDocList();if(typeof renderAiGovDocList==='function')renderAiGovDocList();if(typeof computeAiGov==='function')computeAiGov();})
       .catch(function(e){if(msg){msg.textContent='✗ '+e.message;msg.style.color='var(--warn)';}});}
   function obSeedSampleDocScores(){if(Object.keys(obDocScores()).length)return;
     var sample={'GV.OC-01':4,'GV.OC-03':3,'GV.RM-01':3,'GV.PO-01':4,'GV.PO-02':3,'PR.AA-01':4,'PR.AA-05':3,'PR.AT-01':3,'ID.RA-01':3,'ID.RA-05':2,'DE.CM-01':2,'RS.MA-01':3};
     Object.keys(sample).forEach(function(id){obSaveDocScore(id,{cmmi:sample[id],doc:'Information Security Policy (sample).pdf',matched:Math.min(6,sample[id]+2),total:6,attrs:[{label:'Policy purpose statement',found:true},{label:'Scope definition',found:true},{label:'Roles & responsibilities',found:sample[id]>=3},{label:'Enforcement provisions',found:sample[id]>=3},{label:'Review cadence',found:sample[id]>=4},{label:'Exception process',found:sample[id]>=4}]});});
     var docs=obDocDocs();docs.unshift({name:'Information Security Policy (sample).pdf',type:'Information Security Policy',cmmi:4,matched:5,total:6});obSaveDocs(docs);updateDocBadge();obRenderDocList();}
   (function(){var sel=document.getElementById('obDocType');if(sel)sel.innerHTML=OB_DOC_TYPES.map(function(d){return '<option value="'+d.k+'">'+d.l+'</option>';}).join('');
-    var a=document.getElementById('obDocAnalyze');if(a)a.addEventListener('click',obAnalyzeDoc);obRenderDocList();updateDocBadge();
+    var a=document.getElementById('obDocAnalyze');if(a)a.addEventListener('click',obAnalyzeDoc);obRenderDocList();renderAiGovDocList();updateDocBadge();
     if(typeof computeAiGov==='function')computeAiGov();
     document.querySelectorAll('.aiGovJump').forEach(function(a){a.addEventListener('click',function(ev){ev.preventDefault();var el=document.getElementById(a.dataset.to)||document.getElementById(a.getAttribute('href').slice(1));if(el)el.scrollIntoView({behavior:'smooth',block:'start'});});});})();
 
