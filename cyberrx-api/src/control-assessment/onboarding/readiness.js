@@ -56,8 +56,15 @@ function controlReadiness(ctrl, config) {
     status = PARTIAL; connectorStatus = 'Ready for Design Assessment';
     message = 'Assessed by document / design review, not telemetry.';
   } else if (denomNeeded && !denomOk) {
-    status = NOT; connectorStatus = 'Denominator Missing';
-    message = 'A denominator source is required before this coverage control can be assessed — configure ' + ctrl.required_denominator_source + '.';
+    // Denominator missing: if some telemetry/indicator is available it is PARTIALLY
+    // ready (design/coverage indicator visible, operating effectiveness blocked on
+    // the denominator); with no telemetry at all it is Not Ready.
+    const someEvidence = availFields.length > 0 || relevance;
+    status = someEvidence ? PARTIAL : NOT;
+    connectorStatus = someEvidence ? 'Denominator Missing (telemetry available)' : 'Denominator Missing';
+    message = someEvidence
+      ? ('Telemetry is available, but coverage / operating effectiveness cannot be assessed without the denominator — configure ' + ctrl.required_denominator_source + '.')
+      : ('A denominator source is required before this coverage control can be assessed — configure ' + ctrl.required_denominator_source + '.');
   } else if (!permsOk && availFields.length === 0 && !relevance) {
     status = NOT; connectorStatus = 'Connected with Missing Permissions';
     message = 'Read-only permissions are insufficient to pull this control\'s evidence.';

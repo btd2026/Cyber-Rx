@@ -70,11 +70,20 @@ describe('readiness never over-claims', () => {
     expect(si4.readiness_status).toBe('Partially Ready');
   });
 
-  test('percentage metrics require a denominator — no denominator → Not Ready', () => {
+  test('percentage metrics require a denominator — telemetry present but no denominator → Partially Ready, never Ready', () => {
     const r = computeReadiness('entra', baseConfig({ telemetry_available: IA2_FIELDS, denominator_configured: {}, live_tenant_validated: true }));
     const ia2 = find(r, 'IA-2');
-    expect(ia2.readiness_status).toBe('Not Ready');
-    expect(ia2.connector_status).toBe('Denominator Missing');
+    // Telemetry is available, so it is PARTIALLY ready (design/coverage indicator
+    // visible), but operating effectiveness stays blocked on the denominator — and
+    // it is never "Ready" without it.
+    expect(ia2.readiness_status).toBe('Partially Ready');
+    expect(ia2.readiness_status).not.toBe('Ready');
+    expect(ia2.connector_status).toBe('Denominator Missing (telemetry available)');
+  });
+
+  test('no denominator AND no telemetry → Not Ready', () => {
+    const r = computeReadiness('entra', baseConfig({ telemetry_available: {}, denominator_configured: {}, live_tenant_validated: true }));
+    expect(find(r, 'IA-2').readiness_status).toBe('Not Ready');
   });
 
   test('operating-effectiveness readiness requires live-tenant validation', () => {
