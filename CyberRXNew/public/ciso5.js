@@ -2053,9 +2053,13 @@ function c5Exposure(){
             ?('Most of the business is well protected — '+weak.length+' area'+(weak.length>1?'s':'')+' carr'+(weak.length>1?'y':'ies')+' the residual exposure, and your highest-value controls are the ones to extend to them.')
             :('More of the business needs strengthening than is fully covered — the exposure concentrates in a handful of areas, addressable with your highest-value controls.')))
     :'Where the business is protected, where it isn’t, and which controls buy down the most risk.';
+  // Plain-language intro: name what a "business area" is (the core functions that
+  // define the crown jewels), say what "protected" means here (each area sits
+  // behind the top cyber capabilities, and how healthy those capabilities are is
+  // how well the area is protected), then give the live read.
   var intro=haveAreas
-    ?('Protection seen from the business, not the tool. '+(well.length?('You are strong across '+well.length+' area'+(well.length>1?'s':'')+' — the defensible base you take to the board. '):'')+(topWeak?('The exposure concentrates in '+topWeak.name+', where protection is thinnest'+((topWeak.gaps||0)>0?(' — '+topWeak.gaps+' open control gap'+(topWeak.gaps>1?'s':'')):'')+'. '):'')+(topCtrl?('Your best lever is '+nm(topCtrl.c)+', the control returning the most business value today.'):''))
-    :'The CISO’s read on where to hold the line, and where the next dollar of protection should go.';
+    ?('These are the core business areas that carry the company and define your crown jewels. Each one sits behind your top cybersecurity capabilities — identity, access, backup, monitoring and the rest — and how healthy those capabilities are is how well the area is protected. '+(well.length?(well.length+' area'+(well.length>1?'s are':' is')+' fully covered. '):'')+(topWeak?(weak.length+' still need'+(weak.length>1?'':'s')+' work, with the most exposure in '+topWeak.name+((topWeak.gaps||0)>0?(' ('+topWeak.gaps+' open control gap'+(topWeak.gaps>1?'s':'')+')'):'')+'.'):''))
+    :'These are the core business areas that carry the company and define your crown jewels. Each sits behind your top cybersecurity capabilities, and how healthy those capabilities are is how well the area is protected. Connect your tools to see the live read.';
   var tone=(haveAreas&&weak.length&&well.length<weak.length)?'warn':null;
   // Summary as premium icon cards — clickable to a detail inspector, with a hover tooltip.
   var scard=function(ic,lbl,val,sub,col,pc,tip){col=col||'muted';return '<div class="c5opc" data-c5pc="'+pc+'" style="--ac:var(--'+col+')" title="'+c5esc(tip||'')+'"><span class="c5opc-go">details ›</span><div class="c5opc-h"><span class="c5opc-ic">'+c5icon(ic)+'</span><span class="c5opc-t">'+lbl+'</span></div><div class="c5opc-v" style="color:var(--'+(col==='muted'?'ink':col)+')">'+val+'</div><div class="c5opc-s">'+sub+'</div></div>';};
@@ -2100,7 +2104,7 @@ function c5Exposure(){
   try{window.C5PROT={well:well,weak:weak,ctrl:ctrlConn,target:TARGET,anyDerived:anyDerived,all:areas.slice().sort(function(a,b){return b.score-a.score;})};}catch(_){}
   // TAB A — protection by business area (where are we protected?)
   var bodyA=c5header()+
-    c5shell('Protection · where are we protected, and where is the exposure?',verdict,tone,intro)+
+    c5shell('Protection · how your core business areas are protected',verdict,tone,intro)+
     summary;
   if(haveAreas){
     bodyA+='<div class="c5seclab">Where the business is well protected</div><div>'+w1+'</div>'+

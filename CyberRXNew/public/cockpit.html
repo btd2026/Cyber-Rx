@@ -840,7 +840,7 @@ var TAB_LABELS={
  'Does our product ship secure by design?':'Secure by design','Is security slowing our releases?':'Velocity','What’s top of the security backlog?':'Backlog',
  'Is our cyber audit universe covered?':'Coverage','What findings are open?':'Findings','What needs escalation?':'Escalate','What should Internal Audit action?':'Actions',
  // CISO Protection split
- 'Where are we protected?':'Protection','Which controls buy down the most risk?':'Control value'
+ 'How are our core business areas protected?':'Protection','Which controls buy down the most risk?':'Control value'
 };
 function tabLabel(title){var raw=String(title||'').trim();if(TAB_LABELS[raw])return TAB_LABELS[raw];var t=raw.replace(/\?+\s*$/,'').trim();if(TAB_LABELS[t])return TAB_LABELS[t];t=t.split(/\s+[—–-]\s+/)[0].trim();if(t.length>26)t=t.slice(0,24).replace(/\s+\S*$/,'')+'…';return t;}
 function buildTabs(){

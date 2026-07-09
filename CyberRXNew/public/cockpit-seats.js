@@ -102,7 +102,7 @@ var SEATS = {
   body:function(){return (
    sec('01','Program health','','<div id="c5-frameworks"></div>')
    +sec('02','Cyber exposure','','<div id="c5-health"></div>')
-   +sec('03','Where are we protected?','','<div id="c5-exposure"></div>')
+   +sec('03','How are our core business areas protected?','','<div id="c5-exposure"></div>')
    +sec('04','Which controls buy down the most risk?','','<div id="c5-exposure2"></div>')
    +sec('05','Cyber operations','','<div id="c5-effect"></div>')
    +sec('06','Threats','','<div id="c5-threats"></div>')
