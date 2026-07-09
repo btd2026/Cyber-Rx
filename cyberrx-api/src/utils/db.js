@@ -470,6 +470,17 @@ async function init() {
         updated_at            TIMESTAMPTZ DEFAULT NOW()
       );
 
+      -- Per-tenant encrypted credential store (connect a tool once, it persists).
+      -- Written by utils/vault when not using AWS Secrets Manager. Secret column
+      -- holds AES-256-GCM ciphertext (iv.tag.ciphertext), never plaintext.
+      CREATE TABLE IF NOT EXISTS integration_secrets (
+        org_id                TEXT NOT NULL,
+        tool                  TEXT NOT NULL,
+        secret                TEXT NOT NULL,
+        updated_at            TIMESTAMPTZ DEFAULT NOW(),
+        PRIMARY KEY (org_id, tool)
+      );
+
       -- Vendor Monitoring Connections Table
       CREATE TABLE IF NOT EXISTS vendor_monitoring_connections (
         id                    SERIAL PRIMARY KEY,
