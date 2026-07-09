@@ -154,13 +154,19 @@
     var ctrls=(m.supported_framework_controls||[]);
     var h='<button class="back" id="back">‹ All tools</button>';
     h+='<div class="panel">';
-    // Step 2 — what Nerion can assess
+    // Step 2 — what Nerion can assess. We show the honest can-prove / cannot-prove
+    // framing plus a coverage SUMMARY (count + frameworks). We deliberately do NOT
+    // list the exact connector→control mapping here — that mapping is Nerion's
+    // methodology, and the per-control detail is earned in the readiness section
+    // after connecting. The old standalone control-areas chip row duplicated the
+    // "can prove" box, so it's removed.
+    var fwSet=[];ctrls.forEach(function(c){var f=String(c.framework||'').split(' ')[0];if(f&&fwSet.indexOf(f)<0)fwSet.push(f);});
     h+='<div class="sec"><h3>What Nerion will continuously assess from this tool</h3>'+
        '<p class="why">Nerion knows which controls this tool supports and what telemetry to pull — you don\'t need to.</p>'+
-       '<div class="chips">'+(m.supported_control_areas||[]).map(function(a){return '<span class="chip">'+esc(a)+'</span>';}).join('')+'</div>'+
        '<div class="prove"><div class="box can"><b>What this connector can prove</b><div class="muted" style="margin-top:4px">'+esc(m.what_this_connector_can_prove)+'</div></div>'+
        '<div class="box cant"><b>What it cannot prove alone</b><div class="muted" style="margin-top:4px">'+esc(m.what_this_connector_cannot_prove_alone)+'</div></div></div>'+
-       '<div class="chips" style="margin-top:10px">'+ctrls.map(function(c){return '<span class="chip"><b>'+esc(c.control_id)+'</b> '+esc(c.framework.split(' ')[0])+'</span>';}).join('')+'</div></div>';
+       (ctrls.length?('<p class="why" style="margin-top:10px">Feeds continuous assessment of <b>'+ctrls.length+'</b> control'+(ctrls.length>1?'s':'')+(fwSet.length?(' across '+esc(fwSet.join(', '))):'')+'. You\'ll see each control\'s readiness once it\'s connected.</p>'):'')+
+       '</div>';
     // Step 3 — connect. One-click OAuth is the primary path; the manual credential
     // form is collapsed by default so the page stays simple. maybeRenderOauth()
     // reveals the button for OAuth-capable connectors and, when no OAuth provider is
@@ -171,7 +177,14 @@
     h+='<p class="why" id="manualWhy">Read-only. Your secret is encrypted and never shown again.</p><div class="cols">';
     (m.required_auth_fields||[]).forEach(function(f){h+=fieldInput('auth',f);});
     (m.required_tenant_fields||[]).forEach(function(f){if(!(m.required_auth_fields||[]).some(function(a){return a.key===f.key;}))h+=fieldInput('tenant',f);});
-    h+='</div><p class="why" style="margin-top:2px">Grant these <b>read-only</b> permissions to the credential:</p><div class="chips">'+(m.required_permissions||[]).map(function(p){return '<span class="perm">'+esc(p)+'</span>';}).join('')+'</div>';
+    h+='</div>';
+    // Plain-English access statement for the buyer; exact provider scope tokens are
+    // tucked behind a collapsible expander for the admin who actually grants them.
+    h+='<p class="why" style="margin-top:2px"><b>Read-only access only.</b> Nerion reads configuration and logs to assess controls — it can never change, create, or delete anything in your tool.</p>';
+    if((m.required_permissions||[]).length){
+      h+='<button class="back" id="scopeToggle" style="display:block;margin-top:4px">Show the exact technical scopes ('+(m.required_permissions||[]).length+')</button>';
+      h+='<div id="scopeWrap" style="display:none;margin-top:6px"><div class="chips">'+(m.required_permissions||[]).map(function(p){return '<span class="perm">'+esc(p)+'</span>';}).join('')+'</div></div>';
+    }
     // Scope / denominator / review — advanced, collapsed so connecting stays simple.
     var hasAdv=(m.required_scope_fields||[]).length||(m.required_denominator_fields||[]).length;
     h+='<button class="back" id="advToggle" style="display:block;margin-top:12px;margin-bottom:4px">Advanced: scope, denominator &amp; review period</button>';
@@ -196,6 +209,8 @@
     var at=document.getElementById('advToggle');
     if(!hasAdv){at.style.display='none';}
     at.onclick=function(){var w=document.getElementById('advWrap');var open=w.style.display!=='none';w.style.display=open?'none':'block';at.textContent=(open?'Advanced: scope, denominator & review period':'Hide advanced options');};
+    var st=document.getElementById('scopeToggle');
+    if(st){var scn=(m.required_permissions||[]).length;st.onclick=function(){var w=document.getElementById('scopeWrap');var open=w.style.display!=='none';w.style.display=open?'none':'block';st.textContent=(open?'Show the exact technical scopes ('+scn+')':'Hide technical scopes');};}
     maybeRenderOauth(m.connector_id);
   }
 
