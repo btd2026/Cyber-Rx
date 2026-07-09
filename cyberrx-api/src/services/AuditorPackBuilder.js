@@ -48,6 +48,14 @@ function chip(s, x, y, text, color) {
   s.addText(String(text), { x, y, w, h: 0.3, fontSize: 9.5, bold: true, color, align: 'center', valign: 'middle', fontFace: HEAD });
   return w;
 }
+// Diagonal DRAFT watermark. Lives on a slide MASTER so a client can strip it in ONE
+// place — View ▸ Slide Master, delete the DRAFT text, close — before issuing to auditors.
+function draftMark(color, transparency) {
+  return { text: { text: 'DRAFT', options: { x: 0.6, y: 2.0, w: 12.13, h: 3.3, rotate: 315, align: 'center', valign: 'middle', fontSize: 150, bold: true, color: color || RED, transparency: transparency == null ? 87 : transparency, fontFace: HEAD, charSpacing: 8 } } };
+}
+// Posture distribution (Meets / Observation / Deficiency) over the whole register, so
+// the executive donut reflects full coverage — computed only from supplied scores.
+function classOf(score, tgt) { const n = Number(score); return n >= Number(tgt) ? 'Meets target' : n >= 2.5 ? 'Observation' : 'Deficiency'; }
 
 async function buildPptxBuffer(payload) {
   payload = payload || {};
@@ -73,28 +81,77 @@ async function buildPptxBuffer(payload) {
   const evidence = arr(payload.evidence);
   const licensing = arr(payload.licensing);
   const failing = payload.failing != null ? payload.failing : deficiencies.length;
+  // DRAFT watermark on by default; the platform (or a "final" export) passes draft:false
+  // to issue a clean, unwatermarked copy. On the file, a client removes it via Slide Master.
+  const draft = payload.draft !== false;
+  if (draft) pptx.defineSlideMaster({ title: 'DRAFTC', background: { color: WHITE }, objects: [draftMark(RED, 88)] });
+  // Sequential section numbering — a running counter keeps the deck correctly numbered
+  // no matter which conditional sections render (was previously hardcoded & inconsistent).
+  let sec = 0; const SEC = () => 'Section ' + (++sec);
   let pg = 0;
-  const S_ = () => { const s = pptx.addSlide(); s.background = { color: WHITE }; pg += 1; return s; };
+  const S_ = () => { const s = draft ? pptx.addSlide({ masterName: 'DRAFTC' }) : pptx.addSlide(); s.background = { color: WHITE }; pg += 1; return s; };
 
   // 1 · Cover -----------------------------------------------------------------
   {
     const s = pptx.addSlide(); s.background = { color: DEEPNAVY }; pg += 1;
+    if (draft) s.addText('DRAFT', { x: 0.6, y: 2.0, w: 12.13, h: 3.3, rotate: 315, align: 'center', valign: 'middle', fontSize: 150, bold: true, color: WHITE, transparency: 90, fontFace: HEAD, charSpacing: 8 });
     s.addShape('rect', { x: 0.6, y: 0.55, w: 0.32, h: 0.4, fill: { color: ACCENT } });
     s.addText('NERION', { x: 1.02, y: 0.54, fontSize: 15, bold: true, color: WHITE, charSpacing: 2, fontFace: HEAD });
     s.addText('CYBER BUSINESS OPERATIONS PLATFORM', { x: 1.02, y: 0.86, fontSize: 8, color: '8FA3BD', charSpacing: 2, fontFace: HEAD });
-    s.addText(`${std}${payload.version ? '  ' + payload.version : ''}`, { x: 0.6, y: 2.4, w: 12, fontSize: 34, bold: true, color: WHITE, fontFace: HEAD });
-    s.addText('Maturity assessment · auditor pack', { x: 0.6, y: 3.25, w: 12, fontSize: 18, color: ACCENT, fontFace: HEAD });
+    // Draft status ribbon, top-right.
+    if (draft) {
+      s.addShape('roundRect', { x: 10.55, y: 0.5, w: 2.25, h: 0.52, rectRadius: 0.06, fill: { color: RED } });
+      s.addText('● DRAFT — NOT ISSUED', { x: 10.55, y: 0.5, w: 2.25, h: 0.52, fontSize: 10, bold: true, color: WHITE, align: 'center', valign: 'middle', fontFace: HEAD });
+    }
+    s.addText(`${std}${payload.version ? '  ' + payload.version : ''}`, { x: 0.6, y: 2.3, w: 12, fontSize: 34, bold: true, color: WHITE, fontFace: HEAD });
+    s.addText('Maturity assessment · auditor pack', { x: 0.6, y: 3.15, w: 12, fontSize: 18, color: ACCENT, fontFace: HEAD });
     // overall maturity chip
-    s.addShape('roundRect', { x: 0.6, y: 4.2, w: 3.3, h: 1.2, rectRadius: 0.08, fill: { color: '16263B' } });
-    s.addText(overall, { x: 0.8, y: 4.35, w: 1.6, h: 0.9, fontSize: 46, bold: true, color: clsColor(payload.overallStatus || (Number(overall) >= Number(target) ? 'meets' : Number(overall) >= 2.5 ? 'observation' : 'deficiency')), valign: 'middle', fontFace: HEAD });
-    s.addText([{ text: '/ 5  overall CMMI\n', options: { fontSize: 12, color: 'E2E8F0' } }, { text: `${S(payload.overallLevel, '')} · target ${target}`, options: { fontSize: 11, color: '8FA3BD' } }], { x: 2.5, y: 4.45, w: 1.4, h: 0.9, valign: 'middle', fontFace: BODY });
-    s.addText(`Client: ${client}   ·   Period: ${period}   ·   Cadence: ${cadence}`, { x: 0.6, y: 5.7, w: 12, fontSize: 12, color: 'E2E8F0', fontFace: BODY });
-    s.addText('CONFIDENTIAL — prepared for the named client', { x: 0.6, y: 6.9, w: 12, fontSize: 9, color: '64748B', fontFace: BODY });
+    s.addShape('roundRect', { x: 0.6, y: 4.1, w: 3.3, h: 1.2, rectRadius: 0.08, fill: { color: '16263B' } });
+    s.addText(overall, { x: 0.8, y: 4.25, w: 1.6, h: 0.9, fontSize: 46, bold: true, color: clsColor(payload.overallStatus || (Number(overall) >= Number(target) ? 'meets' : Number(overall) >= 2.5 ? 'observation' : 'deficiency')), valign: 'middle', fontFace: HEAD });
+    s.addText([{ text: '/ 5  overall CMMI\n', options: { fontSize: 12, color: 'E2E8F0' } }, { text: `${S(payload.overallLevel, '')} · target ${target}`, options: { fontSize: 11, color: '8FA3BD' } }], { x: 2.5, y: 4.35, w: 1.4, h: 0.9, valign: 'middle', fontFace: BODY });
+    // Document-control block, bottom-right — auditors expect status / version / date.
+    const genDate = S(payload.generatedAt, new Date().toISOString().slice(0, 10));
+    s.addText([
+      { text: 'DOCUMENT CONTROL\n', options: { fontSize: 8.5, bold: true, color: '8FA3BD', charSpacing: 1 } },
+      { text: `Status:  ${draft ? 'DRAFT — for internal review' : 'Issued'}\n`, options: { fontSize: 10, color: draft ? 'F1A9A0' : 'E2E8F0', bold: draft } },
+      { text: `Version:  ${S(payload.version, '1.0')}\n`, options: { fontSize: 10, color: 'E2E8F0' } },
+      { text: `Generated:  ${genDate}\n`, options: { fontSize: 10, color: 'E2E8F0' } },
+      { text: 'Classification:  CONFIDENTIAL', options: { fontSize: 10, color: 'E2E8F0' } },
+    ], { x: 8.5, y: 5.55, w: 4.3, h: 1.55, valign: 'top', align: 'left', fontFace: BODY, lineSpacingMultiple: 1.05 });
+    s.addText(`Client: ${client}   ·   Period: ${period}   ·   Cadence: ${cadence}`, { x: 0.6, y: 5.7, w: 7.6, fontSize: 12, color: 'E2E8F0', fontFace: BODY });
+    s.addText('CONFIDENTIAL — prepared for the named client', { x: 0.6, y: 6.9, w: 7.6, fontSize: 9, color: '64748B', fontFace: BODY });
+  }
+
+  // 1b · Contents -------------------------------------------------------------
+  {
+    const s = S_(); title(s, 'Auditor pack', 'Contents');
+    if (draft) {
+      s.addShape('roundRect', { x: 0.6, y: 1.3, w: 12.1, h: 0.78, rectRadius: 0.06, fill: { color: 'FBEBE9' }, line: { color: RED, width: 0.75 } });
+      s.addText([{ text: 'This deck is watermarked DRAFT.  ', options: { bold: true, color: RED, fontSize: 11 } }, { text: 'To issue a clean copy to your auditors: open View ▸ Slide Master, delete the diagonal “DRAFT” text and close Master view, then remove the DRAFT ribbon on the cover — or generate a Final version from Nerion.', options: { color: INK, fontSize: 11 } }], { x: 0.8, y: 1.4, w: 11.7, h: 0.6, valign: 'middle', fontFace: BODY });
+    }
+    const toc = [
+      ['1', 'Basis & scope', 'Standard, method, CMMI scale, classification rule'],
+      ['2', 'Executive summary', 'Headline maturity, deficiencies, observations, priority'],
+      ['3', 'Posture at a glance', 'Coverage distribution, strengths and priority gaps'],
+      ['4', 'Methodology & rating scale', 'How each control is scored and classified'],
+      ['5', `${S(payload.groupNoun, 'Family / function')} maturity`, 'Maturity by domain, coloured by classification'],
+      ['6', 'Findings register', 'Every control with score, target and classification'],
+      ['7', 'Detailed findings', 'Condition–criteria–cause–effect–recommendation per deficiency'],
+      ['8', 'Recommendations & roadmap', 'Prioritised, phased 0–3–6–12 month remediation'],
+      ['A/B', 'Appendices', 'Derivation & mapping · evidence register · assurance basis'],
+    ];
+    const rows = toc.map((r, i) => [
+      { text: r[0], options: { bold: true, color: WHITE, fill: { color: NAVY }, fontSize: 11, align: 'center', valign: 'middle', fontFace: HEAD } },
+      { text: r[1], options: { bold: true, color: DEEPNAVY, fill: { color: i % 2 ? PANEL : WHITE }, fontSize: 12, valign: 'middle', fontFace: HEAD } },
+      { text: r[2], options: { color: MUTE, fill: { color: i % 2 ? PANEL : WHITE }, fontSize: 10.5, valign: 'middle', fontFace: BODY } },
+    ]);
+    s.addTable(rows, { x: 0.6, y: draft ? 2.35 : 1.4, w: 12.1, colW: [0.9, 4.0, 7.2], rowH: 0.44, border: { type: 'solid', color: LINE, pt: 0.5 } });
+    footer(s, pg, client);
   }
 
   // 2 · Basis & scope ---------------------------------------------------------
   {
-    const s = S_(); title(s, 'Section 1', 'Basis & scope');
+    const s = S_(); title(s, SEC(), 'Basis & scope');
     const rows = [
       ['Standard', std],
       ['Method', S(payload.method, 'Continuous, evidence-based control assessment. Each control scored on CMMI 0–5 from live tool telemetry and analyzed policies; group scores are the evidence-weighted mean of their children.')],
@@ -114,7 +171,7 @@ async function buildPptxBuffer(payload) {
 
   // 3 · Executive summary -----------------------------------------------------
   {
-    const s = S_(); title(s, 'Section 2', 'Executive summary');
+    const s = S_(); title(s, SEC(), 'Executive summary');
     s.addText(S(payload.execNarrative, S(payload.verdict, `${std} is assessed at CMMI ${overall} of 5 against a ${target} target. ${deficiencies.length} deficienc${deficiencies.length === 1 ? 'y' : 'ies'} and ${observations.length} observation${observations.length === 1 ? '' : 's'} were identified; the roadmap below returns them to target.`)), { x: 0.6, y: 1.25, w: 12.1, h: 2.35, fontSize: 12, color: INK, valign: 'top', fontFace: BODY, lineSpacingMultiple: 1.08 });
     const stats = [
       ['Overall maturity', `${overall} / 5`, clsColor(Number(overall) >= Number(target) ? 'meets' : Number(overall) >= 2.5 ? 'observation' : 'deficiency')],
@@ -132,9 +189,43 @@ async function buildPptxBuffer(payload) {
     footer(s, pg, client);
   }
 
+  // 3a · Posture at a glance (distribution donut + strengths / priority gaps) --
+  {
+    const pop = register.length ? register : findings;
+    if (pop.length) {
+      const s = S_(); title(s, SEC(), 'Posture at a glance');
+      const counts = { 'Meets target': 0, Observation: 0, Deficiency: 0 };
+      pop.forEach((r) => { const c = S(r.classification, classOf(r.score, r.target != null ? r.target : target)); counts[/meet/i.test(c) ? 'Meets target' : /observ/i.test(c) ? 'Observation' : 'Deficiency'] += 1; });
+      const total = counts['Meets target'] + counts.Observation + counts.Deficiency || 1;
+      s.addChart(pptx.ChartType.doughnut, [{ name: 'Posture', labels: ['Meets target', 'Observation', 'Deficiency'], values: [counts['Meets target'], counts.Observation, counts.Deficiency] }], {
+        x: 0.5, y: 1.5, w: 4.6, h: 4.6, holeSize: 62, chartColors: [GREEN, AMBER, RED], showLegend: false, showValue: false, dataBorder: { pt: 2, color: WHITE },
+      });
+      s.addText([{ text: `${Math.round((counts['Meets target'] / total) * 100)}%\n`, options: { fontSize: 30, bold: true, color: GREEN } }, { text: 'meet target', options: { fontSize: 11, color: MUTE } }], { x: 1.55, y: 3.15, w: 2.5, h: 1.2, align: 'center', valign: 'middle', fontFace: HEAD });
+      // legend + counts
+      const leg = [['Meets target', counts['Meets target'], GREEN], ['Observation', counts.Observation, AMBER], ['Deficiency', counts.Deficiency, RED]];
+      leg.forEach((l, i) => {
+        const y = 1.7 + i * 0.5;
+        s.addShape('rect', { x: 5.4, y: y + 0.04, w: 0.22, h: 0.22, fill: { color: l[2] } });
+        s.addText(`${l[0]}`, { x: 5.75, y, w: 2.3, h: 0.34, fontSize: 12, color: INK, valign: 'middle', fontFace: BODY });
+        s.addText(`${l[1]}  ·  ${Math.round((l[1] / total) * 100)}%`, { x: 7.9, y, w: 1.8, h: 0.34, fontSize: 12, bold: true, color: l[2], valign: 'middle', fontFace: HEAD });
+      });
+      // strengths & priority gaps, derived from the register
+      const scored = pop.filter((r) => r.score != null).slice();
+      const byScore = scored.slice().sort((a, b) => Number(b.score) - Number(a.score));
+      const strengths = byScore.slice(0, 3);
+      const gaps = byScore.slice().reverse().slice(0, 3);
+      const colBody = (heading, items, col) => [{ text: heading + '\n', options: { bold: true, color: col, fontSize: 11 } }].concat(
+        items.length ? items.map((r) => ({ text: `${S(r.name, r.ref)}  ·  ${sc1(r.score)}\n`, options: { color: INK, fontSize: 10.5 } })) : [{ text: '—\n', options: { color: MUTE, fontSize: 10.5 } }]);
+      s.addText(colBody('Top strengths', strengths, GREEN), { x: 5.4, y: 3.5, w: 3.6, h: 2.6, valign: 'top', fontFace: BODY, lineSpacingMultiple: 1.15 });
+      s.addText(colBody('Priority gaps', gaps, RED), { x: 9.1, y: 3.5, w: 3.6, h: 2.6, valign: 'top', fontFace: BODY, lineSpacingMultiple: 1.15 });
+      s.addText(`Distribution across ${total} assessed control${total === 1 ? '' : 's'} · target ${target}.`, { x: 0.5, y: 6.65, w: 12, fontSize: 9, color: MUTE, fontFace: BODY });
+      footer(s, pg, client);
+    }
+  }
+
   // 3b · Scope & objectives ---------------------------------------------------
   if (payload.scopeProse) {
-    const s = S_(); title(s, 'Section 3', 'Scope & objectives');
+    const s = S_(); title(s, SEC(), 'Scope & objectives');
     s.addText(String(payload.scopeProse), { x: 0.6, y: 1.3, w: 12.1, h: 3.2, fontSize: 12.5, color: INK, valign: 'top', fontFace: BODY, lineSpacingMultiple: 1.12 });
     const rows = [
       ['Framework', std + (payload.version ? ' ' + payload.version : '')],
@@ -151,7 +242,7 @@ async function buildPptxBuffer(payload) {
 
   // 4 · Approach & CMMI scale -------------------------------------------------
   {
-    const s = S_(); title(s, 'Section 4', 'Methodology & rating scale');
+    const s = S_(); title(s, SEC(), 'Methodology & rating scale');
     s.addText(S(payload.methodologyProse, 'Continuous, evidence-based assessment: each control scored 0–5 from live tool telemetry and analysed policies, rolled up subcategory → category → function/family; mapped frameworks derive from the source assessment via the public crosswalk.'), { x: 0.6, y: 1.3, w: 12.1, h: 1.9, fontSize: 11.5, color: INK, valign: 'top', fontFace: BODY, lineSpacingMultiple: 1.08 });
     const lvl = [['Level', 'Name', 'Meaning'], ['0', 'None', 'No evidence on file'], ['1', 'Initial', 'Ad-hoc / reactive'], ['2', 'Managed', 'Repeatable but not standardized'], ['3', 'Defined', 'Documented & standardized'], ['4', 'Quant. Managed', 'Measured & controlled'], ['5', 'Optimizing', 'Continuously improving']];
     s.addTable(lvl.map((r, i) => r.map((c) => ({ text: c, options: { bold: i === 0, color: i === 0 ? WHITE : INK, fill: { color: i === 0 ? NAVY : (i % 2 ? PANEL : WHITE) }, fontSize: 10.5, fontFace: i === 0 ? HEAD : BODY } }))), { x: 0.6, y: 3.35, w: 7.2, colW: [1.0, 2.2, 4.0], border: { type: 'solid', color: LINE, pt: 0.5 } });
@@ -166,7 +257,7 @@ async function buildPptxBuffer(payload) {
 
   // 5 · Family / function maturity (column chart) -----------------------------
   {
-    const s = S_(); title(s, 'Section 4', `${payload.groupNoun ? payload.groupNoun : 'Family / function'} maturity`);
+    const s = S_(); title(s, SEC(), `${payload.groupNoun ? payload.groupNoun : 'Family / function'} maturity`);
     const gs = groups.slice(0, 12);
     if (gs.length) {
       const chartData = [{ name: 'Maturity', labels: gs.map((g) => g.id), values: gs.map((g) => Number(g.score) || 0) }];
@@ -190,7 +281,7 @@ async function buildPptxBuffer(payload) {
 
   // 5b · Gap analysis (current vs target, per domain) -------------------------
   if (arr(payload.gap).length) {
-    const s = S_(); title(s, 'Section 6', 'Gap analysis · current vs target');
+    const s = S_(); title(s, SEC(), 'Gap analysis · current vs target');
     s.addText(`Each ${S(payload.groupNoun, 'domain').toLowerCase()} is measured against the ${target} target. The gap column quantifies the maturity uplift required, and the priority reflects distance from the deficiency floor — the domains carrying the widest gaps are where the remediation roadmap concentrates first.`, { x: 0.6, y: 1.3, w: 12.1, h: 0.8, fontSize: 11.5, color: INK, valign: 'top', fontFace: BODY });
     const head = [S(payload.groupNoun, 'Domain'), 'Current', 'Target', 'Gap', 'Priority'];
     const rows = [head.map((h) => ({ text: h, options: { bold: true, color: WHITE, fill: { color: NAVY }, fontSize: 9.5, fontFace: HEAD } }))];
@@ -206,7 +297,7 @@ async function buildPptxBuffer(payload) {
 
   // 6 · Findings register (table) ---------------------------------------------
   {
-    const s = S_(); title(s, 'Section 5', 'Findings register');
+    const s = S_(); title(s, SEC(), 'Findings register');
     const head = ['Ref', 'Control', payload.derivedLabel || 'Derived from', 'Maturity', 'Target', 'Classification'];
     const rows = [head.map((h) => ({ text: h, options: { bold: true, color: WHITE, fill: { color: NAVY }, fontSize: 9.5, fontFace: HEAD } }))];
     register.slice(0, 26).forEach((r, i) => {
@@ -222,7 +313,7 @@ async function buildPptxBuffer(payload) {
 
   // 6b · Risk register (findings as rated risks) ------------------------------
   if (arr(payload.riskRegister).length) {
-    const s = S_(); title(s, 'Section 8', 'Risk register · findings as rated risks');
+    const s = S_(); title(s, SEC(), 'Risk register · findings as rated risks');
     s.addText('The findings above are restated here as risks, each rated on likelihood and impact to derive a severity. Severity is what drives the sequencing of the remediation roadmap: the high-severity risks are addressed first, and the treatment column states the control action that reduces each.', { x: 0.6, y: 1.3, w: 12.1, h: 0.8, fontSize: 11.5, color: INK, valign: 'top', fontFace: BODY });
     const head = ['Ref', 'Risk', 'Likelihood', 'Impact', 'Severity', 'Treatment'];
     const rows = [head.map((h) => ({ text: h, options: { bold: true, color: WHITE, fill: { color: NAVY }, fontSize: 9.5, fontFace: HEAD } }))];
@@ -238,7 +329,7 @@ async function buildPptxBuffer(payload) {
 
   // 6c · Detailed findings — framework backbone intro -------------------------
   if (payload.detailedIntro && deficiencies.length) {
-    const s = S_(); title(s, 'Section 9', 'Detailed findings by domain');
+    const s = S_(); title(s, SEC(), 'Detailed findings by domain');
     s.addText(String(payload.detailedIntro), { x: 0.6, y: 1.3, w: 12.1, h: 4.5, fontSize: 12.5, color: INK, valign: 'top', fontFace: BODY, lineSpacingMultiple: 1.14 });
     footer(s, pg, client);
   }
@@ -278,7 +369,7 @@ async function buildPptxBuffer(payload) {
 
   // Prioritized recommendations & phased roadmap (0–3–6–12) -------------------
   {
-    const s = S_(); title(s, 'Section 10', 'Prioritized recommendations & remediation roadmap');
+    const s = S_(); title(s, SEC(), 'Prioritized recommendations & remediation roadmap');
     const rmap = arr(payload.roadmapPhased).length ? arr(payload.roadmapPhased) : roadmap;
     if (rmap.length) {
       s.addText('Recommendations are sequenced worst-first and phased across a 0–3, 3–6 and 6–12 month plan. The near-term phase captures the quick wins that most raise maturity for least effort; the later phases carry the strategic, higher-effort uplifts. Each item carries an owner, an effort estimate and the target maturity uplift on completion.', { x: 0.6, y: 1.3, w: 12.1, h: 0.9, fontSize: 11, color: INK, valign: 'top', fontFace: BODY });
