@@ -1244,6 +1244,11 @@
     document.querySelectorAll('#mapBody .mapadd').forEach(function(s){s.addEventListener('change',function(){if(!this.value)return;var ai=+this.dataset.ai,pn=decodeURIComponent(this.value);if(APP[ai].processes.indexOf(pn)<0)APP[ai].processes.push(pn);renderMap();});});
     document.querySelectorAll('#mapBody .procfn').forEach(function(inp){inp.addEventListener('change',function(){var pi=+this.dataset.pi;if(PROC[pi])PROC[pi].func=this.value.trim()||null;renderMap();});});
     requestAnimationFrame(drawMap);
+    // The map can be rendered while its tab is hidden (0 height) — drawMap would then
+    // collapse every connector line to a point. Redraw whenever #cjmap gains/changes
+    // size (tab becomes visible, window resize, fonts load), so the lines always
+    // reflect the real layout. #cjmap is rebuilt each render, so re-observe it.
+    if(window.ResizeObserver){try{if(window.__cjmapRO)window.__cjmapRO.disconnect();window.__cjmapRO=new ResizeObserver(function(){drawMap();});var _m=document.getElementById('cjmap');if(_m)window.__cjmapRO.observe(_m);}catch(_){}}
     var bd=document.getElementById('bmap');bd.textContent='✓ '+cjs.length+' crown jewels';bd.classList.add('done');
   }
   function drawMap(){
@@ -1554,6 +1559,9 @@
     if(nav&&btn){if(idx>=0&&idx<tabs.length-1){var nx=tabs[idx+1];btn.textContent='Continue to '+nx.l+' →';btn.onclick=function(){obShow(nx.k);};nav.style.display='';}else{nav.style.display='none';}}
     // Progress bar — how much the user has actually COMPLETED (not just position).
     obUpdateProgress();
+    // If we just revealed the crown-jewel map, redraw its connector lines against the
+    // now-visible layout (they collapse to a point if drawn while the tab was hidden).
+    try{var _ms=document.getElementById('mapSec');if(_ms&&_ms.style.display!=='none'&&document.getElementById('cjmap')&&typeof drawMap==='function')requestAnimationFrame(drawMap);}catch(_){}
     try{window.scrollTo({top:0});}catch(_){}}
   (function buildObTabs(){
     var host=document.getElementById('obtabs');if(!host)return;
