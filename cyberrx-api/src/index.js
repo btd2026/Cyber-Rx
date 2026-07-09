@@ -419,6 +419,9 @@ app.use('/api/frameworks',        [apiGetLimiter, apiPostLimiter], require('./ro
 app.use('/api/connectors',        [apiPostLimiter], require('./routes/connectorTest'));
 // Control-aware connector onboarding — manifests, validation, readiness.
 app.use('/api/connectors',        [apiGetLimiter, apiPostLimiter], require('./routes/connectorOnboarding'));
+// OAuth one-click connect (Entra/Okta/Google/GitHub) — degrades to the manual
+// credential form until each provider app is registered (env not set).
+app.use('/api/oauth',             [apiGetLimiter], require('./routes/oauth'));
 app.use('/api/documents',         [apiPostLimiter], require('./routes/documents'));
 app.use('/api/notify',            [apiGetLimiter, apiPostLimiter], require('./routes/notify'));
 app.use('/api/siem',              [apiGetLimiter], require('./routes/siemIncidents'));
