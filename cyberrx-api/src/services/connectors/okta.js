@@ -13,11 +13,13 @@
 
 const { http, jsonOrThrow, nowIso } = require('./http');
 
-const base = (creds) => String(creds.orgUrl || '').replace(/\/+$/, '');
-const authH = (creds) => ({ Authorization: `SSWS ${creds.apiToken}`, Accept: 'application/json' });
+const base = (creds) => String(creds.orgUrl || creds.domain || '').replace(/\/+$/, '');
+// One-click OAuth → Bearer access token; classic API token → SSWS.
+const bearer = (creds) => (creds.oauth && creds.oauth.access_token) || creds.access_token || null;
+const authH = (creds) => ({ Authorization: bearer(creds) ? `Bearer ${bearer(creds)}` : `SSWS ${creds.apiToken}`, Accept: 'application/json' });
 
 async function test(creds) {
-  if (!creds.orgUrl || !creds.apiToken) throw new Error('Okta org URL and API token are required.');
+  if (!base(creds) || !(creds.apiToken || bearer(creds))) throw new Error('Okta org URL and an API token (or OAuth connection) are required.');
   await jsonOrThrow(await http(`${base(creds)}/api/v1/users?limit=1`, { headers: authH(creds) }), 'Okta');
   return { ok: true, detail: 'Authenticated to the Okta API.' };
 }

@@ -10,6 +10,10 @@
 const { http, jsonOrThrow, nowIso } = require('./http');
 
 async function token(creds) {
+  // One-click OAuth: use the delegated Graph token directly, no client-credentials.
+  if (creds && ((creds.oauth && creds.oauth.access_token) || creds.access_token)) {
+    return (creds.oauth && creds.oauth.access_token) || creds.access_token;
+  }
   const body = new URLSearchParams({
     client_id: creds.clientId, client_secret: creds.clientSecret,
     scope: 'https://graph.microsoft.com/.default', grant_type: 'client_credentials',
