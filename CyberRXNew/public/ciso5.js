@@ -3144,6 +3144,40 @@ function caFetch(){
   }catch(_){C5_CA_BUSY=false;C5_CA_RESULTS={};}
 }
 /* Build the framework tree with real roll-ups. Returns {groups, overall, coverage, failing, all}. */
+/* ============================================================================
+   Design-effectiveness review (auditor document test). For controls that can't
+   be proven by telemetry, the engine reviews the governing policy/standard/SOP
+   the way an auditor tests DESIGN: it decomposes the control objective into the
+   specific things the document must address, then checks each is covered — and
+   covered APPROPRIATELY. Here we surface that checklist so the reviewer sees
+   exactly how the engine reviews the document.
+   ============================================================================ */
+var C5_DESIGN=null, C5_DESIGN_BUSY=false;
+function designFetch(){
+  if(C5_DESIGN_BUSY||C5_DESIGN)return;
+  C5_DESIGN_BUSY=true;
+  try{
+    var base=(typeof apiBase==='function')?apiBase():'';
+    fetch(base+'/api/control-assessment/design/criteria',{headers:{'Accept':'application/json'}})
+      .then(function(r){return r&&r.ok?r.json():null;})
+      .then(function(d){C5_DESIGN_BUSY=false;var m={};if(d&&d.controls){d.controls.forEach(function(c){if(c&&c.control_id)m[c.control_id]=c;});}C5_DESIGN=m;try{if(typeof c5Frameworks==='function')c5Frameworks();}catch(_){}})
+      .catch(function(){C5_DESIGN_BUSY=false;C5_DESIGN={};});
+  }catch(_){C5_DESIGN_BUSY=false;C5_DESIGN={};}
+}
+/* The design-test view for a control: the auditor checklist (what the engine
+   looks for in the document) + how appropriateness is judged. Empty string for
+   controls that carry no design criteria (pure telemetry controls). */
+function c5DesignSection(controlId){
+  if(!C5_DESIGN){if(typeof designFetch==='function')designFetch();return '';}
+  var d=C5_DESIGN[controlId];if(!d)return '';
+  var rows=(d.criteria||[]).map(function(c){
+    return '<div class="drow" style="align-items:flex-start"><div class="drow-h"><span class="cap-dot" style="background:var(--muted)"></span><b>'+c5esc(c.text)+'</b>'+(c.required?'':' <span style="color:var(--muted);font-size:11px">· recommended</span>')+'</div><div class="drow-need">✓ covered appropriately when: '+c5esc(c.expectation||'the element is addressed')+'</div></div>';
+  }).join('');
+  var docs=(d.primary_document_types&&d.primary_document_types.length)?('<b>'+d.primary_document_types.map(c5esc).join(' / ')+'</b>'):'the governing policy / standard / SOP';
+  return '<div class="ev-sec">Design-effectiveness review · how the engine reads your document</div>'+
+    '<div class="drill-p" style="color:var(--ink-2)">This control is proven by <b>document design</b>, not telemetry. The engine reviews '+docs+' like an auditor: it locates <b>where</b> each element of the control objective is addressed and judges whether it is covered <b>appropriately</b> — mentioning a topic is not enough. Below are the '+((d.criteria||[]).length)+' elements it checks. Upload the document under <b>Documents reviewed</b> to run the review and see, per element, the exact passage found and the pass/fail.</div>'+
+    '<div style="margin-top:8px">'+rows+'</div>';
+}
 function c5fwTree(sel,cov){
   var groups=[],all=[],evidenced=0,catalogTotal=0;
   function ctl(id,name,mapped){var cc=controlCmmi(id,cov);all.push(cc.score);if(cc.src!=='none')evidenced++;
@@ -3241,6 +3275,7 @@ function c5fwFinding(sel,node){
   h+='<div class="ev-sec">Effect (risk)</div><div class="drill-p">'+F.effect+'</div>';
   h+='<div class="ev-sec">Recommendation</div><div class="drill-p">'+F.recommendation+(F.targetUplift?(' — target uplift '+F.targetUplift+'.'):'')+'</div>';
   if(F.mappings&&F.mappings.length){h+='<div class="ev-sec">Cross-framework</div><div class="drill-p">'+F.mappings.map(function(id){return '<span class="c5fw-chip">'+id+'</span>';}).join('')+'</div>';}
+  h+=c5DesignSection(node.id);
   h+='</div>';
   return h;
 }
@@ -4396,7 +4431,9 @@ function c5fwCtlRow(c){var selc=(C5FW_CTRL===c.id)?' sel':'';
   if(c.src==='native'||c.src==='native-pending'){
     var rel=(c.related&&c.related.length)?('<div class="c5fw-map">related (informational) · '+c.related.slice(0,6).join(' · ')+'</div>'):'';
     var dcol=c.tested?c5fwCol(c.score):'muted';
-    return '<div class="c5fw-crow'+selc+'" data-c5fwctl="'+c.id+'"><span class="c5fw-tw"></span><span class="c5fw-dot" style="background:var(--'+dcol+')"></span><span class="c5fw-id">'+c.id+'</span><span class="c5fw-nm">'+c.name+rel+'</span>'+caStatusPill(c.status)+'</div>';
+    // Show the CMMI score AND the native operating-effectiveness status side by side.
+    var cmmiCell=c.tested?('<span class="c5fw-lvl">'+c5fwLvl(c.score)+'</span><span class="c5fw-sc" style="color:var(--'+dcol+')">'+c.score.toFixed(1)+'</span>'):('<span class="c5fw-sc" style="color:var(--muted)">—</span>');
+    return '<div class="c5fw-crow'+selc+'" data-c5fwctl="'+c.id+'"><span class="c5fw-tw"></span><span class="c5fw-dot" style="background:var(--'+dcol+')"></span><span class="c5fw-id">'+c.id+'</span><span class="c5fw-nm">'+c.name+rel+'</span>'+cmmiCell+' '+caStatusPill(c.status)+'</div>';
   }
   var col=c5fwCol(c.score);
   var mapped=(c.mapped&&c.mapped.length)?('<div class="c5fw-map">mapped ← '+c.mapped.slice(0,6).map(function(id){return id;}).join(' · ')+'</div>'):'';

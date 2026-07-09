@@ -14,6 +14,7 @@ const evidenceModel = require('./evidenceModel');
 const enrichment = require('./enrichment');
 const history = require('./history');
 const exportCsv = require('./exportCsv');
+const design = require('./design');
 const { REGISTRIES, FRAMEWORK_KEYS } = require('./registries');
 
 module.exports = {
@@ -22,6 +23,7 @@ module.exports = {
   buildEvidence: enrichment.buildEvidence,
   history,
   exportCsv,
+  design, // DESIGN-effectiveness (auditor document review)
   REGISTRIES,
   FRAMEWORK_KEYS,
 };

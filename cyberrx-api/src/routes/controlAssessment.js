@@ -50,6 +50,31 @@ router.get('/', async (req, res) => {
   }
 });
 
+// The auditor design-effectiveness checklists — what the engine looks for in a
+// policy/standard/SOP for each document-assessed control. No document required.
+router.get('/design/criteria', (req, res) => {
+  try {
+    const id = req.query.control_id;
+    if (id) { const c = CA.design.checklist(id); return c ? res.json(c) : res.status(404).json({ error: 'no criteria for ' + id }); }
+    res.json({ controls: CA.design.allChecklists() });
+  } catch (e) { res.status(500).json({ error: 'criteria failed' }); }
+});
+
+// Run the design-effectiveness review of a document against a control's criteria.
+// POST { control_id, document_text, document_name?, document_type? }
+router.post('/design/review', express.json({ limit: '4mb' }), (req, res) => {
+  try {
+    const b = req.body || {};
+    if (!b.control_id) return res.status(400).json({ error: 'control_id required' });
+    if (!CA.design.CRITERIA[b.control_id]) return res.status(404).json({ error: 'no design criteria for ' + b.control_id });
+    const result = CA.design.reviewById(b.control_id, b.document_text || '', { document_name: b.document_name, document_type: b.document_type });
+    res.json(result);
+  } catch (e) {
+    if (logger && logger.warn) logger.warn('design review failed', { error: e.message });
+    res.status(500).json({ error: 'design review failed' });
+  }
+});
+
 router.get('/export.csv', (req, res) => {
   try {
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
