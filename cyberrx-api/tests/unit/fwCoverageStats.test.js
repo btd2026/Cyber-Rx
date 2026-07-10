@@ -42,7 +42,7 @@ describe('Coverage-stats drawer (c5FwEvidenceStats) — data-driven', () => {
     expect(stats).toContain('To close the gap');
     expect(stats).toMatch(/Upload <b>'\+docg\.map/);
     expect(stats).toMatch(/Connect <b>'\+tg\.map/);
-    expect(stats).toContain('then press <b>↻ Re-score documents</b>');
+    expect(stats).toContain('then press <b>↻ Recompute</b>');
   });
   it('handles the framework-native path (natively assessed / not yet tested)', () => {
     expect(stats).toMatch(/Natively assessed',sc\.native/);

@@ -4208,11 +4208,11 @@ function c5fwSource(node){
     // fix is unambiguous (never a bare "Non-existent").
     var decl=(typeof FW_CTRL_SRC!=='undefined')?FW_CTRL_SRC[node.id]:null;
     if(decl&&decl.k==='d'){var dl=(typeof FW_DOC_LABEL!=='undefined'&&FW_DOC_LABEL[decl.s])||'the governing policy';
-      h+='<div class="c5fw-src c5fw-src-none"><span class="c5fw-srcic">📄</span><div>Not evidenced yet · evidenced by <b>document review</b> of your <b>'+c5esc(dl)+'</b>. Upload it in onboarding, then press <b>↻ Re-score documents</b>.</div></div>';}
+      h+='<div class="c5fw-src c5fw-src-none"><span class="c5fw-srcic">📄</span><div>Not evidenced yet · evidenced by <b>document review</b> of your <b>'+c5esc(dl)+'</b>. Upload it in onboarding, then press <b>↻ Recompute</b>.</div></div>';}
     else if(decl&&decl.k==='t'){var c=(typeof CAP_BY_KEY!=='undefined')?CAP_BY_KEY[decl.s]:null,tn=(c&&c.tool)||'the source tool';
       h+='<div class="c5fw-src c5fw-src-none"><span class="c5fw-srcic">🔌</span><div>Not evidenced yet · evidenced by <b>telemetry</b> from <b>'+c5esc(tn)+'</b>. Connect it under “Connect your systems”.</div></div>';}
     else if(node.r53fam){ // 800-53 control whose governing policy isn't evidenced yet
-      h+='<div class="c5fw-src c5fw-src-none"><span class="c5fw-srcic">📄</span><div>Not evidenced yet · assessed via <b>800-53 ↔ CSF crosswalk</b> of your <b>'+c5esc(node.r53doc||'governing policy')+'</b>. Upload it in onboarding, then press <b>↻ Re-score documents</b>.</div></div>';}
+      h+='<div class="c5fw-src c5fw-src-none"><span class="c5fw-srcic">📄</span><div>Not evidenced yet · assessed via <b>800-53 ↔ CSF crosswalk</b> of your <b>'+c5esc(node.r53doc||'governing policy')+'</b>. Upload it in onboarding, then press <b>↻ Recompute</b>.</div></div>';}
     else h+='<div class="c5fw-src c5fw-src-none"><span class="c5fw-srcic">—</span><div>No evidence source declared for this control.</div></div>';
   }
   return h;
@@ -4793,11 +4793,25 @@ function c5FwEvidenceStats(T,sel){
         (docg.length?('Upload <b>'+docg.map(function(x){return c5esc(x.label)+' ('+x.n+')';}).join('</b>, <b>')+'</b>'):'')+
         (docg.length&&tg.length?'<br>':'')+
         (tg.length?('Connect <b>'+tg.map(function(x){return c5esc(x.label)+' ('+x.n+')';}).join('</b>, <b>')+'</b>'):'')+
-        ' — then press <b>↻ Re-score documents</b> in the header.</div>';}}
+        ' — then press <b>↻ Recompute</b> in the header.</div>';}}
   }
   h+='<div class="c5foot">Coverage for '+(((typeof FW_NAMES!=='undefined')&&FW_NAMES[sel])||'this framework')+'. Every control traces to its source — open any control in the tree for its evidence.</div>';
   return h;
 }
+/* The finalized auditor report the user uploads once they're satisfied — replaces the
+   old "Final (no watermark)" export. When one is on file, the auditor pack exports
+   without the DRAFT watermark. Stored per browser (metadata only — name + date). */
+function c5fwFinal(){try{return JSON.parse(localStorage.getItem('cyberrx_report_final')||'null');}catch(_){return null;}}
+function c5fwUploadFinal(){
+  try{
+    var inp=document.createElement('input');inp.type='file';inp.accept='.pptx,.pdf,.docx,.xlsx';
+    inp.onchange=function(){var f=inp.files&&inp.files[0];if(!f)return;
+      try{localStorage.setItem('cyberrx_report_final',JSON.stringify({name:f.name,date:new Date().toLocaleDateString()}));}catch(_){}
+      if(typeof c5Frameworks==='function')c5Frameworks();};
+    inp.click();
+  }catch(_){}
+}
+function c5fwClearFinal(){try{localStorage.removeItem('cyberrx_report_final');}catch(_){}if(typeof c5Frameworks==='function')c5Frameworks();}
 /* Program Health dispatcher — renders the tab strip, then the active panel.
    Lazy-mounts: the island is only built while "Nerion's View" is active. */
 function c5Frameworks(){
@@ -4845,7 +4859,16 @@ function c5FrameworksClassic(host){
     '<div class="c5card" data-c5fwcard="failing"><div class="c5card-top"><span class="c5card-l">Controls failing</span><span class="c5chip c5-computed">computed</span></div><div class="c5card-v" style="color:var(--'+(T.failing>0?'crit':'good')+')">'+T.failing+'</div><div class="cn">deficiencies (below CMMI '+C5FW_FLOOR+')</div></div>'+
     '</div>';
   var pills='<div class="c5fw-pills">'+[['csf','NIST CSF 2.0'],['r53','NIST 800-53'],['soc2','SOC 2'],['hipaa','HIPAA'],['cis','CIS v8'],['iso','ISO 27001']].map(function(o){return '<button class="c5fw-pill'+(sel===o[0]?' on':'')+'" data-c5fwsel="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div>';
-  var cadCtrl='<div class="c5fw-controls"><div class="c5fw-cad"><span style="font-size:11px;color:var(--muted);margin-right:2px">Reassess:</span>'+[['weekly','Weekly'],['monthly','Monthly'],['quarterly','Quarterly']].map(function(o){return '<button class="c5fw-cadb'+(cad===o[0]?' on':'')+'" data-c5fwcad="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div><div style="display:flex;gap:8px"><button class="c5btn" onclick="c5fwExport(false)" title="Draft — DRAFT watermark on every slide">Auditor pack (PPTX · Draft)</button><button class="c5btn" onclick="c5fwExport(true)" title="Final — no watermark, ready to hand to auditors" style="background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line)">· Final (no watermark)</button><button class="c5btn" onclick="c5fwExportXlsx()" style="background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line)">Control scorecard + POA&amp;M (XLSX)</button></div></div>';
+  var fin=c5fwFinal();
+  var cadCtrl='<div class="c5fw-controls"><div class="c5fw-cad"><span style="font-size:11px;color:var(--muted);margin-right:2px">Reassess:</span>'+[['weekly','Weekly'],['monthly','Monthly'],['quarterly','Quarterly']].map(function(o){return '<button class="c5fw-cadb'+(cad===o[0]?' on':'')+'" data-c5fwcad="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div><div style="display:flex;gap:8px;align-items:center">'+
+    // Auditor pack — DRAFT watermark until a final report is uploaded, then no watermark.
+    '<button class="c5btn" onclick="c5fwExport('+(fin?'true':'false')+')" title="'+(fin?'Final — no watermark, ready to hand to auditors':'Draft — DRAFT watermark on every slide')+'">Auditor pack (PPTX'+(fin?'':' · Draft')+')</button>'+
+    // Upload Final — attach the finalized report to remove the draft state.
+    (fin
+      ? '<button class="c5btn" onclick="c5fwUploadFinal()" title="Final report on file: '+c5esc(fin.name)+' ('+c5esc(fin.date)+') — click to replace" style="background:color-mix(in srgb,var(--good) 12%,var(--surface));color:var(--good);border:1px solid color-mix(in srgb,var(--good) 35%,var(--line))">✓ Final on file · '+c5esc(String(fin.name).slice(0,22))+'</button>'
+      : '<button class="c5btn" onclick="c5fwUploadFinal()" title="Upload your finalized report to remove the draft watermark" style="background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line)">↥ Upload Final</button>')+
+    '<button class="c5btn" onclick="c5fwExportXlsx()" style="background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line)">Scorecard + POA&amp;M</button>'+
+    '</div></div>';
   // tree
   var tree='<div class="c5fw-tree">'+T.groups.map(function(g){var open=!!C5FW_EXP[g.id];var gc=c5fwCol(g.score),gs=c5fwStatus(g.score);
     var inner='';
@@ -4872,7 +4895,6 @@ function c5FrameworksClassic(host){
     '<div class="c5fw-refresh" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"><span>Refreshed <b>'+cad+'</b> · last assessed <b>'+fmt(now)+'</b> · next refresh <b>'+fmt(nextD)+'</b></span>'+
       '<span style="display:flex;gap:8px">'+
       '<button id="c5fwStatsBtn" type="button" style="border:1px solid var(--line);background:var(--surface);color:var(--ink-2);font-weight:600;font-size:12px;padding:6px 12px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:6px">📊 Coverage stats'+(function(){var s=c5fwSrcCounts(T);return s.none>0?(' · '+s.none+' to close'):'';})()+'</button>'+
-      '<button id="c5reanalyzeBtn" type="button" style="border:1px solid var(--line);background:var(--surface);color:var(--ink-2);font-weight:600;font-size:12px;padding:6px 12px;border-radius:8px;cursor:pointer">↻ Re-score documents</button>'+
       '<button id="c5docsBtn" type="button" style="border:1px solid var(--line);background:var(--surface);color:var(--blue);font-weight:600;font-size:12px;padding:6px 12px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:6px">📄 Documents reviewed'+(function(){var n=(typeof c5DocCount==="function")?c5DocCount():0;return n?(' · '+n):"";})()+'</button></span></div>'+
     pills+
     cards+
