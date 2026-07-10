@@ -231,6 +231,24 @@ var C5_SYSTEMS=[
   {key:'financial',label:'Financial close'}
 ];
 function c5sysLabel(key,override){if(override)return override;for(var i=0;i<C5_SYSTEMS.length;i++){if(C5_SYSTEMS[i].key===key)return C5_SYSTEMS[i].label;}return key;}
+/* Shared per-service critical-service records — one source for the COO Recovery AND
+   Resilience tabs so RTO/RPO/failover can't drift between them. The customer-platform row
+   wires to live resilience signals (worst RTO · rpo_minutes · identity deployment); the
+   other four are Modeled sample rows until per-service recovery telemetry connects. Returns
+   the Recovery-tab shape {n,dep,rto,tgt,rpo,rtgt,live,root,failover}. */
+function c5CriticalServices(){
+  var R=(typeof LIVE!=='undefined'&&LIVE&&LIVE.resilience)||{};
+  var rtoTgt=4,rpoTgt=60;
+  var worst=R.worst_recovery_hours,rtoConn=worst!=null;
+  var rpoMin=(typeof sig==='function')?sig('rpo_minutes'):null,rpoConn=rpoMin!=null;
+  var idP=(typeof c5avgDeploy==='function')?c5avgDeploy(['mfa','pam']):null,idConn=idP!=null,idPct=idConn?idP:78;
+  return [
+    {n:c5sysLabel('customer',R.worst_recovery_service||null),dep:'GreenLake billing · identity recovery '+idPct+'%',rto:(rtoConn?worst:24),tgt:rtoTgt,rpo:(rpoConn?rpoMin:15),rtgt:rpoTgt,live:(rtoConn&&rpoConn),root:true,failover:'No failover'},
+    {n:c5sysLabel('payments'),dep:'Core processor',rto:2,tgt:4,rpo:5,rtgt:30,live:false,failover:'Backup ready'},
+    {n:c5sysLabel('fulfillment'),dep:'WMS · logistics',rto:3,tgt:8,rpo:30,rtgt:60,live:false,failover:'Backup ready'},
+    {n:c5sysLabel('supply'),dep:'3PL vendors',rto:6,tgt:12,rpo:60,rtgt:240,live:false,failover:'Partial alternative'},
+    {n:c5sysLabel('financial'),dep:'ERP',rto:4,tgt:24,rpo:240,rtgt:1440,live:false,failover:'Backup ready'}
+  ];}
 /* Shared identity-fix / decision config — the cost (derived from the live exposure model
    via the top driver, never retyped), plus the fixed timeline, owner and framing. The COO
    Recovery/Vendors, the CIO Tech-estate and the Decisions tabs all read this so the
@@ -3862,18 +3880,48 @@ function c5crDecisions(){
 /* Tab 01 — Operational resilience */
 function c5coResilience(){
   var host=document.getElementById('co-resilience');if(!host)return;
-  var P=c5Processes(),TD=c5TopDriver(),dm=c5get(TD.mid),tp=c5get('thirdparty_risk');var V=c5vendors();var tvName=V.worst?V.worst.name:'a vendor';
-  var atPill=P.atRisk>0?'a':'g';
+  var demo=(typeof signalsAreDemo==='function')&&signalsAreDemo();
+  var svc=c5CriticalServices(),IDF=c5IdFix();
+  function durH(h){return (typeof hrsToStr==='function')?hrsToStr(h):(h+'h');}
+  var total=svc.length,onN=svc.filter(function(s){return s.rto<=s.tgt;}).length,offN=total-onN;
+  var spofN=svc.filter(function(s){return /no failover/i.test(s.failover);}).length;
+  var worstSvc=svc.filter(function(s){return s.rto>s.tgt;}).sort(function(a,b){return (b.rto-b.tgt)-(a.rto-a.tgt);})[0]||null;
+  // ── honest headline — DERIVED from continuity, never a self-graded "Strong" over a 6× miss ──
+  var head=(offN===0)?'Every critical service can recover within its continuity target.'
+    :(worstSvc?(onN+' of '+total+' critical services stay within target — but '+worstSvc.n.toLowerCase()+' can’t recover in time ('+durH(worstSvc.rto)+' vs a '+worstSvc.tgt+'h target) and has no failover.'):(offN+' critical services are over their continuity target.'));
+  var support='Per-service continuity — can each critical service keep running, or recover in time, through a cyber disruption? '+(worstSvc?('The '+worstSvc.n.toLowerCase()+' is the single point of failure; its recovery depends on the same '+IDF.short+' gap.'):'')+' Each service traces to its recovery evidence.';
+  // ── three metric cards (custom, reconciled to the matrix) ──
+  function rcard(mid,title,val,pill,pillCls,valCol,sub){return '<div class="c5card" data-c5m="'+mid+'"><div class="c5card-top"><span class="c5card-l">'+c5esc(title)+'</span><span class="c5pill '+pillCls+'" style="font-size:9px">'+c5esc(pill)+'</span></div><div class="c5card-v" style="color:var(--'+(valCol||'ink')+')">'+c5esc(String(val))+'</div><div class="c5esub" style="font-size:11px;color:var(--muted);margin-top:2px">'+c5esc(sub)+'</div></div>';}
+  var cards='<div class="c5cards">'+
+    rcard('coo_recovery_ready','Continuity',(offN===0?'On target':'At risk'),'Computed','n',(offN===0?'good':'warn'),onN+' of '+total+' services within target')+
+    rcard('coo_rto','Slowest recovery',(worstSvc?durH(worstSvc.rto):durH(svc.map(function(s){return s.rto;}).sort(function(a,b){return b-a;})[0]||0)),'Live','g',(worstSvc?'crit':'good'),(worstSvc?('vs a '+worstSvc.tgt+'h target'):'within target'))+
+    rcard(IDF.mid,'Single point of failure',spofN,'Computed','r',(spofN>0?'crit':'good'),(worstSvc?(worstSvc.n+' · no failover'):'no unmitigated SPOF'))+
+    '</div>';
+  // ── per-service continuity matrix ──
+  var mRows=svc.slice().sort(function(a,b){return (b.rto-b.tgt)-(a.rto-a.tgt);}).map(function(s){var ok=s.rto<=s.tgt;var mid=s.root?IDF.mid:'coo_rto';
+    return '<div class="c5prow" data-c5m="'+mid+'" style="cursor:pointer">'+
+      '<div style="flex:1;min-width:0"><div class="c5row-t">'+c5esc(s.n)+'</div><div class="c5row-s">'+c5esc(s.dep+' · '+s.failover)+'</div></div>'+
+      '<div style="text-align:right;flex:none;min-width:78px;margin-right:12px"><div style="font-weight:600;color:var(--'+(ok?'good':'crit')+')">'+c5esc(durH(s.rto))+'</div><div style="font-size:10.5px;color:var(--muted)">RTO target '+s.tgt+'h</div></div>'+
+      '<span class="c5pill '+(ok?'g':'r')+'" style="flex:none">'+(ok?'Within target':'At risk')+'</span></div>';
+  }).join('');
+  var matrix='<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:16px 0 8px"><span style="font-size:12.5px;font-weight:600;color:var(--ink)">Continuity by critical service — recover within target</span><span style="font-size:11px;color:var(--muted)">Sorted by risk</span></div><div class="c5card" style="padding:2px 14px">'+mRows+'</div>';
+  // ── "if it goes down" impact strip (shared cross-cutting figures) ──
+  var xh=c5xDowntimeHr(),sep='<span style="color:var(--line)">·</span>';
+  var illus='<span class="c5pill n" style="font-size:9px">Illustrative</span>';
+  var strip='<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-top:14px;padding:12px 16px;border-radius:12px;background:var(--surface-2)">'+
+    '<span style="font-size:12px;color:var(--ink-2);font-weight:600">If the customer platform goes down:</span>'+
+    '<span style="font-size:12.5px;color:var(--crit);font-weight:600">'+xh.str+' at risk</span>'+sep+
+    '<span style="font-size:12px;color:var(--muted)">'+c5xCustomers()+'</span>'+sep+
+    '<span style="font-size:12px;color:var(--muted)">no failover</span>'+illus+'</div>';
+  var evSrcs=[{label:'Recovery-time (RTO) evidence',connected:svc[0].live},{label:'Per-service continuity mapping',connected:true},{label:'Failover / alternate-source status',connected:true},{label:'Identity recovery model',connected:c5get(IDF.mid).connected}];
+  var connN=evSrcs.filter(function(s){return s.connected;}).length;
   host.innerHTML=c5header()+
-    c5shell('Operational resilience · can we keep running?','Operations are resilient — one process carries the only real risk.',null,'Your critical operations are healthy and continuity-ready. Of your critical processes, most are resilient; the customer platform carries a single cyber exposure — '+TD.short+'. Every figure traces to its source.')+
-    '<div class="c5cards">'+c5card('coo_resilience')+c5card('coo_processes')+c5card('coo_recovery_ready')+'</div>'+
-    '<div class="c5tiles">'+
-      c5tile('coo_bc','g','Ready','Recovery plans tested this quarter')+
-      c5tile('thirdparty_risk','a','Flagged',(tp.connected?('Rating to watch · touches operations'):'add your tier-1/2 vendors'))+
-      c5tile('coo_rto','g','Recovery','Time to recover the slowest critical service')+
-    '</div>'+
-    c5bl('Bottom line','Protect the one process that can’t go down.',null,(dm.connected?('The customer platform is your most critical process, and its only real cyber exposure is an '+TD.short+' gap ('+dm.displayValue+'). The fix is funded — it protects both uptime and recovery.'):'Connect your controls and the one exposure to your most critical process — an '+TD.short+' gap — surfaces here, with its funded fix.'),{mid:TD.mid,txt:'Fund the '+c5esc(TD.short)+' fix — protects uptime'})+
-    '<div class="c5foot">Resilience and recovery figures trace to source.</div>';
+    c5shell('Operational resilience · can we keep running?',head,(offN>0?'warn':null),support)+
+    cards+
+    matrix+
+    strip+
+    c5bl('The decision','Give the single point of failure a failover, and fund the fix its recovery depends on.',null,(IDF.usd?('The '+(worstSvc?worstSvc.n.toLowerCase():'customer platform')+' can’t recover in time and has no alternative. Fund the '+IDF.short+' fix ('+IDF.usd+' · '+IDF.owner+' · '+IDF.timeline+') — it restores the access path recovery depends on — and add a failover so a single outage can’t stop the business.'):'Connect your controls and the single point of failure — the customer platform — surfaces here with its funded fix.'),{mid:IDF.mid,txt:'Fund the identity fix — protects continuity'})+
+    '<div class="c5foot">Per-service RTO from your recovery evidence; failover status + downtime impact are illustrative until wired. · '+connN+' sources connected'+(demo?' · demo':'')+'</div>';
 }
 /* Tab 02 — Critical process health */
 function c5coProcesses(){
@@ -3986,18 +4034,11 @@ function c5coRecovery(){
   //    to live signals (worst RTO · rpo_minutes · identity deployment %); the other four are
   //    Illustrative sample rows until per-service recovery telemetry connects. Row status is
   //    COMPUTED (RTO ≤ target), never hard-coded. Same five services as the Resilience tab. ──
-  // Service names come from the shared C5_SYSTEMS source (customer platform keeps its live
-  // worst_recovery_service label when present) so the five systems stay identical across seats.
-  var cpSvc=c5sysLabel('customer',(R&&R.worst_recovery_service)||null);
+  // Services come from the shared c5CriticalServices() source (same five, live customer row),
+  // so Recovery and Resilience can't drift. idPct/cpName kept for this tab's copy.
   var cpName=(R&&R.worst_recovery_service)?R.worst_recovery_service:('the '+c5sysLabel('customer').toLowerCase());
   var idPct=idConn?idP:78;
-  var services=[
-    {n:cpSvc,dep:'GreenLake billing · identity recovery '+idPct+'%',rto:(rtoConn?worst:24),tgt:rtoTgt,rpo:(rpoConn?rpoMin:15),rtgt:rpoTgt,live:(rtoConn&&rpoConn),root:true},
-    {n:c5sysLabel('payments'),dep:'Core processor',rto:2,tgt:4,rpo:5,rtgt:30,live:false},
-    {n:c5sysLabel('fulfillment'),dep:'WMS · logistics',rto:3,tgt:8,rpo:30,rtgt:60,live:false},
-    {n:c5sysLabel('supply'),dep:'3PL vendors',rto:6,tgt:12,rpo:60,rtgt:240,live:false},
-    {n:c5sysLabel('financial'),dep:'ERP',rto:4,tgt:24,rpo:240,rtgt:1440,live:false}
-  ];
+  var services=c5CriticalServices();
   function rtoC(h){return h>=24?durH(h):(h+'h');}
   function rpoC(m){return m>=120?durM(m):(m+'m');}
   var svcTotal=services.length,svcOn=services.filter(function(s){return s.rto<=s.tgt;}).length;
@@ -4075,18 +4116,21 @@ function c5coRecovery(){
 /* Tab 05 — Decisions for the COO */
 function c5coDecisions(){
   var host=document.getElementById('co-decisions');if(!host)return;
-  var TD=c5TopDriver(),dm=c5get(TD.mid),tp=c5get('thirdparty_risk');
+  var TD=c5TopDriver(),dm=c5get(TD.mid),tp=c5get('thirdparty_risk'),IDF=c5IdFix();
   var list=[
-    c5dec('co',1,'Fund the '+TD.short+' fix?','It protects customer-platform uptime and recovery — your most critical process'+(dm.connected?(' ('+dm.displayValue+')'):'')+'.',
-      {on:'Fund it — protect uptime & recovery',osum:(dm.connected?('Protects your most critical process · −'+dm.displayValue):'Protects your most critical process'),pros:['Protects uptime and recovery of the customer platform.','Closes the slowest link in a platform recovery.'],cons:['Requires funding this cycle.']}),
-    c5dec('co',2,'Reduce the vendor single point of failure?','A falling-rated Tier-1 vendor underpins a critical process — add resilience.',
-      {on:'Mitigate — add a backup provider or SLA',osum:'Reduces single-point-of-failure exposure',pros:['Reduces a concentration risk to a critical process.'],cons:['Cost and vendor-onboarding effort.']},
-      [{on:'Monitor for now',osum:'Keep the vendor under watch',pros:['No spend now.'],cons:['A rating slide could disrupt operations before you act.']}])
+    // Decision 1 — the convergent identity fix (recommended), with its honest downside.
+    c5dec('co',1,'Fund the '+IDF.short+' fix?','It protects customer-platform uptime and recovery — your most critical process'+(dm.connected?(' ('+dm.displayValue+')'):'')+'. The one fix that moves every COO tab (resilience, recovery, vendors).',
+      {on:'Fund it — protect uptime & recovery',osum:(dm.connected?('Protects your most critical process · −'+dm.displayValue):'Protects your most critical process'),pros:['Protects uptime and recovery of the customer platform.','Lifts identity recovery to close the RTO gap.','Caps every vendor’s blast radius into your data.'],cons:['Requires funding this cycle.','Interim exposure persists across the '+IDF.timeline+' rollout — recovery isn’t fixed on day one.']}),
+    // Decision 2 — the COO's domain call: add a cloud-host failover for the SPOF.
+    c5dec('co',2,'Add a cloud-host failover for the customer platform?','The cloud host is a single point of failure with no alternative — the customer platform can’t recover in time if it fails.',
+      {on:'Add failover — a backup provider or contractual failover SLA',osum:'removes the single point of failure',pros:['Removes the no-alternative cloud-host dependency.','Brings the customer platform inside its continuity target.','Complements the identity fix — access and infrastructure both resilient.'],cons:['Capital + a multi-region / secondary-provider program.','Onboarding + failover-testing effort.']},
+      [{on:'Monitor for now',osum:'accept the SPOF, keep it under watch',pros:['No spend today.'],cons:['A cloud-host outage still stops the customer platform with no failover.','Requires a documented operational risk-acceptance.']}])
   ];
   host.innerHTML=c5header()+
-    c5shell('Decisions for the COO · what needs your call?','Two operational calls — the recommended one is marked, the choice is yours.',null,'Each is tied to a critical process. Choosing one stamps it with your name and time, keeps it editable for 24 hours, and opens a tracked project in the ticketing system connected at onboarding — status pulled back on refresh.')+
+    c5shell('Decisions for the COO · what needs your call?','One fix converges across operations — then the failover call that’s yours.',null,'Each is tied to a critical process. Choosing one stamps it with your name and time, keeps it editable for 24 hours, and opens a tracked project in the ticketing system connected at onboarding — status pulled back on refresh.')+
+    c5convergeStrip('coo')+
     c5decisions(list)+
-    '<div class="c5foot">Each decision links to its critical process and source.</div>';
+    '<div class="c5foot">Each decision links to its critical process and source · no AI/LLM at run-time.</div>';
 }
 
 /* ================= CLO seat — same engine, legal & regulatory lens ================= */
