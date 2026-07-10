@@ -248,6 +248,49 @@ function c5IdFix(){
 var C5_AI_RISK={High:{col:'crit',rank:0},Limited:{col:'warn',rank:1},Minimal:{col:'good',rank:2}};
 function c5aiRiskCls(k){return (C5_AI_RISK[k]&&C5_AI_RISK[k].col)||'muted';}
 function c5aiRiskRank(k){return (C5_AI_RISK[k]&&C5_AI_RISK[k].rank!=null)?C5_AI_RISK[k].rank:9;}
+/* ── Cross-cutting enterprise constants shared by every seat's operational-impact strips, so
+   the customer count and downtime-per-hour figures are ONE source of truth (never retyped).
+   downtimePerHr derives from the live resilience model; customers is a modeled headline
+   figure until a live customer-count source is wired. ── */
+var C5_XCUT={customers:'40M customers',downtimeModeledHr:12000000};
+function c5xDowntimeHr(){var R=(typeof LIVE!=='undefined'&&LIVE&&LIVE.resilience)||{};var live=(R.top_downtime_per_hr||R.downtime_per_hour_usd)||null;var v=live||C5_XCUT.downtimeModeledHr;
+  return {usd:v,live:!!live,str:(typeof usd==='function')?('~'+usd(v)+'/hr'):('~$'+Math.round(v/1e6)+'M/hr')};}
+function c5xCustomers(){return C5_XCUT.customers;}
+/* Which of a seat's analytical tabs the ONE identity fix resolves — in that seat's language.
+   Feeds the Decisions-tab convergence strip so "one fix resolves N tabs" reads consistently
+   and never double-counts. Tab names match each seat's analytical tabs (CEO/CLO/Board use the
+   restructured proposed sets). */
+function c5IdFixResolves(seat){var M={
+  coo:[{tab:'Resilience',note:'restores the customer platform’s access path'},{tab:'Recovery',note:'lifts identity recovery 78% → 100%, closing the RTO gap'},{tab:'Vendors',note:'caps every vendor’s blast radius into your data'}],
+  cio:[{tab:'Tech estate',note:'closes the customer platform’s architecture gap'},{tab:'AI',note:'secures the customer-data AI’s access to data'},{tab:'Software supply chain',note:'hardens the auth path the advisory sits on'}],
+  cro:[{tab:'Vs other risks',note:'moves cyber down the enterprise scale'},{tab:'Appetite',note:'brings the identity category back within its share'},{tab:'Trend',note:'bends residual risk downward'}],
+  cfo:[{tab:'Within appetite',note:'reduces the modeled exposure against appetite'},{tab:'Spend ROI',note:'the highest risk-removed per dollar'},{tab:'Insurance',note:'trims the uninsured tail'}],
+  ceo:[{tab:'Value at risk',note:'protects the growth-critical customer platform'},{tab:'Crown jewels',note:'de-risks the top revenue engine'},{tab:'Trust & disclosure',note:'lowers the odds of a disclosable event'}],
+  clo:[{tab:'Regulatory exposure',note:'reduces the identity-driven privacy/access liability'},{tab:'Contracts & liability',note:'protects the uptime warranties at risk'},{tab:'Incident & disclosure',note:'strengthens forensic/access evidence readiness'}],
+  board:[{tab:'Oversight',note:'the funded treatment for the top risk'},{tab:'Regulatory & disclosure',note:'lowers material-incident likelihood'},{tab:'Assurance',note:'the control the next audit will test'}],
+  ciso:[{tab:'Cyber exposure',note:'closes the largest single exposure'},{tab:'Control value',note:'the highest risk-removed per dollar'},{tab:'Threats',note:'shuts the likeliest attack path'}]
+};return M[seat]||[];}
+/* Shared principal-risk register — the single source the CRO (rank/appetite/trend), Board and
+   CLO read, so inherent/residual/appetite/direction/confidence/owner/cadence never drift.
+   Cyber inherent = residual + the expected-loss controls buy down (control effectiveness);
+   the other principal risks come from your ERM register (LIVE.portfolio) as residual inputs. */
+function c5RiskRegister(){
+  var M=(typeof c5expModel==='function')?c5expModel():{total:0};
+  var removed=(typeof controlsEffUsd==='function')?controlsEffUsd():0;
+  var p=(typeof LIVE!=='undefined'&&LIVE&&LIVE.portfolio)||{};
+  var ap=(typeof LIVE!=='undefined'&&LIVE&&LIVE.economics&&LIVE.economics.appetite&&Number(LIVE.economics.appetite.appetite))||0;
+  var tr=(typeof trajInfo==='function')?trajInfo():{two:false};
+  var cyberDir=tr.two?(tr.down?'Falling':'Rising'):'Steady';
+  var rows=[
+    {key:'cyber',label:'Cyber risk',cyber:true,residual:M.total||0,inherent:(M.total||0)+(removed||0),appetite:ap||null,direction:cyberDir,confidence:'Modeled',owner:'CISO / CIO',cadence:'Quarterly'},
+    {key:'creditMarket',label:'Credit / market',residual:Number(p.creditMarket)||0,inherent:Number(p.creditMarket)||0,appetite:null,direction:'Steady',confidence:'ERM input',owner:'CFO / Treasury',cadence:'Quarterly'},
+    {key:'operational',label:'Operational risk',residual:Number(p.operational)||0,inherent:Number(p.operational)||0,appetite:null,direction:'Steady',confidence:'ERM input',owner:'COO',cadence:'Quarterly'},
+    {key:'thirdParty',label:'Third-party risk',residual:Number(p.thirdParty)||0,inherent:Number(p.thirdParty)||0,appetite:null,direction:'Steady',confidence:'ERM input',owner:'COO / Procurement',cadence:'Quarterly'},
+    {key:'compliance',label:'Compliance & regulatory',residual:Number(p.compliance)||0,inherent:Number(p.compliance)||0,appetite:null,direction:'Steady',confidence:'ERM input',owner:'CLO',cadence:'Quarterly'}
+  ].filter(function(r){return r.residual>0;}).sort(function(a,b){return b.residual-a.residual;});
+  var cyberRank=null;rows.forEach(function(r,i){if(r.cyber)cyberRank=i+1;});
+  return {rows:rows,total:rows.length,cyberRank:cyberRank,cyberResidual:(M.total||0),controlsRemoved:(removed||0),appetite:ap||0};
+}
 
 /* Vendor-concentration matrix — vendor CATEGORY (not real company names) mapped to the
    SAME critical services as the Resilience / Recovery tabs. Illustrative until a live
@@ -3318,8 +3361,8 @@ function c5cfExposure(){
   var sep='<span style="color:var(--line)">·</span>';
   var strip='<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-top:14px;padding:12px 16px;border-radius:12px;background:var(--surface-2)">'+
     '<span data-c5m="'+TD.mid+'" style="cursor:pointer;font-size:12.5px;color:var(--good);font-weight:600">Remediating the largest driver removes '+(dm.connected?c5esc(dm.displayValue):'—')+' of modeled exposure</span>'+sep+
-    '<span style="font-size:12px;color:var(--muted)">90–180 days</span>'+sep+
-    '<span style="font-size:12px;color:var(--muted)">owner CISO / CIO</span>'+sep+
+    '<span style="font-size:12px;color:var(--muted)">'+c5IdFix().timeline+'</span>'+sep+
+    '<span style="font-size:12px;color:var(--muted)">owner '+c5IdFix().owner+'</span>'+sep+
     '<span style="font-size:12px;color:var(--muted)">funding cost not yet connected</span>'+
     '</div>';
   // 5) EVIDENCE FOOTNOTE — small, muted; sources connected is counted from the evidence set.
@@ -3829,15 +3872,13 @@ function c5coSupply(){
       '<span class="c5pill '+(r.status==='single'?'r':r.status==='watch'?'a':'g')+'" style="flex:none">'+stTxt(r.status)+'</span></div>';
   }).join('');
   var matrix='<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:16px 0 8px"><span style="font-size:12.5px;font-weight:600;color:var(--ink)">Vendors under critical services — rating and failover '+illus+'</span><span style="font-size:11px;color:var(--muted)">Sorted by risk to operations</span></div><div class="c5card" style="padding:2px 14px">'+vmRows+'</div>';
-  // ── operational-impact strip (Illustrative) — reuse the Resilience/Recovery hourly figure ──
-  var hourly=(R.top_downtime_per_hr||R.downtime_per_hour_usd)||null;
-  var hourlyStr=(hourly&&typeof usd==='function')?('~'+usd(hourly)+'/hr'):'~$12M/hr';
+  // ── operational-impact strip (Illustrative) — hourly + customers from the shared cross-cutting source ──
   var sep='<span style="color:var(--line)">·</span>';
   var strip='<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-top:14px;padding:12px 16px;border-radius:12px;background:var(--surface-2)">'+
     '<span style="font-size:12px;color:var(--ink-2);font-weight:600">If the cloud host fails:</span>'+
     '<span style="font-size:12.5px;color:var(--crit);font-weight:600">no failover for the customer platform</span>'+sep+
-    '<span style="font-size:12px;color:var(--muted)">'+hourlyStr+' at risk</span>'+sep+
-    '<span style="font-size:12px;color:var(--muted)">40M customers</span>'+illus+'</div>';
+    '<span style="font-size:12px;color:var(--muted)">'+c5xDowntimeHr().str+' at risk</span>'+sep+
+    '<span style="font-size:12px;color:var(--muted)">'+c5xCustomers()+'</span>'+illus+'</div>';
   // ── evidence footnote source count ──
   var evSrcs=[
     {label:'Vendor intake / tiering',connected:tier1Conn},
@@ -3939,16 +3980,16 @@ function c5coRecovery(){
       '<span class="c5pill '+(ok?'g':'r')+'" style="flex:none">'+(ok?'On target':'Off target')+'</span></div>';
   }).join('');
   var matrix='<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:16px 0 8px"><span style="font-size:12.5px;font-weight:600;color:var(--ink)">Recovery by critical service — actual vs target '+illus+'</span><span style="font-size:11px;color:var(--muted)">All paths tested this quarter</span></div><div class="c5card" style="padding:2px 14px">'+matRows+'</div>';
-  // 5) OPERATIONAL-IMPACT STRIP — Illustrative placeholders. Billing exposure = gap × hourly
-  //    when the resilience hourly figure is live, else the sample ~$240M (20h × $12M/hr).
-  var hourly=(R&&(R.top_downtime_per_hr||R.downtime_per_hour_usd))||null;
-  var billExp=(hourly&&rtoConn&&typeof usd==='function')?('~'+usd(Math.round(rtoGapH*hourly))):'~$240M';
+  // 5) OPERATIONAL-IMPACT STRIP — billing exposure = the RTO gap × the shared downtime-per-hour
+  //    figure (derived); customers + hourly come from the shared cross-cutting source, never retyped.
+  var xh=c5xDowntimeHr();
+  var billExp='~'+((typeof usd==='function')?usd(Math.round((rtoConn?rtoGapH:20)*xh.usd)):('$'+Math.round((rtoConn?rtoGapH:20)*xh.usd/1e6)+'M'));
   var sep='<span style="color:var(--line)">·</span>';
   var strip='<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-top:14px;padding:12px 16px;border-radius:12px;background:var(--surface-2)">'+
     '<span style="font-size:12px;color:var(--ink-2);font-weight:600">The '+rtoGapH+'-hour gap, in operational terms:</span>'+
     '<span style="font-size:12.5px;color:var(--crit);font-weight:600">'+billExp+' billing exposure</span>'+sep+
     '<span style="font-size:12px;color:var(--muted)">SLA credits trigger past '+rtoTgt+'h</span>'+sep+
-    '<span style="font-size:12px;color:var(--muted)">40M customers</span>'+illus+'</div>';
+    '<span style="font-size:12px;color:var(--muted)">'+c5xCustomers()+'</span>'+illus+'</div>';
   // 2/6) DATA-DRIVEN headline · supporting line · decision callout ──
   var head,intro,decHead,decBody,decBtn;
   if(!testConn){

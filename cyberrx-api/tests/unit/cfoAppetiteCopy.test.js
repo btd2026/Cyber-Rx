@@ -71,8 +71,9 @@ describe('CFO Within Appetite — reorganised layout (top → bottom)', () => {
   });
   it('4) remediation strip folds in exposure-reduction / timeline / owner / funding note', () => {
     expect(fn).toContain('Remediating the largest driver removes ');
-    expect(fn).toContain('90–180 days');
-    expect(fn).toContain('owner CISO / CIO');
+    // timeline + owner now come from the shared c5IdFix config (single source, not retyped)
+    expect(fn).toContain('c5IdFix().timeline');
+    expect(fn).toContain("owner '+c5IdFix().owner");
     expect(fn).toContain('funding cost not yet connected');
   });
   it('5) evidence footnote counts connected sources from the evidence set', () => {

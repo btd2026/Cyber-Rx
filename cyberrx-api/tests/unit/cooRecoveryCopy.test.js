@@ -79,11 +79,12 @@ describe('COO Recovery — operational-impact strip (Illustrative)', () => {
     expect(fn).toContain("-hour gap, in operational terms:");
     expect(fn).toContain('billing exposure');
     expect(fn).toContain("SLA credits trigger past '+rtoTgt+'h");
-    expect(fn).toContain('40M customers');
+    expect(fn).toContain('c5xCustomers()'); // customers from the shared cross-cutting source
   });
-  it('derives billing exposure from the resilience hourly figure when live (else the ~$240M sample)', () => {
-    expect(fn).toContain("(hourly&&rtoConn&&typeof usd==='function')?('~'+usd(Math.round(rtoGapH*hourly)))");
-    expect(fn).toContain("'~$240M'");
+  it('derives billing exposure from the shared downtime-per-hour figure (gap × hourly)', () => {
+    expect(fn).toContain('var xh=c5xDowntimeHr();');
+    expect(fn).toContain('rtoConn?rtoGapH:20)*xh.usd');
+    expect(fn).not.toContain("'~$240M'"); // no hard-coded fallback any more
   });
 });
 
