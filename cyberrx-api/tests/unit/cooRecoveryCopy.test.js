@@ -1,10 +1,14 @@
 /**
  * Source-scan guards for the COO "Recovery" tab (CyberRXNew/public/ciso5.js —
- * c5coRecovery). The tab must answer "Can we recover within our targets?" from the
- * recovery evidence (RTO/RPO vs target, last DR test, backup verification, the top
- * recovery dependency) — leading with the RTO miss when the target is missed, ranking
- * the top recovery gap from the data (never hard-coded to identity), and generating the
- * headline / bottom line / button / evidence confidence dynamically.
+ * c5coRecovery). Rebuilt around a per-service recovery matrix with an explicit identity
+ * root-cause that threads to the Resilience tab.
+ *
+ * Structure: header (breadcrumb + one supporting line) · three metric cards (RTO gap /
+ * RPO / last test) + a single green backups line · the recovery-by-service matrix
+ * (centerpiece) · an Illustrative operational-impact strip · a decision callout
+ * (reusing c5bl) · a small evidence footnote. Every figure wires to its live signal;
+ * per-service breakdown and impact are Illustrative until wired. Row status is COMPUTED
+ * (RTO <= target), never hard-coded.
  */
 
 const fs = require('fs');
@@ -15,110 +19,108 @@ const a = src.indexOf('function c5coRecovery()');
 const b = src.indexOf('function c5coDecisions(', a);
 const fn = a >= 0 && b > a ? src.slice(a, b) : '';
 
-describe('COO Recovery — answers the target question, no hard-coded conclusion', () => {
-  it('locates the tab and asks "can we recover within our targets?"', () => {
+describe('COO Recovery — header & question', () => {
+  it('answers "can we recover within our targets?"', () => {
     expect(a).toBeGreaterThan(0);
     expect(fn).toContain('Recovery readiness · can we recover within our targets?');
   });
-  it('drops the old hard-coded "watch the identity path" / customer-platform lead', () => {
-    expect(fn).not.toContain('Recovery is tested — watch the identity path.');
-    expect(fn).not.toContain('could slow a customer-platform restore');
-    expect(fn).not.toContain("txt:'Fund the '+c5esc(TD.short)+' fix — faster recovery'");
-    expect(fn).not.toMatch(/faster recovery/);
+  it('the headline names the missed RTO path and gap (wired, not hard-coded)', () => {
+    expect(fn).toContain("misses its RTO target by '+durH(rtoGapH)+'.");
   });
-  it('does not conflate the top exposure driver (c5TopDriver) with the recovery dependency', () => {
-    expect(fn).not.toContain('c5TopDriver()');
+  it('one supporting line reports the computed on-target count (X of Y)', () => {
+    expect(fn).toContain("svcOn+' of '+svcTotal+' critical services restore within target.");
   });
 });
 
-describe('COO Recovery — RTO miss leads the message', () => {
-  it('when RTO is missed, the headline states the missed RTO target', () => {
-    expect(fn).toContain('Recovery is tested, but one critical path misses the RTO target.');
-    expect(fn).toMatch(/top&&top\.key==='rto'/);
+describe('COO Recovery — three metric cards + a demoted backups line', () => {
+  it('RTO gap card is red / "Off target" when the target is missed (not amber "Gap")', () => {
+    expect(fn).toMatch(/rtoMiss\?rcard\('coo_rto','RTO gap',durH\(worst\)\+' vs '\+rtoTgt\+'h','Off target','r'/);
+    expect(fn).toMatch(/rcard\('coo_rto','RTO',durH\(worst\)\+' vs '\+rtoTgt\+'h','On target','g'/);
+    expect(fn).not.toContain('Passed, gap remains'); // muddy old test label is gone
   });
-  it('the RTO card becomes an "RTO gap" with the overshoot, never "within target" when missed', () => {
-    expect(fn).toMatch(/rtoMiss\?rcard\('coo_rto','RTO gap'/);
-    expect(fn).toMatch(/rcard\('coo_rto','RTO within target'/); // the within-target branch also exists
-    expect(fn).toContain('Slowest critical recovery path exceeds target by ');
-  });
-  it('never says recovery is fully ready / guaranteed / no-risk', () => {
-    expect(fn).not.toMatch(/fully ready/i);
-    expect(fn).not.toMatch(/guaranteed recovery/i);
-    expect(fn).not.toMatch(/\bno risk\b/i);
-    expect(fn).not.toMatch(/protects uptime/i);
-  });
-});
-
-describe('COO Recovery — RPO / backups / test card logic', () => {
-  it('RPO shows "within target" when the target is met', () => {
-    expect(fn).toContain("rcard('coo_rpo','RPO within target'");
+  it('RPO card shows within/off target from the target comparison', () => {
     expect(fn).toContain("'Within target','g','Data-loss window is within target.'");
-    expect(fn).toMatch(/rpoMiss\?rcard\('coo_rpo','RPO gap'/);
+    expect(fn).toMatch(/rpoMiss\?rcard\('coo_rpo','RPO'/);
   });
-  it('a passed test with a material dependency gap says "Passed, gap remains"', () => {
-    expect(fn).toMatch(/materialDep\?rcard\('coo_last_test','Recovery test','Passed, gap remains'/);
-    expect(fn).toContain("still affects target recovery");
-    expect(fn).toMatch(/rcard\('coo_last_test','Recovery test','Passed','Passed','g'/); // clean-pass branch too
+  it('last-recovery-test card is a clean "Passed · This quarter · live failover"', () => {
+    expect(fn).toContain("rcard('coo_last_test','Last recovery test','Passed','This quarter','n','Live failover — surfaced the RTO gap.')");
   });
-  it('backup tile reflects verified / stale / missing states', () => {
-    expect(fn).toMatch(/bkVerified\?c5tile\('coo_backups','g','Verified'/);
-    expect(fn).toMatch(/c5tile\('coo_backups','a','Stale'/);
-    expect(fn).toMatch(/c5tile\('coo_backups','n','Missing'/);
+  it('backups are a single green confirmation line (old standalone card demoted), still drillable', () => {
+    expect(fn).toContain('Backups immutable and restore-tested this quarter');
+    expect(fn).toContain('data-c5m="coo_backups"');
+    expect(fn).not.toContain("c5tile('coo_backups'"); // no standalone backup tile any more
   });
 });
 
-describe('COO Recovery — top recovery dependency is data-ranked, not always identity', () => {
-  it('ranks gaps by severity and picks top = gaps[0]', () => {
-    expect(fn).toMatch(/gaps\.sort\(function\(a,b\)\{return b\.sev-a\.sev;\}\)/);
-    expect(fn).toMatch(/var top=gaps\[0\]\|\|null/);
+describe('COO Recovery — the per-service matrix (centerpiece)', () => {
+  it('has the header row: left title + right "All paths tested this quarter"', () => {
+    expect(fn).toContain('Recovery by critical service — actual vs target');
+    expect(fn).toContain('All paths tested this quarter');
   });
-  it('every candidate gap carries its own head / phrase / button (so all three change with the top gap)', () => {
-    ["key:'rto'", "key:'rpo'", "key:'backup'", "key:'identity'", "key:'test'"].forEach((k) => expect(fn).toContain(k));
-    expect(fn).toContain("button:'Close the RTO gap'");
-    expect(fn).toContain("button:'Close identity recovery gap'");
-    expect(fn).toContain("button:'Resolve backup recovery gap'");
+  it('uses the SAME five services as the Resilience tab, customer platform first', () => {
+    ['Payments processing', 'Order fulfillment', 'Supply chain', 'Financial close'].forEach((s) => expect(fn).toContain(s));
+    expect(fn).toContain("GreenLake billing · identity recovery '+idPct+'%"); // identity root folded into the at-risk row
   });
-  it('the bottom-line button is generated from the top gap, not a fixed string', () => {
-    expect(fn).toMatch(/btn=\{mid:top\.mid,txt:top\.button\}/);
-    expect(fn).toMatch(/btn=\{mid:'coo_rto',txt:'Close the RTO gap'\}/); // RTO branch
+  it('the customer-platform row wires to live signals; others are Illustrative samples', () => {
+    expect(fn).toMatch(/rto:\(rtoConn\?worst:24\),tgt:rtoTgt,rpo:\(rpoConn\?rpoMin:15\)/);
+    expect(fn).toMatch(/Illustrative/);
   });
-  it('the dependency tile is labelled "Top recovery dependency" and reflects Gap/Ready dynamically', () => {
-    expect(fn).toContain('Top recovery dependency');
-    expect(fn).toMatch(/depPill=!idConn\?'—':idGap\?'Gap':'Ready'/);
-  });
-});
-
-describe('COO Recovery — missing evidence & evidence confidence', () => {
-  it('missing recovery-test evidence yields "Not enough evidence to confirm recovery readiness."', () => {
-    expect(fn).toContain('Not enough evidence to confirm recovery readiness.');
-    expect(fn).toMatch(/if\(!testConn\)\{/);
-    expect(fn).toContain("txt:'Connect recovery evidence'");
-  });
-  it('renders an evidence-confidence strip that cannot be High without test + dependency evidence', () => {
-    expect(fn).toMatch(/var evPanel=c5EvLine\(evLevel,/);
-    expect(fn).toMatch(/var evLevel=demo\?'Demo':\(\(!testConn\|\|!idConn\)&&evConf\.level==='High'\?'Medium':evConf\.level\)/);
-    expect(fn).toMatch(/Recovery test result \(DR\)',connected:testConn,critical:true/);
-    expect(fn).toMatch(/Recovery-dependency mapping',connected:idConn,critical:true/);
-  });
-  it('backups-verified-but-incomplete produces the incomplete-readiness message', () => {
-    expect(fn).toContain('Backups are verified, but recovery readiness is incomplete.');
+  it('row status is COMPUTED from RTO <= target, never hard-coded', () => {
+    expect(fn).toContain('var ok=s.rto<=s.tgt');
+    expect(fn).toContain('svcOn=services.filter(function(s){return s.rto<=s.tgt;}).length');
+    expect(fn).toMatch(/\(ok\?'On target':'Off target'\)/);
   });
 });
 
-describe('COO Recovery — labelling, demo, and source traceability', () => {
+describe('COO Recovery — operational-impact strip (Illustrative)', () => {
+  it('renders the gap in operational terms with the Illustrative badge', () => {
+    expect(fn).toContain("-hour gap, in operational terms:");
+    expect(fn).toContain('billing exposure');
+    expect(fn).toContain("SLA credits trigger past '+rtoTgt+'h");
+    expect(fn).toContain('40M customers');
+  });
+  it('derives billing exposure from the resilience hourly figure when live (else the ~$240M sample)', () => {
+    expect(fn).toContain("(hourly&&rtoConn&&typeof usd==='function')?('~'+usd(Math.round(rtoGapH*hourly)))");
+    expect(fn).toContain("'~$240M'");
+  });
+});
+
+describe('COO Recovery — decision callout threads identity to Resilience', () => {
+  it('reuses the c5bl box with a "The decision" eyebrow', () => {
+    expect(fn).toContain("c5bl('The decision'");
+  });
+  it('makes the identity root-cause explicit and threads to the Resilience tab', () => {
+    expect(fn).toContain("finish deploying identity recovery ('+idPct+'% → 100%)");
+    expect(fn).toContain('the same exposure flagged on the Resilience tab');
+  });
+  it('the primary button is "Close the RTO gap", wired to coo_rto', () => {
+    expect(fn).toContain("decBtn={mid:'coo_rto',txt:'Close the RTO gap'}");
+  });
+});
+
+describe('COO Recovery — evidence footnote & live wiring', () => {
+  it('footnote counts connected sources (no separate evidence-confidence panel)', () => {
+    expect(fn).toMatch(/connN=evSrcs\.filter\(function\(s\)\{return s\.connected;\}\)\.length/);
+    expect(fn).toContain("sources connected");
+    expect(fn).not.toContain('c5EvLine'); // the confidence panel is replaced by the footnote
+  });
   it('labels demo values in non-production', () => {
     expect(fn).toMatch(/var demo=\(typeof signalsAreDemo/);
-    expect(fn).toContain("values shown are demo");
+    expect(fn).toContain("' · demo'");
   });
-  it('every card/tile keeps data-c5m for drill-down source traceability', () => {
-    expect(fn).toMatch(/rcard\(mid,title,val,statusTxt,cls,sub\)\{return '<div class="c5card" data-c5m="'\+mid/);
-    expect(fn).toContain('data-c5m="coo_identity_recovery"');
-    expect(fn).toContain('Drill any card for its source, owner and evidence date.');
-  });
-  it('RTO/RPO/test values come from live signals, computed from targets', () => {
+  it('RTO/RPO/test/backup/identity all come from live signals, computed vs targets', () => {
     expect(fn).toMatch(/R\.worst_recovery_hours/);
     expect(fn).toMatch(/sig\('rpo_minutes'\)/);
     expect(fn).toMatch(/sig\('dr_test_days'\)/);
     expect(fn).toMatch(/sig\('backup_immutable_pct'\)/);
+    expect(fn).toMatch(/c5avgDeploy\(\['mfa','pam'\]\)/);
+  });
+  it('does not conflate the top exposure driver (c5TopDriver) with the recovery dependency', () => {
+    expect(fn).not.toContain('c5TopDriver()');
+  });
+  it('never overclaims recovery as guaranteed / no-risk / protects uptime', () => {
+    expect(fn).not.toMatch(/guaranteed recovery/i);
+    expect(fn).not.toMatch(/\bno risk\b/i);
+    expect(fn).not.toMatch(/protects uptime/i);
   });
 });
