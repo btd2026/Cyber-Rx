@@ -675,15 +675,18 @@ function c5get(id){
         note:'Where you stand against peers your size — top-third is the target.'+(live2?'':' Shown against the published baseline; opt in for your live cohort.'),connectTool:'the live peer cohort (opt in)'});}
     /* ---- CFO metrics (same engine, financial lens; shared objects reused where they exist) ---- */
     case 'cf_appetite':{var ap=(typeof LIVE!=='undefined'&&LIVE&&LIVE.economics&&LIVE.economics.appetite)||{};var v=Number(ap.appetite)||0;var conn=v>0;
-      return c5obj({id:id,name:'Risk appetite',connected:conn,displayValue:conn?usd(v):'—',label:'self-reported',color:'ink',
-        formula:'risk appetite = the maximum annual cyber loss the board has approved',
-        inputs:[{name:'Board-approved appetite',value:conn?usd(v):'—',source:'onboarding · board appetite statement'}],
+      var apdemo=(typeof signalsAreDemo==='function')&&signalsAreDemo();
+      return c5obj({id:id,name:'Board-approved cyber loss appetite',connected:conn,displayValue:conn?usd(v):'—',label:(apdemo?'demo':'self-reported'),color:'ink',
+        formula:'board-approved cyber loss appetite = the maximum annual cyber loss the board has approved to tolerate',
+        method:'Self-reported from the board appetite statement captured at onboarding — not a computed or live value. Confirm it represents board-approved cyber LOSS tolerance (not enterprise value or revenue) before relying on the headroom.',
+        inputs:[{name:'Board-approved cyber loss appetite',value:conn?usd(v):'—',source:'onboarding · board appetite statement'+(apdemo?' (demo)':'')}],
         sources:[{tool:'Onboarding',connector:'onboarding',field:'economics.appetite',lastRefresh:c5ago()}],
-        note:'The line every exposure figure is measured against — the board sets it.',connectTool:'the board appetite (onboarding)'});}
+        note:'The board-approved cyber loss tolerance every exposure figure is measured against — self-reported at onboarding.',connectTool:'the board cyber-loss appetite (onboarding)'});}
     case 'cf_headroom':{var ap2=(typeof LIVE!=='undefined'&&LIVE&&LIVE.economics&&LIVE.economics.appetite)||{};var appV=Number(ap2.appetite)||0;var ale=(typeof LIVE!=='undefined'&&LIVE&&LIVE.economics&&Number(LIVE.economics.ale))||0;var conn=appV>0&&ale>0;var hr=appV-ale;
-      return c5obj({id:id,name:'Headroom',connected:conn,displayValue:conn?usd(hr):'—',label:'computed',color:conn?(hr>=0?'good':'crit'):'muted',
-        formula:'headroom = risk appetite − expected annual loss (ALE)',
-        inputs:[{name:'Risk appetite',value:appV?usd(appV):'—',source:'cf_appetite'},{name:'Expected annual loss',value:ale?usd(ale):'—',source:'exp_total / ALE'}],
+      return c5obj({id:id,name:'Financial headroom',connected:conn,displayValue:conn?usd(hr):'—',label:'computed',color:conn?(hr>=0?'good':'crit'):'muted',
+        formula:'financial headroom = board-approved cyber loss appetite − modeled expected annual loss (ALE)',
+        method:'Computed from the board-approved cyber loss appetite (self-reported) minus your modeled expected annual loss. Only credible when both inputs are credible — if the appetite is demo/illustrative, treat the headroom as demo.',
+        inputs:[{name:'Board-approved cyber loss appetite',value:appV?usd(appV):'—',source:'cf_appetite'},{name:'Modeled expected annual loss',value:ale?usd(ale):'—',source:'exp_total / ALE'}],
         sources:[{tool:'Nerion engine',connector:'nerion',field:'appetite_minus_ale',lastRefresh:c5ago()}],
         action:conn?(hr<0?('Exposure exceeds the board’s appetite by '+usd(-hr)+'. Close it: fund the largest exposure drivers to pull ALE ('+usd(ale)+') back under the '+usd(appV)+' limit, and/or transfer the tail via insurance — then re-confirm the appetite with the board.'):('Inside appetite by '+usd(hr)+' — hold; re-test headroom whenever ALE or the board’s limit moves.')):'Set the board appetite and connect the risk register to compute headroom.',
         action:conn?(hr<0?('Exposure exceeds the board’s appetite by '+usd(-hr)+'. Close it: fund the largest exposure drivers to pull ALE ('+usd(ale)+') back under the '+usd(appV)+' limit, and/or transfer the tail via insurance — then re-confirm the appetite with the board.'):('Inside appetite by '+usd(hr)+' — hold; re-test headroom whenever ALE or the board’s limit moves.')):'Set the board appetite and connect the risk register to compute headroom.',
@@ -2732,25 +2735,65 @@ function c5ctlRankRows(){
   // Legend so the bar length + colour are never a mystery.
   return rows+'<div style="padding:10px 4px 2px;font-size:11px;line-height:1.5;color:var(--muted)">Bar length = risk removed vs. your largest area. <span style="color:var(--warn);font-weight:700">Amber</span> = the lowest-contributing area, flagged to review — everything else is green. Return-per-dollar (×) appears once you attribute security spend by control.</div>';
 }
-/* Tab 01 — Financial exposure */
+/* Tab 01 — Within appetite (Fortune-100 CFO financial view). Separates modeled
+   exposure, board-approved cyber loss appetite, headroom, the largest financial driver,
+   the tail scenario, outage impact and the insurance residual gap — with source labels
+   on every dollar and no "removes exposure" overclaiming. */
 function c5cfExposure(){
   var host=document.getElementById('cf-exposure');if(!host)return;
-  var hr=c5get('cf_headroom'),cov=c5get('cf_ins_cov'),ec=c5get('exp_identity');
-  var alePill=hr.connected?(hr.value>=0||/^[^−-]/.test(hr.displayValue)?'g':'r'):'n';
-  var aleTxt=hr.connected?'Within appetite':'—';
-  var covGap=c5get('cf_ins_gap');
+  var demo=(typeof signalsAreDemo==='function')&&signalsAreDemo();
+  var expT=c5get('exp_total'),ap=c5get('cf_appetite'),hr=c5get('cf_headroom'),ec=c5get('exp_identity'),tail=c5get('cf_tail'),bi=c5get('cf_bi'),insCov=c5get('cf_ins_cov'),insGap=c5get('cf_ins_gap');
+  function num(m){try{var d=String(m.displayValue);var s=d.replace(/[^0-9.]/g,'');var mult=/B/.test(d)?1e9:/M/.test(d)?1e6:/K/.test(d)?1e3:1;return parseFloat(s)*mult;}catch(_){return NaN;}}
+  var expN=expT.connected?num(expT):NaN, apN=ap.connected?num(ap):NaN;
+  var apImplausible=(!isNaN(expN)&&!isNaN(apN)&&apN>expN*50); // $B appetite vs $M exposure ⇒ likely not cyber-loss tolerance
+  var apProv=demo?'Demo appetite threshold':(apImplausible?'Illustrative appetite':'Self-reported');
+  var hrCredible=expT.connected&&ap.connected&&!apImplausible&&!demo;
+  var status=!expT.connected?'Not Enough Evidence':!ap.connected?'Appetite not connected':(isNaN(expN)||isNaN(apN))?'Watch':(expN>apN?'Outside appetite':(expN>apN*0.8?'Watch':'Within appetite'))+(demo?' (demo)':'');
+  var statusCol=/Within/.test(status)?'good':/Watch/.test(status)?'warn':/Outside/.test(status)?'crit':'muted';
+  var covPct=insCov.connected?((String(insCov.displayValue).match(/(\d+)/)||[])[1]||null):null;
+  // ── card / tile helpers (source-labelled, click-through to the metric inspector) ──
+  function cfCard(title,val,sub,prov,col,mid){return '<div class="c5card"'+(mid?(' data-c5m="'+mid+'"'):'')+'><div class="c5card-top"><span class="c5card-l">'+title+'</span><span class="c5pill n" style="font-size:9px">'+c5esc(prov)+'</span></div><div class="c5card-v" style="color:var(--'+(col||'ink')+')">'+c5esc(String(val))+'</div>'+(sub?('<div class="c5esub" style="font-size:11px;color:var(--muted);margin-top:2px">'+c5esc(sub)+'</div>'):'')+'</div>';}
+  function cfTile(title,val,sub,pillTxt,pillCls,mid){return '<div class="c5tile"'+(mid?(' data-c5m="'+mid+'"'):'')+' style="--ac:var(--'+(pillCls==='r'?'crit':pillCls==='a'?'warn':pillCls==='g'?'good':pillCls==='b'?'blue':'muted')+')"><div class="c5tile-top"><span class="c5tile-l">'+title+'</span>'+(pillTxt?('<span class="c5pill '+pillCls+'">'+pillTxt+'</span>'):'')+'</div><div class="c5tile-h">'+c5esc(String(val))+'</div>'+(sub?('<div class="c5tile-s">'+c5esc(sub)+'</div>'):'')+'</div>';}
+  // ── evidence confidence — appetite is self-reported ⇒ never High ──
+  var L=(typeof LIVE!=='undefined'&&LIVE)||{};
+  var evSrcs=[
+    {label:'Exposure model (ALE)',connected:expT.connected,critical:true,computed:true},
+    {label:'Board-approved cyber loss appetite',connected:ap.connected,critical:false,partial:true},
+    {label:'Identity telemetry',connected:ec.connected,critical:false},
+    {label:'Business-service mapping',connected:!!(L.process_exposure&&L.process_exposure.length),critical:false,partial:true},
+    {label:'Tail-loss model',connected:tail.connected,critical:false,computed:true},
+    {label:'Insurance policy data (manual)',connected:insCov.connected,critical:false,partial:true},
+    {label:'Outage-impact model',connected:bi.connected,critical:false,computed:true}
+  ];
+  var evConf=(typeof TrustLogic!=='undefined')?TrustLogic.evidenceConfidence(evSrcs):{level:'—'};
+  var evLevel=demo?'Demo':(ap.connected&&evConf.level==='High'?'Medium':evConf.level); // self-reported appetite caps below High
+  var SL=(typeof TrustLogic!=='undefined')?TrustLogic.sourceStatus:function(o){return o&&o.connected?{label:'Connected',cls:'g'}:{label:'Not Connected',cls:'n'};};
+  var evChips=evSrcs.map(function(s){var st=SL({connected:s.connected,computed:s.computed,partial:s.partial});if(demo&&s.connected)st={label:'Demo',cls:'a'};return '<span class="c5pill '+st.cls+'" style="display:inline-block;margin:2px 5px 2px 0">'+s.label+': '+st.label+'</span>';}).join('');
+  var evPanel='<div style="margin-top:14px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:12px;font-weight:600;color:var(--ink-2)">Evidence confidence</span><span class="c5pill '+({High:'g',Medium:'a',Low:'a',Demo:'n','Not Enough Evidence':'n'}[evLevel]||'n')+'">'+evLevel+'</span></div><div style="margin-top:7px;line-height:2">'+evChips+'</div><div style="margin-top:6px;font-size:11.5px;color:var(--muted)">Exposure and tail loss are modeled; the appetite is self-reported; insurance data is manual; identity exposure is computed from connected telemetry.</div></div>';
+  // ── funding decision block (no ROI/per-$1 without cost data) ──
+  var funding='<div class="c5statgrid" style="margin-top:14px">'+
+    cfCard('Funding required','Cost estimate needed','Connect the remediation cost to compute exposure reduction per $1','Not connected','muted')+
+    cfCard('Modeled exposure reduction',(ec.connected?ec.displayValue:'—'),'From reducing the largest financial driver','Modeled'+(demo?' · Demo':''),'good','exp_identity')+
+    cfCard('Timeline · owner','90–180 days','Owner: CISO / CIO','Estimate','ink')+
+    '</div>';
+  var answer='Cyber exposure remains within appetite, but identity risk is the largest financial driver.';
   host.innerHTML=c5header()+
-    c5shell('Financial exposure · are we within appetite?','Cyber exposure is within appetite — and one move keeps it there.',null,'Your modeled cyber exposure sits against the board-approved appetite, with the headroom shown below. The largest driver is a single identity gap; funding its fix protects the headroom and trims your tail. Every figure traces to its model and source.')+
-    '<div class="c5cards">'+c5card('exp_total')+c5card('cf_appetite')+c5card('cf_headroom')+'</div>'+
-    (function(){var hasGap=covGap.connected&&covGap.color==='warn'; // a residual gap only exists when tail > insured limit
-      return '<div class="c5tiles">'+
-      c5tile('exp_identity','a','Largest',(ec.connected?'the single biggest driver — the CISO’s top ask':'the single biggest driver'))+
-      c5tile('cf_tail','a','Watch',(covGap.connected?(hasGap?('Exceeds your insured limit by '+covGap.displayValue):'Within your insured limit'):'the severe-but-plausible bad year'))+
-      c5tile('cf_bi','b','If down','If the customer platform is down')+
-      c5tile('cf_ins_cov',(hasGap?'a':'g'),(hasGap?'Gap':'Covered'),(covGap.connected?(hasGap?('of the tail covered · '+covGap.displayValue+' residual gap'):'of the tail covered · no residual gap'):'of the modeled tail covered'))+
-    '</div>';})()+
-    c5bl('Bottom line','One fix protects your headroom.',null,(ec.connected?('The identity gap drives '+ec.displayValue+' of your exposure — the CISO’s top ask, in your terms. Funding it keeps you comfortably within appetite and trims the tail.'):'Connect your identity controls and the top exposure driver — the CISO’s top ask — surfaces here in dollars.'),{mid:'exp_identity',txt:ec.connected?('Approve identity fix — removes '+ec.displayValue):'Approve identity fix'})+
-    '<div class="c5foot">Exposure is modeled (ALE and tail); every input traces to its source.</div>';
+    c5shell('Financial exposure · are we within the board’s appetite?','Cyber exposure is within appetite — identity risk is the largest financial driver.',null,'Modeled cyber exposure is below the board-approved cyber loss appetite. The largest driver is customer-platform identity risk; funding remediation reduces modeled exposure and protects financial headroom. Every dollar carries its source; drill any card for its basis.')+
+    '<div class="c5cards">'+
+      cfCard('Modeled cyber exposure',(expT.connected?expT.displayValue:'—'),'Status: '+status,'Modeled'+(demo?' · Demo':''),statusCol,'exp_total')+
+      cfCard('Board-approved cyber loss appetite',(ap.connected?ap.displayValue:'Appetite not connected'),(apImplausible?'Confirm this is cyber-loss tolerance, not enterprise value':'Board-approved cyber loss tolerance'),apProv,'ink','cf_appetite')+
+      cfCard('Financial headroom',(hr.connected?hr.displayValue:'—'),(hrCredible?'Headroom to cyber loss appetite':'Shown only when appetite is credible — treat as '+(demo?'demo':'illustrative')),(hrCredible?'Computed':(demo?'Demo headroom':'Illustrative')),(hrCredible?statusCol:'muted'),'cf_headroom')+
+    '</div>'+
+    '<div class="c5tiles">'+
+      cfTile('Largest financial exposure driver',(ec.connected?ec.displayValue:'—'),'Customer-platform identity risk','Largest','a','exp_identity')+
+      cfTile('1-in-20 modeled loss scenario',(tail.connected?tail.displayValue:'—'),'Tail loss scenario','Modeled','a','cf_tail')+
+      cfTile('Customer-platform outage impact',(bi.connected?bi.displayValue:'—'),'Business interruption estimate','If down','b','cf_bi')+
+      cfTile('Insurance gap',(insGap.connected?(insGap.displayValue+' residual tail exposure'):(insCov.connected?'No residual gap':'—')),(covPct?(covPct+'% of modeled 1-in-20 scenario covered'):'coverage of the modeled tail'),'Manual','a','cf_ins_gap')+
+    '</div>'+
+    funding+
+    evPanel+
+    c5bl('Bottom line','Current modeled cyber exposure remains within appetite — identity risk is the largest financial driver.',null,'The largest financial exposure driver is customer-platform identity risk'+(ec.connected?(': '+ec.displayValue+' modeled exposure'):'')+'. Funding the remediation reduces the largest modeled driver, protects financial headroom, and narrows residual exposure. Approve identity remediation funding, or defer with accepted residual exposure.',{mid:'exp_identity',txt:'Approve identity remediation — reduce modeled exposure'},{mid:'exp_identity',txt:'Defer with risk acceptance'})+
+    '<div class="c5foot">Exposure and tail are modeled (ALE and Monte-Carlo); appetite is self-reported; insurance is manual. Every input traces to its source'+(demo?' — values shown are demo/illustrative.':'.')+'</div>';
 }
 /* Tab 02 — Cyber ROI */
 function c5cfRoi(){
