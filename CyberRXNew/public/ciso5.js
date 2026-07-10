@@ -4825,10 +4825,12 @@ function c5FrameworksClassic(host){
   var pills='<div class="c5fw-pills">'+[['csf','NIST CSF 2.0'],['r53','NIST 800-53'],['soc2','SOC 2'],['hipaa','HIPAA'],['cis','CIS v8'],['iso','ISO 27001']].map(function(o){return '<button class="c5fw-pill'+(sel===o[0]?' on':'')+'" data-c5fwsel="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div>';
   // Reassess cadence toggle — its own row (reference layout).
   var reassessRow='<div class="c5fw-cad"><span style="font-size:11px;color:var(--muted);margin-right:2px">Reassess:</span>'+[['weekly','Weekly'],['monthly','Monthly'],['quarterly','Quarterly']].map(function(o){return '<button class="c5fw-cadb'+(cad===o[0]?' on':'')+'" data-c5fwcad="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div>';
-  // Export buttons — draft (watermarked) pack, final (no watermark), and the XLSX scorecard.
+  // Export buttons — draft (watermarked) pack, upload-the-reviewed-final, and the XLSX
+  // scorecard. "Upload Final" lets the user put back the human-reviewed deck (PPTX/PDF).
   var exportBtns='<button class="c5btn" onclick="c5fwExport(false)" title="Draft — DRAFT watermark on every slide">Auditor pack (PPTX)</button>'+
-    '<button class="c5btn" onclick="c5fwExport(true)" title="Final — no watermark, ready to hand to auditors" style="background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line)">Final</button>'+
-    '<button class="c5btn" onclick="c5fwExportXlsx()" style="background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line)">Scorecard + POA&amp;M</button>';
+    '<button class="c5btn" id="c5fwUploadFinalBtn" title="Upload the final deck after human review (PPTX / PDF)" style="background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line)">↥ Upload Final</button>'+
+    '<button class="c5btn" onclick="c5fwExportXlsx()" style="background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line)">Scorecard + POA&amp;M</button>'+
+    '<input type="file" id="c5fwFinalFile" accept=".pptx,.ppt,.pdf,.key" style="display:none">';
   // Last-assessed line with a "N documents reviewed" link that opens the review.
   var docN=(typeof c5DocCount==='function')?c5DocCount():0;
   var lastAssessed='<div style="font-size:12.5px;color:var(--ink-2)">Last assessed <b>'+fmt(now)+'</b> · next refresh <b>'+fmt(nextD)+'</b>'+(docN?(' · <a id="c5docsLink" style="color:var(--blue);font-weight:600;cursor:pointer">'+docN+' documents reviewed</a>'):'')+'</div>';
@@ -4849,7 +4851,8 @@ function c5FrameworksClassic(host){
     '<div style="margin-top:12px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">'+reassessRow+'<div style="flex:0 1 48%;min-width:300px;margin-left:auto">'+peerBox+'</div></div>'+
     '<div style="border-top:1px solid var(--line);margin:14px 0 12px"></div>'+
     lastAssessed+
-    '<div style="margin-top:11px;display:flex;gap:8px;flex-wrap:wrap">'+exportBtns+'</div>'+
+    '<div style="margin-top:11px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">'+exportBtns+'</div>'+
+    c5fwFinalMetaHtml()+
   '</div>';
   // Inline "how controls are evidenced" + "close the gap" box (non-native frameworks).
   var _sc=c5fwSrcCounts(T),_tot=T.total,_gaps=c5fwGaps(T);
@@ -4897,6 +4900,12 @@ function c5FrameworksClassic(host){
   if(typeof fwRecord==='function'){try{fwRecord(T.overall);}catch(_){}}
   var _pb=document.getElementById('c5fwPeerBox');if(_pb)_pb.onclick=function(){c5fwPeerOpen();};
   var _dl=document.getElementById('c5docsLink');if(_dl)_dl.onclick=function(){c5OpenDocsReview();};
+  // Upload Final — the human-reviewed deck; the hidden file input does the actual upload.
+  var _uff=document.getElementById('c5fwFinalFile');
+  var _ufb=document.getElementById('c5fwUploadFinalBtn');if(_ufb&&_uff)_ufb.onclick=function(){_uff.click();};
+  if(_uff)_uff.onchange=function(){var f=_uff.files&&_uff.files[0];if(f)c5fwStoreFinal(f);};
+  var _ufr=document.getElementById('c5fwFinalReplace');if(_ufr&&_uff)_ufr.onclick=function(){_uff.click();};
+  var _ufx=document.getElementById('c5fwFinalRemove');if(_ufx)_ufx.onclick=function(){c5fwFinalRemove();};
   var _ra=document.getElementById('c5reanalyzeBtn');if(_ra)_ra.onclick=function(){
     if(typeof window.reanalyzeStoredDocs!=='function'){c5OpenDocsReview();return;}
     var o=_ra.textContent;_ra.disabled=true;_ra.textContent='↻ Re-scoring…';
@@ -4932,6 +4941,34 @@ function c5GapUpload(target){
     window.location.href=base+'#upload='+encodeURIComponent(target||'');
   }catch(_){}
 }
+/* The human-reviewed final auditor deck, uploaded here after review. Stored in
+   localStorage with who uploaded it and when; the file itself is kept for re-download
+   when small enough for localStorage, otherwise only its metadata is recorded. */
+function c5fwFinalGet(){try{return JSON.parse(localStorage.getItem('cyberrx_fw_final')||'null');}catch(_){return null;}}
+function c5fwFinalMetaHtml(){
+  var f=c5fwFinalGet();if(!f)return '';
+  var when='';try{when=(typeof fmtWhen==='function')?fmtWhen(f.at):new Date(f.at).toLocaleString();}catch(_){}
+  return '<div id="c5fwFinalMeta" style="margin-top:9px;font-size:12px;color:var(--ink-2);display:flex;align-items:center;gap:12px;flex-wrap:wrap">'+
+    '<span style="color:var(--good);font-weight:700">✓ Final deck on file</span>'+
+    '<span><b style="color:var(--ink)">'+c5esc(f.name||'final deck')+'</b></span>'+
+    '<span>uploaded by <b style="color:var(--ink)">'+c5esc(f.by||'the CISO')+'</b>'+(when?(' · '+c5esc(when)):'')+'</span>'+
+    (f.dataUrl?('<a href="'+f.dataUrl+'" download="'+c5esc(f.name||'final-deck')+'" style="color:var(--blue);font-weight:600">Download</a>'):'')+
+    '<a id="c5fwFinalReplace" style="color:var(--blue);font-weight:600;cursor:pointer">Replace</a>'+
+    '<a id="c5fwFinalRemove" style="color:var(--crit);font-weight:600;cursor:pointer">Remove</a>'+
+  '</div>';
+}
+function c5fwStoreFinal(file){
+  if(!file)return;
+  var by=(typeof c5CisoName==='function'&&c5CisoName())||'the CISO';
+  function save(dataUrl){var o={name:file.name,size:file.size,by:by,at:Date.now()};if(dataUrl)o.dataUrl=dataUrl;
+    try{localStorage.setItem('cyberrx_fw_final',JSON.stringify(o));}
+    catch(_){try{delete o.dataUrl;localStorage.setItem('cyberrx_fw_final',JSON.stringify(o));}catch(__){}} // too big to keep the file — record the metadata
+    try{c5Frameworks();}catch(___){}}
+  // Keep the file for re-download only when small enough for localStorage (~3 MB).
+  if(file.size<=3*1024*1024&&typeof FileReader!=='undefined'){var r=new FileReader();r.onload=function(){save(String(r.result||''));};r.onerror=function(){save(null);};try{r.readAsDataURL(file);}catch(_){save(null);}}
+  else save(null);
+}
+function c5fwFinalRemove(){try{localStorage.removeItem('cyberrx_fw_final');}catch(_){}try{c5Frameworks();}catch(__){}}
 /* "connect now" on a missing-telemetry gap → onboarding, focused on the connector for
    that tool. Same shell-safe routing as c5GapUpload (never navigates the cockpit's own
    frame): ask the shell to switch views, falling back to a #connect= hash when standalone. */
@@ -5108,10 +5145,50 @@ function c5CloseDocsReview(){var sc=document.getElementById('docScrim'),md=docum
    (cyberrx_doc_text is keyed by doc-type with {text, filename}) — so a reviewed
    policy can be opened and read here without a re-upload. */
 function c5DocTextMap(){var m={};try{var tx=JSON.parse(localStorage.getItem('cyberrx_doc_text')||'{}')||{};Object.keys(tx).forEach(function(k){var e=tx[k];if(e&&e.filename&&e.text)m[e.filename]=e.text;});}catch(_){}return m;}
+/* If a stored document is a raw PDF byte stream (starts with %PDF), pull the human-
+   readable text out of its content stream — the strings shown by (…)Tj / […]TJ
+   operators, with the Td / TD / T-star / ET operators treated as line breaks — so the
+   viewer shows readable prose instead of PDF operators. Plain text is returned as-is. */
+function c5PdfText(raw){
+  try{
+    if(typeof raw!=='string')return raw;
+    if(!/^\s*%PDF/.test(raw.slice(0,50)))return raw;
+    var s=raw,n=s.length,i=0,line='',out=[];
+    function flush(){var t=line.replace(/\s+$/,'');if(t.replace(/\s/g,'').length)out.push(t);line='';}
+    while(i<n){
+      var ch=s[i];
+      if(ch==='('){
+        var j=i+1,depth=1,str='';
+        while(j<n){
+          var c=s[j];
+          if(c==='\\'){
+            var nx=s[j+1];
+            if(nx==='n'){str+=' ';j+=2;continue;}
+            if(nx==='r'){j+=2;continue;}
+            if(nx==='t'){str+='\t';j+=2;continue;}
+            if(nx==='('||nx===')'||nx==='\\'){str+=nx;j+=2;continue;}
+            if(nx>='0'&&nx<='7'){var oct=nx,k=j+2,cc=1;while(k<n&&cc<3&&s[k]>='0'&&s[k]<='7'){oct+=s[k];k++;cc++;}str+=String.fromCharCode(parseInt(oct,8)&0xff);j=k;continue;}
+            str+=(nx||'');j+=2;continue;
+          }
+          if(c==='('){depth++;str+=c;j++;continue;}
+          if(c===')'){depth--;if(depth===0){j++;break;}str+=c;j++;continue;}
+          str+=c;j++;
+        }
+        line+=str;i=j;continue;
+      }
+      if(ch==='T'&&(s[i+1]==='d'||s[i+1]==='D'||s[i+1]==='*')){flush();i+=2;continue;}
+      if(ch==='E'&&s[i+1]==='T'){flush();i+=2;continue;}
+      i++;
+    }
+    flush();
+    var text=out.join('\n').replace(/\n{3,}/g,'\n\n').trim();
+    return text||raw;
+  }catch(_){return raw;}
+}
 /* Open the uploaded document itself in a reader overlay (above the review modal). */
 function c5ViewDoc(fname){
   try{
-    var txt=c5DocTextMap()[fname];
+    var txt=c5PdfText(c5DocTextMap()[fname]);
     var old=document.getElementById('c5docViewer');if(old&&old.parentNode)old.parentNode.removeChild(old);
     var wrap=document.createElement('div');wrap.id='c5docViewer';
     wrap.style.cssText='position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;background:rgba(20,33,72,.5)';

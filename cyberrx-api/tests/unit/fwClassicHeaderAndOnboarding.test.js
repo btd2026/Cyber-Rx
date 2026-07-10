@@ -17,14 +17,17 @@ const cStart = ciso.indexOf('function c5FrameworksClassic(');
 const classic = ciso.slice(cStart, ciso.indexOf('\nfunction ', cStart + 10));
 
 describe('classic Program-Health header — export buttons', () => {
-  it('has Auditor pack (PPTX), Final (no-watermark export), and Scorecard + POA&M', () => {
+  it('has Auditor pack (PPTX), Upload Final, and Scorecard + POA&M', () => {
     expect(classic).toContain('>Auditor pack (PPTX)</button>');
-    expect(classic).toMatch(/onclick="c5fwExport\(true\)"[^>]*>Final<\/button>/);
+    expect(classic).toMatch(/id="c5fwUploadFinalBtn"[^>]*>↥ Upload Final<\/button>/);
     expect(classic).toContain('>Scorecard + POA&amp;M</button>');
   });
-  it('does not use the reverted "Upload Final" / drawer experiments', () => {
-    expect(ciso).not.toContain('Upload Final');
-    expect(ciso).not.toContain('function c5fwUploadFinal');
+  it('Upload Final replaces the old no-watermark "Final" export button', () => {
+    // the middle button is now an upload, not a c5fwExport(true) download
+    expect(classic).not.toMatch(/onclick="c5fwExport\(true\)"[^>]*>Final<\/button>/);
+    expect(classic).toContain('id="c5fwFinalFile"'); // hidden file input drives the upload
+  });
+  it('does not resurrect the drawer / stats experiments', () => {
     expect(ciso).not.toContain('function c5FwEvidenceStats');
     expect(classic).not.toContain('Coverage stats');
     expect(classic).not.toContain('c5fwStatsBtn');
