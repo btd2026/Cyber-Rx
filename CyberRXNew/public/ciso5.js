@@ -3433,10 +3433,13 @@ function c5cfRoi(){
     primaryBtn={mid:'eff_spend',txt:'Connect security spend data'};
     secondaryBtn={mid:TD.mid,txt:'Review '+cand+' ROI candidate'};
   }
+  var demo=(typeof signalsAreDemo==='function')&&signalsAreDemo();
+  var roiInputsN=[redConn,haveSpend].filter(Boolean).length;
   host.innerHTML=c5header()+
     c5shell('Cyber ROI · is our security spend paying off?','Modeled exposure reduction is visible, but spend ROI is not complete until security spend is connected.',null,'Nerion can show modeled exposure reduction today. To prove return per dollar, connect budget, vendor spend, project cost, and labor allocation data.')+
     '<div class="c5cards">'+cards+'</div>'+
-    c5bl('Bottom line',blHead,null,blBody,primaryBtn,secondaryBtn);
+    c5bl('Bottom line',blHead,null,blBody,primaryBtn,secondaryBtn)+
+    '<div class="c5foot">Modeled exposure reduction from your control ledger; ROI needs security spend attributed (budget · GL · vendor spend · project cost). · '+roiInputsN+' of 2 ROI inputs connected'+(demo?' · demo':'')+'</div>';
 }
 /* Tab 03 — Insurance & risk transfer */
 function c5covBar(){
@@ -3514,10 +3517,10 @@ function c5cfDecisions(){
   var host=document.getElementById('cf-decisions');if(!host)return;
   var ec=c5get('exp_identity'),gap=c5get('cf_ins_gap'),em=c5get('exp_email');
   // Driver naming is data-ranked (c5TopDriver), never hard-coded to identity.
-  var TD=c5TopDriver(),dm=c5get(TD.mid);
+  var TD=c5TopDriver(),dm=c5get(TD.mid),IDF=c5IdFix();
   var list=[
-    c5dec('cf',1,'Fund the '+TD.short+' fix?','Your single largest exposure driver'+(dm.connected?(' — '+dm.displayValue):'')+'. Funding it reduces the modeled exposure and keeps modeled loss within appetite.',
-      {on:'Approve & fund the '+TD.short+' fix',osum:(dm.connected?('Reduces '+dm.displayValue+' · keeps you within appetite'):'Reduces the top exposure driver'),pros:['Reduces your single largest exposure driver.','Highest return per dollar of the choices here.','Keeps modeled loss within the board-approved appetite.'],cons:['Requires capital this cycle (scoped with your team).']}),
+    c5dec('cf',1,'Fund the '+IDF.short+' fix?','Your single largest exposure driver'+(dm.connected?(' — '+dm.displayValue):'')+'. Funding it reduces the modeled exposure and keeps modeled loss within appetite — the one fix that moves every CFO tab (appetite, ROI, insurance).',
+      {on:'Approve & fund the '+IDF.short+' fix',osum:(dm.connected?('Reduces '+dm.displayValue+' · keeps you within appetite'):'Reduces the top exposure driver'),pros:['Reduces your single largest exposure driver.','Highest return per dollar of the choices here.','Keeps modeled loss within the board-approved appetite and trims the insurance tail.'],cons:['Requires capital this cycle (scoped with your team).','Interim exposure persists across the '+IDF.timeline+' rollout — not removed on day one.']}),
     c5dec('cf',2,'Close the insurance gap — buy up, or reduce the tail?','Weigh transferring more risk to insurance against reducing the modeled tail at its source.',
       {on:'Reduce the tail — fund the '+TD.short+' fix',osum:'Cheaper than extra premium in most cases',pros:['Lowers the severe-year tail at source.','Improves your renewal position.'],cons:['Takes a cycle to land vs. an immediate transfer.']},
       [{on:'Buy up cover — raise the limit',osum:'Immediate transfer · higher premium',pros:['Caps the financial loss immediately.'],cons:['Adds recurring premium.','Transfers the loss; does not reduce it.']},
@@ -3527,9 +3530,10 @@ function c5cfDecisions(){
       [{on:'Fund additional mitigation for this driver',osum:'Extra spend · marginal reduction',pros:['Further lowers an already-small exposure.'],cons:['Low return per dollar vs. the top driver.']}])
   ];
   host.innerHTML=c5header()+
-    c5shell('Risk decisions · what needs my sign-off?','Three decisions are waiting — one clear yes, one to weigh, one to accept.',null,'Each decision below gives you the options — the recommended call is marked, but the choice is yours. Choosing one stamps it with your name and time, keeps it editable for 24 hours, and (where you connected Jira / ServiceNow at onboarding) opens a tracked project whose status is pulled back on refresh.')+
+    c5shell('Risk decisions · what needs my sign-off?','One fix converges across the financials — then the transfer and accept calls that are yours.',null,'Each decision below gives you the options — the recommended call is marked, but the choice is yours. Choosing one stamps it with your name and time, keeps it editable for 24 hours, and (where you connected Jira / ServiceNow at onboarding) opens a tracked project whose status is pulled back on refresh.')+
+    c5convergeStrip('cfo')+
     c5decisions(list)+
-    '<div class="c5foot">Each decision is priced from your risk model and spend records. Every figure traces to its source.</div>';
+    '<div class="c5foot">Each decision is priced from your risk model and spend records. Every figure traces to its source · no AI/LLM at run-time.</div>';
 }
 
 /* ================= CEO seat — same engine, strategy & trust lens ================= */
