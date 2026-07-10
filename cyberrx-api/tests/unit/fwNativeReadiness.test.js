@@ -102,3 +102,29 @@ describe('the crosswalk finding names the mapped CSF controls and shows they are
     expect(src).toContain("cc.src==='document'?'📄 document review':cc.src==='system'?'🔌 connected tool'");
   });
 });
+
+describe('clicking a mapped native control does not throw (the sel-scope bug)', () => {
+  // c5fwSource(node) takes only `node` — it must NOT reference a bare `sel` (which is not in
+  // scope there) or clicking a crosswalk-scored SOC2/HIPAA/CIS/ISO control throws and the
+  // detail panel breaks. It must read the framework from the FW_SEL global instead.
+  it('c5fwSource has no out-of-scope `sel`, and reads FW_SEL for the framework name', () => {
+    const a = src.indexOf('function c5fwSource(node)');
+    const fn = src.slice(a, src.indexOf('\nfunction ', a + 10));
+    expect(fn).not.toMatch(/FW_NAMES\[sel\]/); // the bug: bare `sel` is undefined in c5fwSource
+    expect(fn).toContain('FW_NAMES[FW_SEL]'); // fixed: use the global selection
+  });
+  it('c5fwFinding renders a mapped node without throwing', () => {
+    function grab(n) { const i = src.indexOf('function ' + n + '('); return src.slice(i, src.indexOf('\nfunction ', i + 10)); }
+    global.C5FW_TARGET = 3.5; global.C5FW_FLOOR = 2.0; global.CMMI_LABELS = { 0: 'None', 3: 'Defined', 5: 'Opt' };
+    global.cmmiColor = () => 'ink'; global.c5esc = (s) => String(s == null ? '' : s); global.c5fwCadence = () => 'monthly';
+    global.FW_NAMES = { hipaa: 'HIPAA Security Rule' }; global.FW_SEL = 'hipaa'; global.C5_DESIGN = {}; global.designFetch = () => {}; global.fwDeployedIds = () => ({});
+    global.controlCmmi = (id) => (/^[A-Z]{2}\.[A-Z]{2}-/.test(id) ? { score: 3.0, src: 'document', doc: { doc: 'Policy.pdf' } } : { score: 0, src: 'none' });
+    // eslint-disable-next-line no-eval
+    const c5fwFinding = eval([grab('c5fwStatus'), grab('c5fwLvl'), grab('c5fwCol'), grab('c5fwSource'), grab('c5fwFindingData'), grab('c5DesignSection'), grab('c5fwFinding'), '\n;c5fwFinding'].join('\n'));
+    const node = { type: 'ctl', id: '308(a)(2)', name: 'Assigned security responsibility', score: 3.0, tested: true, status: 'Readiness (crosswalk)', src: 'mapped', mapped: ['GV.RR-02'], related: ['GV.RR-02'], readiness: true };
+    let html = '';
+    expect(() => { html = c5fwFinding('hipaa', node); }).not.toThrow();
+    expect(html.length).toBeGreaterThan(100);
+    ['C5FW_TARGET', 'C5FW_FLOOR', 'CMMI_LABELS', 'cmmiColor', 'c5esc', 'c5fwCadence', 'FW_NAMES', 'FW_SEL', 'C5_DESIGN', 'designFetch', 'fwDeployedIds', 'controlCmmi'].forEach((k) => { delete global[k]; });
+  });
+});

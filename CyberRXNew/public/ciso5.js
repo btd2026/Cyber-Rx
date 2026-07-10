@@ -556,6 +556,19 @@ function c5get(id){
         ],
         sources:[{tool:'Nerion engine',connector:'nerion',field:'rosi',lastRefresh:c5ago()}],
         note:'Every dollar of security spend expressed as risk removed — the CFO’s language.',connectTool:'import your funded initiatives'});}
+    case 'cf_roi_readiness':{var rst=(typeof ROI_STATE!=='undefined'&&ROI_STATE)?ROI_STATE:null;var spendConn=!!(rst&&rst.invested>0);var erm=c5get('eff_removed');var redOk=!!erm.connected;
+      var complete=spendConn&&redOk,stateTxt=complete?'Complete':(redOk?'Partial':'Not enough evidence');
+      return c5obj({id:id,name:'ROI readiness',connected:redOk,displayValue:redOk?stateTxt:'Not enough evidence',label:'computed',color:complete?'good':(redOk?'warn':'muted'),
+        impact:'ROI readiness is whether Nerion has the two inputs it needs to prove return per dollar: the modeled exposure your controls reduce, and the security spend attributed to them. '+(complete?'Both are in — the return figure is trustworthy.':(redOk?'The exposure model is connected, but spend is not yet attributed, so return per dollar cannot be computed — only estimated.':'Neither input is connected yet.')),
+        found:complete?'Both inputs are connected — the return-per-dollar figure is fully evidenced.':(redOk?'Exposure reduction is modeled, but security spend is not yet attributed — so return per dollar is pending, not wrong.':'Neither the exposure model nor spend is connected, so ROI cannot be shown.'),
+        affected:'The credibility of the ROI number the CFO takes to the board.',
+        whyNow:complete?'Keep spend attribution current so the ROI figure stays defensible as the portfolio changes.':'Connect '+(redOk?'security spend (budget, GL, vendor spend, project cost)':'the control ledger and security spend')+' to turn the modeled reduction into a proven return per dollar.',
+        formula:'ROI readiness = (exposure model connected) AND (security spend attributed)',
+        method:'A readiness check, not a score. It reports which of the two ROI inputs are connected — the modeled exposure reduction and the attributed security spend — so a partial ROI is never presented as a proven one.',
+        inputs:[{name:'Exposure model (reduction)',value:redOk?'Connected':'Not connected',color:redOk?'good':'muted',source:'eff_removed'},{name:'Security spend attributed',value:spendConn?'Connected':'Not connected',color:spendConn?'good':'muted',source:'eff_spend'},{name:'= ROI readiness',value:stateTxt,color:complete?'good':(redOk?'warn':'muted'),source:'both inputs required'}],
+        sources:[{tool:'Nerion engine',connector:'nerion',field:'roi_inputs',lastRefresh:c5ago()}],
+        action:complete?'ROI is fully evidenced — keep spend attribution current at each planning cycle.':('Connect '+(redOk?'security spend data (budget, GL, vendor spend, project cost)':'your control ledger and security spend')+' to complete ROI and prove return per dollar.'),
+        note:'Whether return per dollar is proven or still pending — honest about the missing input.',connectTool:'security spend (budget, GL, vendor spend, project cost)'});}
     case 'threat_status':{var oi=sig('open_incidents'),ta=sig('threat_actors_active');var conn=oi!=null;
       return c5obj({id:id,name:'Live attack status',connected:conn,displayValue:conn?(oi>0?(oi+' active campaign'+(oi>1?'s':'')):'No confirmed active intrusion in connected telemetry'):'—',label:'live',color:conn?(oi>0?'crit':'good'):'muted',
         formula:'live status = open incident campaigns (SIEM); sector actors from the threat-intel feed',
@@ -930,7 +943,7 @@ function c5get(id){
       return c5obj({id:id,name:'Families assured',connected:conn,displayValue:conn?(A.assured+' of '+A.fams.length):'—',label:'computed',color:conn?(A.gaps>0?'warn':'good'):'muted',
         formula:'families assured = control families evidenced at or above the assurance threshold by tests + telemetry',
         method:'Assurance is evidence-based — deployment telemetry and last-test signals, never a self-attested flag.',
-        inputs:A.fams.map(function(f){return {name:f.l,value:f.status+(f.deploy!=null?(' · '+f.deploy+'% deployed'):''),color:(f.status==='Assured'?'good':f.status==='Gap'?'crit':f.connected?'warn':'muted'),source:f.evidence};}).concat([{name:'= Assured',value:A.assured+' of '+A.fams.length+' at/above the assurance threshold ('+A.gaps+' with gaps)',source:'count(assured) ÷ total'}]),
+        inputs:A.fams.map(function(f){var gap=(f.connected&&f.status!=='Assured');return {name:f.l,value:f.status+(f.deploy!=null?(' · '+f.deploy+'% deployed'):'')+(gap?' gap':''),color:(f.status==='Assured'?'good':f.status==='Gap'?'crit':f.connected?'warn':'muted'),source:f.evidence,drillMid:gap?'cr_gaps':undefined};}).concat([{name:'= Assured',value:A.assured+' of '+A.fams.length+' at/above the assurance threshold ('+A.gaps+' with gaps)',source:'count(assured) ÷ total'}]),
         sources:[{tool:'Control tools + GRC',connector:'assurance',field:'test_evidence',lastRefresh:c5ago()}],
         action:conn?(A.gaps>0?('Close '+A.gaps+' assurance gap'+(A.gaps>1?'s':'')+' — for each family below, complete deployment and attach current test evidence to reach the assurance threshold.'):'All connected control families are assured by evidence; keep the tests and telemetry current.'):'Connect your control tools and GRC test evidence so family assurance is measured, not claimed.',table:(conn&&A.gaps>0)?{title:'Control families not yet assured · what each means and how to close it',cols:['Family','What it means','To close it'],rows:A.fams.filter(function(f){return f.connected&&f.status!=='Assured';}).map(function(f){return [{text:'⚠ '+f.l,color:f.status==='Gap'?'crit':'warn',bold:true},f.status+' — '+f.evidence,{text:'Complete deployment and attach current test results / telemetry to reach the assurance threshold.',color:'blue'}];})}:null,note:'How many control families are actually assured by evidence — not how many are claimed.',connectTool:'your control tools + GRC test evidence'});}
     case 'cr_gaps':{var A2=c5Assurance();var conn=A2.fams.some(function(f){return f.connected;});
@@ -1917,7 +1930,8 @@ function c5domainKey(m){var id=String((m&&m.id)||'');
   if(/^tac_|attack.?path|mitre/.test(id))return 'threat';
   if(/^ais_|supply|sbom|crypto|cbom/.test(id))return 'aisupply';
   if(/^coo_|^cops_|recover|continu|_ops|process|service|uptime|availab/.test(id))return 'operations';
-  if(/^cf_|roi|insur|premium|_fin|cost/.test(id))return 'financial';
+  if(/^cf_ins|cf_premium|cf_tail|insur|premium/.test(id))return 'insurance';
+  if(/^cf_|roi|_fin|cost/.test(id))return 'financial';
   if(/^ceo_|growth|trust|objective|customer/.test(id))return 'growth';
   if(/^dom_|^peer|^fw|matur|coverage|failing/.test(id))return 'maturity';
   if(/^clo_|legal|regulat|material|disclos|sox/.test(id))return 'legal';
@@ -1978,6 +1992,30 @@ function c5risk(m){
       mo:'This is in good shape right now — nothing here is creating pressure on the business. The value is in keeping it there.',mr:'This is not where it should be, and the gap is exposure the business is carrying — the weaker it is, the more room an incident has to cause harm.',
       wo:'Within target today — hold the line; the risk is drift, so keep it monitored on the current cadence.',wr:'Left unaddressed the gap persists and the risk the business carries keeps rising until it is closed.'}
   };
+  // Insurance is its own world — and premium, limit, coverage, gap and tail each mean
+  // something different, so they are written distinctly (not one shared "financial" line).
+  if(c5domainKey(m)==='insurance'){
+    var iid=String(m.id||''),iok=(m.color!=='crit'&&m.color!=='warn'); // neutral facts read calm, not "at risk"
+    var INS={
+      cf_ins_limit:{i:'This is the slice of a catastrophic cyber loss your insurer absorbs instead of your balance sheet — risk transferred off the company.',a:'The severe-year (tail) loss and the capital you would otherwise hold against it.',
+        mo:'Your policy limit transfers most of the modeled worst-year loss to the insurer — the retained slice is small.',mr:'A meaningful part of your modeled worst-year loss sits above the policy limit — that excess stays on your balance sheet unless you raise the limit or add an excess layer.',
+        wo:'Comfortable today — but the tail moves with your risk model, so re-test the limit against it at each renewal.',wr:'Until the limit is raised, the uninsured excess is capital the business is silently exposed to in a bad year.'},
+      cf_premium:{i:'This is the annual price of transferring cyber risk to an insurer — worth it when the loss it offloads dwarfs the cost.',a:'Your renewal position, and the posture evidence that sets the price.',
+        mo:'The premium is buying real protection — the coverage it secures is large relative to what you pay.',mr:'The premium looks high relative to what it transfers — worth challenging at renewal, or redirecting toward controls that cut the underlying risk.',
+        wo:'Reasonable today — the lever is renewal: demonstrable control improvements are how you hold or lower it.',wr:'Premium is repriced against your posture at renewal — without evidence of improvement it tends to rise.'},
+      cf_ins_gap:{i:'This is the part of a severe cyber year your policy would NOT cover — retained on the balance sheet by default.',a:'The uninsured excess above your policy limit.',
+        mo:'The tail is essentially fully insured — little or no uninsured excess is being retained.',mr:'A slice of the modeled worst year is uninsured — if that year happened, the business absorbs it directly unless it is transferred or capital is set aside for it.',
+        wo:'Fully covered today — re-test after any risk-model or policy change.',wr:'This uninsured slice is a live balance-sheet exposure until you raise the limit, add a layer, or ring-fence capital for it.'},
+      cf_ins_cov:{i:'This is how much of a severe cyber year your policy actually transfers off the balance sheet.',a:'The insured limit measured against the modeled tail.',
+        mo:'Your policy transfers most or all of the modeled tail — the balance sheet is well protected against a bad year.',mr:'Only part of the modeled tail is transferred — the remainder is retained until you extend cover.',
+        wo:'Strong coverage today — hold the tower and re-confirm at renewal.',wr:'Partial coverage leaves retained tail on the books — close it by raising the limit or adding an excess layer.'},
+      cf_tail:{i:'This is your modeled worst-year cyber loss — the severe (roughly 1-in-20) scenario your insurance and capital planning are sized against.',a:'The catastrophic-loss scenario behind your insurance and reserves.',
+        mo:'The modeled tail is contained relative to your cover and appetite — a bad year would be absorbable.',mr:'The modeled tail is large — a severe cyber year would be a material financial event, which is exactly what your insurance and retained capital must be sized against.',
+        wo:'Sized and covered today — revisit it as your exposure model updates.',wr:'A large, under-covered tail is the scenario that turns a cyber incident into a balance-sheet event — keep cover and capital aligned to it.'}
+    };
+    var ix=INS[iid]||INS.cf_ins_limit;
+    return {impact:ix.i,affected:ix.a,means:(iok?ix.mo:ix.mr),whyNow:(iok?ix.wo:ix.wr)};
+  }
   var d=D[c5domainKey(m)]||D.generic;
   return {impact:d.i,affected:d.a,means:(ok?d.mo:d.mr),whyNow:(ok?d.wo:d.wr)};}
 function c5InspectObj(m){
@@ -2033,11 +2071,14 @@ function c5InspectObj(m){
     } else if(m.inputs&&m.inputs.length){
       _tbl='<table class="itbl"><thead><tr><th>Item</th><th>Value</th><th>Source</th></tr></thead><tbody>'+m.inputs.map(function(i){
         var dot=i.color?('<span class="c5sq '+c5sqClass(i.color)+'" style="display:inline-block;width:9px;height:9px;margin-right:7px;vertical-align:middle"></span>'):'';
-        // When an item carries a gap, make it clickable to open exactly what the gap is
-        // (i.drill = the area to open in the protection detail). A visible affordance is
-        // shown whenever the value mentions a gap so the executive knows it drills in.
+        // When an item carries a gap, make it clickable to open exactly what the gap is.
+        // Two drill targets are supported so any metric can wire it: i.drill opens a
+        // business-area protection detail (data-c5area); i.drillMid opens another metric
+        // (data-c5m). A visible "· see the gap →" affordance appears whenever the value
+        // mentions a gap so the executive knows the item drills in.
         var hasGap=/gap/i.test(String(i.value||''));
-        var nameCell=i.drill?('<span class="c5gaplink" data-c5area="'+c5esc(String(i.drill))+'" style="cursor:pointer;color:var(--ink);border-bottom:1px dashed var(--line)" title="See exactly what the gap is">'+i.name+'</span>'+(hasGap?' <span data-c5area="'+c5esc(String(i.drill))+'" style="cursor:pointer;color:var(--blue);font-weight:600;white-space:nowrap">· see the gap →</span>':'')):i.name;
+        var _dt=i.drill?['data-c5area',String(i.drill)]:(i.drillMid?['data-c5m',String(i.drillMid)]:null);
+        var nameCell=_dt?('<span class="c5gaplink" '+_dt[0]+'="'+c5esc(_dt[1])+'" style="cursor:pointer;color:var(--ink);border-bottom:1px dashed var(--line)" title="See exactly what the gap is">'+i.name+'</span>'+(hasGap?' <span '+_dt[0]+'="'+c5esc(_dt[1])+'" style="cursor:pointer;color:var(--blue);font-weight:600;white-space:nowrap">· see the gap →</span>':'')):i.name;
         return '<tr><td>'+dot+nameCell+'</td><td class="v">'+i.value+'</td><td class="src">'+i.source+'</td></tr>';}).join('')+'</tbody></table>';
     }
     // Nothing tabular to show → fall back to the compact key-evidence summary so the
@@ -3227,26 +3268,27 @@ function c5cfRoi(){
   var er=c5get('eff_removed');var redConn=!!er.connected;var redVal=redConn?er.displayValue:'Not connected';
   var TD=c5TopDriver(); // data-ranked reallocation candidate — never hard-coded to identity
   var cand=TD.ok?TD.name:'the largest driver',candL=TD.ok?TD.phrase:'the largest driver';
-  function card(t,v,badge,badgeCls,sub,col){return '<div class="c5card" style="min-width:200px"><div class="c5card-top"><span class="c5card-l">'+t+'</span><span class="c5pill '+(badgeCls||'n')+'" style="font-size:9px">'+badge+'</span></div><div class="c5card-v" style="color:var(--'+(col||'ink')+')">'+v+'</div><div class="c5esub" style="font-size:11px;color:var(--muted);margin-top:2px">'+sub+'</div></div>';}
+  // Each card opens its own detail drawer (data-c5m), like every other card in the cockpit.
+  function card(t,v,badge,badgeCls,sub,col,mid){return '<div class="c5card"'+(mid?(' data-c5m="'+mid+'"'):'')+' style="min-width:200px;position:relative'+(mid?';cursor:pointer':'')+'">'+(mid?'<span class="c5opc-go" style="position:absolute;top:10px;right:12px;font-size:10px;color:var(--blue);font-weight:600">details ›</span>':'')+'<div class="c5card-top"><span class="c5card-l">'+t+'</span><span class="c5pill '+(badgeCls||'n')+'" style="font-size:9px">'+badge+'</span></div><div class="c5card-v" style="color:var(--'+(col||'ink')+')">'+v+'</div><div class="c5esub" style="font-size:11px;color:var(--muted);margin-top:2px">'+sub+'</div></div>';}
   var redCard=redConn
-    ?card('Modeled exposure reduction',redVal,'Modeled','a','Estimated exposure reduced by current controls.','good')
-    :card('Modeled exposure reduction','Not connected','Model not connected','n','Connect your control ledger to model exposure reduction.','muted');
+    ?card('Modeled exposure reduction',redVal,'Modeled','a','Estimated exposure reduced by current controls.','good','eff_removed')
+    :card('Modeled exposure reduction','Not connected','Model not connected','n','Connect your control ledger to model exposure reduction.','muted','eff_removed');
   var cards,blHead,blBody,primaryBtn,secondaryBtn;
   if(haveSpend){
     var mult=(typeof roiMult==='function')?roiMult(st.ret):Math.round(st.ret);
     cards=redCard+
-      card('Security spend attributed',usd(st.invested),'Connected','g','Budget, vendor spend and project cost attributed.','ink')+
-      card('Return per dollar',mult+'×','Computed','a','Modeled exposure reduction ÷ attributed spend.','good')+
-      card('ROI readiness','Complete','Spend connected','g','Exposure model and spend both connected.','good');
+      card('Security spend attributed',usd(st.invested),'Connected','g','Budget, vendor spend and project cost attributed.','ink','eff_spend')+
+      card('Return per dollar',mult+'×','Computed','a','Modeled exposure reduction ÷ attributed spend.','good','eff_return')+
+      card('ROI readiness','Complete','Spend connected','g','Exposure model and spend both connected.','good','cf_roi_readiness');
     blHead='Spend ROI is computed on attributed spend.';
     blBody='Your program returns '+mult+'× on '+usd(st.invested)+' of attributed spend. Reducing '+candL+' delivers the most modeled exposure reduction per dollar — the strongest reallocation candidate.';
     primaryBtn={mid:TD.mid,txt:'Review '+cand+' ROI'};
     secondaryBtn={mid:'eff_spend',txt:'Review spend attribution'};
   } else {
     cards=redCard+
-      card('Security spend attributed','Not connected','Spend data needed','n','Connect budget, GL, vendor spend, and project cost data.','muted')+
-      card('Return per dollar','Not enough evidence','Pending spend data','n','ROI cannot be calculated until spend is attributed.','muted')+
-      card('ROI readiness',redConn?'Partial':'Not enough evidence',redConn?'Exposure model connected':'Model + spend needed',redConn?'a':'n','Spend attribution is the missing input.',redConn?'warn':'muted');
+      card('Security spend attributed','Not connected','Spend data needed','n','Connect budget, GL, vendor spend, and project cost data.','muted','eff_spend')+
+      card('Return per dollar','Not enough evidence','Pending spend data','n','ROI cannot be calculated until spend is attributed.','muted','eff_return')+
+      card('ROI readiness',redConn?'Partial':'Not enough evidence',redConn?'Exposure model connected':'Model + spend needed',redConn?'a':'n','Spend attribution is the missing input.',redConn?'warn':'muted','cf_roi_readiness');
     blHead='Modeled exposure reduction is real; spend ROI is pending.';
     blBody=(redConn?('Nerion shows '+redVal+' in modeled exposure reduction, but cannot prove cyber spend ROI until spend data is connected. '):'Connect your control ledger and security spend to model exposure reduction and prove return per dollar. ')+'Reducing '+candL+' appears to be the strongest exposure-reduction candidate; connect spend data to confirm return per dollar.';
     primaryBtn={mid:'eff_spend',txt:'Connect security spend data'};
@@ -4558,7 +4600,7 @@ function c5fwSource(node){
         return '<div style="font-size:11px;color:var(--ink-2);line-height:1.4"><b>'+c5esc(cid)+'</b> — '+_ic+_dn+' · CMMI '+(cc.score!=null?cc.score:0)+'</div>';}).join('');
       h+='<div class="c5fw-src"><span class="c5fw-srcic">🔗</span><div style="flex:1;min-width:0">Scored by crosswalk from <b>your evidence</b> — this control inherits the maturity of the <b>'+_mids.length+'</b> NIST CSF 2.0 subcategor'+(_mids.length===1?'y':'ies')+' it shares an objective with. Each of those is evidenced from your connected tools + reviewed documents:'+
         (_rows?('<div style="margin-top:6px;display:flex;flex-direction:column;gap:2px;border-left:2px solid var(--line);padding-left:9px">'+_rows+(_mids.length>8?('<div style="font-size:11px;color:var(--muted)">+ '+(_mids.length-8)+' more</div>'):'')+'</div>'):' none of the mapped CSF controls are evidenced yet — connect the tool or upload the document they await.')+
-        '<div style="font-size:11px;color:var(--muted);margin-top:6px">A <b>readiness indicator</b> from the public crosswalk — a defensible estimate of where you stand, not a certified '+((typeof FW_NAMES!=='undefined'&&FW_NAMES[sel])||'framework')+' audit opinion (your assessor issues that).</div></div></div>';
+        '<div style="font-size:11px;color:var(--muted);margin-top:6px">A <b>readiness indicator</b> from the public crosswalk — a defensible estimate of where you stand, not a certified '+((typeof FW_NAMES!=='undefined'&&typeof FW_SEL!=='undefined'&&FW_NAMES[FW_SEL])||'framework')+' audit opinion (your assessor issues that).</div></div></div>';
     }
   } else {
     // Not evidenced yet — name the EXACT source this control is mapped to, so the

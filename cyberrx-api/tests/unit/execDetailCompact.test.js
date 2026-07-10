@@ -139,7 +139,8 @@ describe('drawer wiring intact (source scan)', () => {
   });
   it('an evidence item that carries a gap is clickable to open exactly what the gap is', () => {
     expect(fn).toContain('i.drill?'); // rows with a drill target render a clickable link
-    expect(fn).toContain('data-c5area="'); // routes to the per-area gap detail (c5areaInspect)
+    expect(fn).toContain("'data-c5area'"); // i.drill routes to the per-area gap detail (c5areaInspect)
+    expect(fn).toContain('i.drillMid'); // i.drillMid routes to another metric (data-c5m) — generic, any metric can wire it
     expect(fn).toContain('see the gap →'); // visible affordance when the value mentions a gap
   });
   it('still opens via openDrill (drill-down preserved)', () => {
