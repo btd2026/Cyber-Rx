@@ -5218,26 +5218,106 @@ function c5PdfText(raw){
   }catch(_){return raw;}
 }
 /* Open the uploaded document itself in a reader overlay (above the review modal). */
+/* The auditor annotations already produced for a document: every control attribute
+   Nerion marked present carries the VERBATIM evidence quote it found (green call-out),
+   and every attribute marked absent carries its reasoning (gap call-out). Grouped by the
+   quote so one highlighted sentence lists all the requirements it satisfies. */
+function c5DocAnnotations(fname){
+  var scores=c5DocScoresSafe(),met={},gaps=[],seenGap={};
+  Object.keys(scores).forEach(function(cid){
+    var s=scores[cid]||{};if(s.doc!==fname)return;
+    (Array.isArray(s.attrs)?s.attrs:[]).forEach(function(a){
+      if(a.found&&a.evidence){
+        var q=String(a.evidence).trim();if(q.length<6)return;
+        var key=q.replace(/\s+/g,' ').slice(0,80).toLowerCase(); // normalise whitespace so identical passages merge
+        var e=met[key]||(met[key]={quote:q,items:[]});
+        if(q.length>e.quote.length)e.quote=q;
+        e.items.push({control:cid,label:a.label});
+      } else if(!a.found){
+        var gk=cid+'|'+a.label;if(seenGap[gk])return;seenGap[gk]=1;
+        gaps.push({control:cid,label:a.label,reason:String(a.reasoning||'').trim()});
+      }
+    });
+  });
+  return {met:Object.keys(met).map(function(k){return met[k];}),gaps:gaps};
+}
+/* Highlight each evidence quote in the document text (whitespace-tolerant, anchored on a
+   prefix so truncated quotes still land), numbered to match the margin panel. Returns the
+   escaped, mark-wrapped HTML and how many annotations were located inline. */
+function c5AnnotateText(text,met){
+  var ranges=[];
+  met.forEach(function(m,idx){
+    var q=String(m.quote||'').trim();if(q.length<8)return;
+    var anchor=q.slice(0,140).replace(/[.*+?^${}()|[\]\\]/g,'\\$&').replace(/\s+/g,'\\s+');
+    var re;try{re=new RegExp(anchor);}catch(_){return;}
+    var mm=re.exec(text);if(mm)ranges.push({start:mm.index,end:mm.index+mm[0].length,ann:idx});
+  });
+  ranges.sort(function(a,b){return a.start-b.start;});
+  var kept=[],lastEnd=-1;ranges.forEach(function(r){if(r.start>=lastEnd){kept.push(r);lastEnd=r.end;}});
+  var out='',pos=0;
+  kept.forEach(function(r){
+    out+=c5esc(text.slice(pos,r.start));
+    out+='<mark class="c5ann" data-annidx="'+r.ann+'" title="Requirement evidenced — click for the finding" style="background:color-mix(in srgb,var(--good) 20%,transparent);border-bottom:2px solid var(--good);border-radius:2px;cursor:pointer;padding:0 1px">'+c5esc(text.slice(r.start,r.end))+'<sup style="font-size:9px;font-weight:800;color:var(--good);margin-left:1px">'+(r.ann+1)+'</sup></mark>';
+    pos=r.end;
+  });
+  out+=c5esc(text.slice(pos));
+  return {html:out,located:kept.length};
+}
+/* Open the uploaded document with the auditor's annotations rendered in place — the
+   policy text with each evidencing sentence highlighted and numbered, alongside a margin
+   panel of the requirements in scope (evidenced ✓ and gaps ⚠), as if reviewed by hand. */
 function c5ViewDoc(fname){
   try{
     var txt=c5PdfText(c5DocTextMap()[fname]);
+    var ann=c5DocAnnotations(fname),met=ann.met,gaps=ann.gaps;
     var old=document.getElementById('c5docViewer');if(old&&old.parentNode)old.parentNode.removeChild(old);
     var wrap=document.createElement('div');wrap.id='c5docViewer';
     wrap.style.cssText='position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;background:rgba(20,33,72,.5)';
-    var body=txt
-      ?('<pre style="white-space:pre-wrap;overflow-wrap:anywhere;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;line-height:1.65;color:var(--ink);margin:0">'+c5esc(txt)+'</pre>')
-      :('<div style="color:var(--ink-2);font-size:13px;line-height:1.6">The extracted text for this document isn’t retained in this browser. Re-upload it in onboarding’s document step to read it here.</div>');
-    wrap.innerHTML='<div style="width:min(880px,94vw);max-height:90vh;display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 24px 60px rgba(20,33,72,.45);overflow:hidden">'+
+    var annotated=txt?c5AnnotateText(txt,met):{html:'',located:0};
+    // Left column — the annotated document (or an honest note if the text wasn't retained).
+    var docCol=txt
+      ?('<div style="font-size:11px;color:var(--muted);margin-bottom:10px"><span style="background:color-mix(in srgb,var(--good) 20%,transparent);border-bottom:2px solid var(--good);padding:0 3px;border-radius:2px">highlighted</span> = a requirement Nerion evidenced · the number ties to the margin note. '+annotated.located+' of '+met.length+' evidenced passages located in the text.</div>'+
+         '<div id="c5annDoc" style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.7;color:var(--ink)">'+annotated.html+'</div>')
+      :('<div style="color:var(--ink-2);font-size:13px;line-height:1.6">The document text isn’t retained in this browser, so it can’t be shown inline — but the auditor findings Nerion recorded are in the panel. Re-upload the policy in onboarding to read it with the highlights in place.</div>');
+    // Right column — the requirements panel (evidenced + gaps).
+    function metItem(m,i){
+      var ctrls=m.items.map(function(x){return c5esc(x.control);}).filter(function(v,ix,arr){return arr.indexOf(v)===ix;}).join(' · ');
+      var labels=m.items.map(function(x){return x.label;}).filter(function(v,ix,arr){return arr.indexOf(v)===ix;}).map(c5esc).join(', ');
+      return '<div class="c5annp" id="c5annp-'+i+'" data-annidx="'+i+'" style="border:1px solid var(--line);border-left:3px solid var(--good);border-radius:8px;padding:9px 11px;margin-bottom:8px;cursor:pointer;background:var(--surface)">'+
+        '<div style="display:flex;align-items:center;gap:7px"><span style="flex:none;width:18px;height:18px;border-radius:50%;background:var(--good);color:#fff;font-size:10px;font-weight:800;display:inline-flex;align-items:center;justify-content:center">'+(i+1)+'</span><b style="font-size:12.5px;color:var(--ink)">'+labels+'</b></div>'+
+        '<div style="font-size:11px;color:var(--muted);margin-top:3px">satisfies '+ctrls+'</div>'+
+        '<div style="font-size:11.5px;color:var(--ink-2);font-style:italic;line-height:1.5;margin-top:5px;border-left:2px solid color-mix(in srgb,var(--good) 45%,var(--line));padding-left:8px">“'+c5esc(String(m.quote).slice(0,220))+(String(m.quote).length>220?'…':'')+'”</div>'+
+      '</div>';
+    }
+    function gapItem(g){
+      return '<div style="border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:8px;padding:8px 11px;margin-bottom:7px;background:var(--surface)">'+
+        '<div style="display:flex;align-items:center;gap:7px"><span style="color:var(--warn);font-weight:800">⚠</span><b style="font-size:12.5px;color:var(--ink)">'+c5esc(g.label)+'</b></div>'+
+        '<div style="font-size:11px;color:var(--muted);margin-top:3px">expected for '+c5esc(g.control)+'</div>'+
+        (g.reason?('<div style="font-size:11.5px;color:var(--ink-2);line-height:1.5;margin-top:4px">'+c5esc(g.reason.slice(0,200))+'</div>'):'')+
+      '</div>';
+    }
+    var panel='<div style="font-size:12px;color:var(--ink-2);margin-bottom:12px;line-height:1.5"><b style="color:var(--good)">'+met.length+'</b> requirement'+(met.length===1?'':'s')+' evidenced · <b style="color:var(--warn)">'+gaps.length+'</b> gap'+(gaps.length===1?'':'s')+' — the auditor call-outs Nerion recorded for this document.</div>'+
+      (met.length?('<div style="font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--good);margin:4px 0 8px">✓ Evidenced requirements</div>'+met.map(metItem).join('')):'')+
+      (gaps.length?('<div style="font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--warn);margin:14px 0 8px">⚠ Gaps — expected, not found</div>'+gaps.map(gapItem).join('')):'')+
+      ((!met.length&&!gaps.length)?'<div style="font-size:12.5px;color:var(--muted)">No stored review annotations for this document yet — run the document review to generate them.</div>':'');
+    wrap.innerHTML='<div style="width:min(1160px,96vw);max-height:92vh;display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 24px 60px rgba(20,33,72,.45);overflow:hidden">'+
       '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line);background:var(--surface-2)">'+
-        '<b style="font-family:var(--serif);font-size:15px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📄 '+c5esc(fname)+'</b>'+
+        '<div style="min-width:0;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><b style="font-family:var(--serif);font-size:15px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📄 '+c5esc(fname)+'</b><span style="font-size:10px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--blue);background:color-mix(in srgb,var(--blue) 12%,var(--surface));border:1px solid color-mix(in srgb,var(--blue) 30%,transparent);border-radius:20px;padding:2px 9px">✦ Auditor-annotated</span></div>'+
         '<button type="button" id="c5docViewerClose" style="flex:none;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 13px;font-weight:600;font-size:12.5px;cursor:pointer">Close</button>'+
       '</div>'+
-      '<div style="padding:16px 20px;overflow:auto">'+body+'</div>'+
+      '<div style="display:flex;min-height:0;flex:1;flex-wrap:wrap">'+
+        '<div style="flex:1.7;min-width:300px;overflow:auto;padding:16px 20px;border-right:1px solid var(--line)">'+docCol+'</div>'+
+        '<div style="flex:1;min-width:280px;max-width:440px;overflow:auto;padding:14px 16px;background:var(--surface-2)">'+panel+'</div>'+
+      '</div>'+
     '</div>';
     document.body.appendChild(wrap);
     function close(){if(wrap.parentNode)wrap.parentNode.removeChild(wrap);}
     wrap.addEventListener('click',function(e){if(e.target===wrap)close();});
     var cb=document.getElementById('c5docViewerClose');if(cb)cb.onclick=close;
+    // Click a highlight → reveal its margin note; click a margin note → jump to the highlight.
+    function flash(el){if(!el)return;try{el.scrollIntoView({behavior:'smooth',block:'center'});}catch(_){el.scrollIntoView();}var o=el.style.boxShadow;el.style.transition='box-shadow .25s';el.style.boxShadow='0 0 0 2px var(--good)';setTimeout(function(){el.style.boxShadow=o;},1400);}
+    wrap.querySelectorAll('mark.c5ann').forEach(function(mk){mk.onclick=function(){flash(document.getElementById('c5annp-'+mk.getAttribute('data-annidx')));};});
+    wrap.querySelectorAll('.c5annp').forEach(function(p){p.onclick=function(){var i=p.getAttribute('data-annidx');flash(wrap.querySelector('mark.c5ann[data-annidx="'+i+'"]'));};});
   }catch(_){}
 }
 /* The four Frameworks summary cards open the same inspector as every other metric,
