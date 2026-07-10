@@ -12,7 +12,7 @@ var SEATS = {
    +sec('02','Must we disclose anything?','','<div id="bd-material"></div>')
    +sec('03','Is our residual risk trending down?','','<div id="bd-trend"></div>')
    +sec('04','Is our oversight sound?','','<div id="bd-governance"></div>')
-   +sec('05','What should the board note?','','<div id="board-asks"></div>')
+   +sec('05','What should the board note?','','<div id="bd-decisions"></div>')
   );}
  },
 
