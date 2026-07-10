@@ -218,6 +218,30 @@ function c5vendors(){var seed=(typeof vendorSeed==='function')?vendorSeed():[];v
   var atRisk=rated.filter(function(v){return v.score<75;});
   return {seed:seed,vs:vs,p:p,atRisk:atRisk,worst:rated[0]||null};}
 
+/* Vendor-concentration matrix — vendor CATEGORY (not real company names) mapped to the
+   SAME critical services as the Resilience / Recovery tabs. Illustrative until a live
+   ratings + failover feed is wired; negative labels ("single point", "falling") must stay
+   gated behind category rows / real evidence, never pinned to a named third party on an
+   exec screen. Status is COMPUTED, never hard-coded: no failover on a critical service ⇒
+   'single'; a falling / below-threshold rating on a critical service (but some failover)
+   ⇒ 'watch'; else 'ok'. Sorted by risk (single → watch → ok) so the SPOF count derived
+   from it and the finding can never contradict each other. Shared by c5coSupply and the
+   coo_spof metric. */
+function c5vendorMatrix(){
+  function gradeVal(g){return {'A':92,'A-':88,'A−':88,'B':82,'B-':76,'B−':76,'C':68,'C-':62,'C−':62,'D':50}[g]||75;}
+  var rows=[
+    {cat:'Cloud hosting provider',proc:'Customer platform',crit:true,failover:'No failover',grade:'C',trend:'down'},
+    {cat:'Logistics (3PL)',proc:'Supply chain',crit:true,failover:'Partial alternative',grade:'B−',trend:'down'},
+    {cat:'Payment processor',proc:'Payments processing',crit:true,failover:'Backup ready',grade:'A',trend:'flat'},
+    {cat:'Identity provider',proc:'Access — all services',crit:true,failover:'Blast-radius control',grade:'A',trend:'flat'},
+    {cat:'ERP / financials',proc:'Financial close',crit:true,failover:'Backup ready',grade:'B',trend:'flat'}
+  ];
+  rows.forEach(function(r){r.score=gradeVal(r.grade);
+    var noFailover=/no failover/i.test(r.failover),weak=(r.score<75||r.trend==='down');
+    r.status=(r.crit&&noFailover)?'single':(r.crit&&weak)?'watch':'ok';});
+  var order={single:0,watch:1,ok:2};
+  return rows.sort(function(a,b){return order[a.status]-order[b.status];});}
+
 /* Modeled decomposition of expected loss into the top control-gap exposure drivers.
    Each driver's share = its control-gap severity × framework weight, scaled to ALE. */
 function c5expModel(){
@@ -1032,12 +1056,14 @@ function c5get(id){
         inputs:[{name:'Tier-1 count',value:conn?t1:'—',source:'vendor intake'}],
         sources:[{tool:'Vendor intake',connector:'vendors',field:'tier',lastRefresh:c5ago()}],
         action:conn?(t1+' tier-1 supplier'+(t1===1?'':'s')+' underpin operations — '+(V.seed||[]).filter(function(x){return /1/.test(x.tier);}).map(function(x){return x.name;}).join(', ')+'. Monitor each closely and confirm a tested failover so no single supplier is a continuity risk.'):'Classify your tier-1/2 suppliers at onboarding so the ones that could halt operations surface here.',table:conn?{title:'Tier-1 suppliers — the ones to monitor closest',cols:['Supplier','Why it matters','To reduce concentration risk'],rows:(V.seed||[]).filter(function(x){return /1/.test(x.tier);}).map(function(x){return [{text:x.name,bold:true},'Tier-1 — its failure would hurt operations most',{text:'Monitor its security rating and confirm a tested failover / alternate supplier.',color:'blue'}];})}:null,note:'The suppliers whose failure would hurt operations most — the ones to monitor closest.',connectTool:'your tier-1/2 vendors (onboarding)'});}
-    case 'coo_spof':{var rs3=(typeof LIVE!=='undefined'&&LIVE&&LIVE.resilience)||{};var tv=rs3.top_vendor_blast;var n=(tv&&tv.systems&&tv.systems.length>=2)?1:0;var conn=(tv&&tv.vendor)||false;
-      return c5obj({id:id,name:'Single points of failure',connected:!!conn,displayValue:conn?String(n):'—',label:'computed',color:conn?(n>0?'warn':'good'):'muted',
-        formula:'single points of failure = vendors that underpin two or more critical systems with no independent failover',
-        inputs:[{name:tv&&tv.vendor?tv.vendor:'top vendor',value:tv&&tv.systems?((tv.systems.length)+' systems'):'—',source:'asset→vendor map'}],
-        sources:[{tool:'Operations model',connector:'ops',field:'top_vendor_blast',lastRefresh:c5ago()}],
-        action:(conn&&n>0)?(tv.vendor+' is a single point of failure — it underpins '+tv.systems.length+' critical systems ('+tv.systems.join(', ')+') with no independent failover. Add a second source or failover for at least one to remove the concentration.'):(conn?'No single supplier underpins multiple critical systems without failover — keep the asset→vendor map current so new concentration surfaces here.':'Connect your asset→vendor map so supplier concentration and single points of failure surface here.'),table:(conn&&n>0)?{title:'Single point of failure · what it means and how to close it',cols:['Concentration','What it means','To close it'],rows:[[{text:'⚠ '+tv.vendor,color:'crit',bold:true},'Underpins '+tv.systems.length+' critical systems ('+tv.systems.join(', ')+') with no independent failover — one outage takes them all down at once.',{text:'Add an independent failover / second source for at least one of these systems, or contractually guarantee '+tv.vendor+' resilience, to break the single point of failure.',color:'blue'}]]}:null,note:'Where one supplier failing takes down multiple operations at once — the concentration to reduce.',connectTool:'your asset→vendor map'});}
+    case 'coo_spof':{var VM=(typeof c5vendorMatrix==='function')?c5vendorMatrix():[];var sp=VM.filter(function(r){return r.status==='single';});var n=sp.length;var conn=VM.length>0;
+      return c5obj({id:id,name:'Single points of failure',connected:conn,displayValue:conn?String(n):'—',label:'computed',color:conn?(n>0?'crit':'good'):'muted',
+        formula:'single points of failure = vendor categories underpinning a critical service with no independent failover (derived from the vendor→process matrix)',
+        inputs:VM.map(function(r){return {name:r.cat+' · '+r.proc,value:r.failover+' · '+r.grade,color:(r.status==='single'?'crit':r.status==='watch'?'warn':'good'),source:'vendor→process map · illustrative'};}),
+        sources:[{tool:'Operations model',connector:'ops',field:'vendor→process map',lastRefresh:c5ago()}],
+        action:(conn&&n>0)?(sp.map(function(r){return r.cat;}).join(', ')+' underpin'+(n===1?'s':'')+' a critical service with no independent failover — add a backup provider or a contractual failover SLA for at least one to break the single point of failure.'):(conn?'No single vendor underpins a critical service without failover — keep the vendor→process map current so new concentration surfaces here.':'Connect your asset→vendor map so supplier concentration and single points of failure surface here.'),
+        table:(conn&&n>0)?{title:'Single point of failure · what it means and how to close it',cols:['Concentration','What it means','To close it'],rows:sp.map(function(r){return [{text:'⚠ '+r.cat,color:'crit',bold:true},'Underpins '+r.proc+' with '+r.failover.toLowerCase()+' — an outage takes it down with no alternative.',{text:'Add an independent failover / second source, or contractually guarantee resilience, to break the single point of failure.',color:'blue'}];})}:null,
+        note:'Where one vendor failing takes down a critical operation with no alternative — the concentration to reduce.',connectTool:'your asset→vendor map'});}
     /* ---- CLO metrics (legal & regulatory lens; surfaces obligations + evidence, not legal conclusions) ---- */
     case 'cl_jurisdictions':{var ob=(typeof LIVE!=='undefined'&&LIVE&&LIVE.legal&&LIVE.legal.obligations)||[];var conn=ob.length>0;
       return c5obj({id:id,name:'Jurisdictions in scope',connected:conn,displayValue:conn?String(ob.length):'—',label:'self-reported',color:'ink',
@@ -3703,20 +3729,72 @@ function c5coProcesses(){
 /* Tab 03 — Supply chain & third parties · PRIMARY decision is the Acme mitigation, NOT identity */
 function c5coSupply(){
   var host=document.getElementById('co-supply');if(!host)return;
-  var V=c5vendors();var seed=V.seed;var TD=c5TopDriver();
-  var rows;
-  if(!seed.length){rows='<div class="c5note">◐ Add your tier-1/2 vendors (CSV or a TPRM pull) and connect a monitoring service to rank suppliers by live rating and flag single points of failure. Until then this stays honestly empty.</div>';}
-  else{var rs=(typeof LIVE!=='undefined'&&LIVE&&LIVE.resilience)||{};var blastVendor=(rs.top_vendor_blast&&rs.top_vendor_blast.vendor)||null;var blastSys=(rs.top_vendor_blast&&rs.top_vendor_blast.systems)||[];
-    var vs=V.vs;var list=((V.p&&V.p.vendors)||[]).slice().sort(function(a,b){return (a.score||100)-(b.score||100);}).slice(0,6);
-    rows='<div class="c5rank"><div class="c5rank-h">Tier-1 vendors · rating and the processes they touch</div>'+list.map(function(v){var cls=v.color||capColor(v.score);var spof=(blastVendor&&String(v.name).toLowerCase().indexOf(String(blastVendor).toLowerCase())>=0)?'<span class="c5tag rev">SPOF</span>':'';
-      return '<div class="c5row" data-c5m="thirdparty_risk"><div class="c5row-main"><div class="c5row-t">'+v.name+spof+'</div><div class="c5row-s">'+(spof?(blastSys.slice(0,2).join(' · ')+' · '):'')+(v.score!=null&&v.score<75?'rating falling':'healthy')+'</div></div><div class="c5row-v" style="color:var(--'+cls+')">'+(v.score!=null?v.score:'—')+'</div></div>';
-    }).join('')+'</div>';}
+  var demo=(typeof signalsAreDemo==='function')&&signalsAreDemo();
+  var V=c5vendors();var TD=c5TopDriver();
+  var R=(typeof LIVE!=='undefined'&&LIVE&&LIVE.resilience)||{};
+  // ── vendor-concentration matrix (shared source of truth) — SPOF count derives from it, so
+  //    the card and the finding can never contradict each other (the old "0 vs mitigate one"). ──
+  var VM=c5vendorMatrix();
+  var spofN=VM.filter(function(r){return r.status==='single';}).length;
+  var watchN=VM.filter(function(r){return r.status==='watch';}).length;
+  var criticalTouch=spofN+watchN; // vendors touching a critical service that carry a concern
+  var sp0=VM.filter(function(r){return r.status==='single';})[0]||null;
+  var spofSub=sp0?(sp0.cat.replace(/ hosting provider/,' host').replace(/ \/ financials/,'')+' · '+sp0.proc.toLowerCase()):'None on a critical path';
+  // ── metric-card values wired to live vendor data; SPOF derived from the matrix ──
+  var tier1Conn=V.seed.length>0;
+  var tier1=tier1Conn?((V.p&&V.p.tier1!=null)?V.p.tier1:V.seed.filter(function(x){return /1/.test(x.tier);}).length):'—';
+  var flaggedConn=V.seed.length>0;var flaggedN=flaggedConn?V.atRisk.length:'—';
+  var idP=(typeof c5avgDeploy==='function')?c5avgDeploy(['mfa','pam']):null,idConn=idP!=null;
+  function vcard(mid,title,val,pill,pillCls,valCol,sub){return '<div class="c5card" data-c5m="'+mid+'"><div class="c5card-top"><span class="c5card-l">'+c5esc(title)+'</span><span class="c5pill '+pillCls+'" style="font-size:9px">'+c5esc(pill)+'</span></div><div class="c5card-v" style="color:var(--'+(valCol||'ink')+')">'+c5esc(String(val))+'</div><div class="c5esub" style="font-size:11px;color:var(--muted);margin-top:2px">'+c5esc(sub)+'</div></div>';}
+  var cards='<div class="c5cards">'+
+    vcard('coo_tier1','Tier-1 vendors',tier1,'Self-reported','n','ink',criticalTouch+' touch a critical service')+
+    vcard('thirdparty_risk','Flagged for watch',flaggedN,'Modeled','a',(flaggedConn&&V.atRisk.length>0?'warn':'ink'),'Ratings falling or below threshold')+
+    vcard('coo_spof','Single point of failure',spofN,'Computed','r',(spofN>0?'crit':'good'),spofSub)+
+    '</div>';
+  // ── vendor concentration matrix (centerpiece) — CATEGORY labels, status computed per row ──
+  var illus='<span class="c5pill n" style="font-size:9px">Illustrative</span>';
+  function arrow(t){return t==='down'?'↓':t==='up'?'↑':'→';}
+  function stTxt(s){return s==='single'?'Single point':s==='watch'?'Watch':'OK';}
+  function stCls(s){return s==='single'?'crit':s==='watch'?'warn':'good';}
+  var vmRows=VM.map(function(r){var c=stCls(r.status);
+    return '<div class="c5prow" data-c5m="thirdparty_risk" style="cursor:pointer">'+
+      '<div style="flex:1;min-width:0"><div class="c5row-t">'+c5esc(r.cat)+'</div><div class="c5row-s">'+c5esc('Touches '+r.proc+' · '+r.failover)+'</div></div>'+
+      '<div style="text-align:right;flex:none;min-width:52px;margin-right:12px;font-weight:600;color:var(--'+c+')">'+c5esc(r.grade+' '+arrow(r.trend))+'</div>'+
+      '<span class="c5pill '+(r.status==='single'?'r':r.status==='watch'?'a':'g')+'" style="flex:none">'+stTxt(r.status)+'</span></div>';
+  }).join('');
+  var matrix='<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:16px 0 8px"><span style="font-size:12.5px;font-weight:600;color:var(--ink)">Vendors under critical services — rating and failover '+illus+'</span><span style="font-size:11px;color:var(--muted)">Sorted by risk to operations</span></div><div class="c5card" style="padding:2px 14px">'+vmRows+'</div>';
+  // ── operational-impact strip (Illustrative) — reuse the Resilience/Recovery hourly figure ──
+  var hourly=(R.top_downtime_per_hr||R.downtime_per_hour_usd)||null;
+  var hourlyStr=(hourly&&typeof usd==='function')?('~'+usd(hourly)+'/hr'):'~$12M/hr';
+  var sep='<span style="color:var(--line)">·</span>';
+  var strip='<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-top:14px;padding:12px 16px;border-radius:12px;background:var(--surface-2)">'+
+    '<span style="font-size:12px;color:var(--ink-2);font-weight:600">If the cloud host fails:</span>'+
+    '<span style="font-size:12.5px;color:var(--crit);font-weight:600">no failover for the customer platform</span>'+sep+
+    '<span style="font-size:12px;color:var(--muted)">'+hourlyStr+' at risk</span>'+sep+
+    '<span style="font-size:12px;color:var(--muted)">40M customers</span>'+illus+'</div>';
+  // ── evidence footnote source count ──
+  var evSrcs=[
+    {label:'Vendor intake / tiering',connected:tier1Conn},
+    {label:'Third-party rating feed',connected:flaggedConn},
+    {label:'Vendor → critical-process mapping',connected:true},
+    {label:'Failover / alternate-source status',connected:true},
+    {label:'Operations model (blast radius)',connected:!!(R&&R.top_vendor_blast)},
+    {label:'Identity controls (blast-radius cap)',connected:idConn},
+    {label:'Business-process criticality',connected:!!(typeof c5Processes==='function'&&c5Processes()&&c5Processes().total)}
+  ];
+  var connN=evSrcs.filter(function(s){return s.connected;}).length;
+  // ── data-driven headline + supporting line ──
+  var head=spofN>0
+    ?('Your supply chain is steady — but one Tier-1 vendor is a single point of failure for '+(sp0?sp0.proc.toLowerCase():'a critical service')+', with no failover.')
+    :'Your supply chain is steady — no single vendor is an unmitigated point of failure.';
+  var support='Of '+tier1+' Tier-1 vendors, '+criticalTouch+' touch a critical service and '+spofN+(spofN===1?' has':' have')+' no alternative. Completing identity controls limits how far any compromised vendor can reach. Each vendor traces to its rating and the process it touches.';
   host.innerHTML=c5header()+
-    c5shell('Supply chain & third parties · can a vendor stop us?','Your supply chain is steady — one Tier-1 vendor needs watching.',null,'Third-party risk to your operations. Among your Tier-1 vendors, the worst-rated is a single point of failure for a critical process. The rest are healthy. Each vendor traces to its rating and the processes it touches.')+
-    '<div class="c5cards">'+c5card('coo_tier1')+c5card('thirdparty_risk')+c5card('coo_spof')+'</div>'+
-    rows+
-    c5bl('Bottom line','Reduce the one dependency that touches your critical process.',null,'Your worst-rated Tier-1 vendor is a falling-rated single point of failure. Add a resilience option — a backup provider or a contractual SLA. Separately, closing the '+TD.short+' gap limits how far a compromised vendor could reach.',{mid:'thirdparty_risk',txt:'Mitigate the vendor dependency'},{mid:TD.mid,txt:'Fund '+c5esc(TD.short)+' — limits blast radius'})+
-    '<div class="c5foot">Vendor ratings from your third-party monitoring; dependencies from your operations model.</div>';
+    c5shell('Supply chain & third parties · which vendors could stop us?',head,(spofN>0)?'warn':null,support)+
+    cards+
+    matrix+
+    strip+
+    c5bl('The decision — two moves','Give the customer platform a failover, and cap every vendor’s blast radius with identity.',null,'The cloud host is a falling-rated single point of failure with no alternative — add a backup provider or a contractual failover SLA. Separately, completing identity controls (the same work on the Resilience and Recovery tabs) limits how far a compromised vendor can reach into your operations.',{mid:'thirdparty_risk',txt:'Mitigate the vendor dependency'},{mid:TD.mid,txt:'Fund '+c5esc(TD.short)+' — limits blast radius'})+
+    '<div class="c5foot">vendor ratings are self-reported; process mapping and failover status are connected demo values. · '+connN+' sources connected'+(demo?' · demo':'')+'</div>';
 }
 /* Tab 04 — Recovery readiness */
 /* Tab 04 — Recovery readiness. Answers the COO question "Can we recover within our
