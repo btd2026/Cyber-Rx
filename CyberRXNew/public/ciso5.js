@@ -3967,7 +3967,10 @@ function c5cpDecisions(){
   '.c5fw-jump{border:1px solid color-mix(in srgb,var(--blue) 40%,var(--line));background:var(--surface);color:var(--blue);font-family:inherit;font-size:11px;font-weight:600;padding:2px 9px;border-radius:20px;cursor:pointer;transition:background .12s,border-color .12s}',
   '.c5fw-jump:hover{background:color-mix(in srgb,var(--blue) 10%,var(--surface));border-color:var(--blue)}',
   '.c5doc-flash{animation:c5docflash 1.6s ease-out}',
-  '@keyframes c5docflash{0%,40%{background:color-mix(in srgb,var(--blue) 16%,var(--surface));box-shadow:0 0 0 2px color-mix(in srgb,var(--blue) 45%,transparent)}100%{background:transparent;box-shadow:none}}'
+  '@keyframes c5docflash{0%,40%{background:color-mix(in srgb,var(--blue) 16%,var(--surface));box-shadow:0 0 0 2px color-mix(in srgb,var(--blue) 45%,transparent)}100%{background:transparent;box-shadow:none}}',
+  /* Persistent green outline for the control opened via "open the document reference" —
+     a transparent rectangle so the document text stays fully readable inside it. */
+  '.c5doc-ref{outline:2px solid var(--good);outline-offset:4px;border-radius:6px;background:transparent}'
 ].join('');try{var s=document.createElement('style');s.textContent=css;document.head.appendChild(s);}catch(_){}})();
 
 var C5FW_CTRL=null, C5FW_EXP=null, C5FW_TARGET=3.5, C5FW_FLOOR=2.5;
@@ -4129,7 +4132,8 @@ function c5fwGaps(T){
     if(d){kind=d.k;label=d.k==='d'?((typeof FW_DOC_LABEL!=='undefined'&&FW_DOC_LABEL[d.s])||'policy'):((typeof CAP_BY_KEY!=='undefined'&&CAP_BY_KEY[d.s]&&CAP_BY_KEY[d.s].tool)||'tool');}
     else if(node.r53doc){kind='d';label=node.r53doc;} // 800-53 control awaiting its governing policy
     else return;
-    var key=kind+':'+label;(by[key]=by[key]||{kind:kind,label:label,n:0}).n++;}
+    var src=d?d.s:(node.r53doc||label); // onboarding target: the doc-type key (d8…) when known
+    var key=kind+':'+label;(by[key]=by[key]||{kind:kind,label:label,n:0,s:src}).n++;}
   (T.groups||[]).forEach(function(g){(g.children||[]).forEach(function(c){
     if(c.type==='cat')(c.children||[]).forEach(function(x){need(x);});else need(c);});});
   return Object.keys(by).map(function(k){return by[k];}).sort(function(a,b){return b.n-a.n;});
@@ -4223,10 +4227,14 @@ function c5OpenDocsReviewAt(cid){
   try{
     c5OpenDocsReview();
     setTimeout(function(){
+      // Clear any prior reference box so only the one just opened is boxed.
+      var host=document.getElementById('docDoc');
+      if(host)host.querySelectorAll('.c5doc-ref').forEach(function(x){x.classList.remove('c5doc-ref');});
       var el=document.getElementById('c5doc-'+cid);
       if(el){try{el.scrollIntoView({behavior:'smooth',block:'center'});}catch(_){el.scrollIntoView();}
-        el.classList.remove('c5doc-flash');void el.offsetWidth;el.classList.add('c5doc-flash');
-        setTimeout(function(){el.classList.remove('c5doc-flash');},1700);}
+        // Persistent green transparent box around the referenced control (kept until
+        // another reference is opened or the review is closed) — not a brief flash.
+        el.classList.add('c5doc-ref');}
     },70);
   }catch(_){}
 }
@@ -4862,7 +4870,7 @@ function c5FrameworksClassic(host){
     '</div>'+
     '<div>'+
       '<div style="font-weight:600;font-size:13px;color:var(--ink);margin-bottom:9px">Close the gap</div>'+
-      (_gaps.length?_gaps.map(function(g){return '<div style="font-size:12.5px;color:var(--ink-2);margin-bottom:6px">'+(g.kind==='d'?'↥ Upload':'⚡ Connect')+' <b>'+c5esc(g.label)+'</b>'+(g.n>1?(' ('+g.n+')'):'')+'</div>';}).join(''):'<div style="font-size:12.5px;color:var(--good);margin-bottom:6px">All controls evidenced.</div>')+
+      (_gaps.length?_gaps.map(function(g){return '<div style="font-size:12.5px;color:var(--ink-2);margin-bottom:6px">'+(g.kind==='d'?'↥ Upload':'⚡ Connect')+' <b>'+c5esc(g.label)+'</b>'+(g.n>1?(' ('+g.n+')'):'')+(g.kind==='d'?(' <a class="c5gap-up" data-c5gapup="'+c5esc(g.s||g.label)+'" title="Go to onboarding and upload this document" style="color:var(--blue);font-weight:600;cursor:pointer">upload now →</a>'):'')+'</div>';}).join(''):'<div style="font-size:12.5px;color:var(--good);margin-bottom:6px">All controls evidenced.</div>')+
       '<button id="c5reanalyzeBtn" type="button" style="margin-top:4px;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);font-weight:600;font-size:12px;padding:6px 12px;border-radius:8px;cursor:pointer">↻ Re-score documents</button>'+
     '</div>'+
   '</div>');
@@ -4904,7 +4912,14 @@ function c5FrameworksClassic(host){
   host.querySelectorAll('[data-c5fwexp]').forEach(function(b){b.onclick=function(){var id=b.getAttribute('data-c5fwexp');C5FW_EXP[id]=!C5FW_EXP[id];c5Frameworks();};});
   host.querySelectorAll('[data-c5fwctl]').forEach(function(b){b.onclick=function(){C5FW_CTRL=b.getAttribute('data-c5fwctl');c5Frameworks();};});
   host.querySelectorAll('[data-c5docjump]').forEach(function(b){b.onclick=function(e){e.stopPropagation();c5OpenDocsReviewAt(b.getAttribute('data-c5docjump'));};});
+  host.querySelectorAll('[data-c5gapup]').forEach(function(b){b.onclick=function(e){e.stopPropagation();c5GapUpload(b.getAttribute('data-c5gapup'));};});
   host.querySelectorAll('[data-c5fwcard]').forEach(function(b){b.style.cursor='pointer';b.onclick=function(){c5fwInspect(b.getAttribute('data-c5fwcard'),T,sel,cad);};});
+}
+/* "upload now" on a missing-document gap → onboarding, deep-linked to the exact
+   uploader for that document type (target is the doc-type key, e.g. d8). */
+function c5GapUpload(target){
+  try{var base=(function(){try{return new URL('onboarding.html',location.href).href;}catch(_){return 'onboarding.html';}})();
+    window.location.href=base+'#upload='+encodeURIComponent(target||'');}catch(_){}
 }
 /* ============================================================================
    Documents reviewed — the analyst-grade read of every policy uploaded during
@@ -4987,6 +5002,7 @@ function c5DocsReviewHtml(){
   var metaByName={};docs.forEach(function(d){metaByName[d.name]=d;});
   var fnOrder=['GV','ID','PR','DE','RS','RC'],fnName={GV:'Govern',ID:'Identify',PR:'Protect',DE:'Detect',RS:'Respond',RC:'Recover'};
   function stColor(c){return c>=4?'good':c>=3?'good':c>=2?'warn':'crit';}
+  var textMap=c5DocTextMap(); // filenames whose uploaded text we can open for reading
   var html='';
   order.forEach(function(dn){
     var rows=(byDoc[dn]||[]).slice().sort(function(a,b){return a.id<b.id?-1:1;});
@@ -5037,7 +5053,8 @@ function c5DocsReviewHtml(){
     html+='<section style="margin:0 0 26px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--surface)">'+
       '<div style="padding:16px 20px;background:var(--surface-2);border-bottom:1px solid var(--line)">'+
         '<div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><span style="font-size:18px">📄</span><b style="font-family:var(--serif);font-size:17px;color:var(--ink)">'+c5esc(dn)+'</b>'+(meta.type?('<span style="font-size:12px;color:var(--ink-2)">'+c5esc(meta.type)+'</span>'):'')+
-          ((meta.engine==='llm'||rows.some(function(r){return r.s&&(r.s.narrative||(Array.isArray(r.s.attrs)&&r.s.attrs.some(function(a){return a.evidence;})));}))?'<span style="font-size:10px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--blue);background:color-mix(in srgb,var(--blue) 12%,var(--surface));border:1px solid color-mix(in srgb,var(--blue) 30%,transparent);border-radius:20px;padding:2px 9px">✦ AI-reviewed</span>':'')+'</div>'+
+          ((meta.engine==='llm'||rows.some(function(r){return r.s&&(r.s.narrative||(Array.isArray(r.s.attrs)&&r.s.attrs.some(function(a){return a.evidence;})));}))?'<span style="font-size:10px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--blue);background:color-mix(in srgb,var(--blue) 12%,var(--surface));border:1px solid color-mix(in srgb,var(--blue) 30%,transparent);border-radius:20px;padding:2px 9px">✦ AI-reviewed</span>':'')+
+          (textMap[dn]?('<button type="button" data-c5docview="'+c5esc(dn)+'" title="Open and read the uploaded document" style="margin-left:auto;flex:none;border:1px solid color-mix(in srgb,var(--blue) 40%,var(--line));background:var(--surface);color:var(--blue);font-family:inherit;font-size:11.5px;font-weight:600;padding:5px 12px;border-radius:8px;cursor:pointer">📄 Open document</button>'):'')+'</div>'+
         '<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:10px">'+
           '<div><span style="font-size:22px;font-weight:700;font-family:var(--serif);color:var(--'+stColor(mean)+')">'+mean.toFixed(1)+'</span><span style="font-size:12px;color:var(--muted)"> / 5 mean CMMI</span></div>'+
           '<div style="font-size:12px;color:var(--ink-2)"><b style="color:var(--ink)">'+rows.length+'</b> control'+(rows.length!==1?'s':'')+' evidenced · <b style="color:var(--ink)">'+matched+'</b> of '+total+' attributes present</div>'+
@@ -5057,11 +5074,39 @@ function c5OpenDocsReview(){
   try{
     var host=document.getElementById('docDoc');if(!host)return;
     host.innerHTML=c5DocsReviewHtml();
+    host.querySelectorAll('[data-c5docview]').forEach(function(b){b.onclick=function(e){e.stopPropagation();c5ViewDoc(b.getAttribute('data-c5docview'));};});
     var sc=document.getElementById('docScrim'),md=document.getElementById('docModal');
     if(sc)sc.classList.add('open');if(md)md.classList.add('open');
   }catch(_){}
 }
-function c5CloseDocsReview(){var sc=document.getElementById('docScrim'),md=document.getElementById('docModal');if(sc)sc.classList.remove('open');if(md)md.classList.remove('open');}
+function c5CloseDocsReview(){var sc=document.getElementById('docScrim'),md=document.getElementById('docModal');if(sc)sc.classList.remove('open');if(md)md.classList.remove('open');try{var h=document.getElementById('docDoc');if(h)h.querySelectorAll('.c5doc-ref').forEach(function(x){x.classList.remove('c5doc-ref');});}catch(_){}}
+/* Filename → the document's extracted text captured at onboarding upload
+   (cyberrx_doc_text is keyed by doc-type with {text, filename}) — so a reviewed
+   policy can be opened and read here without a re-upload. */
+function c5DocTextMap(){var m={};try{var tx=JSON.parse(localStorage.getItem('cyberrx_doc_text')||'{}')||{};Object.keys(tx).forEach(function(k){var e=tx[k];if(e&&e.filename&&e.text)m[e.filename]=e.text;});}catch(_){}return m;}
+/* Open the uploaded document itself in a reader overlay (above the review modal). */
+function c5ViewDoc(fname){
+  try{
+    var txt=c5DocTextMap()[fname];
+    var old=document.getElementById('c5docViewer');if(old&&old.parentNode)old.parentNode.removeChild(old);
+    var wrap=document.createElement('div');wrap.id='c5docViewer';
+    wrap.style.cssText='position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;background:rgba(20,33,72,.5)';
+    var body=txt
+      ?('<pre style="white-space:pre-wrap;overflow-wrap:anywhere;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;line-height:1.65;color:var(--ink);margin:0">'+c5esc(txt)+'</pre>')
+      :('<div style="color:var(--ink-2);font-size:13px;line-height:1.6">The extracted text for this document isn’t retained in this browser. Re-upload it in onboarding’s document step to read it here.</div>');
+    wrap.innerHTML='<div style="width:min(880px,94vw);max-height:90vh;display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 24px 60px rgba(20,33,72,.45);overflow:hidden">'+
+      '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line);background:var(--surface-2)">'+
+        '<b style="font-family:var(--serif);font-size:15px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📄 '+c5esc(fname)+'</b>'+
+        '<button type="button" id="c5docViewerClose" style="flex:none;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 13px;font-weight:600;font-size:12.5px;cursor:pointer">Close</button>'+
+      '</div>'+
+      '<div style="padding:16px 20px;overflow:auto">'+body+'</div>'+
+    '</div>';
+    document.body.appendChild(wrap);
+    function close(){if(wrap.parentNode)wrap.parentNode.removeChild(wrap);}
+    wrap.addEventListener('click',function(e){if(e.target===wrap)close();});
+    var cb=document.getElementById('c5docViewerClose');if(cb)cb.onclick=close;
+  }catch(_){}
+}
 /* The four Frameworks summary cards open the same inspector as every other metric,
    built from real assessment data (roll-up, coverage, trend history, deficiencies). */
 /* "See details" on a document-evidenced finding → back to onboarding's document-
