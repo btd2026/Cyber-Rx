@@ -3197,7 +3197,7 @@ function c5ctlRankRows(){
 function c5cfExposure(){
   var host=document.getElementById('cf-exposure');if(!host)return;
   var demo=(typeof signalsAreDemo==='function')&&signalsAreDemo();
-  var expT=c5get('exp_total'),ap=c5get('cf_appetite'),hr=c5get('cf_headroom'),ec=c5get('exp_identity'),tail=c5get('cf_tail'),bi=c5get('cf_bi'),insCov=c5get('cf_ins_cov'),insGap=c5get('cf_ins_gap');
+  var expT=c5get('exp_total'),ap=c5get('cf_appetite'),ec=c5get('exp_identity'),tail=c5get('cf_tail'),bi=c5get('cf_bi'),insCov=c5get('cf_ins_cov'),insGap=c5get('cf_ins_gap');
   // The largest financial driver is data-ranked (c5TopDriver → c5expModel drivers[0]),
   // never hard-coded to identity. dm is that driver's metric; drv/drvL/drvS its labels.
   var TD=c5TopDriver(),dm=c5get(TD.mid);
@@ -3205,14 +3205,11 @@ function c5cfExposure(){
   function num(m){try{var d=String(m.displayValue);var s=d.replace(/[^0-9.]/g,'');var mult=/B/.test(d)?1e9:/M/.test(d)?1e6:/K/.test(d)?1e3:1;return parseFloat(s)*mult;}catch(_){return NaN;}}
   var expN=expT.connected?num(expT):NaN, apN=ap.connected?num(ap):NaN;
   var apImplausible=(!isNaN(expN)&&!isNaN(apN)&&apN>expN*50); // $B appetite vs $M exposure ⇒ likely not cyber-loss tolerance
-  var apProv=demo?'Demo appetite threshold':(apImplausible?'Illustrative appetite':'Self-reported');
-  var hrCredible=expT.connected&&ap.connected&&!apImplausible&&!demo;
   var status=!expT.connected?'Not Enough Evidence':!ap.connected?'Appetite not connected':(isNaN(expN)||isNaN(apN))?'Watch':(expN>apN?'Outside appetite':(expN>apN*0.8?'Watch':'Within appetite'))+(demo?' (demo)':'');
   var statusCol=/Within/.test(status)?'good':/Watch/.test(status)?'warn':/Outside/.test(status)?'crit':'muted';
   var covPct=insCov.connected?((String(insCov.displayValue).match(/(\d+)/)||[])[1]||null):null;
   // ── card / tile helpers (source-labelled, click-through to the metric inspector) ──
   function cfCard(title,val,sub,prov,col,mid){return '<div class="c5card"'+(mid?(' data-c5m="'+mid+'"'):'')+'><div class="c5card-top"><span class="c5card-l">'+title+'</span><span class="c5pill n" style="font-size:9px">'+c5esc(prov)+'</span></div><div class="c5card-v" style="color:var(--'+(col||'ink')+')">'+c5esc(String(val))+'</div>'+(sub?('<div class="c5esub" style="font-size:11px;color:var(--muted);margin-top:2px">'+c5esc(sub)+'</div>'):'')+'</div>';}
-  function cfTile(title,val,sub,pillTxt,pillCls,mid){return '<div class="c5tile"'+(mid?(' data-c5m="'+mid+'"'):'')+' style="--ac:var(--'+(pillCls==='r'?'crit':pillCls==='a'?'warn':pillCls==='g'?'good':pillCls==='b'?'blue':'muted')+')"><div class="c5tile-top"><span class="c5tile-l">'+title+'</span>'+(pillTxt?('<span class="c5pill '+pillCls+'">'+pillTxt+'</span>'):'')+'</div><div class="c5tile-h">'+c5esc(String(val))+'</div>'+(sub?('<div class="c5tile-s">'+c5esc(sub)+'</div>'):'')+'</div>';}
   // ── evidence confidence — appetite is self-reported ⇒ never High ──
   var L=(typeof LIVE!=='undefined'&&LIVE)||{};
   var evSrcs=[
@@ -3224,38 +3221,49 @@ function c5cfExposure(){
     {label:'Insurance policy data (manual)',connected:insCov.connected,critical:false,partial:true},
     {label:'Outage-impact model',connected:bi.connected,critical:false,computed:true}
   ];
-  var evConf=(typeof TrustLogic!=='undefined')?TrustLogic.evidenceConfidence(evSrcs):{level:'—'};
-  var evLevel=demo?'Demo':(ap.connected&&evConf.level==='High'?'Medium':evConf.level); // self-reported appetite caps below High
-  var SL=(typeof TrustLogic!=='undefined')?TrustLogic.sourceStatus:function(o){return o&&o.connected?{label:'Connected',cls:'g'}:{label:'Not Connected',cls:'n'};};
-  var evChips=evSrcs.map(function(s){var st=SL({connected:s.connected,computed:s.computed,partial:s.partial});if(demo&&s.connected)st={label:'Demo',cls:'a'};return '<span class="c5pill '+st.cls+'" style="display:inline-block;margin:2px 5px 2px 0">'+s.label+': '+st.label+'</span>';}).join('');
-  var evPanel=c5EvLine(evLevel,'exposure and tail loss are modeled; appetite is self-reported; insurance is manual; the largest driver is computed from connected telemetry.',evSrcs,demo);
-  // ── evidence-aware wording: cautious when demo / low evidence; appetite verdict is data-driven ──
-  var soft=demo||evLevel==='Low'||evLevel==='Not Enough Evidence';
-  var withinTxt=!expT.connected?'not yet measured — connect your exposure model':!ap.connected?'measured against the board’s appetite once appetite connects':/Within/.test(status)?'within the board’s appetite':/Outside/.test(status)?'outside the board’s appetite':'approaching the board’s appetite';
-  var drvLead=TD.ok?(drv+(soft?' appears to be the largest financial driver':' is the largest financial driver')):'connect your telemetry to rank the largest financial driver';
-  // ── funding decision block (no ROI/per-$1 without cost data) ──
-  var funding='<div class="c5statgrid" style="margin-top:14px">'+
-    cfCard('Funding required','Cost estimate needed','Connect the remediation cost to compute exposure reduction per $1','Not connected','muted')+
-    cfCard('Modeled exposure reduction',(dm.connected?dm.displayValue:'—'),'From reducing the largest financial driver','Modeled'+(demo?' · Demo':''),'good',TD.mid)+
-    cfCard('Timeline · owner','90–180 days','Owner: CISO / CIO','Estimate','ink')+
+  // ── verdict (data-driven): are we inside the board's cyber-loss appetite, and what leads it ──
+  var verdict=!expT.connected?'Connect your exposure model to size cyber exposure against the board’s appetite.'
+    :!ap.connected?'Board appetite isn’t connected yet — connect it to judge whether we’re inside it.'
+    :('We’re '+(/Outside/.test(status)?'outside':/Within/.test(status)?'within':'approaching')+' the board’s cyber-loss appetite'+(TD.ok?(' — '+drv+' is the largest driver.'):'.'));
+  // ── derived figures — never hard-coded (over/headroom = exposure − appetite; driver share = driver ÷ exposure) ──
+  var overRaw=(!isNaN(expN)&&!isNaN(apN))?(expN-apN):NaN;
+  var overVal=isNaN(overRaw)?'—':((typeof usd==='function')?usd(Math.abs(overRaw)):('$'+Math.round(Math.abs(overRaw)/1e6)+'M'));
+  var overLabel=isNaN(overRaw)?'Over appetite':(overRaw>0?'Over appetite':'Headroom to appetite');
+  var overCol=isNaN(overRaw)?'muted':(overRaw>0?'crit':'good');
+  var expCol=isNaN(overRaw)?'ink':(overRaw>0?'crit':'good');
+  var driverN=dm.connected?num(dm):NaN;
+  var drvPct=(!isNaN(driverN)&&!isNaN(expN)&&expN>0)?Math.round(driverN/expN*100):null;
+  var pillCls=statusCol==='crit'?'r':statusCol==='warn'?'a':statusCol==='good'?'g':'n';
+  var heroPill=(/Outside/.test(status)?'Outside appetite':/Within/.test(status)?'Within appetite':/Watch/.test(status)?'Approaching appetite':'Appetite')+(demo?' · demo':'');
+  // 2) HERO — modeled exposure vs board appetite: three figures, hairline-separated, in one card.
+  function heroCol(val,label,col,first){return '<div style="flex:1 1 120px;min-width:110px;padding:2px 16px'+(first?'':';border-left:1px solid var(--line)')+'"><div class="c5card-v" style="color:var(--'+(col||'ink')+')">'+c5esc(String(val))+'</div><div class="c5esub" style="font-size:11px;color:var(--muted);margin-top:2px">'+c5esc(label)+'</div></div>';}
+  var hero='<div class="c5card" data-c5m="exp_total" style="cursor:pointer;margin-top:6px"><div class="c5card-top"><span class="c5card-l">Modeled exposure vs board appetite</span><span class="c5pill '+pillCls+'" style="font-size:9px">'+c5esc(heroPill)+'</span></div>'+
+    '<div style="display:flex;flex-wrap:wrap;align-items:stretch;margin-top:10px">'+
+      heroCol(expT.connected?expT.displayValue:'—','Modeled cyber exposure',expCol,true)+
+      heroCol(ap.connected?ap.displayValue:'—','Board-approved appetite'+(demo?' (demo)':'')+(apImplausible?' · confirm scope':''),'ink',false)+
+      heroCol(overVal,overLabel,overCol,false)+
+    '</div></div>';
+  // 3) TWO CARDS — largest driver · downside tail (insurance folded into the tail caption).
+  var driverCap=TD.ok?(cap(drv)+(drvPct!=null?(' — '+drvPct+'% of modeled exposure'):'')):'Connect telemetry to rank the largest driver';
+  var downCap=(covPct?(covPct+'% insured'):'insurance manual')+(insGap.connected?(' · '+insGap.displayValue+' uninsured residual'):'');
+  var twoCards='<div class="c5cards" style="margin-top:14px">'+
+    cfCard('Largest exposure driver',(dm.connected?dm.displayValue:'—'),driverCap,'Largest','ink',TD.mid)+
+    cfCard('Downside — 1-in-20 tail',(tail.connected?tail.displayValue:'—'),downCap,'Modeled','ink','cf_tail')+
     '</div>';
+  // 4) REMEDIATION STRIP — muted fill, no border. The exposure-reduction figure drills to its basis.
+  var sep='<span style="color:var(--line)">·</span>';
+  var strip='<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-top:14px;padding:12px 16px;border-radius:12px;background:var(--surface-2)">'+
+    '<span data-c5m="'+TD.mid+'" style="cursor:pointer;font-size:12.5px;color:var(--good);font-weight:600">Remediating the largest driver removes '+(dm.connected?c5esc(dm.displayValue):'—')+' of modeled exposure</span>'+sep+
+    '<span style="font-size:12px;color:var(--muted)">90–180 days</span>'+sep+
+    '<span style="font-size:12px;color:var(--muted)">owner CISO / CIO</span>'+sep+
+    '<span style="font-size:12px;color:var(--muted)">funding cost not yet connected</span>'+
+    '</div>';
+  // 5) EVIDENCE FOOTNOTE — small, muted; sources connected is counted from the evidence set.
+  var connN=evSrcs.filter(function(s){return s.connected;}).length;
+  var foot='<div class="c5foot">'+(demo?'demo — ':'')+'exposure and tail loss are modeled, appetite is self-reported, insurance is manual; the largest driver is computed from connected telemetry. · '+connN+' sources connected</div>';
   host.innerHTML=c5header()+
-    c5shell('Financial exposure · are we within the board’s appetite?',(expT.connected?('Cyber exposure is '+withinTxt+' — '+drvLead+'.'):'Connect your exposure model to size cyber exposure against the board’s appetite.'),null,(expT.connected?('Modeled cyber exposure is '+(/Within/.test(status)?'below':/Outside/.test(status)?'above':'measured against')+' the board-approved cyber loss appetite. The largest driver is '+drvL+'; funding remediation reduces modeled exposure and protects financial headroom. Every dollar carries its source; drill any card for its basis.'):'Connect your exposure model, appetite and telemetry and this sizes cyber exposure against the board’s appetite and ranks the largest financial driver.'))+
-    '<div class="c5cards">'+
-      cfCard('Modeled cyber exposure',(expT.connected?expT.displayValue:'—'),'Status: '+status,'Modeled'+(demo?' · Demo':''),statusCol,'exp_total')+
-      cfCard('Board-approved cyber loss appetite',(ap.connected?ap.displayValue:'Appetite not connected'),(apImplausible?'Confirm this is cyber-loss tolerance, not enterprise value':'Board-approved cyber loss tolerance'),apProv,'ink','cf_appetite')+
-      cfCard('Financial headroom',(hr.connected?hr.displayValue:'—'),(hrCredible?'Headroom to cyber loss appetite':'Shown only when appetite is credible — treat as '+(demo?'demo':'illustrative')),(hrCredible?'Computed':(demo?'Demo headroom':'Illustrative')),(hrCredible?statusCol:'muted'),'cf_headroom')+
-    '</div>'+
-    '<div class="c5tiles">'+
-      cfTile('Largest financial exposure driver',(dm.connected?dm.displayValue:'—'),(TD.ok?cap(drv):'Connect telemetry to rank'),'Largest','a',TD.mid)+
-      cfTile('1-in-20 modeled loss scenario',(tail.connected?tail.displayValue:'—'),'Tail loss scenario','Modeled','a','cf_tail')+
-      cfTile('Customer-platform outage impact',(bi.connected?bi.displayValue:'—'),'Business interruption estimate','If down','b','cf_bi')+
-      cfTile('Insurance gap',(insGap.connected?(insGap.displayValue+' residual tail exposure'):(insCov.connected?'No residual gap':'—')),(covPct?(covPct+'% of modeled 1-in-20 scenario covered'):'coverage of the modeled tail'),'Manual','a','cf_ins_gap')+
-    '</div>'+
-    funding+
-    evPanel+
-    c5bl('Bottom line',(expT.connected?('Current modeled cyber exposure is '+withinTxt+' — '+drvLead+'.'):'Connect your exposure model to rank the largest financial driver.'),null,'The largest financial exposure driver is '+drvL+(dm.connected?(': '+dm.displayValue+' modeled exposure'):'')+'. Funding the remediation reduces the largest modeled driver, protects financial headroom, and narrows residual exposure. Approve '+drvS+' remediation funding, or defer with accepted residual exposure.',{mid:TD.mid,txt:'Approve '+drvS+' remediation — reduce modeled exposure'},{mid:TD.mid,txt:'Defer with risk acceptance'})+
-    '<div class="c5foot">Exposure and tail are modeled (ALE and Monte-Carlo); appetite is self-reported; insurance is manual. Every input traces to its source'+(demo?' — values shown are demo/illustrative.':'.')+'</div>';
+    c5shell('Financial exposure · board appetite',verdict,null,'Every figure carries its source; drill any card for its basis.')+
+    hero+twoCards+strip+foot;
 }
 /* Tab 02 — Cyber ROI */
 /* Tab 02 — Spend ROI. One executive viewport: header answer, four cards, one short

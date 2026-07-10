@@ -40,17 +40,18 @@ describe('CFO Within Appetite — driver is data-driven, not hard-coded identity
     expect(fn).not.toContain('identity risk is the largest financial driver');
     expect(fn).not.toContain('largest financial exposure driver is customer-platform identity risk');
   });
-  it('headline / bottom line / driver value all read the computed driver', () => {
-    expect(fn).toMatch(/'The largest financial exposure driver is '\+drvL/);
-    expect(fn).toMatch(/cfTile\('Largest financial exposure driver',\(dm\.connected\?dm\.displayValue/);
+  it('headline verdict and the driver card both read the computed driver', () => {
+    // verdict names the ranked driver: "… — <driver> is the largest driver."
+    expect(fn).toMatch(/' — '\+drv\+' is the largest driver\.'/);
+    // the driver card value is the ranked driver's own displayValue
+    expect(fn).toMatch(/cfCard\('Largest exposure driver',\(dm\.connected\?dm\.displayValue/);
   });
   it('the within/outside-appetite verdict is computed from status, not asserted', () => {
-    expect(fn).toMatch(/withinTxt=/);
+    expect(fn).toMatch(/\/Outside\/\.test\(status\)\?'outside'/);
     expect(fn).toMatch(/\/Within\/\.test\(status\)/);
   });
-  it('the primary button reduces the computed driver (never a literal identity string)', () => {
-    expect(fn).toMatch(/txt:'Approve '\+drvS\+' remediation — reduce modeled exposure'/);
-    expect(fn).not.toContain("txt:'Approve identity remediation — reduce modeled exposure'");
+  it('the driver share % is derived from the driver ÷ exposure, not hard-coded', () => {
+    expect(fn).toMatch(/drvPct=.*Math\.round\(driverN\/expN\*100\)/);
   });
 });
 

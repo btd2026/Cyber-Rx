@@ -1,9 +1,14 @@
 /**
  * Source-scan guards for the CFO "Within Appetite" tab (CyberRXNew/public/ciso5.js —
- * c5cfExposure + the cf_appetite / cf_headroom metrics). Asserts CFO-safe financial
- * framing: board-approved cyber loss appetite (not "Risk appetite"), separated
- * exposure/tail/BI/insurance-gap cards, funding block, evidence confidence, and a
- * reduce-not-remove button.
+ * c5cfExposure + the cf_appetite / cf_headroom metrics).
+ *
+ * This view was reorganised to a compact, board-critical layout:
+ *   header · hero (exposure vs appetite, 3 hairline-separated figures) · two cards
+ *   (largest driver · downside tail) · a muted remediation strip · an evidence footnote.
+ * Several non-board-critical cards were removed/merged (financial-headroom card,
+ * outage-impact tile, insurance-gap tile, funding card, modeled-exposure-reduction card,
+ * timeline card, bottom-line callout, evidence-confidence panel). Every figure still
+ * traces to its metric; nothing is hard-coded.
  */
 
 const fs = require('fs');
@@ -16,59 +21,10 @@ const fn = a >= 0 && b > a ? src.slice(a, b) : '';
 const apM = src.slice(src.indexOf("case 'cf_appetite':"), src.indexOf("case 'cf_headroom':"));
 const hrM = src.slice(src.indexOf("case 'cf_headroom':"), src.indexOf("case 'cf_tail':"));
 
-describe('CFO Within Appetite — no overclaiming button', () => {
-  it('the action button reduces, never removes/eliminates exposure', () => {
-    expect(fn).not.toMatch(/Approve identity fix — removes/);
-    expect(fn).not.toMatch(/removes '\+ec\.displayValue/);
+describe('CFO Within Appetite — no overclaiming', () => {
+  it('never claims exposure is eliminated or a reduction is guaranteed', () => {
     expect(fn).not.toMatch(/eliminates/i);
     expect(fn).not.toMatch(/guaranteed/i);
-  });
-  it('displays "reduce modeled exposure" on the primary action, driver-parameterized', () => {
-    // driver is data-ranked (c5TopDriver), so the button text is composed, not literal
-    expect(fn).toContain("txt:'Approve '+drvS+' remediation — reduce modeled exposure'");
-    expect(fn).not.toContain('Approve identity remediation — reduce modeled exposure');
-    expect(fn).toContain('Defer with risk acceptance');
-  });
-});
-
-describe('CFO Within Appetite — appetite & headroom', () => {
-  it('relabels risk appetite as board-approved cyber loss appetite', () => {
-    expect(fn).toContain('Board-approved cyber loss appetite');
-    expect(apM).toContain("name:'Board-approved cyber loss appetite'");
-    expect(apM).not.toContain("name:'Risk appetite'");
-    expect(hrM).toContain("name:'Financial headroom'");
-  });
-  it('marks a $B-vs-$M appetite as illustrative and gates confident headroom', () => {
-    expect(fn).toMatch(/apImplausible=.*apN>expN\*50/);
-    expect(fn).toContain('hrCredible=');
-    expect(fn).toMatch(/Demo appetite threshold|Illustrative appetite/);
-    expect(fn).toMatch(/Demo headroom|Illustrative/);
-  });
-  it('labels appetite as self-reported / demo, not board-approved-live', () => {
-    expect(apM).toMatch(/label:\(apdemo\?'demo':'self-reported'\)/);
-  });
-});
-
-describe('CFO Within Appetite — separated financial cards', () => {
-  it('has distinct modeled-exposure / appetite / headroom / driver / tail / BI / insurance cards', () => {
-    expect(fn).toContain('Modeled cyber exposure');
-    expect(fn).toContain('Financial headroom');
-    expect(fn).toContain('Largest financial exposure driver');
-    expect(fn).toContain('1-in-20 modeled loss scenario');
-    expect(fn).toContain('Customer-platform outage impact');
-    expect(fn).toContain('Insurance gap');
-  });
-  it('the insurance card shows residual tail exposure + % of the 1-in-20 covered', () => {
-    expect(fn).toContain('residual tail exposure');
-    expect(fn).toMatch(/covPct\+'% of modeled 1-in-20 scenario covered'/);
-  });
-});
-
-describe('CFO Within Appetite — funding block (no ROI without cost)', () => {
-  it('shows funding required / cost-estimate-needed and modeled exposure reduction', () => {
-    expect(fn).toContain('Funding required');
-    expect(fn).toContain('Cost estimate needed');
-    expect(fn).toContain('Modeled exposure reduction');
   });
   it('does not claim ROI / best-return / payback without cost data', () => {
     expect(fn).not.toMatch(/best ROI/i);
@@ -77,18 +33,65 @@ describe('CFO Within Appetite — funding block (no ROI without cost)', () => {
   });
 });
 
-describe('CFO Within Appetite — evidence confidence & labels', () => {
-  it('renders an evidence-confidence panel that caps below High while appetite is self-reported', () => {
-    expect(fn).toMatch(/var evPanel=c5EvLine\(evLevel,/); // compact one-line evidence strip
-    expect(fn).toMatch(/var evLevel=demo\?'Demo':\(ap\.connected&&evConf\.level==='High'\?'Medium':evConf\.level\)/);
+describe('CFO Within Appetite — appetite & headroom metrics unchanged', () => {
+  it('relabels risk appetite as board-approved cyber loss appetite', () => {
+    expect(fn).toContain('Board-approved appetite'); // hero column label
+    expect(apM).toContain("name:'Board-approved cyber loss appetite'");
+    expect(apM).not.toContain("name:'Risk appetite'");
+    expect(hrM).toContain("name:'Financial headroom'"); // metric still exists (drillable elsewhere)
   });
-  it('labels demo / manual / self-reported / modeled values', () => {
-    expect(fn).toMatch(/signalsAreDemo/);
-    expect(fn).toContain('Insurance policy data (manual)');
-    expect(fn).toMatch(/Modeled'\+\(demo\?' · Demo'/);
+  it('flags a $B-vs-$M appetite as implausible (confirm scope)', () => {
+    expect(fn).toMatch(/apImplausible=.*apN>expN\*50/);
+    expect(fn).toContain('confirm scope');
   });
-  it('every card carries a source/provenance label', () => {
-    expect(fn).toMatch(/function cfCard\(title,val,sub,prov,col,mid\)/);
+  it('labels appetite as self-reported / demo, not board-approved-live', () => {
+    expect(apM).toMatch(/label:\(apdemo\?'demo':'self-reported'\)/);
+  });
+});
+
+describe('CFO Within Appetite — reorganised layout (top → bottom)', () => {
+  it('1) header: board-appetite breadcrumb + a single supporting line (not a 3-line paragraph)', () => {
+    expect(fn).toContain("c5shell('Financial exposure · board appetite'");
+    expect(fn).toContain('Every figure carries its source; drill any card for its basis.');
+  });
+  it('2) hero card: modeled exposure vs board appetite, three figures', () => {
+    expect(fn).toContain('Modeled exposure vs board appetite');
+    expect(fn).toContain('Modeled cyber exposure');
+    expect(fn).toContain('Board-approved appetite');
+    expect(fn).toMatch(/Over appetite|Headroom to appetite/);
+  });
+  it('2) "Over appetite" is DERIVED (exposure − appetite), not hard-coded', () => {
+    expect(fn).toMatch(/overRaw=\(!isNaN\(expN\)&&!isNaN\(apN\)\)\?\(expN-apN\)/);
+  });
+  it('3) two cards: largest driver (with % share) + downside tail (insurance folded in)', () => {
+    expect(fn).toContain("cfCard('Largest exposure driver'");
+    expect(fn).toContain("cfCard('Downside — 1-in-20 tail'");
+    expect(fn).toMatch(/Math\.round\(driverN\/expN\*100\)/); // driver share % is computed
+    expect(fn).toContain('uninsured residual'); // insurance gap merged into the tail caption
+  });
+  it('4) remediation strip folds in exposure-reduction / timeline / owner / funding note', () => {
+    expect(fn).toContain('Remediating the largest driver removes ');
+    expect(fn).toContain('90–180 days');
+    expect(fn).toContain('owner CISO / CIO');
+    expect(fn).toContain('funding cost not yet connected');
+  });
+  it('5) evidence footnote counts connected sources from the evidence set', () => {
+    expect(fn).toMatch(/connN=evSrcs\.filter\(function\(s\)\{return s\.connected;\}\)\.length/);
+    expect(fn).toContain('sources connected');
+  });
+});
+
+describe('CFO Within Appetite — removed / merged cards are gone', () => {
+  it('no separate financial-headroom card, outage-impact, insurance-gap or funding cards', () => {
+    expect(fn).not.toContain("cfCard('Financial headroom'");
+    expect(fn).not.toContain('Customer-platform outage impact');
+    expect(fn).not.toContain("cfTile('Insurance gap'");
+    expect(fn).not.toContain("cfCard('Funding required'");
+    expect(fn).not.toContain("cfCard('Modeled exposure reduction'");
+  });
+  it('no bottom-line callout (it duplicated the headline) and no tiles helper', () => {
+    expect(fn).not.toContain('c5bl(');
+    expect(fn).not.toContain('cfTile(');
   });
 });
 
@@ -97,14 +100,15 @@ describe('CFO Within Appetite — clean executive view', () => {
     expect(fn).not.toMatch(/\bCMMI\b/);
     expect(fn).not.toMatch(/PR\.[A-Z]{2}|ID\.AM/);
   });
-  it('bottom line names the data-ranked largest driver, not a hard-coded identity conclusion', () => {
-    // driver comes from c5TopDriver() (c5expModel drivers ranked by modeled USD)
+  it('the largest driver is data-ranked (c5TopDriver), never a hard-coded identity conclusion', () => {
     expect(fn).toMatch(/var TD=c5TopDriver\(\),dm=c5get\(TD\.mid\)/);
-    expect(fn).toContain("'The largest financial exposure driver is '+drvL");
     expect(fn).not.toContain('identity risk is the largest financial driver');
     expect(fn).not.toContain('largest financial exposure driver is customer-platform identity risk');
   });
-  it('cards/tiles remain click-through for source traceability', () => {
-    expect(fn).toMatch(/data-c5m="'\+mid\+'"/);
+  it('every card carries a source/provenance label and stays click-through for its basis', () => {
+    expect(fn).toMatch(/function cfCard\(title,val,sub,prov,col,mid\)/);
+    expect(fn).toMatch(/data-c5m="'\+mid\+'"/); // cfCard drill
+    expect(fn).toContain('data-c5m="exp_total"'); // hero drills to the exposure metric
+    expect(fn).toContain("'ink',TD.mid)"); // driver card drills to the ranked driver metric
   });
 });
