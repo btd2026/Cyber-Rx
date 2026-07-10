@@ -2395,25 +2395,31 @@ function c5Exposure(){
   // Largest remaining coverage gap = lowest-coverage connected control (the next-investment read).
   var gapRanked=ctrlConn.filter(function(o){return o.p!=null;}).slice().sort(function(a,b){return a.p-b.p;});
   var topGap=gapRanked[0]||null;
-  var w3=ctrlConn.map(function(o,idx){var c=o.c,pct=maxV>0?Math.round(o.usd/maxV*100):0;if(pct<6&&o.usd>0)pct=6;
+  // Control-value cards (same treatment as the Cyber-operations tab): a card grid where
+  // each control carries a status, what it reduces + its modeled $, coverage/evidence/gap
+  // meta, a next action, and a click-through to the source record. Nothing hard-coded.
+  var CTRL_IC={mfa:'key',pam:'lock',edr:'cpu',vuln:'target',siem:'pulse',backup:'box',cspm:'store',aware:'checklist',seg:'gauge',dlp:'file'};
+  var w3=ctrlConn.map(function(o){var c=o.c;
       var cov=(o.p!=null)?o.p:null;
       var ev=ctrlEvidenceStatus(cov,demoCV);
-      var evCls=(ev==='Telemetry Validated')?'g':(ev==='Mock / Demo'||ev==='Not Enough Evidence')?'n':'a';
-      var covCls=(cov==null)?'n':(cov>=90?'b':cov>=70?'a':'r');
       var gapPct=(cov!=null)?(100-cov):null;
       var gapShort=(gapPct!=null&&gapPct>0)?(gapPct+'% '+(CTRL_POP[c.k]||'assets')+' uncovered'):(cov===100?'operating evidence needed':'');
       var next=CTRL_NEXT[c.k]||ctrlNextGeneric(cov);
       var desc=CTRL_DESC[c.k]||('Reduces '+c.name.toLowerCase()+' exposure');
-      // Two lines only, dense: name + coverage + evidence + $ · then one muted line
-      // (what it reduces · remaining gap · next). Full basis is one click away.
-      return '<div class="c5erow" data-c5cv="'+c.k+'" title="'+c5esc(nm(c)+' — click for source, coverage denominator, evidence status and remaining gap.')+'">'+
-        '<span class="c5rank'+(idx===0?' top':'')+'">'+(idx+1)+'</span>'+
-        '<div style="flex:1;min-width:0">'+
-          '<div class="c5exp">'+nm(c)+' <span class="c5pill '+covCls+'" style="margin-left:4px">'+(cov!=null?(cov+'%'):'n/a')+'</span> <span class="c5pill '+evCls+'" style="margin-left:4px;font-size:10px">'+ev+'</span></div>'+
-          '<div class="c5esub" style="color:var(--ink-2)">'+c5esc(desc)+(gapShort?(' <span style="color:var(--muted)">· Gap '+c5esc(gapShort)+'</span>'):'')+' <span style="color:var(--muted)">· Next</span> '+c5esc(next)+'</div>'+
-        '</div>'+
-        '<div class="c5etrack"><div style="width:'+pct+'%;height:100%;background:linear-gradient(90deg,color-mix(in srgb,var(--good) 62%,transparent),var(--good))"></div></div>'+
-        '<div class="c5emult" style="color:var(--good)">'+usd(o.usd)+'</div></div>';
+      // Status from coverage — the spec status model (Within target / Action needed / Gap),
+      // never "Healthy/Safe". Evidence status (Mock / Demo …) is carried in the meta line.
+      var st=(cov==null)?{t:'Evidence Incomplete',c:'muted'}:(cov>=90?{t:'Within target',c:'good'}:cov>=70?{t:'Action needed',c:'warn'}:{t:'Gap',c:'crit'});
+      var meta='Coverage: '+(cov!=null?(cov+'%'):'n/a')+' · Evidence: '+ev+(gapShort?(' · Gap: '+gapShort):'');
+      return '<div class="c5aic" data-c5cv="'+c.k+'" style="--ac:var(--'+st.c+')" title="'+c5esc(nm(c)+' — click for source, coverage denominator, evidence status and remaining gap.')+'">'+
+        '<span class="c5tile-ic" style="--ac:var(--'+st.c+')">'+c5icon(CTRL_IC[c.k]||'shieldcheck')+'</span>'+
+        '<div style="min-width:0;flex:1">'+
+          '<div class="c5aic-t">'+c5esc(nm(c))+'</div>'+
+          '<div class="c5aic-v" style="color:var(--'+st.c+')">'+c5esc(st.t)+'</div>'+
+          '<div class="c5aic-s"><b style="color:var(--good)">'+usd(o.usd)+'</b> modeled reduction · '+c5esc(desc)+'</div>'+
+          '<div class="c5esub" style="font-size:11px;color:var(--muted);margin-top:3px">'+c5esc(meta)+'</div>'+
+          '<div class="c5esub" style="margin-top:3px;color:var(--ink-2)"><b>Next action:</b> '+c5esc(next)+'</div>'+
+          '<div class="c5esub" style="color:var(--blue);font-size:11px;margin-top:2px;cursor:pointer">Click for the record ›</div>'+
+        '</div></div>';
     }).join('');
 
   // Build the surface: intro + three-number summary, then only the sections that
@@ -2478,7 +2484,7 @@ function c5Exposure(){
       'Modeled exposure reduction estimates the business exposure reduced by covered controls across protected assets and business services'+(demoCV?' (demo values).':' — coverage × asset exposure × business-service criticality.'));
   if(haveCtrls){
     bodyB+=c5ControlValueEvidencePanel(ctrlConn,rr,demoCV)+
-      '<div class="c5seclab">Controls delivering the most business value · '+ctrlConn.length+' control'+(ctrlConn.length>1?'s':'')+' · '+usd(rr.total)+' modeled exposure reduction</div><div>'+w3+'</div>';
+      '<div class="c5seclab">Controls delivering the most business value · '+ctrlConn.length+' control'+(ctrlConn.length>1?'s':'')+' · '+usd(rr.total)+' modeled exposure reduction</div><div class="c5aigrid">'+w3+'</div>';
     if(topCtrl){
       var gapLine=(topGap&&topGap.c.k!==topCtrl.c.k)?(' '+nm(topGap.c)+' has the largest remaining coverage gap ('+topGap.p+'%) and should be evaluated as the next investment priority.'):'';
       var TDcv=c5TopDriver(); // remaining priority = the data-ranked top driver, not a literal
@@ -4124,9 +4130,24 @@ function c5fwSource(node){
       (tool?('<div class="c5fw-srcsub">'+c5esc(tool.name.replace(/ *\(.*\)/,''))+' capability</div>'):'')+'</div></div>';
   } else if(node.src==='document'){
     var fn=(node.doc&&node.doc.doc)?node.doc.doc:'Uploaded policy';
-    var att=(node.doc&&Array.isArray(node.doc.attrs)&&node.doc.attrs.length)?(' · '+node.doc.attrs.filter(function(a){return a.found;}).length+' of '+node.doc.attrs.length+' attributes present'):'';
-    h+='<div class="c5fw-src"><span class="c5fw-srcic">📄</span><div><b>'+c5esc(fn)+'</b>'+att+
-      '<div class="c5fw-srcsub">Document review <button type="button" class="c5fw-jump" data-c5docjump="'+c5esc(node.id)+'" title="Open the document review at this control">→ view in document review</button></div></div></div>';
+    var attrs=(node.doc&&Array.isArray(node.doc.attrs))?node.doc.attrs:[];
+    var presentN=attrs.filter(function(a){return a.found;}).length;
+    var att=attrs.length?(' · '+presentN+' of '+attrs.length+' attributes present'):'';
+    // Annotations from the analyzed policy, inline in the detail window: each expected
+    // control attribute with the verbatim evidence quote where the policy language
+    // satisfies it (the auditor workpaper proof), or the reason it's missing. Plus a
+    // button that opens the source document reference scrolled to this control.
+    var annos=attrs.length?('<div class="c5fw-annos" style="margin-top:10px;display:flex;flex-direction:column;gap:8px">'+attrs.map(function(a){
+      var ok=!!a.found,cc=ok?'good':'crit';
+      var detail=(ok&&a.evidence)
+        ?('<div style="font-size:11.5px;color:var(--ink-2);font-style:italic;line-height:1.5;margin-top:2px;border-left:2px solid color-mix(in srgb,var(--good) 55%,var(--line));padding-left:9px">“'+c5esc(String(a.evidence).slice(0,240))+(String(a.evidence).length>240?'…':'')+'”</div>')
+        :(!ok?('<div style="font-size:11px;color:var(--muted);margin-top:2px">'+c5esc(a.reasoning?String(a.reasoning).slice(0,180):'Not found in the analyzed policy — complete this in the document and re-score.')+'</div>'):'');
+      return '<div><span style="font-size:10.5px;font-weight:700;color:var(--'+cc+')">'+(ok?'✓ ':'✗ ')+c5esc(a.label)+'</span>'+detail+'</div>';
+    }).join('')+'</div>'):'';
+    h+='<div class="c5fw-src"><span class="c5fw-srcic">📄</span><div style="flex:1;min-width:0"><b>'+c5esc(fn)+'</b>'+att+
+      '<div class="c5fw-srcsub">Document review <button type="button" class="c5fw-jump" data-c5docjump="'+c5esc(node.id)+'" title="Open the source document, scrolled to this control">→ open the document reference</button></div>'+
+      annos+
+    '</div></div>';
   } else if(node.src==='mapped'){
     if(node.r53fam){ // 800-53 control inheriting its family's CSF crosswalk maturity
       var few=(node.mapped||[]).slice(0,6).join(', ')+((node.mapped||[]).length>6?', …':'');
