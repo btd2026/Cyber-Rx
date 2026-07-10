@@ -201,3 +201,22 @@ describe('5 · Open document renders the auditor annotations (highlights + margi
     delete global.c5esc; delete global.docScores;
   });
 });
+
+describe('6 · Open document viewer scrolls, and the empty state is actionable', () => {
+  const a = ciso.indexOf('function c5ViewDoc(');
+  const fn = ciso.slice(a, ciso.indexOf('\nfunction ', a + 400));
+  it('the columns scroll (flex min-height:0 fix, no content-height lock)', () => {
+    expect(fn).toContain('display:flex;flex:1 1 auto;min-height:0'); // bounded body row
+    expect(fn).toContain('min-width:0;min-height:0;overflow-y:auto'); // left doc column scrolls
+    expect(fn).toContain('min-height:0;overflow-y:auto'); // right panel scrolls
+    expect(fn).not.toContain('min-height:0;flex:1;flex-wrap:wrap'); // the old, non-scrolling layout is gone
+  });
+  it('when there are no annotations, it explains why and offers to generate them', () => {
+    expect(fn).toContain('hasn’t recorded attribute-level review notes');
+    expect(fn).toContain('id="c5annReanalyze"');
+    expect(fn).toContain('Run document review to generate annotations');
+  });
+  it('the generate button re-runs the review and reopens the viewer', () => {
+    expect(fn).toContain('window.reanalyzeStoredDocs(function(){try{c5ViewDoc(fname);}catch(_){}})');
+  });
+});
