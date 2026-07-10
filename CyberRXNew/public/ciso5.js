@@ -4331,36 +4331,65 @@ function c5ctAi(){
 /* Tab 04 — Software supply chain · PRIMARY decision is the advisory patch, NOT identity */
 function c5ctSupply(){
   var host=document.getElementById('ct-supply');if(!host)return;
-  var adv=c5get('ct_advisories'),TD=c5TopDriver(),dm=c5get(TD.mid);
-  var advCount=adv.connected?adv.displayValue:'—';
-  var rows='<div class="c5rank"><div class="c5rank-h">Dependencies · advisories and integrity</div>'+
-    '<div class="c5prow" data-c5m="ct_advisories"><span class="c5sq '+(adv.connected&&adv.color==='warn'?'a':'g')+'" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">Auth-library advisory <span class="c5tag rev">High</span></div><div class="c5row-s">'+(adv.connected?(advCount+' critical dependency advisor'+(advCount==='1'?'y':'ies')+' · used by the customer platform · patch available'):'connect your SCA scanner')+'</div></div><span class="c5pill '+(adv.connected&&adv.color==='warn'?'a':'g')+'">'+(adv.connected?(adv.color==='warn'?'Prioritize':'Clear'):'—')+'</span></div>'+
-    '<div class="c5prow" data-c5m="ct_appsec"><span class="c5sq b" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">Code-scanning findings <span class="c5tag">SAST</span></div><div class="c5row-s">First-party code · scheduled remediation</div></div><span class="c5pill b">Scheduled</span></div>'+
-    '<div class="c5prow" data-c5m="ct_deps"><span class="c5sq n" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">SBOM coverage</div><div class="c5row-s">Connect your SBOM to inventory the dependency tree</div></div><span class="c5pill n">Connect SBOM</span></div>'+
-    '<div class="c5prow" data-c5m="ct_unsigned"><span class="c5sq n" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">Build signing</div><div class="c5row-s">Connect your CI/CD signing to verify release integrity</div></div><span class="c5pill n">Connect CI/CD</span></div>'+
-    '</div>';
+  var demo=(typeof signalsAreDemo==='function')&&signalsAreDemo();
+  var adv=c5get('ct_advisories'),appsec=c5get('ct_appsec'),IDF=c5IdFix();
+  // ── honest partial coverage: 1 of 3 supply-chain signals is live (SCA); SBOM + signing aren't ──
+  var advConn=adv.connected,sbomConn=false,signConn=false;
+  var sigLive=[advConn,sbomConn,signConn].filter(Boolean).length;
+  var advCount=advConn?adv.displayValue:'—';
+  var illus='<span class="c5pill n" style="font-size:9px">Illustrative until scanner-wired</span>';
+  // ── per-component matrix. Advisory detail (CVSS / KEV / blast radius) is illustrative until
+  //    the real scanner is wired — a wrong "not exploited" would be a compliance miss, so it's
+  //    badged, never shown as confirmed fact. ──
+  function comp(mid,name,tag,tagCls,sub,pill,pillCls){return '<div class="c5prow" data-c5m="'+mid+'" style="cursor:pointer"><div style="flex:1;min-width:0"><div class="c5row-t">'+c5esc(name)+(tag?(' <span class="c5tag '+(tagCls||'')+'">'+c5esc(tag)+'</span>'):'')+'</div><div class="c5row-s">'+sub+'</div></div><span class="c5pill '+pillCls+'" style="flex:none">'+c5esc(pill)+'</span></div>';}
+  var advSub=advConn?(advCount+' critical advisor'+(advCount==='1'?'y':'ies')+' · CVSS 9.8 · KEV-listed · blast radius: the customer-platform auth path'):'connect your SCA scanner to see the advisories on your critical path';
+  var rows=
+    comp('ct_advisories','Auth-library advisory','High','rev',advSub,(advConn?(adv.color==='warn'?'Patch now':'Clear'):'—'),(advConn&&adv.color==='warn'?'r':'g'))+
+    comp('ct_appsec','Code-scanning findings','SAST','',(appsec.connected?(appsec.displayValue+' · first-party code · scheduled remediation'):'first-party code · scheduled remediation'),'Scheduled','b')+
+    comp('ct_deps','SBOM coverage','','','not connected — connect your SBOM to inventory the full dependency tree','Connect SBOM','n')+
+    comp('ct_unsigned','Build signing','','','not connected — connect CI/CD signing to verify release integrity','Connect CI/CD','n');
+  var matrix='<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:16px 0 8px"><span style="font-size:12.5px;font-weight:600;color:var(--ink)">Software supply chain — signals and integrity '+illus+'</span><span style="font-size:11px;color:var(--muted)">'+sigLive+' of 3 signals live</span></div><div class="c5card" style="padding:2px 14px">'+rows+'</div>';
+  // ── regulatory strip — EU Cyber Resilience Act (CRA) ──
+  var sep='<span style="color:var(--line)">·</span>';
+  var strip='<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-top:14px;padding:12px 16px;border-radius:12px;background:var(--surface-2)">'+
+    '<span style="font-size:12px;color:var(--ink-2);font-weight:600">Regulatory:</span>'+
+    '<span style="font-size:12.5px;color:var(--warn);font-weight:600">EU Cyber Resilience Act (CRA)</span>'+sep+
+    '<span style="font-size:12px;color:var(--muted)">requires vulnerability handling + an SBOM for products with digital elements</span>'+illus+'</div>';
+  var evSrcs=[{label:'SCA scanner (advisories)',connected:advConn},{label:'SAST code scanning',connected:appsec.connected},{label:'SBOM',connected:sbomConn},{label:'CI/CD build signing',connected:signConn},{label:'Identity exposure model',connected:c5get(IDF.mid).connected}];
+  var connN=evSrcs.filter(function(s){return s.connected;}).length;
+  var head='One of three supply-chain signals is live — the SCA scanner. It flags a high-severity auth-library advisory on the customer platform’s critical path; SBOM and build-signing are not yet connected.';
+  var support='Advisories come from your connected SCA scanner; SBOM coverage and build-signing integrity light up when those tools connect. The auth-library advisory sits on the same access path as the '+IDF.short+' gap, so the identity fix also shrinks its blast radius. Each item traces to its scanner.';
   host.innerHTML=c5header()+
-    c5shell('Software supply chain · are our dependencies safe?','Your dependencies are triaged — one high-severity advisory to clear.',null,'Your software supply chain: advisories triaged from your SCA scanner. A high-severity advisory affects an auth library used by the customer platform — worth prioritizing. SBOM coverage and build signing light up when those tools connect. Each item traces to its advisory.')+
-    '<div class="c5cards">'+c5card('ct_deps')+c5card('ct_advisories')+c5card('ct_unsigned')+'</div>'+
-    rows+
-    c5bl('Bottom line','Clear the advisory in your critical path.',null,(adv.connected?('A high-severity advisory in an auth library used by the customer platform is your top supply-chain item — patch it now. It also intersects the '+TD.short+' gap, so closing that reduces the blast radius of auth-library issues.'):'Connect your SCA scanner and the high-severity advisories on your critical path surface here — patch first, with '+TD.short+' reducing the blast radius.'),{mid:'ct_advisories',txt:'Patch the auth-library advisory'},{mid:TD.mid,txt:'Fund '+c5esc(TD.short)+' — reduces blast radius'})+
-    '<div class="c5foot">Dependencies and advisories from your SBOM and scanners.</div>';
+    c5shell('Software supply chain · are our dependencies safe?',head,'warn',support)+
+    '<div class="c5cards">'+c5card('ct_advisories')+c5card('ct_deps')+c5card('ct_unsigned')+'</div>'+
+    matrix+
+    strip+
+    c5bl('The decision','Clear the advisory in your critical path — then fund the fix that shrinks its blast radius.',null,(advConn?('A high-severity, KEV-listed advisory in an auth library used by the customer platform is your top supply-chain item — patch it now. It sits on the same access path as the '+IDF.short+' gap'+(IDF.usd?(', so funding the identity fix ('+IDF.usd+' · '+IDF.owner+') reduces the blast radius of auth-library issues'):', so the identity fix reduces the blast radius')+'.'):'Connect your SCA scanner and the high-severity advisories on your critical path surface here — patch first, with the identity fix reducing the blast radius.'),{mid:'ct_advisories',txt:'Patch the auth-library advisory'},{mid:IDF.mid,txt:'Fund the identity fix — reduces blast radius'})+
+    '<div class="c5foot">Advisories from your SCA scanner; SBOM + signing connect-list; CVSS/KEV/blast-radius detail is illustrative until the scanner is wired. · '+connN+' sources connected'+(demo?' · demo':'')+'</div>';
 }
 /* Tab 05 — Decisions for the CTO */
 function c5ctDecisions(){
   var host=document.getElementById('ct-decisions');if(!host)return;
-  var TD=c5TopDriver(),dm=c5get(TD.mid),adv=c5get('ct_advisories');
+  var TD=c5TopDriver(),dm=c5get(TD.mid),adv=c5get('ct_advisories'),IDF=c5IdFix();
+  var g=(typeof LIVE!=='undefined'&&LIVE&&LIVE.aiRisk&&LIVE.aiRisk.governance)||{};var frameworkInPlace=/nist|iso|rmf/i.test(g.framework||'');
   var list=[
-    c5dec('ct',1,'Patch the auth-library advisory?','High-severity advisory'+(adv.connected?(' ('+adv.displayValue+' open)'):'')+' — used by the customer platform. The urgent tactical fix.',
+    // Decision 1 — the convergent identity fix (recommended), with its honest downside.
+    c5dec('ct',1,'Fund the '+IDF.short+' fix?','Closes the biggest architecture gap in the stack — the customer platform’s access model'+(dm.connected?(' ('+dm.displayValue+')'):'')+'. The one fix that moves cyber on every CIO tab (tech estate, AI, supply chain).',
+      {on:'Fund it — closes & simplifies the access model',osum:(dm.connected?('Largest architecture gap · −'+dm.displayValue):'Largest architecture gap'),pros:['Closes the largest architecture gap and simplifies the access model.','Secures the customer-data AI’s access and shrinks the auth-library blast radius.','Reduces blast radius across the platform.'],cons:['Larger, multi-sprint effort and cost.','Interim exposure persists across the '+IDF.timeline+' rollout — not closed on day one.']}),
+    // Decision 2 — the CIO's domain call: stand up the AI governance framework.
+    c5dec('ct',2,'Stand up the AI governance framework?','AI is guardrailed in practice but a formal framework '+(frameworkInPlace?'is in place':'is not in place yet')+' — so "under governance" is asserted, not provable, and the high-risk customer-facing use carries EU AI Act obligations.',
+      {on:'Formalize — adopt a framework + EU AI Act mapping',osum:'provable governance',pros:['Adopts NIST AI RMF / ISO 42001 with an acceptable-use policy.','Maps each system to its EU AI Act risk class and verifies the inventory (shadow AI).','Applies heightened controls to the high-risk use.'],cons:['Policy + mapping effort this quarter.','Ongoing conformity upkeep as AI use grows.']},
+      [{on:'Guardrails only, formalize later',osum:'no framework yet',pros:['No governance-program cost today.'],cons:['"Under governance" stays unprovable; EU AI Act obligations go unmet; shadow AI unverified.']}]),
+    // Decision 3 — the urgent tactical patch on the critical path.
+    c5dec('ct',3,'Patch the auth-library advisory?','High-severity, KEV-listed advisory'+(adv.connected?(' ('+adv.displayValue+' open)'):'')+' — used by the customer platform. The urgent tactical fix.',
       {on:'Patch it now — highest-severity, in the critical path',osum:'Closes a known-exploitable path to customers',pros:['Closes an actively-exploitable dependency shipping to customers.','Fast, low-cost tactical fix.'],cons:['Requires a release / regression pass.']},
-      [{on:'Schedule for the next release',osum:'Batch with the next deploy',pros:['Avoids an out-of-band release.'],cons:['Leaves a known-exploitable path open in the interim.']}]),
-    c5dec('ct',2,'Fund the '+TD.short+' fix?','Closes the biggest architecture gap in the stack — the customer platform’s access model'+(dm.connected?(' ('+dm.displayValue+')'):'')+'.',
-      {on:'Fund it — closes & simplifies the access model',osum:(dm.connected?('Largest architecture gap · −'+dm.displayValue):'Largest architecture gap'),pros:['Closes the largest architecture gap and simplifies the access model.','Reduces blast radius across the platform.'],cons:['Larger, multi-sprint effort and cost.']})
+      [{on:'Schedule for the next release',osum:'Batch with the next deploy',pros:['Avoids an out-of-band release.'],cons:['Leaves a known-exploitable path open in the interim.']}])
   ];
   host.innerHTML=c5header()+
-    c5shell('Decisions for the CIO · what needs your call?','Two technical calls — the recommended one is marked, the choice is yours.',null,'Each is tied to the stack. Choosing one stamps it with your name and time, keeps it editable for 24 hours, and opens a tracked ticket in the system connected at onboarding — status pulled back on refresh.')+
+    c5shell('Decisions for the CIO · what needs your call?','One fix converges across the stack — then the governance and tactical calls that are yours.',null,'Each is tied to the stack. Choosing one stamps it with your name and time, keeps it editable for 24 hours, and opens a tracked ticket in the system connected at onboarding — status pulled back on refresh.')+
+    c5convergeStrip('cio')+
     c5decisions(list)+
-    '<div class="c5foot">Each decision links to its component and source.</div>';
+    '<div class="c5foot">Each decision links to its component and source · no AI/LLM at run-time.</div>';
 }
 
 /* ================= Internal Audit seat — same engine, independent-assurance lens ================= */
