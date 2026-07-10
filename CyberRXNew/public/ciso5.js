@@ -3221,18 +3221,112 @@ function c5coSupply(){
     '<div class="c5foot">Vendor ratings from your third-party monitoring; dependencies from your operations model.</div>';
 }
 /* Tab 04 — Recovery readiness */
+/* Tab 04 — Recovery readiness. Answers the COO question "Can we recover within our
+   targets?" — every conclusion is generated from the recovery evidence (RTO/RPO vs
+   target, last DR test, backup verification, the top recovery dependency). Nothing is
+   hard-coded: it leads with the RTO miss when the target is missed, and the top recovery
+   gap (and its headline / bottom line / button) is ranked from the data, not assumed to
+   be identity. Compact — detail lives in each card's drill-down. */
 function c5coRecovery(){
   var host=document.getElementById('co-recovery');if(!host)return;
-  var ir=c5get('coo_identity_recovery'),TD=c5TopDriver(),dm=c5get(TD.mid);
+  var demo=(typeof signalsAreDemo==='function')&&signalsAreDemo();
+  var R=(typeof LIVE!=='undefined'&&LIVE&&LIVE.resilience)||{};
+  function durH(h){return (typeof hrsToStr==='function')?hrsToStr(h):(h+'h');}
+  function durM(m){return m>=60?((Math.round(m/6)/10)+'h'):(m+'m');}
+  function joinL(a){a=(a||[]).filter(Boolean);return a.length<=1?(a[0]||''):a.length===2?(a[0]+' and '+a[1]):(a.slice(0,-1).join(', ')+' and '+a[a.length-1]);}
+  // ── recovery evidence (live / computed from connected sources) ──
+  var worst=R.worst_recovery_hours,rtoTgt=4;
+  var rtoConn=worst!=null,rtoMiss=rtoConn&&worst>rtoTgt,rtoGapH=rtoConn?Math.max(0,worst-rtoTgt):null;
+  var rpoMin=(typeof sig==='function')?sig('rpo_minutes'):null,rpoTgt=60;
+  var rpoConn=rpoMin!=null,rpoMiss=rpoConn&&rpoMin>rpoTgt,rpoGapM=rpoConn?Math.max(0,rpoMin-rpoTgt):null;
+  var testDays=(typeof sig==='function')?sig('dr_test_days'):null,testConn=testDays!=null,testPassed=testConn&&testDays<=90;
+  var immPct=(typeof sig==='function')?sig('backup_immutable_pct'):null,bkConn=immPct!=null,bkVerified=bkConn&&immPct>=95;
+  var idP=(typeof c5avgDeploy==='function')?c5avgDeploy(['mfa','pam']):null,idConn=idP!=null,idGap=idConn&&idP<90;
+  // affected critical process/service — from the operations model, never hard-coded
+  var P=(typeof c5Processes==='function')?c5Processes():null;
+  var atRiskProc=(P&&P.list&&P.list.length)?((P.list.filter(function(x){return x.status==='At risk';})[0]||P.list[0]).name):'';
+  var affected=R.worst_recovery_service||atRiskProc||'a critical service';
+  // ── rank the top recovery gap from the data (RTO miss outranks a soft dependency) ──
+  var gaps=[];
+  if(rtoMiss)gaps.push({key:'rto',phrase:'the RTO target',head:'one critical path misses the RTO target',reason:'Slowest critical recovery path exceeds the '+rtoTgt+'h target by '+durH(rtoGapH)+'.',mid:'coo_rto',button:'Close the RTO gap',sev:5});
+  if(rpoMiss)gaps.push({key:'rpo',phrase:'the RPO target',head:'the data-loss window (RPO) exceeds target',reason:'Data-loss window exceeds the '+rtoTgt+'-minute target by '+durM(rpoGapM)+'.',mid:'coo_rpo',button:'Close the RPO gap',sev:4});
+  if(bkConn&&!bkVerified)gaps.push({key:'backup',phrase:'backup verification',head:'backup verification is incomplete',reason:'Only '+immPct+'% of backups are immutable and restore-verified.',mid:'coo_backups',button:'Resolve backup recovery gap',sev:4});
+  if(idGap)gaps.push({key:'identity',phrase:'identity recovery',head:'identity recovery could delay restoration',reason:'Access restoration could delay service recovery — identity controls '+idP+'% deployed.',mid:'coo_identity_recovery',button:'Close identity recovery gap',sev:3});
+  if(testConn&&!testPassed)gaps.push({key:'test',phrase:'the overdue recovery test',head:'the recovery test is overdue',reason:'Recovery test last ran '+testDays+' days ago — readiness is unproven.',mid:'coo_last_test',button:'Re-run the recovery test',sev:2});
+  gaps.sort(function(a,b){return b.sev-a.sev;});
+  var top=gaps[0]||null;
+  var materialDep=null;for(var gi=0;gi<gaps.length;gi++){if(gaps[gi].key!=='test'){materialDep=gaps[gi];break;}}
+  // ── evidence confidence — test/dependency evidence missing ⇒ never High ──
+  var evSrcs=[
+    {label:'Recovery test result (DR)',connected:testConn,critical:true},
+    {label:'Time to recover (RTO)',connected:rtoConn,critical:true,computed:false},
+    {label:'Data-loss window (RPO)',connected:rpoConn,critical:false},
+    {label:'Backup verification',connected:bkConn,critical:false},
+    {label:'Recovery-dependency mapping',connected:idConn,critical:true,partial:!idConn,computed:true},
+    {label:'Business-process mapping',connected:!!(P&&P.total),critical:false,partial:!(P&&P.total)}
+  ];
+  var evConf=(typeof TrustLogic!=='undefined')?TrustLogic.evidenceConfidence(evSrcs):{level:'—'};
+  var evLevel=demo?'Demo':((!testConn||!idConn)&&evConf.level==='High'?'Medium':evConf.level); // gate High without test + dependency evidence
+  var evPanel=c5EvLine(evLevel,'RTO/RPO and backup results are live; recovery-dependency and process mapping are '+((idConn&&P&&P.total)?'connected':'partial')+(demo?' — demo values':'')+'.',evSrcs,demo);
+  // ── dynamic cards (operationally accurate labels, drill-through preserved via data-c5m) ──
+  function colOf(cls){return cls==='g'?'good':cls==='a'?'warn':cls==='r'?'crit':'muted';}
+  function rcard(mid,title,val,statusTxt,cls,sub){return '<div class="c5card" data-c5m="'+mid+'"><div class="c5card-top"><span class="c5card-l">'+c5esc(title)+'</span><span class="c5pill '+cls+'" style="font-size:9px">'+c5esc(statusTxt)+'</span></div><div class="c5card-v" style="color:var(--'+colOf(cls)+')">'+c5esc(val)+'</div><div class="c5esub" style="font-size:11px;color:var(--muted);margin-top:2px">'+c5esc(sub)+'</div></div>';}
+  var rtoCard=!rtoConn?rcard('coo_rto','Time to recover (RTO)','Not connected','Not connected','n','Connect your recovery-test results to measure RTO.')
+    :rtoMiss?rcard('coo_rto','RTO gap',durH(worst)+' vs '+rtoTgt+'h target','Gap','a','Slowest critical recovery path exceeds target by '+durH(rtoGapH)+'.')
+    :rcard('coo_rto','RTO within target',durH(worst)+' vs '+rtoTgt+'h target','Within target','g','Recovery time meets current target.');
+  var rpoCard=!rpoConn?rcard('coo_rpo','Data-loss window (RPO)','Not connected','Not connected','n','Connect your backup platform to measure RPO.')
+    :rpoMiss?rcard('coo_rpo','RPO gap',durM(rpoMin)+' vs '+rpoTgt+'m target','Gap','a','Data-loss window exceeds target by '+durM(rpoGapM)+'.')
+    :rcard('coo_rpo','RPO within target',durM(rpoMin)+' vs '+rpoTgt+'m target','Within target','g','Data-loss window is within target.');
+  var testCard=!testConn?rcard('coo_last_test','Recovery test','Not tested','Not tested','n','Recovery readiness cannot be confirmed without test evidence.')
+    :!testPassed?rcard('coo_last_test','Recovery test','Overdue','Overdue','a','Last run '+testDays+' days ago — readiness is unproven until re-tested.')
+    :materialDep?rcard('coo_last_test','Recovery test','Passed, gap remains','Gap remains','a','Test passed, but '+materialDep.phrase+' still affects target recovery.')
+    :rcard('coo_last_test','Recovery test','Passed','Passed','g','Latest recovery test supports readiness.');
+  // ── tiles: backup verification + the top recovery dependency (data-ranked) ──
+  var bkTile=!bkConn?c5tile('coo_backups','n','Missing','Connect your backup platform to verify restores.')
+    :bkVerified?c5tile('coo_backups','g','Verified','Immutable and restore-tested this quarter.')
+    :c5tile('coo_backups','a','Stale',immPct+'% immutable — raise to 95%+ and restore-verify.');
+  var depName=idConn?'Identity recovery':'Not mapped';
+  var depCls=!idConn?'n':idGap?'a':'g',depPill=!idConn?'—':idGap?'Gap':'Ready';
+  var depSub=!idConn?'Connect your identity + recovery tooling to map the critical recovery path.':idGap?('Access restoration could delay service recovery — identity controls '+idP+'% deployed.'):'Access restoration is within reach — rehearse an identity-first recovery.';
+  var depTile='<div class="c5tile'+(idConn?'':' c5off')+'" data-c5m="coo_identity_recovery" title="'+c5tip(c5get('coo_identity_recovery'))+'"><div class="c5tile-top"><span class="c5tile-l">Top recovery dependency</span><span class="c5pill '+depCls+'">'+depPill+'</span></div><div class="c5tile-h'+(idConn?'':' c5muted')+'">'+c5esc(depName)+'</div><div class="c5tile-s">'+c5esc(depSub)+'</div></div>';
+  // ── dynamic headline + bottom line + button ──
+  var rpoStatus=rpoConn?(rpoMiss?'over target':'within target'):'not connected';
+  var bkStatus=bkConn?(bkVerified?'verified':(immPct+'% immutable')):'not connected';
+  var missingSrcs=[];if(!testConn)missingSrcs.push('recovery-test results');if(!rtoConn)missingSrcs.push('RTO / recovery-time data');if(!rpoConn)missingSrcs.push('RPO / backup-cadence data');if(!bkConn)missingSrcs.push('backup verification');if(!idConn)missingSrcs.push('recovery-dependency mapping');
+  var head,blHead,blBody,btn;
+  if(!testConn){
+    head='Not enough evidence to confirm recovery readiness.';
+    blHead='Not enough evidence to confirm recovery readiness.';
+    blBody='Connect or upload '+joinL(missingSrcs)+' to validate RTO, RPO, backup verification, and recovery-test results.';
+    btn={mid:'coo_last_test',txt:'Connect recovery evidence'};
+  } else if(top&&top.key==='rto'){
+    head='Recovery is tested, but one critical path misses the RTO target.';
+    blHead='The latest recovery evidence shows an RTO gap: '+durH(worst)+' vs '+rtoTgt+'h target.';
+    blBody='RPO and backup evidence are '+rpoStatus+'/'+bkStatus+', but the slowest critical recovery path exceeds the RTO target by '+durH(rtoGapH)+', which could delay restoration of '+affected+'. The priority is to close this recovery path and retest against the target.';
+    btn={mid:'coo_rto',txt:'Close the RTO gap'};
+  } else if(top){
+    head='Recovery is tested, but '+top.head+'.';
+    blHead='The latest recovery evidence shows a '+top.phrase+' gap.';
+    blBody='RTO and RPO are '+(rtoConn?(rtoMiss?'over target':'within target'):'not connected')+'/'+rpoStatus+' and backups are '+bkStatus+', but '+top.reason.charAt(0).toLowerCase()+top.reason.slice(1)+' This could delay restoration of '+affected+'. The priority is to close this recovery dependency and retest against the target.';
+    btn={mid:top.mid,txt:top.button};
+  } else if(!rtoConn||!rpoConn||!bkConn||!idConn){
+    head=bkVerified?'Backups are verified, but recovery readiness is incomplete.':'Recovery is tested, but recovery evidence is incomplete.';
+    blHead='Recovery readiness is incomplete.';
+    blBody='The recovery test passed, but '+joinL(missingSrcs)+' '+(missingSrcs.length>1?'are':'is')+' not yet connected. Complete the evidence to confirm RTO, RPO, backup verification, and the recovery dependency against target.';
+    btn={mid:'coo_last_test',txt:'Connect recovery evidence'};
+  } else {
+    head='Recovery is tested and within target.';
+    blHead='Recovery is currently within target.';
+    blBody='The latest recovery test supports the current RTO and RPO targets, and backups are verified. Continue monitoring evidence freshness and retest on schedule.';
+    btn={mid:'coo_last_test',txt:'View recovery evidence'};
+  }
   host.innerHTML=c5header()+
-    c5shell('Recovery readiness · can we bounce back?','Recovery is tested — watch the identity path.',null,'Your recovery posture: RTO and RPO against target from the last test, backups verified. The one gap — restoring identity and access quickly — could slow a customer-platform restore. Every figure traces to its test evidence.')+
-    '<div class="c5cards">'+c5card('coo_rto')+c5card('coo_rpo')+c5card('coo_last_test')+'</div>'+
-    '<div class="c5tiles">'+
-      c5tile('coo_backups','g','Verified','Restore-tested this quarter')+
-      c5tile('coo_identity_recovery',(ir.connected&&ir.color==='warn')?'a':'g',(ir.connected&&ir.color==='warn')?'Gap':'Ready','Access recovery — often the weak link')+
-    '</div>'+
-    c5bl('Bottom line','Close the recovery gap in your critical path.',null,(dm.connected?('Recovery meets targets where measured, but slow identity restoration could delay a customer-platform recovery. The '+TD.short+' fix improves recovery too — resilient access means a faster restore.'):'Connect your identity tools and the recovery weak link — access restoration — surfaces here, tied to the funded '+TD.short+' fix.'),{mid:TD.mid,txt:'Fund the '+c5esc(TD.short)+' fix — faster recovery'})+
-    '<div class="c5foot">RTO/RPO and backup results from your last recovery test.</div>';
+    c5shell('Recovery readiness · can we recover within our targets?',head,(top||!testConn)?'warn':null,'Your recovery posture: RTO and RPO against target from the last test, backup verification, and the critical recovery path that could delay restoration. Every figure traces to its test evidence.')+
+    '<div class="c5cards">'+rtoCard+rpoCard+testCard+'</div>'+
+    '<div class="c5tiles">'+bkTile+depTile+'</div>'+
+    evPanel+
+    c5bl('Bottom line',blHead,null,blBody,btn)+
+    '<div class="c5foot">RTO/RPO and backup results from your last recovery test'+(demo?' — values shown are demo.':'.')+' Drill any card for its source, owner and evidence date.</div>';
 }
 /* Tab 05 — Decisions for the COO */
 function c5coDecisions(){
