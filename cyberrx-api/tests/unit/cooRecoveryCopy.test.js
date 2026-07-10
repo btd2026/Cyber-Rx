@@ -57,15 +57,18 @@ describe('COO Recovery — the per-service matrix (centerpiece)', () => {
     expect(fn).toContain('Recovery by critical service — actual vs target');
     expect(fn).toContain('All paths tested this quarter');
   });
-  it('uses the SAME five services as the other seats via the shared C5_SYSTEMS source', () => {
-    // service names are pulled from the single shared source (not retyped), so seats can't drift
-    ['payments', 'fulfillment', 'supply', 'financial'].forEach((k) => expect(fn).toContain("c5sysLabel('" + k + "')"));
-    expect(fn).toContain("c5sysLabel('customer'"); // customer row keeps its live label override
-    expect(fn).toContain("GreenLake billing · identity recovery '+idPct+'%"); // identity root folded into the at-risk row
+  it('uses the SAME five services as Resilience via the shared c5CriticalServices() source', () => {
+    // the services now come from ONE shared helper so Recovery and Resilience can't drift
+    expect(fn).toContain('var services=c5CriticalServices();');
+    const cs = src.slice(src.indexOf('function c5CriticalServices()'), src.indexOf('\nfunction ', src.indexOf('function c5CriticalServices()') + 20));
+    ['payments', 'fulfillment', 'supply', 'financial'].forEach((k) => expect(cs).toContain("c5sysLabel('" + k + "')"));
+    expect(cs).toContain("c5sysLabel('customer'"); // customer row keeps its live label override
+    expect(cs).toContain("GreenLake billing · identity recovery '+idPct+'%");
   });
-  it('the customer-platform row wires to live signals; others are Illustrative samples', () => {
-    expect(fn).toMatch(/rto:\(rtoConn\?worst:24\),tgt:rtoTgt,rpo:\(rpoConn\?rpoMin:15\)/);
-    expect(fn).toMatch(/Illustrative/);
+  it('the customer-platform row wires to live signals in the shared source; others are samples', () => {
+    const cs = src.slice(src.indexOf('function c5CriticalServices()'), src.indexOf('\nfunction ', src.indexOf('function c5CriticalServices()') + 20));
+    expect(cs).toMatch(/rto:\(rtoConn\?worst:24\),tgt:rtoTgt,rpo:\(rpoConn\?rpoMin:15\)/);
+    expect(fn).toMatch(/Illustrative/); // recovery still badges the modeled per-service breakdown
   });
   it('row status is COMPUTED from RTO <= target, never hard-coded', () => {
     expect(fn).toContain('var ok=s.rto<=s.tgt');
