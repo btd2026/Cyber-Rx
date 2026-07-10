@@ -62,9 +62,21 @@ describe('Threats — posture strip & attack paths', () => {
 describe('Threats — evidence-aware MITRE grid', () => {
   it('identity-dependent tactics are flagged and never read Strong while identity evidence is partial', () => {
     expect(tm).toContain("var IDENTITY_TACTICS=['Initial Access','Persistence','Privilege Escalation','Defense Evasion','Credential Access','Discovery','Lateral Movement']");
-    expect(region).toMatch(/if\(idDep&&identityPartial&&covStat==='Strong Coverage'\)covStat='Moderate Coverage'/);
+    // The downgrade now lives in the metric (applied once) so the card AND the detail
+    // drawer read the same status/colour — they can never disagree.
+    expect(tm).toMatch(/if\(idDep&&idPartial&&covStat==='Strong Coverage'\)\{covStat='Moderate Coverage';color='warn';state='partial';\}/);
     expect(region).toContain('Identity evidence partial');
     expect(region).toContain('identity path');
+  });
+  it('the identity-partial flag is computed (shared helper), not hard-coded true', () => {
+    const src2 = require('fs').readFileSync(require('path').resolve(__dirname, '../../../CyberRXNew/public/ciso5.js'), 'utf8');
+    expect(src2).toContain('function c5IdentityOperatingPartial()');
+    expect(region).toMatch(/var identityPartial=\(typeof c5IdentityOperatingPartial==='function'\)\?c5IdentityOperatingPartial\(\)/);
+    expect(region).not.toContain('var identityPartial=true;');
+  });
+  it('the grid card reads the metric colour/status directly (synced with the detail drawer)', () => {
+    expect(region).toMatch(/var col=m\.connected\?\(m\.color\|\|'muted'\):'muted'/);
+    expect(region).not.toMatch(/if\(idDep&&identityPartial&&covStat==='Strong Coverage'\)covStat='Moderate Coverage'/);
   });
   it('shows coverage status and Prevent/Detect/Respond compactly', () => {
     expect(region).toMatch(/P\/D\/R: '\+m\.prevent\+' · '\+m\.detect\+' · '\+m\.respond/);

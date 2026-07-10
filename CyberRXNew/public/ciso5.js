@@ -1534,6 +1534,19 @@ function c5ctlMetric(id){
     sources:def.caps.map(function(k){return c5capSrc(k);}),
     note:'What this control area removes in dollars — its weighted share of the total. Attribute spend by control to light up the return multiple (×).',connectTool:'per-control security spend'});
 }
+/* Whether identity OPERATING evidence is incomplete — computed, not hard-coded. Identity
+   coverage % (deployment) is not the same as proof the identity controls operate: that
+   needs live privileged-session monitoring and access-review / JML evidence. Demo
+   telemetry is not operating evidence, so it reads partial; live it clears only when
+   those operating signals are connected. Used by BOTH the tactic metric and the Threats
+   grid so the two never disagree. */
+function c5IdentityOperatingPartial(){
+  var demo=(typeof signalsAreDemo==='function')&&signalsAreDemo();
+  if(demo)return true;
+  var priv=(typeof sig==='function')?sig('priv_sessions_flagged'):null;
+  var dormant=(typeof sig==='function')?sig('dormant_accounts'):null;
+  return !(priv!=null&&dormant!=null);
+}
 function c5tacticMetric(t){
   var caps=(typeof TACTIC_CAPS!=='undefined'&&TACTIC_CAPS[t])||[];var cov=(typeof threatCoverage==='function')?threatCoverage(caps):null;var conn=cov!=null;
   var state=cov==null?'limited':cov>=80?'covered':cov>=50?'partial':'limited';var color=cov==null?'muted':cov>=80?'good':cov>=50?'warn':'crit';
@@ -1543,6 +1556,10 @@ function c5tacticMetric(t){
   var idDep=IDENTITY_TACTICS.indexOf(t)>=0;
   var pdr=function(x){if(x==null)return 'Not Enough Evidence';x=Math.max(0,Math.min(100,x));return x>=90?'Strong':x>=75?'Moderate':x>=50?'Partial':'Gap';};
   var covStat=cov==null?'Not Enough Evidence':(cov>=90?'Strong Coverage':cov>=75?'Moderate Coverage':cov>=50?'Partial Coverage':'Gap');
+  // Apply the identity downgrade HERE (once) so the metric's status/colour — and every
+  // surface that reads them (the Threats grid card AND the detail drawer) — match exactly.
+  var idPartial=(typeof c5IdentityOperatingPartial==='function')?c5IdentityOperatingPartial():true;
+  if(idDep&&idPartial&&covStat==='Strong Coverage'){covStat='Moderate Coverage';color='warn';state='partial';}
   return c5obj({id:'tac_'+t,name:t,connected:conn,displayValue:conn?(cov+'% coverage'):'not connected',label:'computed',color:color,state:state,identity_dependent:idDep,coverage_status:covStat,prevent:pdr(cov!=null?cov-10:null),detect:pdr(cov!=null?cov+5:null),respond:pdr(cov),
     formula:'tactic coverage = mean live deployment/coverage of the controls MITRE ATT&CK maps to this tactic',
     method:'Each control’s % is the live deployment or coverage figure its own tool reports — telemetry, not a manual entry: Qualys/Tenable report patch coverage (patch_pct), KnowBe4/Proofpoint report training completion (training_pct), Splunk/Sentinel report log-source coverage (siem_coverage_pct), your IdP reports MFA enrollment (mfa_pct), and so on. Tactic coverage is the mean of those. A control with no connected tool reads "not connected" and is left out of the mean. Figures are illustrative in the sample workspace and become live the moment each tool is connected.',
@@ -2753,16 +2770,17 @@ function c5ThreatsEvidencePanel(E){
 function c5Threats(){
   var host=document.getElementById('c5-threats');if(!host)return;
   var demo=(typeof signalsAreDemo==='function')&&signalsAreDemo();
-  var identityPartial=true; // identity operating evidence incomplete in the sample workspace
+  var identityPartial=(typeof c5IdentityOperatingPartial==='function')?c5IdentityOperatingPartial():true; // computed, shared with the metric
   var tactics=(typeof TACTIC_CAPS!=='undefined')?Object.keys(TACTIC_CAPS):[];
   var ts=c5get('threat_status');var ta=sig('threat_actors_active');
   var E=c5ThreatsEvidence(demo);
   // MITRE heatmap — evidence-aware; identity-dependent tactics never read Strong while
   // identity operating evidence is incomplete, no matter the coverage percentage.
   var cells=tactics.map(function(t){var m=c5get('tac_'+t);
+    // Read the metric's already-downgraded status/colour so the card matches the detail
+    // drawer exactly (the identity downgrade now lives in c5tacticMetric, applied once).
     var idDep=!!m.identity_dependent;var covStat=m.coverage_status||'Not Enough Evidence';
-    if(idDep&&identityPartial&&covStat==='Strong Coverage')covStat='Moderate Coverage';
-    var col=(covStat==='Strong Coverage')?'good':(covStat==='Moderate Coverage'||covStat==='Partial Coverage')?'warn':(covStat==='Gap')?'crit':'muted';
+    var col=m.connected?(m.color||'muted'):'muted';
     var pct=null;if(m.connected){var mm=String(m.displayValue).match(/(\d+)/);pct=mm?Number(mm[1]):null;}
     var ev=(!m.connected)?'Not Enough Evidence':(demo?'Demo Telemetry':(idDep&&identityPartial?'Identity evidence partial':'Telemetry Validated'));
     return '<div class="c5att" data-c5m="tac_'+t+'" style="--ac:var(--'+col+')" title="'+c5esc(c5tip(m))+'">'+
