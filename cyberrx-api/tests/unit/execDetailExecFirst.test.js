@@ -141,8 +141,8 @@ describe('authored risk narrative (vendors) is accurate and data-driven', () => 
   it('the generic why-now fallback is risk-framed (residual risk), not a bland status', () => {
     const w = src.indexOf('function c5whyNow(');
     const fn = src.slice(w, src.indexOf('\nfunction ', w + 10));
-    expect(fn).toMatch(/residual risk stays elevated/);
-    expect(fn).toMatch(/residual risk keeps rising toward the critical range/);
+    expect(fn).toContain('var _r=c5risk(m);if(_r.whyNow)return _r.whyNow;'); // routes through the status-aware engine
+    expect(fn).toMatch(/the risk keeps rising/);
   });
 });
 
@@ -209,13 +209,13 @@ describe('domain consequence engine — every detail window reads as an executiv
   });
   it('impact = what could go wrong, means = if-X-then-Y, why = risk of not acting (per domain)', () => {
     const e = narr('exp_identity');
-    expect(e.impact).toMatch(/modeled loss exposure/);
+    expect(e.impact).toMatch(/business value at risk if the weakness/);
     expect(e.means).toMatch(/up to that amount of loss is on the table/);
-    expect(e.why).toMatch(/exposure sits on the books/);
+    expect(e.why).toMatch(/exposure stays on the books/);
     const o = narr('coo_recovery');
-    expect(o.means).toMatch(/outage extends into lost revenue, missed SLAs/);
+    expect(o.means).toMatch(/outage turns into lost revenue, missed commitments/);
     const t = narr('tac_lateral');
-    expect(t.means).toMatch(/advance toward your crown jewels before you catch them/);
+    expect(t.means).toMatch(/move toward your most valuable systems before you caught them/);
   });
   it('an authored m.* field always overrides the domain default', () => {
     global.c5esc = (s) => String(s == null ? '' : s); global.c5why = () => 'm'; global.c5whyRanked = () => '';

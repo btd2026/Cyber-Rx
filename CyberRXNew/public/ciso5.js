@@ -1896,7 +1896,7 @@ function c5impactText(m){if(m&&m.impact)return m.impact;if(!m||!m.connected)retu
 function c5affected(m){if(m&&m.affected)return m.affected;if(!m||!m.connected)return 'Not established yet — the source is not connected.';var r=m.ranking&&m.ranking[0];if(r&&r.itemName)return c5esc(r.itemName)+' (highest-ranked) and the items below it — plus the business services they support.';var _r=c5risk(m);if(_r.affected)return _r.affected;return 'The systems and services behind '+String((m&&m.name)||'this measure').toLowerCase()+' (see key evidence).';}
 /* Why it matters now — m.whyNow override, else the ranking rationale, else a risk read
    ("if we don't act, residual risk rises"). */
-function c5whyNow(m){if(m&&m.whyNow)return m.whyNow;var wr=c5whyRanked(m);if(wr)return wr;if(!m||!m.connected)return 'It can’t be acted on until the evidence is connected.';if(m.color==='crit'||m.color==='warn'){var _r=c5risk(m);if(_r.whyNow)return _r.whyNow;}return m.color==='crit'?'Left unaddressed it is an open, escalating exposure — residual risk stays elevated until it is remediated, and a decision is needed now.':m.color==='warn'?'If it is not addressed this cycle the exposure persists and residual risk keeps rising toward the critical range.':m.color==='blue'?'It is within tolerance for now, but drift would raise residual risk — worth monitoring on the current cadence.':'It is within target — no material risk pressure right now.';}
+function c5whyNow(m){if(m&&m.whyNow)return m.whyNow;var wr=c5whyRanked(m);if(wr)return wr;if(!m||!m.connected)return 'It can’t be acted on until the evidence is connected.';var _r=c5risk(m);if(_r.whyNow)return _r.whyNow;return m.color==='crit'?'Left unaddressed it is an open, escalating exposure — a decision is needed now.':m.color==='warn'?'If it is not addressed this cycle the exposure persists and the risk keeps rising.':'It is within target today — hold the line and keep it monitored.';}
 /* Decision rows — [label, text, color]. Always resolves to something explicit, including
    "No executive decision needed now". A threshold (m.decisionThreshold) is shown clearly. */
 function c5decisionRows(m){var rows=[];
@@ -1911,40 +1911,75 @@ function c5decisionRows(m){var rows=[];
    of that risk area, not one generic template. */
 function c5domainKey(m){var id=String((m&&m.id)||'');
   if(/^er_crown|crown/.test(id))return 'crownjewel';
+  if(/incident|breach|active.?compromise|cops_incidents|ceo_cust/.test(id))return 'incidents';
   if(/^exp_/.test(id))return 'exposure';
-  if(/^ctl_|control.?value/.test(id))return 'control';
-  if(/^tac_/.test(id))return 'threat';
-  if(/^ais_/.test(id))return 'aisupply';
-  if(/^coo_|recover|continu|_ops|process/.test(id))return 'operations';
-  if(/^cf_|roi|insur|premium/.test(id))return 'financial';
-  if(/^ceo_|growth|trust|objective/.test(id))return 'growth';
-  if(/^dom_|^peer|^fw/.test(id))return 'maturity';
-  if(/^clo_|legal|regulat|material|disclos/.test(id))return 'legal';
+  if(/^ctl_|control.?value|protection|evidence.?ready/.test(id))return 'control';
+  if(/^tac_|attack.?path|mitre/.test(id))return 'threat';
+  if(/^ais_|supply|sbom|crypto|cbom/.test(id))return 'aisupply';
+  if(/^coo_|^cops_|recover|continu|_ops|process|service|uptime|availab/.test(id))return 'operations';
+  if(/^cf_|roi|insur|premium|_fin|cost/.test(id))return 'financial';
+  if(/^ceo_|growth|trust|objective|customer/.test(id))return 'growth';
+  if(/^dom_|^peer|^fw|matur|coverage|failing/.test(id))return 'maturity';
+  if(/^clo_|legal|regulat|material|disclos|sox/.test(id))return 'legal';
   if(/^cro_|appetite/.test(id))return 'appetite';
   if(/^er_/.test(id))return 'enterprise';
   return 'generic';}
-/* Consequence-framed narrative for any measure: what could go wrong (impact), if-X-then-Y
-   (means), who/what is affected, and the risk of not acting (whyNow) — written per domain
-   and filled with the measure's reading. The base layer beneath any authored m.* override,
-   so EVERY detail window reads like an executive risk brief, not a methodology note. */
+/* Consequence-framed narrative for any measure, written for a Fortune-100 C-suite — plain
+   language, no jargon. impact = what's at stake · means = the consequence in plain terms
+   (adapted to whether things are healthy or at-risk) · affected = who/what · whyNow = why
+   it deserves attention now. STATUS-AWARE so a clean result reads naturally ("nothing is
+   wrong right now") instead of a risk warning. The base layer beneath any authored m.*
+   override, so EVERY detail window across every seat reads like a clear executive brief. */
 function c5risk(m){
   if(!m||!m.connected)return {};
-  var V=m.displayValue||'the current reading';
-  var T={
-    crownjewel:{impact:'These are your most valuable systems — where a breach does the most damage, so they are the first thing to harden.',means:'If a crown jewel is compromised, the impact is concentrated: the data, revenue or operations it underpins are hit directly, not diffusely.',affected:'The crown-jewel systems and the business services that depend on them.',whyNow:'A single high-risk crown jewel is where an incident hurts most — leaving it exposed keeps your worst-case loss high.'},
-    exposure:{impact:'This is modeled loss exposure — the business value at risk if the weakness behind it is exploited (<b>'+V+'</b>).',means:'If this exposure is realized, up to that amount of loss is on the table — a real financial and operational hit, not a hypothetical.',affected:'The assets and processes behind this exposure driver (see key evidence).',whyNow:'Until the driver is reduced the exposure sits on the books — residual risk stays at this level.'},
-    control:{impact:'This control is what blocks a specific attack path. A gap here means that path is not reliably stopped.',means:'If the control is not operating, the risk it was holding down comes back — the loss it prevents is no longer being prevented.',affected:'The systems and processes this control is meant to protect.',whyNow:'Every cycle it stays below target, the un-reduced risk is exposure you are carrying unnecessarily.'},
-    threat:{impact:'This is a technique attackers actually use to move through an environment. Thin coverage means an intrusion using it could progress with less chance of detection.',means:'If an attacker uses this tactic, weak coverage (<b>'+V+'</b>) means they could advance toward your crown jewels before you catch them.',affected:'The detection/response coverage for this attacker technique and the assets it would target.',whyNow:'Until coverage improves this remains a viable path an adversary can take right now.'},
-    aisupply:{impact:'This is exposure in your AI systems and software supply chain — attack surface expanding faster than traditional controls cover it.',means:'If one of these AI systems or components is abused or compromised, it becomes a path to your data or a source of unsafe automated decisions.',affected:'The AI systems, models and third-party components in scope, and the data they touch.',whyNow:'AI and supply-chain risk is growing — leaving this unaddressed widens a surface attackers increasingly target.'},
-    operations:{impact:'This is whether the business can keep running — or recover — through a cyber disruption. A gap means an incident becomes a prolonged outage.',means:'If the affected service goes down and cannot recover in time, the outage extends into lost revenue, missed SLAs and customer impact — not just an IT problem.',affected:'The critical business services and their recovery / dependency paths.',whyNow:'Recovery readiness only matters before the incident — unaddressed, a disruption would run longer and cost more.'},
-    financial:{impact:'This is the financial exposure or return behind the cyber program — the money at stake, or the payoff of the spend.',means:'If the underlying risk is realized, the modeled financial impact (<b>'+V+'</b>) lands on the P&L; if spend is not justified, it is capital not reducing risk.',affected:'The financial lines and cyber investments this measure ties to.',whyNow:'The number moves with each decision — acting, or not, changes the financial exposure the business carries.'},
-    growth:{impact:'This ties cyber to the business’s ability to grow and keep customer trust — revenue and reputation cyber can protect or cost.',means:'If trust or a growth-critical control slips, the consequence shows up in churn, stalled deals and brand damage — well beyond the security budget.',affected:'Customer trust, deals in flight, and the growth objectives cyber underpins.',whyNow:'Trust erodes fast and is expensive to rebuild — unaddressed weaknesses put growth-tied value at risk now.'},
-    maturity:{impact:'This is how mature the program is against the framework you are held to — the baseline auditors, regulators and the board measure you against.',means:'If maturity sits below target, the control deficiencies behind it are the findings an auditor writes up first — and the gaps most likely to be exploited.',affected:'The control domains below target and the frameworks in scope.',whyNow:'Every reassessment it stays below target, those deficiencies remain open exposures and audit risk.'},
-    legal:{impact:'This is legal, regulatory or disclosure exposure — where a cyber event becomes a compliance or reporting obligation.',means:'If a reportable event occurs and the process is not sound, the consequence is regulatory penalty, disclosure risk and legal liability on top of the incident.',affected:'The regulatory obligations, disclosure controls and legal exposure in scope.',whyNow:'Regulators expect a defensible process before an event — gaps here become findings and liability after one.'},
-    appetite:{impact:'This is where residual risk sits against the appetite the board set — the line between acceptable and not.',means:'If exposure runs above appetite, the business is knowingly carrying more risk than it agreed to — a governance problem, not just a technical one.',affected:'The risk categories running against board appetite.',whyNow:'Sitting above appetite without a decision is an open governance gap the board owns.'},
-    enterprise:{impact:'This is enterprise cyber risk framed for the business — exposure the organization owns and must decide on.',means:'If it is realized, the impact lands on the business it maps to — operations, revenue or trust — not just on IT.',affected:'The business areas and assets this risk maps to (see key evidence).',whyNow:'Left unaddressed this stays an open exposure the business is carrying — residual risk does not fall on its own.'}
+  var V=m.displayValue||'the current reading',ok=(m.color==='good'||m.color==='blue');
+  // Each domain: impact + affected (status-independent), then means/why for OK vs at-risk.
+  var D={
+    crownjewel:{i:'These are your most valuable systems — where a breach would do the most damage, so they are the first thing to protect.',a:'The crown-jewel systems and the business services that depend on them.',
+      mo:'Your crown jewels are holding up — none is carrying material risk right now. Because this is where an incident would hurt most, the value is in keeping them that way.',mr:'A crown jewel is exposed. If it were compromised the damage is concentrated — the data, revenue or operations it underpins take a direct hit, which is your worst case, not an average one.',
+      wo:'Clear today — but this is where you can least afford to slip, so hold the coverage and re-check as the data refreshes.',wr:'A single high-risk crown jewel is where an incident hurts most — leaving it exposed keeps your worst-case loss high until it is protected.'},
+    exposure:{i:'This is the business value at risk if the weakness behind it were exploited (<b>'+V+'</b>).',a:'The assets and processes behind this exposure (see key evidence).',
+      mo:'Exposure here is low — little business value is sitting at risk from this today.',mr:'If this exposure were realized, up to that amount of loss is on the table — a real financial and operational hit, not a hypothetical.',
+      wo:'Low today — hold the controls that keep it there; the risk is a change quietly reopening it.',wr:'Until it is reduced the exposure stays on the books — the loss potential does not fall on its own.'},
+    control:{i:'This control is what closes a specific way in for an attacker. When it is strong, that door is shut.',a:'The systems and processes this control is meant to protect.',
+      mo:'This control is doing its job — the risk it exists to stop is being held down. Nothing to act on beyond keeping the evidence current.',mr:'This control is not fully working, so the risk it was holding down is coming back — the harm it prevents is no longer reliably prevented.',
+      wo:'Effective today — keep the evidence current so it stays that way and stands up to an audit.',wr:'Every cycle it stays weak, that is risk the business is carrying that it does not need to.'},
+    threat:{i:'This is a method real attackers use to move through a network. Good coverage means you would see and stop an intrusion that tried it.',a:'The detection and response coverage for this attacker method, and the assets it would target.',
+      mo:'You are well covered against this method — an attacker who tried it would very likely be seen and stopped.',mr:'Coverage here is thin (<b>'+V+'</b>). If an attacker used this method they could move toward your most valuable systems before you caught them.',
+      wo:'Well covered today — keep detection tuned, because attacker methods keep changing.',wr:'Until coverage improves this stays a route an attacker could take right now.'},
+    aisupply:{i:'This is exposure in your AI systems and software supply chain — an attack surface growing faster than traditional controls cover it.',a:'The AI systems, models and third-party software in scope, and the data they touch.',
+      mo:'Your AI and supply-chain exposure is in hand for now — nothing here is creating pressure today.',mr:'If one of these AI systems or outside components were abused or compromised, it becomes a way into your data or a source of unsafe automated decisions.',
+      wo:'In hand today — but this surface expands quickly, so keep watching it as you adopt more AI and vendors.',wr:'This risk is growing — leaving it unaddressed widens a surface attackers increasingly go after.'},
+    operations:{i:'This is about whether the business can keep running — or recover quickly — through a cyber disruption.',a:'The critical business services and their recovery and dependency paths.',
+      mo:'Recovery looks ready — if a disruption hit, the business could keep going, or come back within its target.',mr:'If the affected service went down and could not recover in time, the outage turns into lost revenue, missed commitments and customer impact — not just an IT problem.',
+      wo:'Ready today — but readiness fades, so keep recovery exercised; an untested change is the real risk.',wr:'Recovery readiness only counts before the incident — left as-is, a disruption would run longer and cost more.'},
+    incidents:{i:'These are cyber incidents actively affecting the business — the events that can turn into a reportable, material breach. It is the queue a leader clears first.',a:'The systems and business services the open incidents are touching (see key evidence).',
+      mo:'No business-impacting incident is open — nothing cyber is actively harming the business right now. If one opened, it would be the first thing needing attention and the kind of event that can become reportable.',mr:'One or more incidents are actively affecting the business. If they are not contained they can escalate into a reportable breach — with customer, regulatory and financial fallout, not just an IT clean-up.',
+      wo:'Clear right now — the real risk is a new incident not being caught and worked fast enough, so the value is in keeping detection and the response queue sharp.',wr:'Every hour an active incident runs, the damage and the odds of it becoming material grow — this is the live queue to act on now.'},
+    financial:{i:'This is the money behind the cyber program — the loss at stake, or the return on what is spent to prevent it.',a:'The financial lines and cyber investments this measure ties to.',
+      mo:'The financial picture here is healthy — the exposure is contained and the spend is doing its job.',mr:'If the underlying risk were realized, the modeled financial impact (<b>'+V+'</b>) lands on the P&L; and where the spend is not justified, it is capital that is not buying down risk.',
+      wo:'Healthy today — but this number moves with each decision, so revisit it as the risk or the spend changes.',wr:'This number moves with each decision — acting, or not, changes the financial exposure the business carries.'},
+    growth:{i:'This is where cyber meets growth and customer trust — the revenue and reputation your security posture can protect or cost.',a:'Customer trust, deals in progress, and the growth goals cyber underpins.',
+      mo:'Trust and the growth-critical controls are holding — cyber is protecting revenue here, not threatening it.',mr:'If trust or a growth-critical control slipped, the cost shows up in lost customers, stalled deals and brand damage — well beyond the security budget.',
+      wo:'Solid today — but trust is fragile and expensive to rebuild, so protect it proactively.',wr:'Trust erodes fast and is costly to rebuild — an unaddressed weakness puts growth-tied value at risk now.'},
+    maturity:{i:'This is how mature the program is against the standard you are measured on — the bar auditors, regulators and the board hold you to.',a:'The control areas behind this score and the frameworks in scope.',
+      mo:'The program is at or above target here — it would stand up to the standard it is measured against.',mr:'Below target, the specific weaknesses behind this score are the findings an auditor writes up first — and the gaps most likely to be exploited.',
+      wo:'At target today — keep the evidence current so the next review holds.',wr:'For as long as it sits below target, those weaknesses stay open exposures and audit risk.'},
+    legal:{i:'This is legal, regulatory or disclosure exposure — where a cyber event turns into a reporting or compliance obligation.',a:'The regulatory obligations, disclosure controls and legal exposure in scope.',
+      mo:'The process here is sound — if a reportable event happened, you could meet the obligation defensibly.',mr:'If a reportable event happened and the process were not sound, the result is regulatory penalty, disclosure risk and legal liability on top of the incident itself.',
+      wo:'Defensible today — regulators expect that before an event, so keep the process current and evidenced.',wr:'Regulators expect a defensible process before an event — a gap here becomes a finding and liability after one.'},
+    appetite:{i:'This is where residual risk sits against the appetite the board set — the line between acceptable and not.',a:'The risk categories measured against board appetite.',
+      mo:'Residual risk is within the appetite the board set — the business is operating inside its agreed tolerance.',mr:'Exposure is running above appetite — the business is knowingly carrying more risk than it agreed to, which is a governance question, not just a technical one.',
+      wo:'Within appetite today — keep it there; moving above the line is a board-level decision.',wr:'Sitting above appetite without a decision is an open governance gap the board owns.'},
+    enterprise:{i:'This is enterprise cyber risk framed for the business — exposure the organization owns and decides on.',a:'The business areas and assets this risk maps to (see key evidence).',
+      mo:'This area is in good shape — no material enterprise exposure is concentrated here today.',mr:'If it were realized, the impact lands on the business it maps to — operations, revenue or trust — not just on IT.',
+      wo:'Clear today — hold it; enterprise risk shifts, so keep the picture current.',wr:'Left unaddressed this stays an open exposure the business is carrying — it does not resolve on its own.'},
+    generic:{i:'This is a part of your cyber posture that bears on the business — the stronger it is, the less exposure the organization carries.',a:'The systems, services and people this measure covers (see key evidence).',
+      mo:'This is in good shape right now — nothing here is creating pressure on the business. The value is in keeping it there.',mr:'This is not where it should be, and the gap is exposure the business is carrying — the weaker it is, the more room an incident has to cause harm.',
+      wo:'Within target today — hold the line; the risk is drift, so keep it monitored on the current cadence.',wr:'Left unaddressed the gap persists and the risk the business carries keeps rising until it is closed.'}
   };
-  return T[c5domainKey(m)]||{};}
+  var d=D[c5domainKey(m)]||D.generic;
+  return {impact:d.i,affected:d.a,means:(ok?d.mo:d.mr),whyNow:(ok?d.wo:d.wr)};}
 function c5InspectObj(m){
   if(!m)return;
   var chip='<span class="c5chip c5-'+String(m.label).replace(/[^a-z]/g,'')+'">'+c5srcLabelText(m)+'</span>';
