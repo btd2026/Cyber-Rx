@@ -943,7 +943,20 @@
   // ---- CISO registers: Crown Jewel Register · BIA · SBOM (guided entry, validated) ----
   // Small generic repeatable-row helper: fields = [{cls,label,type,ph,opts?}].
   function makeRowList(wrapId, rowCls, fields, badgeId, singular){
-    function upd(){var n=collect().length,b=document.getElementById(badgeId);if(b){if(n){b.textContent='✓ '+n+' '+(n>1?singular+'s':singular);b.classList.add('done');}else{b.textContent='optional';b.classList.remove('done');}}}
+    function upd(){var n=collect().length,b=document.getElementById(badgeId);if(b){if(n){b.textContent='✓ '+n+' '+(n>1?singular+'s':singular);b.classList.add('done');}else{b.textContent='optional';b.classList.remove('done');}}
+      // Collapsible header above the rows — lets a long uploaded/added list be hidden to
+      // simplify the page, matching the policy-document list. Shown only when rows exist.
+      var wrap=document.getElementById(wrapId);if(!wrap)return;
+      var headId=wrapId+'-collhead',head=document.getElementById(headId);
+      var total=wrap.querySelectorAll('.'+rowCls).length;
+      if(total>0){
+        if(!head){head=document.createElement('div');head.id=headId;head.style.cssText='margin:2px 0 8px';wrap.parentNode.insertBefore(head,wrap);}
+        var collapsed=wrap.getAttribute('data-coll')==='1';
+        head.innerHTML='<button type="button" class="rl-collapse" title="Show / hide the '+singular+'s" style="background:none;border:none;cursor:pointer;font-weight:700;font-size:12.5px;color:var(--ink);display:inline-flex;align-items:center;gap:7px;padding:0"><span style="font-size:11px">'+(collapsed?'▸':'▾')+'</span>'+total+' '+(total>1?singular+'s':singular)+'</button>';
+        head.querySelector('.rl-collapse').onclick=function(){var c=wrap.getAttribute('data-coll')==='1';wrap.setAttribute('data-coll',c?'0':'1');wrap.style.display=c?'':'none';upd();};
+        wrap.style.display=collapsed?'none':'';
+      } else if(head){head.remove();}
+    }
     function add(v){v=v||{};var wrap=document.getElementById(wrapId);if(!wrap)return;
       var row=document.createElement('div');row.className=rowCls;row.style.cssText='display:grid;grid-template-columns:'+fields.map(function(f){return f.w||'1fr';}).join(' ')+' auto;gap:10px;margin-bottom:10px;align-items:end';
       row.innerHTML=fields.map(function(f){
@@ -955,6 +968,7 @@
       fields.forEach(function(f){if(v[f.cls]!=null){var el=row.querySelector('.'+f.cls);if(el)el.value=v[f.cls];}});
       row.querySelector('.rl-del').addEventListener('click',function(){row.remove();upd();});
       ['input','change'].forEach(function(ev){row.addEventListener(ev,upd);});
+      wrap.setAttribute('data-coll','0');wrap.style.display=''; // adding a row expands the list
       upd();
     }
     function collect(){return Array.prototype.slice.call(document.querySelectorAll('#'+wrapId+' .'+rowCls)).map(function(r){
