@@ -40,6 +40,22 @@ describe('onboarding — uploaded-document list is collapsible', () => {
   });
 });
 
+describe('onboarding — register rows (strategic initiatives, SBOM, …) are collapsible', () => {
+  const mrl = onb.slice(onb.indexOf('function makeRowList('), onb.indexOf('function makeRowList(') + 2600);
+  it('makeRowList renders a collapse toggle above the rows when rows exist', () => {
+    expect(mrl).toContain('class="rl-collapse"');
+    expect(mrl).toMatch(/var total=wrap\.querySelectorAll\('\.'\+rowCls\)\.length/);
+    expect(mrl).toMatch(/total\+' '\+\(total>1\?singular\+'s':singular\)/);
+  });
+  it('the toggle hides/shows the row container (data-coll)', () => {
+    expect(mrl).toContain("wrap.getAttribute('data-coll')");
+    expect(mrl).toContain("wrap.style.display=c?'':'none'");
+  });
+  it('adding a row expands the list so the new row is visible', () => {
+    expect(onb).toContain("wrap.setAttribute('data-coll','0');wrap.style.display=''; // adding a row expands the list");
+  });
+});
+
 describe('onboarding — Compliance frameworks in scope', () => {
   it('removes HITRUST and CMMC from the framework selector', () => {
     expect(scope).not.toContain('value="HITRUST"');
