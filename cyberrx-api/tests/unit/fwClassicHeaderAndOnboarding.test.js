@@ -1,9 +1,9 @@
 /**
- * Guards for the classic Program-Health header cleanup and the onboarding seat list:
- *  - "Final (no watermark)" export → an "Upload Final" button (upload the finalized
- *    report; the auditor pack then exports without the DRAFT watermark),
- *  - "Re-score documents" button removed,
- *  - cleaner button labels,
+ * Guards for the classic Program-Health header layout (matches the reference design) and
+ * the onboarding seat list:
+ *  - top card = framework pills · reassess · last-assessed (+ documents-reviewed link) ·
+ *    Auditor pack (PPTX) / Final / Scorecard + POA&M,
+ *  - inline "How N controls are evidenced" bar + "Close the gap" (with Re-score button),
  *  - onboarding collects only the seats that exist in the cockpit (CTO→CIO; no CPO /
  *    Internal Audit).
  */
@@ -16,41 +16,41 @@ const onb = fs.readFileSync(path.resolve(__dirname, '../../../CyberRXNew/public/
 const cStart = ciso.indexOf('function c5FrameworksClassic(');
 const classic = ciso.slice(cStart, ciso.indexOf('\nfunction ', cStart + 10));
 
-describe('classic Program-Health header — Upload Final replaces the no-watermark export', () => {
-  it('adds an "Upload Final" button wired to c5fwUploadFinal()', () => {
-    expect(classic).toContain('↥ Upload Final');
-    expect(classic).toContain('onclick="c5fwUploadFinal()"');
-    expect(classic).not.toContain('· Final (no watermark)');
+describe('classic Program-Health header — export buttons', () => {
+  it('has Auditor pack (PPTX), Final (no-watermark export), and Scorecard + POA&M', () => {
+    expect(classic).toContain('>Auditor pack (PPTX)</button>');
+    expect(classic).toMatch(/onclick="c5fwExport\(true\)"[^>]*>Final<\/button>/);
+    expect(classic).toContain('>Scorecard + POA&amp;M</button>');
   });
-  it('the auditor pack exports with the DRAFT watermark until a final is uploaded', () => {
-    expect(classic).toContain('var fin=c5fwFinal()');
-    expect(classic).toContain("onclick=\"c5fwExport('+(fin?'true':'false')+')\"");
-    expect(classic).toContain("Auditor pack (PPTX'+(fin?'':' · Draft')+')");
+  it('does not use the reverted "Upload Final" / drawer experiments', () => {
+    expect(ciso).not.toContain('Upload Final');
+    expect(ciso).not.toContain('function c5fwUploadFinal');
+    expect(ciso).not.toContain('function c5FwEvidenceStats');
+    expect(classic).not.toContain('Coverage stats');
+    expect(classic).not.toContain('c5fwStatsBtn');
   });
-  it('shows a "Final on file" state once uploaded', () => {
-    expect(classic).toContain('✓ Final on file · ');
-  });
-  it('uses cleaner button labels (Scorecard + POA&M, no verbose suffixes)', () => {
-    expect(classic).toContain('Scorecard + POA&amp;M');
-    expect(classic).not.toContain('Control scorecard + POA&amp;M (XLSX)');
-  });
-});
-
-describe('classic Program-Health header — Re-score documents removed', () => {
-  it('the "Re-score documents" button is gone', () => {
-    expect(ciso).not.toContain('Re-score documents');
-    expect(classic).not.toContain('id="c5reanalyzeBtn"');
-  });
-  it('the Coverage-stats / evidence copy points to Recompute instead', () => {
-    expect(ciso).toContain('↻ Recompute');
+  it('shows a last-assessed line with a "N documents reviewed" link', () => {
+    expect(classic).toContain('Last assessed <b>');
+    expect(classic).toContain('id="c5docsLink"');
+    expect(classic).toMatch(/docN\+' documents reviewed/);
   });
 });
 
-describe('final-report helpers', () => {
-  it('c5fwFinal / c5fwUploadFinal / c5fwClearFinal exist and persist to localStorage', () => {
-    expect(ciso).toContain('function c5fwFinal()');
-    expect(ciso).toContain('function c5fwUploadFinal()');
-    expect(ciso).toContain("localStorage.setItem('cyberrx_report_final'");
+describe('classic Program-Health header — inline evidence box + close the gap', () => {
+  it('renders the "How N controls are evidenced" bar inline (not in a drawer)', () => {
+    expect(classic).toContain("How '+_tot+' controls are evidenced");
+    expect(classic).toContain('live telemetry');
+    expect(classic).toContain('policy');
+    expect(classic).toContain('not evidenced');
+  });
+  it('renders "Close the gap" with the upload/connect steps and a Re-score button', () => {
+    expect(classic).toContain('Close the gap');
+    expect(classic).toMatch(/g\.kind==='d'\?'↥ Upload':'⚡ Connect'/);
+    expect(classic).toContain('id="c5reanalyzeBtn"');
+    expect(classic).toContain('↻ Re-score documents');
+  });
+  it('is ordered top card → cards → evidence box', () => {
+    expect(classic).toContain('topCard+\n    cards+\n    evBox+');
   });
 });
 

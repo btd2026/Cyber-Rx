@@ -4768,50 +4768,6 @@ function c5CrownTreeInput(){
     return {org:org,RISKS:RISKS,C:C,DATA:DATA,CATALOG:106};
   }catch(e){try{console.warn('crown-tree adapter',e&&e.message);}catch(_){}return null;}
 }
-/* Coverage-stats detail — the evidence breakdown + gap-closing steps that used to sit
-   inline under the header, now opened in the right-side detail drawer from the
-   "📊 Coverage stats" button, so the header stays uncrowded. Data-driven from the
-   assessment totals; nothing hard-coded. */
-function c5FwEvidenceStats(T,sel){
-  var sc=c5fwSrcCounts(T);
-  function row(ic,label,val,col){return '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid var(--line)"><span style="color:var(--ink-2)">'+ic+' '+label+'</span><b style="color:var(--'+(col||'ink')+');font-variant-numeric:tabular-nums">'+val+'</b></div>';}
-  var evidenced=(T.native?sc.native:(sc.sys+sc.doc+(sc.mapped||0)));
-  var h='<div class="ev-claim">Framework coverage · '+T.total+' controls</div>'+
-    '<div style="display:flex;align-items:center;gap:14px;margin:12px 0 2px;padding:14px 16px;border-radius:12px;border:1px solid var(--line);border-left:3px solid var(--good);background:var(--surface-2)">'+
-      '<div style="min-width:0;flex:1"><div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">Evidenced</div><div style="font-size:24px;font-weight:700;line-height:1.1;color:var(--good)">'+evidenced+' of '+T.total+'</div></div>'+
-      (sc.none>0?('<div style="text-align:right"><span class="c5pill a">'+sc.none+' to close</span></div>'):'<div style="text-align:right"><span class="c5pill g">Fully evidenced</span></div>')+
-    '</div>'+
-    '<div class="ev-sec">How these controls are evidenced today</div>';
-  if(T.native){
-    h+=row('🧪','Natively assessed',sc.native,'good')+row('—','Not yet tested',sc.none,'muted');
-    h+='<div class="drill-p" style="margin-top:8px">These controls are assessed framework-natively from their own machine-verifiable evidence (no crosswalk). Controls without that evidence read “not yet tested”. CSF ids shown per control are related mappings, informational only.</div>';
-  } else {
-    h+=row('🔌','From connected tools',sc.sys,'blue')+row('📄','From your policies',sc.doc,'good')+(sc.mapped?row('🔗','By framework mapping',sc.mapped,'ink'):'')+row('—','Not yet evidenced',sc.none,'muted');
-    h+='<div class="drill-p" style="margin-top:8px">Connecting more tools moves controls from policy evidence to live telemetry.</div>';
-    if(sc.none>0){var gaps=c5fwGaps(T);if(gaps.length){var docg=gaps.filter(function(x){return x.kind==='d';}),tg=gaps.filter(function(x){return x.kind==='t';});
-      h+='<div class="ev-sec">To close the gap</div><div class="drill-p">'+
-        (docg.length?('Upload <b>'+docg.map(function(x){return c5esc(x.label)+' ('+x.n+')';}).join('</b>, <b>')+'</b>'):'')+
-        (docg.length&&tg.length?'<br>':'')+
-        (tg.length?('Connect <b>'+tg.map(function(x){return c5esc(x.label)+' ('+x.n+')';}).join('</b>, <b>')+'</b>'):'')+
-        ' — then press <b>↻ Recompute</b> in the header.</div>';}}
-  }
-  h+='<div class="c5foot">Coverage for '+(((typeof FW_NAMES!=='undefined')&&FW_NAMES[sel])||'this framework')+'. Every control traces to its source — open any control in the tree for its evidence.</div>';
-  return h;
-}
-/* The finalized auditor report the user uploads once they're satisfied — replaces the
-   old "Final (no watermark)" export. When one is on file, the auditor pack exports
-   without the DRAFT watermark. Stored per browser (metadata only — name + date). */
-function c5fwFinal(){try{return JSON.parse(localStorage.getItem('cyberrx_report_final')||'null');}catch(_){return null;}}
-function c5fwUploadFinal(){
-  try{
-    var inp=document.createElement('input');inp.type='file';inp.accept='.pptx,.pdf,.docx,.xlsx';
-    inp.onchange=function(){var f=inp.files&&inp.files[0];if(!f)return;
-      try{localStorage.setItem('cyberrx_report_final',JSON.stringify({name:f.name,date:new Date().toLocaleDateString()}));}catch(_){}
-      if(typeof c5Frameworks==='function')c5Frameworks();};
-    inp.click();
-  }catch(_){}
-}
-function c5fwClearFinal(){try{localStorage.removeItem('cyberrx_report_final');}catch(_){}if(typeof c5Frameworks==='function')c5Frameworks();}
 /* Program Health dispatcher — renders the tab strip, then the active panel.
    Lazy-mounts: the island is only built while "Nerion's View" is active. */
 function c5Frameworks(){
@@ -4859,16 +4815,46 @@ function c5FrameworksClassic(host){
     '<div class="c5card" data-c5fwcard="failing"><div class="c5card-top"><span class="c5card-l">Controls failing</span><span class="c5chip c5-computed">computed</span></div><div class="c5card-v" style="color:var(--'+(T.failing>0?'crit':'good')+')">'+T.failing+'</div><div class="cn">deficiencies (below CMMI '+C5FW_FLOOR+')</div></div>'+
     '</div>';
   var pills='<div class="c5fw-pills">'+[['csf','NIST CSF 2.0'],['r53','NIST 800-53'],['soc2','SOC 2'],['hipaa','HIPAA'],['cis','CIS v8'],['iso','ISO 27001']].map(function(o){return '<button class="c5fw-pill'+(sel===o[0]?' on':'')+'" data-c5fwsel="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div>';
-  var fin=c5fwFinal();
-  var cadCtrl='<div class="c5fw-controls"><div class="c5fw-cad"><span style="font-size:11px;color:var(--muted);margin-right:2px">Reassess:</span>'+[['weekly','Weekly'],['monthly','Monthly'],['quarterly','Quarterly']].map(function(o){return '<button class="c5fw-cadb'+(cad===o[0]?' on':'')+'" data-c5fwcad="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div><div style="display:flex;gap:8px;align-items:center">'+
-    // Auditor pack — DRAFT watermark until a final report is uploaded, then no watermark.
-    '<button class="c5btn" onclick="c5fwExport('+(fin?'true':'false')+')" title="'+(fin?'Final — no watermark, ready to hand to auditors':'Draft — DRAFT watermark on every slide')+'">Auditor pack (PPTX'+(fin?'':' · Draft')+')</button>'+
-    // Upload Final — attach the finalized report to remove the draft state.
-    (fin
-      ? '<button class="c5btn" onclick="c5fwUploadFinal()" title="Final report on file: '+c5esc(fin.name)+' ('+c5esc(fin.date)+') — click to replace" style="background:color-mix(in srgb,var(--good) 12%,var(--surface));color:var(--good);border:1px solid color-mix(in srgb,var(--good) 35%,var(--line))">✓ Final on file · '+c5esc(String(fin.name).slice(0,22))+'</button>'
-      : '<button class="c5btn" onclick="c5fwUploadFinal()" title="Upload your finalized report to remove the draft watermark" style="background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line)">↥ Upload Final</button>')+
-    '<button class="c5btn" onclick="c5fwExportXlsx()" style="background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line)">Scorecard + POA&amp;M</button>'+
-    '</div></div>';
+  // Reassess cadence toggle — its own row (reference layout).
+  var reassessRow='<div class="c5fw-cad"><span style="font-size:11px;color:var(--muted);margin-right:2px">Reassess:</span>'+[['weekly','Weekly'],['monthly','Monthly'],['quarterly','Quarterly']].map(function(o){return '<button class="c5fw-cadb'+(cad===o[0]?' on':'')+'" data-c5fwcad="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div>';
+  // Export buttons — draft (watermarked) pack, final (no watermark), and the XLSX scorecard.
+  var exportBtns='<button class="c5btn" onclick="c5fwExport(false)" title="Draft — DRAFT watermark on every slide">Auditor pack (PPTX)</button>'+
+    '<button class="c5btn" onclick="c5fwExport(true)" title="Final — no watermark, ready to hand to auditors" style="background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line)">Final</button>'+
+    '<button class="c5btn" onclick="c5fwExportXlsx()" style="background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line)">Scorecard + POA&amp;M</button>';
+  // Last-assessed line with a "N documents reviewed" link that opens the review.
+  var docN=(typeof c5DocCount==='function')?c5DocCount():0;
+  var lastAssessed='<div style="font-size:12.5px;color:var(--ink-2)">Last assessed <b>'+fmt(now)+'</b> · next refresh <b>'+fmt(nextD)+'</b>'+(docN?(' · <a id="c5docsLink" style="color:var(--blue);font-weight:600;cursor:pointer">'+docN+' documents reviewed</a>'):'')+'</div>';
+  // Top card: framework pills · reassess · last-assessed · export buttons.
+  var topCard='<div style="border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:6px">'+
+    pills+
+    '<div style="margin-top:12px">'+reassessRow+'</div>'+
+    '<div style="border-top:1px solid var(--line);margin:14px 0 12px"></div>'+
+    lastAssessed+
+    '<div style="margin-top:11px;display:flex;gap:8px;flex-wrap:wrap">'+exportBtns+'</div>'+
+  '</div>';
+  // Inline "how controls are evidenced" + "close the gap" box (non-native frameworks).
+  var _sc=c5fwSrcCounts(T),_tot=T.total,_gaps=c5fwGaps(T);
+  function _w(n){return (_tot>0?Math.max(0,Math.min(100,n/_tot*100)):0)+'%';}
+  var evBox=T.native?'':('<div style="display:grid;grid-template-columns:1fr 1fr;gap:22px;border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:14px">'+
+    '<div>'+
+      '<div style="font-weight:600;font-size:13px;color:var(--ink);margin-bottom:11px">How '+_tot+' controls are evidenced</div>'+
+      '<div style="display:flex;height:10px;border-radius:6px;overflow:hidden;background:var(--line)">'+
+        '<div style="width:'+_w(_sc.sys)+';background:var(--good)"></div>'+
+        '<div style="width:'+_w(_sc.doc)+';background:var(--blue)"></div>'+
+        '<div style="width:'+_w(_sc.none)+';background:color-mix(in srgb,var(--warn) 65%,var(--line))"></div>'+
+      '</div>'+
+      '<div style="display:flex;gap:18px;margin-top:9px;font-size:12px;color:var(--ink-2);flex-wrap:wrap">'+
+        '<span><b style="color:var(--ink)">'+_sc.sys+'</b> live telemetry</span>'+
+        '<span><b style="color:var(--ink)">'+_sc.doc+'</b> policy</span>'+
+        '<span><b style="color:var(--ink)">'+_sc.none+'</b> not evidenced</span>'+
+      '</div>'+
+    '</div>'+
+    '<div>'+
+      '<div style="font-weight:600;font-size:13px;color:var(--ink);margin-bottom:9px">Close the gap</div>'+
+      (_gaps.length?_gaps.map(function(g){return '<div style="font-size:12.5px;color:var(--ink-2);margin-bottom:6px">'+(g.kind==='d'?'↥ Upload':'⚡ Connect')+' <b>'+c5esc(g.label)+'</b>'+(g.n>1?(' ('+g.n+')'):'')+'</div>';}).join(''):'<div style="font-size:12.5px;color:var(--good);margin-bottom:6px">All controls evidenced.</div>')+
+      '<button id="c5reanalyzeBtn" type="button" style="margin-top:4px;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);font-weight:600;font-size:12px;padding:6px 12px;border-radius:8px;cursor:pointer">↻ Re-score documents</button>'+
+    '</div>'+
+  '</div>');
   // tree
   var tree='<div class="c5fw-tree">'+T.groups.map(function(g){var open=!!C5FW_EXP[g.id];var gc=c5fwCol(g.score),gs=c5fwStatus(g.score);
     var inner='';
@@ -4891,13 +4877,9 @@ function c5FrameworksClassic(host){
     '</div><span class="peer-badge">'+(c5peerLive()?'DTNKShield ›':'Sample ›')+'</span></div>';
   host.innerHTML=c5header()+
     c5shell('Program health · how is the security program performing?','Your security program, scored against the framework you follow.',null,'Each function is scored from your live control evidence and kept current. Open a function to see the controls behind its score.')+
-    cadCtrl+
-    '<div class="c5fw-refresh" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"><span>Refreshed <b>'+cad+'</b> · last assessed <b>'+fmt(now)+'</b> · next refresh <b>'+fmt(nextD)+'</b></span>'+
-      '<span style="display:flex;gap:8px">'+
-      '<button id="c5fwStatsBtn" type="button" style="border:1px solid var(--line);background:var(--surface);color:var(--ink-2);font-weight:600;font-size:12px;padding:6px 12px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:6px">📊 Coverage stats'+(function(){var s=c5fwSrcCounts(T);return s.none>0?(' · '+s.none+' to close'):'';})()+'</button>'+
-      '<button id="c5docsBtn" type="button" style="border:1px solid var(--line);background:var(--surface);color:var(--blue);font-weight:600;font-size:12px;padding:6px 12px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:6px">📄 Documents reviewed'+(function(){var n=(typeof c5DocCount==="function")?c5DocCount():0;return n?(' · '+n):"";})()+'</button></span></div>'+
-    pills+
+    topCard+
     cards+
+    evBox+
     peerBox+
     xnote+
     '<div class="c5fw-wrap"><div class="c5fw-right">'+tree+'</div><div class="c5fw-left" id="c5fw-detail">'+c5fwFinding(sel,selNode)+'</div></div>'+
@@ -4905,8 +4887,7 @@ function c5FrameworksClassic(host){
   // record cadence snapshot
   if(typeof fwRecord==='function'){try{fwRecord(T.overall);}catch(_){}}
   var _pb=document.getElementById('c5fwPeerBox');if(_pb)_pb.onclick=function(){c5fwPeerOpen();};
-  var _st=document.getElementById('c5fwStatsBtn');if(_st)_st.onclick=function(){if(typeof openDrill==='function')openDrill('Framework coverage & evidence',c5FwEvidenceStats(T,sel));};
-  var _db=document.getElementById('c5docsBtn');if(_db)_db.onclick=function(){c5OpenDocsReview();};
+  var _dl=document.getElementById('c5docsLink');if(_dl)_dl.onclick=function(){c5OpenDocsReview();};
   var _ra=document.getElementById('c5reanalyzeBtn');if(_ra)_ra.onclick=function(){
     if(typeof window.reanalyzeStoredDocs!=='function'){c5OpenDocsReview();return;}
     var o=_ra.textContent;_ra.disabled=true;_ra.textContent='↻ Re-scoring…';
