@@ -13,6 +13,7 @@ const path = require('path');
 
 const ciso = fs.readFileSync(path.resolve(__dirname, '../../../CyberRXNew/public/ciso5.js'), 'utf8');
 const onb = fs.readFileSync(path.resolve(__dirname, '../../../CyberRXNew/public/onboarding.html'), 'utf8');
+const idx = fs.readFileSync(path.resolve(__dirname, '../../../CyberRXNew/public/index.html'), 'utf8');
 
 describe('1 · missing-document gaps get an "upload now" deep-link', () => {
   it('c5fwGaps carries the onboarding doc-type key (s) for each gap', () => {
@@ -27,6 +28,19 @@ describe('1 · missing-document gaps get an "upload now" deep-link', () => {
     expect(ciso).toContain('host.querySelectorAll(\'[data-c5gapup]\')');
     expect(ciso).toContain('function c5GapUpload(target)');
     expect(ciso).toContain("window.location.href=base+'#upload='+encodeURIComponent(target||'')");
+  });
+  it('asks the shell to switch views (keeps the cockpit) rather than navigating its own iframe', () => {
+    // regression: window.location.href replaced the cockpit iframe with onboarding
+    expect(ciso).toContain('if(window.parent&&window.parent!==window){');
+    expect(ciso).toContain("window.parent.postMessage({type:'cyberrx-goto-onboarding',tool:'document review',upload:target||''},'*');");
+  });
+  it('the shell forwards the upload target to the onboarding iframe', () => {
+    expect(idx).toContain('(e.data.tool||e.data.upload)');
+    expect(idx).toContain('upload:e.data.upload');
+  });
+  it('onboarding focuses the uploader from the postMessage (not only the hash)', () => {
+    expect(onb).toContain('function obFocusUpload(target)');
+    expect(onb).toContain('if(e.data.upload){try{obFocusUpload(String(e.data.upload));}catch(_){}return;}');
   });
   it('onboarding resolves the deep-link to the right uploader + tab', () => {
     expect(onb).toContain('function obHandleUploadDeepLink()');
