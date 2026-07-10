@@ -171,7 +171,8 @@ describe('5 · Open document renders the auditor annotations (highlights + margi
     expect(ciso).toContain('function c5AnnotateText(text,met)');
     expect(ciso).toContain('mark class="c5ann"'); // green highlight mark
     expect(ciso).toContain('✦ Nauditor-annotated'); // header badge (Nerion Auditor branding)
-    expect(ciso).toContain('Evidenced requirements'); // margin panel
+    expect(ciso).toContain('Evidenced — quoted in the text'); // margin panel (quoted matches)
+    expect(ciso).toContain('Matched — keyword review'); // keyword matches that drove the score
     expect(ciso).toContain('Gaps — expected, not found');
   });
   it('collector groups by quote (merging controls) and gathers gaps; highlighter is whitespace-tolerant', () => {
@@ -212,9 +213,9 @@ describe('6 · Open document viewer scrolls, and the empty state is actionable',
     expect(fn).not.toContain('min-height:0;flex:1;flex-wrap:wrap'); // the old, non-scrolling layout is gone
   });
   it('when there are no annotations, it explains why and offers to generate them', () => {
-    expect(fn).toContain('hasn’t recorded attribute-level review notes');
+    expect(fn).toContain('No attribute-level review is on file for this document');
     expect(fn).toContain('id="c5annReanalyze"');
-    expect(fn).toContain('Run document review to generate annotations');
+    expect(fn).toContain('Run document review');
   });
   it('the generate button re-runs the review, then reopens with annotations or explains the no-op', () => {
     expect(fn).toContain('window.reanalyzeStoredDocs(function(nScores,nDocs){');
