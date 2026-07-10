@@ -8,11 +8,10 @@ var SEATS = {
   sub:'Every figure opens to its basis and source, reconciles across seats, and is traceable to SEC Item 106 — governance-grade, plain language.',
   brief:'Bottom line: cyber is a managed risk this quarter, and nothing crosses the disclosure threshold. Residual risk is trending down, the program returns more than it costs, and the one exposure that matters is already funded by management. The board’s job here isn’t to fix anything — it’s to confirm the materiality process is sound and that every above-appetite risk has a named owner. On both counts, it is: one item to note, nothing to approve.',
   body:function(){return (
-   sec('01','Is cyber a managed risk this quarter?','','<div id="bd-health"></div>')
-   +sec('02','Must we disclose anything?','','<div id="bd-material"></div>')
-   +sec('03','Is our residual risk trending down?','','<div id="bd-trend"></div>')
-   +sec('04','Is our oversight sound?','','<div id="bd-governance"></div>')
-   +sec('05','What should the board note?','','<div id="bd-decisions"></div>')
+   sec('01','Is our cyber oversight sound?','','<div id="bd-health"></div>')
+   +sec('02','What must we disclose — and are we ready?','','<div id="bd-material"></div>')
+   +sec('03','Is our cyber reporting independently validated?','','<div id="bd-governance"></div>')
+   +sec('04','What should the board note?','','<div id="bd-decisions"></div>')
   );}
  },
 
