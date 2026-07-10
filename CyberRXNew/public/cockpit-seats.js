@@ -49,10 +49,9 @@ var SEATS = {
   brief:'From a legal standpoint your exposure is contained, but it concentrates in one place. If a breach hit today you could meet your notification clocks — provided the forensic evidence is ready, and identity is the thin spot there. A cluster of enterprise contracts warrant uptime an identity-driven outage could breach, and your privacy operations are on SLA with access hygiene the soft point. One action reduces your disclosure, contractual and privacy exposure at once. I’m surfacing obligations here, not making the legal call — that stays yours.',
   body:function(){return (
    sec('01','Where are we exposed by jurisdiction?','','<div id="cl-regulatory"></div>')
-   +sec('02','Could we meet our breach-notification clocks?','','<div id="cl-notification"></div>')
-   +sec('03','Which contracts are at risk?','','<div id="cl-contracts"></div>')
-   +sec('04','Are we handling privacy requests on time?','','<div id="cl-privacy"></div>')
-   +sec('05','What needs my sign-off?','','<div id="clo-asks"></div><div id="cl-decisions"></div>')
+   +sec('02','Which contracts and liabilities are at risk?','','<div id="cl-contracts"></div>')
+   +sec('03','Are we ready for incident disclosure?','','<div id="cl-notification"></div>')
+   +sec('04','What needs my sign-off?','','<div id="clo-asks"></div><div id="cl-decisions"></div>')
   );}
  },
 
