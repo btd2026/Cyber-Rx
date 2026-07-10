@@ -4838,7 +4838,7 @@ function c5FrameworksClassic(host){
   // Top card: framework pills · (reassess + peer benchmark) · last-assessed · export buttons.
   var topCard='<div style="border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:6px">'+
     pills+
-    '<div style="margin-top:12px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">'+reassessRow+'<div style="flex:1;min-width:300px">'+peerBox+'</div></div>'+
+    '<div style="margin-top:12px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">'+reassessRow+'<div style="flex:0 1 48%;min-width:300px;margin-left:auto">'+peerBox+'</div></div>'+
     '<div style="border-top:1px solid var(--line);margin:14px 0 12px"></div>'+
     lastAssessed+
     '<div style="margin-top:11px;display:flex;gap:8px;flex-wrap:wrap">'+exportBtns+'</div>'+
