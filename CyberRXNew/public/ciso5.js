@@ -2012,8 +2012,8 @@ function c5InspectObj(m){
   if(_summ)h+='<div style="margin-top:11px;padding:13px 16px 2px;border:1px solid var(--line);border-radius:12px;background:var(--surface)">'+_summ+'</div>';
   // DECISION — needed now / if it worsens / none (always explicit).
   h+='<div class="ev-sec">Decision</div>'+c5decisionRows(m).map(function(d){return '<div class="conf" style="border-left:3px solid var(--'+d[2]+');margin-bottom:8px"><b>'+d[0]+':</b> '+d[1]+'</div>';}).join('');
-  // KEY EVIDENCE — 3–5 compact points (not a table).
-  if(m.connected){var _ke=c5keyEvHtml(m);if(_ke)h+='<div class="ev-sec">Key evidence</div>'+_ke;}
+  // (Key evidence is no longer shown inline — it lives inside the "View evidence"
+  //  accordion below, so the default view stays focused on the decision.)
   // RECOMMENDED ACTION — the single next step, with owner / expected result.
   if(m.connected&&m.action){
     var meta=['Owner: '+c5esc(m.owner||c5ownerOf(m)),m.due?('Due: '+c5esc(m.due)):'',m.expected?('Expected result: '+c5esc(m.expected)):''].filter(Boolean).join(' · ');
@@ -2033,8 +2033,16 @@ function c5InspectObj(m){
     } else if(m.inputs&&m.inputs.length){
       _tbl='<table class="itbl"><thead><tr><th>Item</th><th>Value</th><th>Source</th></tr></thead><tbody>'+m.inputs.map(function(i){
         var dot=i.color?('<span class="c5sq '+c5sqClass(i.color)+'" style="display:inline-block;width:9px;height:9px;margin-right:7px;vertical-align:middle"></span>'):'';
-        return '<tr><td>'+dot+i.name+'</td><td class="v">'+i.value+'</td><td class="src">'+i.source+'</td></tr>';}).join('')+'</tbody></table>';
+        // When an item carries a gap, make it clickable to open exactly what the gap is
+        // (i.drill = the area to open in the protection detail). A visible affordance is
+        // shown whenever the value mentions a gap so the executive knows it drills in.
+        var hasGap=/gap/i.test(String(i.value||''));
+        var nameCell=i.drill?('<span class="c5gaplink" data-c5area="'+c5esc(String(i.drill))+'" style="cursor:pointer;color:var(--ink);border-bottom:1px dashed var(--line)" title="See exactly what the gap is">'+i.name+'</span>'+(hasGap?' <span data-c5area="'+c5esc(String(i.drill))+'" style="cursor:pointer;color:var(--blue);font-weight:600;white-space:nowrap">· see the gap →</span>':'')):i.name;
+        return '<tr><td>'+dot+nameCell+'</td><td class="v">'+i.value+'</td><td class="src">'+i.source+'</td></tr>';}).join('')+'</tbody></table>';
     }
+    // Nothing tabular to show → fall back to the compact key-evidence summary so the
+    // "View evidence" accordion is never empty (it replaces the old inline block).
+    if(!_tbl){_tbl=c5keyEvHtml(m);}
     h+=c5acc(m.ranking&&m.ranking.length?'View full ranking':'View evidence',_tbl);
     var _gaps=(m.gaps&&m.gaps.length)?m.gaps.map(function(g){
       return '<div class="conf" style="border-left:3px solid var(--warn);margin-bottom:8px"><b>'+c5esc(g.title||'Gap')+'</b>'+(g.meaning?('<div style="margin-top:3px">'+c5esc(g.meaning)+'</div>'):'')+(g.close?('<div style="margin-top:4px;color:var(--ink-2)">How to close: '+c5esc(g.close)+'</div>'):'')+((g.owner||g.due)?('<div style="margin-top:4px;font-size:11px;color:var(--muted)">'+[g.owner?('Owner: '+c5esc(g.owner)):'',g.due?('Due: '+c5esc(g.due)):''].filter(Boolean).join(' · ')+'</div>'):'')+'</div>';
@@ -2149,14 +2157,14 @@ function c5protInspect(kind){
     m=c5obj({name:'Business areas ranked by protection',why:'Ranks your business areas by how well protected each is — best first. An area is “well protected” when it clears the '+P.target+'-point coverage bar with no open control gaps. It matters because you see at a glance which parts of the business you can defend to the board and which are catching up.',displayValue:String((P.well||[]).length)+' of '+allA.length+' clear the bar',label:'computed',color:(P.well&&P.well.length)?'good':'muted',
       formula:'business areas ranked by protection score (0–100), best first; “well protected” = score ≥ '+P.target+' AND no open control gaps',
       method:'From your business functions joined to the live control posture. Protection = the mean maturity of the NIST controls guarding that area (0–5 → 0–100); it clears the bar at ≥ '+P.target+' with zero open control gaps.',
-      inputs:topA.length?topA.map(function(a,i){var okA=(a.score>=P.target&&(a.gaps||0)===0);return {name:'#'+(i+1)+'  '+a.name,value:a.score+' / 100 · '+(okA?'✓ well protected':(a.gaps>0?(a.gaps+' open gap'+(a.gaps>1?'s':'')):'below bar'))+(a.measured?'':' · illustrative'),color:(okA?'good':(a.score<50?'crit':'warn')),source:(a.grc?('GRC '+a.grc):'functions × control posture')};}):[{name:'No business areas yet',value:'—',source:'add your business functions / capability map'}],
+      inputs:topA.length?topA.map(function(a,i){var okA=(a.score>=P.target&&(a.gaps||0)===0);return {name:'#'+(i+1)+'  '+a.name,drill:a.name,value:a.score+' / 100 · '+(okA?'✓ well protected':(a.gaps>0?(a.gaps+' open gap'+(a.gaps>1?'s':'')):'below bar'))+(a.measured?'':' · illustrative'),color:(okA?'good':(a.score<50?'crit':'warn')),source:(a.grc?('GRC '+a.grc):'functions × control posture')};}):[{name:'No business areas yet',value:'—',source:'add your business functions / capability map'}],
       sources:[{tool:'Business functions (value chain)',connector:'capmap',field:'business areas',lastRefresh:c5ago()},{tool:'Live control posture',connector:'grc',field:'control maturity → coverage · gaps'}],
       note:'Ranked best-protected first — the top is your defensible base; the bottom is where the next dollar of protection should go.'});
   } else if(kind==='weak'){
     m=c5obj({name:'Business areas to strengthen',why:'Lists the business areas carrying the residual cyber exposure — below their protection bar or with open control gaps. It matters because this is exactly where the next dollar of protection should go.',displayValue:String((P.weak||[]).length),label:'computed',color:(P.weak&&P.weak.length)?'warn':'good',
       formula:'business areas below the '+P.target+'-point bar OR carrying one or more open control gaps; ranked weakest-first',
       method:'From your Business Capability Map joined to GRC. An area appears here when its protection score is below the bar or it has open control gaps — this is where the residual cyber exposure concentrates.',
-      inputs:(P.weak&&P.weak.length)?P.weak.map(function(a){return {name:a.name,value:a.score+(a.gaps>0?(' · '+a.gaps+' gap'+(a.gaps>1?'s':'')):'')+(a.measured?'':' (illustrative)'),color:(a.score<50?'crit':'warn'),source:(a.exp>0?(usd(a.exp)+' exposure'):'Capability Map × GRC')};}):[{name:'No area below the bar',value:'—',source:'every mapped area is covered'}],
+      inputs:(P.weak&&P.weak.length)?P.weak.map(function(a){return {name:a.name,drill:a.name,value:a.score+(a.gaps>0?(' · '+a.gaps+' gap'+(a.gaps>1?'s':'')):'')+(a.measured?'':' (illustrative)'),color:(a.score<50?'crit':'warn'),source:(a.exp>0?(usd(a.exp)+' exposure'):'Capability Map × GRC')};}):[{name:'No area below the bar',value:'—',source:'every mapped area is covered'}],
       sources:[{tool:'Business Capability Map',connector:'capmap',field:'capabilities',lastRefresh:c5ago()},{tool:'GRC',connector:'grc',field:'control_coverage · gaps · open_risk'}],
       note:'Where to concentrate next — the areas carrying the residual exposure, worst first.'});
   } else {
@@ -3367,8 +3375,8 @@ function c5ceStrategic(){
   var host=document.getElementById('ce-strategic');if(!host)return;
   var O=c5Objectives();
   var TD=c5TopDriver(); // data-ranked top driver, not hard-coded identity
-  var rows=O.objs.map(function(o){var pill=o.status==='at risk'?'a':o.status==='watch'?'b':'g';var pt=o.status==='at risk'?'At risk':o.status==='watch'?'Watch':'Safe';
-    return '<div class="c5prow" data-c5m="ceo_objectives"><span class="c5sq '+(o.c==='warn'?'a':o.c==='blue'?'b':'g')+'" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">'+o.name+'</div><div class="c5row-s">'+o.sub+'</div></div><span class="c5pill '+pill+'">'+pt+'</span></div>';
+  var rows=O.objs.map(function(o,i){var pill=o.status==='at risk'?'a':o.status==='watch'?'b':'g';var pt=o.status==='at risk'?'At risk':o.status==='watch'?'Watch':'Safe';
+    return '<div class="c5prow" data-c5obj="'+i+'" style="cursor:pointer" title="'+c5esc(o.name+' — click for its cyber dependency, status and the fix.')+'"><span class="c5sq '+(o.c==='warn'?'a':o.c==='blue'?'b':'g')+'" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">'+o.name+'</div><div class="c5row-s">'+o.sub+'</div></div><span class="c5pill '+pill+'">'+pt+'</span><span style="font-size:11px;color:var(--blue);font-weight:600;margin-left:8px;white-space:nowrap">details ›</span></div>';
   }).join('');
   var atN=O.atRisk||0,safeN=(O.protected!=null?O.protected:(O.total-atN));
   host.innerHTML=c5header()+
@@ -3377,6 +3385,43 @@ function c5ceStrategic(){
     c5bl('Bottom line','Protect the objective that drives growth.',null,'Your at-risk objective is exposed by '+TD.phrase+', which threatens its uptime and the trust it runs on. The fix is funded.',{mid:TD.mid,txt:'Back the '+c5esc(TD.short)+' fix — protects growth'})+
     '<div class="c5foot">Objectives are mapped from your strategy inputs; cyber exposure traces to source.</div>';
 }
+/* Per-objective detail — opens ONE strategic objective with its cyber dependency, status,
+   modeled exposure and the fix, so the CEO can click any business objective for its story
+   (not a single shared drawer for all of them). */
+function c5objectiveInspect(i){
+  var O=c5Objectives();var o=O.objs[i];if(!o)return;
+  var Mo=c5expModel();
+  var depName={identity:'Identity & access',product:'Secure-by-design (product)',cost:'Cloud / cost efficiency',vendor:'Third-party estate',workforce:'Security culture'};
+  var driverUsd=function(key){var du=0;Mo.drivers.forEach(function(d){if(d.id==='exp_'+key)du=d.usd||0;});return du;};
+  var dep=depName[o.map]||'no material cyber dependency';
+  var uv=o.map?driverUsd(o.map):0;
+  var atRisk=(o.status==='at risk'),watch=(o.status==='watch');
+  var col=atRisk?'warn':(watch?'blue':'good');
+  var statusTxt=atRisk?'At risk':(watch?'Watch':'Safe');
+  var inputs=[
+    {name:'Strategic objective',value:o.name,source:(O.fromInput?'Strategy intake (onboarding)':'Sector default (labeled)')},
+    {name:'Cyber dependency',value:dep,source:'objective → capability mapping'},
+    {name:'Cyber status',value:statusTxt+(o.sub?(' · '+o.sub):''),color:col,source:'exposure model'}
+  ];
+  if(o.map)inputs.push({name:'Modeled exposure on the dependency',value:(uv>0?usd(uv):'—'),color:(uv>0?'warn':null),source:(uv>0?'control telemetry → driver_usd':'no material driver')});
+  var impact=atRisk
+    ?('This objective runs on '+dep.toLowerCase()+', and that dependency carries a material cyber exposure'+(uv>0?(' of about '+usd(uv)):'')+' right now. Left unaddressed it threatens '+(o.sub?o.sub.toLowerCase():'the objective’s delivery')+'.')
+    :(watch
+      ?('This objective runs on '+dep.toLowerCase()+'. Nothing is material today, but it is worth watching as the estate changes.')
+      :('This objective '+(o.map?('runs on '+dep.toLowerCase()+', and nothing cyber is putting it at risk right now'):'has no material cyber dependency — cyber is not a blocker here')+'.'));
+  var m=c5obj({id:'ceo_obj_'+i,name:o.name+' · cyber status',connected:true,displayValue:statusTxt,label:'computed',color:col,
+    impact:impact,
+    affected:'The “'+o.name+'” objective and the '+dep.toLowerCase()+' capability it depends on.',
+    whyNow:atRisk?('The dependency is exposed now — until the '+dep.toLowerCase()+' gap is closed, this objective carries avoidable cyber risk. The fix is scoped and funded.'):(watch?'Clear today; keep it monitored as the estate changes.':'Clear today — no cyber blocker to this objective; hold posture and keep the mapping current.'),
+    why:'Whether cyber is a blocker to this specific strategic objective — the dependency it runs on, whether that dependency carries a material modeled exposure, and the fix if it does.',
+    method:'Your objective is tagged (at strategy intake) to the cyber capability it depends on; Nerion checks whether that capability carries a material modeled exposure from live control telemetry, and reports the status with the dollars and the fix.',
+    inputs:inputs,
+    sources:[{tool:(O.fromInput?'Strategy intake (onboarding)':'Sector default (labeled)'),connector:'strategy',field:'objective → capability',lastRefresh:c5ago()},{tool:'Exposure model',connector:'nerion',field:'driver_usd (from control telemetry)'}],
+    action:atRisk?('Protect “'+o.name+'”: fund remediation on '+dep+' to move it back to Safe.'):'',
+    note:'One objective, its cyber dependency, and the status behind it.'});
+  c5InspectObj(m);
+}
+document.addEventListener('click',function(e){var el=e.target.closest('[data-c5obj]');if(el&&el.getAttribute('data-c5obj')!=null)c5objectiveInspect(Number(el.getAttribute('data-c5obj')));});
 /* Tab 03 — Financial exposure (shared objects with CFO/CISO) */
 function c5ceFinancial(){
   var host=document.getElementById('ce-financial');if(!host)return;
