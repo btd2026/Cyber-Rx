@@ -114,6 +114,13 @@ describe('opening the peer box shows a framework-specific example benchmark', ()
     expect(fn).toContain('unlocks once <b>');
     expect(fn).toContain("peerBar('Overall',over,S.overall)");
   });
+  it('the legend clearly labels the dot marker as My Organization', () => {
+    const s = SRC.indexOf('function c5fwPeerSampleHTML(');
+    const fn = SRC.slice(s, SRC.indexOf('\nfunction ', s + 10));
+    expect(fn).toContain('the ● dot = My Organization');
+    expect(fn).toContain('border-radius:50%'); // legend swatch is a circle, matching the bar marker
+    expect(fn).toContain('green ≥ median · amber ≥ 25th · red below 25th');
+  });
   it('behaviorally renders a framework-named sample with Overall + 6 function bars', () => {
     function grab(name) { const a = SRC.indexOf('function ' + name + '('); return SRC.slice(a, SRC.indexOf('\nfunction ', a + 10)); }
     const code = grab('c5peerSampleData') + '\n' + grab('c5fwPeerSampleHTML');
