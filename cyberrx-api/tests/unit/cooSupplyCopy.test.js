@@ -20,8 +20,11 @@ const fn = a >= 0 && b > a ? src.slice(a, b) : '';
 const ms = src.indexOf('function c5vendorMatrix()');
 const me = src.indexOf('\nfunction ', ms + 20);
 const matrixFn = ms >= 0 ? src.slice(ms, me) : '';
+// c5vendorMatrix pulls its process labels from the shared C5_SYSTEMS source via c5sysLabel,
+// so evaluate them together (single-source consistency across seats).
+const sysDef = src.slice(src.indexOf('var C5_SYSTEMS=['), src.indexOf('function c5IdFix('));
 // eslint-disable-next-line no-eval
-const c5vendorMatrix = eval('(' + matrixFn + ')');
+const c5vendorMatrix = eval('(function(){' + sysDef + '\nreturn (' + matrixFn + ');})()');
 const spofM = src.slice(src.indexOf("case 'coo_spof':"), src.indexOf("case 'coo_spof':") + 1600);
 
 describe('COO Vendors — the contradiction is fixed (SPOF derived from the matrix)', () => {
@@ -82,8 +85,15 @@ describe('COO Vendors — the concentration matrix (centerpiece)', () => {
   it('uses vendor CATEGORY labels, never real company names', () => {
     ['Cloud hosting provider', 'Logistics (3PL)', 'Payment processor', 'Identity provider', 'ERP / financials'].forEach((c) => expect(matrixFn).toContain(c));
   });
-  it('maps vendors to the SAME critical services as the Resilience/Recovery tabs', () => {
-    ['Customer platform', 'Supply chain', 'Payments processing', 'Financial close'].forEach((p) => expect(matrixFn).toContain(p));
+  it('maps vendors to the SAME critical services via the shared C5_SYSTEMS source (no drift)', () => {
+    // process labels are pulled from the single shared source, not retyped
+    ['customer', 'supply', 'payments', 'financial'].forEach((k) => expect(matrixFn).toContain("c5sysLabel('" + k + "')"));
+    // and the shared source defines those canonical labels once
+    ['Customer platform', 'Supply chain', 'Payments processing', 'Financial close'].forEach((p) => expect(sysDef).toContain(p));
+    // resolved at runtime, the matrix rows carry the shared labels
+    const procs = c5vendorMatrix().map((r) => r.proc);
+    expect(procs).toContain('Customer platform');
+    expect(procs).toContain('Financial close');
   });
   it('each row shows rating + trend arrow and a computed status pill; drills to the vendor', () => {
     expect(fn).toContain("r.grade+' '+arrow(r.trend)");

@@ -57,8 +57,10 @@ describe('COO Recovery — the per-service matrix (centerpiece)', () => {
     expect(fn).toContain('Recovery by critical service — actual vs target');
     expect(fn).toContain('All paths tested this quarter');
   });
-  it('uses the SAME five services as the Resilience tab, customer platform first', () => {
-    ['Payments processing', 'Order fulfillment', 'Supply chain', 'Financial close'].forEach((s) => expect(fn).toContain(s));
+  it('uses the SAME five services as the other seats via the shared C5_SYSTEMS source', () => {
+    // service names are pulled from the single shared source (not retyped), so seats can't drift
+    ['payments', 'fulfillment', 'supply', 'financial'].forEach((k) => expect(fn).toContain("c5sysLabel('" + k + "')"));
+    expect(fn).toContain("c5sysLabel('customer'"); // customer row keeps its live label override
     expect(fn).toContain("GreenLake billing · identity recovery '+idPct+'%"); // identity root folded into the at-risk row
   });
   it('the customer-platform row wires to live signals; others are Illustrative samples', () => {
