@@ -4527,144 +4527,25 @@ var C5_DP_OPENASK={};    // which awaiting-leader rows are expanded (ask id → 
 var C5_DP_PLANNER_OPEN=false; // control-improvement planner drill-down open?
 function c5DecProj(){
   var host=document.getElementById('c5-decproj');if(!host)return;
-  // This renderer only runs on the CISO seat — so if a return bar is showing, the
-  // CISO has navigated back; drop it.
   if(window.__c5Return||document.getElementById('c5retbar')){window.__c5Return=null;c5HideReturnBar();}
-  var cov=c5ProjCov();
-  /* ---- Panel A: decisions I owe ---- */
   var levers=c5Levers();
-  var mineStore;try{mineStore=JSON.parse(localStorage.getItem('cyberrx_ciso_decisions')||'{}')||{};}catch(_){mineStore={};}
-  var mine=levers.slice(0,6).map(function(l){
-    // Normalize the stored decision: legacy string, or {status,ts,by,until}.
-    var raw=mineStore[l.k],dec=(raw&&typeof raw==='object')?raw:(raw?{status:raw}:null);
-    var status=dec&&dec.status;
-    var state=l.inflight?'flight':(status==='Committed'?'committed':status==='Deferred'?'deferred':'open');
-    var pill=l.inflight?('<span class="c5dp-pill blue">◒ In flight'+(l.inflight.ticket?(' · '+c5esc(l.inflight.ticket)):'')+'</span>'):
-      (status?('<span class="c5dp-pill '+(status==='Committed'?'good':'muted')+'">'+(status==='Committed'?'✓ Committed &amp; funded':'⏸ Deferred'+(dec.until?(' to '+c5esc(dec.until)):''))+'</span>'):'<span class="c5dp-pill warn">Awaiting your call</span>');
-    var meta=status?('<div class="c5dp-when">'+(status==='Committed'?'Funded':'Deferred')+' by <b>'+c5esc(dec.by||c5CisoName())+'</b>'+(dec.ts?(' · '+c5dpWhen(dec.ts)):'')+' <button class="c5dp-linkbtn" data-cisoundo="'+l.k+'">Change</button></div>'):'';
-    var acts=(status||l.inflight)?'':'<button class="c5dp-btn primary" data-cisodec="'+l.k+'" data-cisoval="Committed">Commit &amp; fund</button><button class="c5dp-btn ghost" data-cisodec="'+l.k+'" data-cisoval="Deferred">Defer</button>';
-    var top=l.proj.slice(0).sort(function(a,b){return (b.to-b.from)-(a.to-a.from);})[0];
-    // Main queue stays executive: business-language impact only. The exact controls,
-    // framework IDs and CMMI movement live in the expandable drill-down below.
-    var impact=top?('<div class="c5dp-impact">Unlocks modeled exposure reduction<span class="c5dp-chip">'+l.proj.length+' control'+(l.proj.length>1?'s':'')+' improved</span></div>'):'';
-    // Expandable: the full per-decision projection (every control it moves) lives here.
-    var open=!!C5_DP_OPENDEC[l.k];
-    var autoLbl=top&&top.auto==='manual'?'manual':top&&top.auto==='semi'?'semi-automated':'fully-automated';
-    var detail=open?('<div class="c5dp-cdetail"><div class="c5dp-cdh">Projected control movement'+(l.deploy!=null?(' · '+l.deploy+'% deployed today'):'')+'</div>'+
-      l.proj.map(c5dpMeterRow).join('')+
-      '<div class="c5dp-capnote">Maturity is capped by automation — '+c5esc(l.name)+' is a <b>'+autoLbl+'</b> control, so tool coverage alone tops out at CMMI '+(top?top.ceil:5)+'.</div></div>'):'';
-    return '<div class="c5dp-card '+state+(open?' exp':'')+'"><div class="c5dp-cardrow" data-decexp="'+l.k+'"><div class="c5dp-card-main">'+
-      '<div class="c5dp-t"><span class="c5dp-caret">'+(open?'▾':'▸')+'</span> Commit funding — '+c5esc(l.name)+'</div>'+
-      '<div class="c5dp-sub">'+c5esc(l.need)+'</div>'+impact+'</div>'+
-      '<div class="c5dp-card-side">'+pill+(acts?('<div class="c5dp-acts2">'+acts+'</div>'):'')+meta+'</div></div>'+detail+'</div>';
-  }).join('');
-  if(levers.length)mine='<div class="c5dp-cards">'+mine+'</div>';
-  else mine='<div class="c5dp-empty">Connect your security tools and upload your policies, and the funded decisions that move your posture appear here — each with the exact controls it improves.</div>';
-
-  /* ---- Panel B: awaiting other leaders (expandable → detail + jump to their seat) ---- */
-  var store=c5AskStore(),seats=['board','ceo','cfo','clo','cro','cio','coo','cpo','audit'],pending=0,decided=0,rowsB=[];
-  seats.forEach(function(seat){
-    var asks=[];try{asks=c5AskModel(seat)||[];}catch(_){}
-    asks.forEach(function(a){
-      if(a.sample)return; // skip pre-connect placeholders
-      var st=store[a.id],who=c5SeatNameOf(seat),meta=C5_SEAT_META[seat]||{label:seat,role:''},first=(who||meta.label).split(/\s+/)[0];
-      var acted=!!(st&&st.status);if(acted)decided++;else pending++;
-      var statusHtml=acted?('<div class="c5dp-lstat"><span class="c5dp-pill good">✓ '+c5esc(st.status)+'</span><span class="c5dp-when2">by '+c5esc(who||meta.label)+(st.ts?(' · '+c5dpWhen(st.ts)):'')+'</span></div>'):'<span class="c5dp-pill warn">Pending</span>';
-      var open=!!C5_DP_OPENASK[a.id];
-      var detail=open?('<div class="c5dp-ldetail">'+
-        (a.why?('<div class="c5dp-ldp"><span class="c5dp-ldk">Why</span><span>'+c5esc(a.why)+'</span></div>'):'')+
-        '<div class="c5dp-ldp"><span class="c5dp-ldk">The ask</span><span>'+c5esc(a.ask)+'</span></div>'+
-        (a.opts&&a.opts.length?('<div class="c5dp-ldp"><span class="c5dp-ldk">Options</span><span>'+a.opts.map(function(o){return '<span class="c5dp-optpill">'+c5esc(o)+'</span>';}).join(' ')+'</span></div>'):'')+
-        '<div class="c5dp-ldp"><span class="c5dp-ldk">Status</span><span>'+(acted?('Recorded — <b>'+c5esc(st.status)+'</b> by '+c5esc(who||meta.label)+(st.ts?(' on '+c5dpWhen(st.ts)):'')):'Awaiting a decision from '+c5esc(who||meta.label))+'</span></div>'+
-        '<div class="c5dp-ldacts"><button class="c5dp-btn primary" data-goseat="'+seat+'">Open in '+c5esc(first)+'’s cockpit →</button>'+(acted?'':'<button class="c5dp-btn" data-remind="'+seat+'">✉ Draft a reminder</button>')+'</div>'+
-        '</div>'):'';
-      rowsB.push('<div class="c5dp-litem'+(open?' exp':'')+'"><div class="c5dp-lrow" data-askexp="'+a.id+'"><div class="c5dp-avatar '+(acted?'done':'wait')+'">'+c5dpInitials(meta.label,who)+'</div>'+
-        '<div class="c5dp-lmain"><div class="c5dp-t"><span class="c5dp-caret">'+(open?'▾':'▸')+'</span> '+c5esc(who||meta.label)+' <span class="c5dp-role">'+c5esc(meta.label)+'</span></div>'+
-        '<div class="c5dp-sub">'+c5esc(a.title)+'</div></div>'+
-        '<div class="c5dp-lside">'+statusHtml+(acted?'':'<button class="c5dp-btn" data-remind="'+seat+'">✉ Remind</button>')+'</div></div>'+detail+'</div>');
-    });
+  // Standardized decision panel — one funding decision per lever, in the same
+  // c5dec / c5decisions format every other seat uses (was a bespoke 3-panel tool).
+  var list=levers.slice(0,4).map(function(l,i){
+    var n=l.proj.length;
+    var moves=n?(n+' mapped control'+(n>1?'s':'')+' toward target maturity'):'your posture in this area';
+    var rec={on:'Commit & fund',osum:'Unlocks modeled exposure reduction · improves '+moves,
+      pros:['Improves '+moves+'.','Reduces modeled exposure in this area.','Opens a tracked funding project.'],
+      cons:['Requires capital this cycle (scoped with your team).'],
+      consequence:'Opens a tracked funding project and begins control-improvement tracking.'};
+    var alt=[{on:'Defer to next cycle',osum:'Records the deferral; the gap stays open',pros:['No spend now.'],cons:['The exposure stays open until it is funded.'],req:true,consequence:'Records the decision as deferred; the exposure remains open until the next cycle.'}];
+    return c5dec('cs',i+1,'Fund '+l.name+'?',l.need,rec,alt);
   });
-  var panelB=rowsB.length?(
-    '<div class="c5dp-stats c5dp-stats-2">'+c5dpStat(String(pending),'Awaiting a decision','warn')+c5dpStat(String(decided),'Recorded','good')+'</div>'+
-    '<div class="c5dp-lrows">'+rowsB.join('')+'</div>'+
-    '<div class="c5dp-foot">Click any leader for the decision detail and to jump straight to their cockpit; or send a reminder Nerion drafts for you.</div>'
-  ):'<div class="c5dp-empty">Once you route risk acceptances and attestations to each leader, their outstanding decisions and status appear here.</div>';
-
-  /* ---- Panel C: raise a control to its ceiling (the reverse tool; the forward
-     projection now lives inside each expandable decision above) ---- */
-  var allCtrls={};levers.forEach(function(l){l.proj.forEach(function(p){if(!allCtrls[p.id]||p.from<allCtrls[p.id].score)allCtrls[p.id]={id:p.id,name:p.name,score:p.from};});});
-  var ctrlList=Object.keys(allCtrls).map(function(k){return allCtrls[k];}).sort(function(a,b){return a.score-b.score||(a.id<b.id?-1:1);});
-  if((!C5_DECPROJ_TARGET||!allCtrls[C5_DECPROJ_TARGET])&&ctrlList.length)C5_DECPROJ_TARGET=ctrlList[0].id;
-  var tOpts=ctrlList.map(function(c){return '<option value="'+c.id+'"'+(c.id===C5_DECPROJ_TARGET?' selected':'')+'>'+c.id+' — '+c5esc(c.name||'')+'  (now '+c.score+')</option>';}).join('');
-  var rev='';
-  if(C5_DECPROJ_TARGET&&allCtrls[C5_DECPROJ_TARGET]){
-    var cur=allCtrls[C5_DECPROJ_TARGET],fam=String(C5_DECPROJ_TARGET).split(/[.\-]/)[0],doc=C5_FAM_DOC[fam]||'the relevant policy';
-    var lv=c5ControlLevers(C5_DECPROJ_TARGET);
-    var toolCeil=lv.reduce(function(m,x){return Math.max(m,x.ceil||5);},0)||5;   // best tool ceiling
-    var reachable=Math.max(toolCeil,5); // the document path can evidence up to Optimizing (5)
-    rev='<div class="c5dp-do">To move <b>'+C5_DECPROJ_TARGET+'</b> from '+c5dpMini(cur.score,reachable)+' — take either path (the cockpit scores the higher of the two):</div>'+
-      '<div class="c5dp-play">'+
-      lv.map(function(x){var cl=x.ceil||5;return '<div class="c5dp-opt"><div class="c5dp-opt-ic tool">🔌</div><div class="c5dp-opt-b"><div class="c5dp-opt-t">Deploy '+c5esc(x.name)+' to 90%+ <span class="c5dp-optceil">→ up to CMMI '+cl+'</span></div><div class="c5dp-opt-d">'+(x.deploy!=null?('<b>'+x.deploy+'% today</b> · '):'<b>Not yet connected</b> · ')+c5esc(x.need)+(cl<5?(' <span style="color:var(--warn)">This is a '+(x.auto==='manual'?'manual':'semi-automated')+' control — deployment alone tops out at CMMI '+cl+'.</span>'):'')+'</div></div></div>';}).join('')+
-      '<div class="c5dp-opt"><div class="c5dp-opt-ic doc">📄</div><div class="c5dp-opt-b"><div class="c5dp-opt-t">Strengthen your '+c5esc(doc)+' <span class="c5dp-optceil">→ up to CMMI 5</span></div><div class="c5dp-opt-d">The document-review engine scores this sub-category from the policy language — a fuller, board-approved policy that evidences continuous improvement can reach Optimizing.</div></div></div>'+
-      '</div>';
-  } else rev='<div class="c5dp-empty">Connect a security tool or upload a policy and this shows exactly what raises each sub-category, and how far it can realistically go.</div>';
-
-  // ── Executive command view — summary, evidence, bottom line ─────────────────
-  var demo=(typeof signalsAreDemo==='function')&&signalsAreDemo();
-  function myStatus(l){var raw=mineStore[l.k];return (raw&&typeof raw==='object')?raw.status:(raw||null);}
-  var openLevers=levers.slice(0,6).filter(function(l){return !myStatus(l)&&!l.inflight;});
-  var myPending=openLevers.length, topOpen=openLevers[0]||null;
-  var expM=c5get('exp_total'),expId=c5get(c5TopDriver().mid);
-  var expWait=expM.connected?expM.displayValue:(expId.connected?expId.displayValue:'—');
-  var blocking=myPending+pending, wn={0:'No',1:'One',2:'Two',3:'Three',4:'Four',5:'Five',6:'Six'}, wns={0:'no',1:'one',2:'two',3:'three',4:'four',5:'five',6:'six'};
-  var answer=(blocking>0)
-    ?((wn[blocking]||blocking)+' decision'+(blocking===1?' is':'s are')+' blocking measurable exposure reduction. '+(myPending>0?((wns[myPending]||myPending)+' waiting on the CISO'):'none waiting on the CISO')+'; '+(wns[pending]||pending)+' require partner action.')
-    :'No decision is currently blocking measurable exposure reduction — the queue is clear.';
-  // Evidence confidence — modeled decision impacts; not High while partner attestations pend / demo.
-  var evSrcs=[
-    {label:'Exposure model',connected:(expM.connected||expId.connected),critical:true},
-    {label:'Control-assessment evidence',connected:levers.length>0,critical:true,computed:true},
-    {label:'Business-service mapping',connected:!!((typeof LIVE!=='undefined'&&LIVE&&LIVE.process_exposure&&LIVE.process_exposure.length)),critical:false,partial:true},
-    {label:'Owner / accountability data',connected:true,critical:false},
-    {label:'Partner confirmation evidence',connected:decided>0,critical:false,partial:(decided===0&&pending>0)}
-  ];
-  var evConf=(typeof TrustLogic!=='undefined')?TrustLogic.evidenceConfidence(evSrcs):{level:'—'};
-  var evLevel=demo?'Demo':evConf.level;
-  var evPanel=c5EvLine(evLevel,'decision impacts modeled from control value, exposure and business-service data; some partner attestations pending.',evSrcs,demo);
-  function dpCard(t,v,sub,prov,col){return '<div class="c5opc" style="cursor:default;--ac:var(--'+(col||'ink')+')"><div class="c5opc-h"><span class="c5opc-t">'+t+'</span></div><div class="c5opc-v" style="font-size:22px;color:var(--'+(col==='muted'?'ink':(col||'ink'))+')">'+c5esc(String(v))+'</div><div class="c5opc-s">'+c5esc(sub)+'</div><div style="font-size:10px;color:var(--muted);margin-top:2px">'+c5esc(prov)+'</div></div>';}
-  var summary='<div class="c5statgrid" style="margin-top:14px">'+
-    dpCard('My decision needed',myPending,'Awaiting your call','Computed',myPending>0?'warn':'good')+
-    dpCard('Partner decisions pending',pending,'Awaiting leader action','Computed',pending>0?'warn':'good')+
-    dpCard('Exposure waiting on decisions',expWait,'Pending approval or acceptance','Modeled exposure'+(demo?' · Demo':''),'warn')+
-    dpCard('Oldest pending decision',(topOpen?'Highest-impact':(pending>0?'Partner':'—')),(topOpen?c5esc(topOpen.name):(pending>0?'A partner attestation is pending':'None pending')),'Evidence Incomplete · age not tracked','muted')+
-    '</div>';
-  // Bottom decision box — the highest-impact open decision, dynamic.
-  var blBox;
-  if(topOpen){
-    blBox='<div class="c5bl"><div class="c5bl-k">Bottom line</div><div class="c5bl-h">The highest-impact open decision is '+c5esc(topOpen.name)+' funding.</div><div class="c5bl-p">It is blocking modeled exposure reduction and the related control improvement. Decision needed: commit funding, or defer with accepted risk.</div><div style="margin-top:8px"><button class="c5dp-btn primary" data-cisodec="'+topOpen.k+'" data-cisoval="Committed">Commit funding</button> <button class="c5dp-btn ghost" data-cisodec="'+topOpen.k+'" data-cisoval="Deferred">Defer with risk acceptance</button></div></div>';
-  } else if(pending>0){
-    blBox='<div class="c5bl"><div class="c5bl-k">Bottom line</div><div class="c5bl-h">No decision is waiting on you — '+pending+' partner decision'+(pending>1?'s':'')+' outstanding.</div><div class="c5bl-p">Push the partner accountability queue below for the outstanding attestations before the next operating review.</div></div>';
-  } else {
-    blBox='<div class="c5bl"><div class="c5bl-k">Bottom line</div><div class="c5bl-h">No decision is blocking risk reduction right now.</div><div class="c5bl-p">Your decision queue and the partner queue are clear — hold and re-check as new recommendations surface.</div></div>';
-  }
-  // Control-improvement planner — moved OFF the executive page into a drill-down.
-  var planner='<div class="c5dp-sec"><button class="c5dp-btn" id="c5dp-plannerbtn">'+(C5_DP_PLANNER_OPEN?'Hide control improvement planner ▾':'Open control improvement planner ▸')+'</button>'+
-    '<div id="c5dp-planner" style="display:'+(C5_DP_PLANNER_OPEN?'block':'none')+';margin-top:10px">'+
-    '<div class="c5dp-hd">Planning detail (not the executive summary): pick a control to see what raises it and how far — maturity is capped by how automated it is.</div>'+
-    '<div class="c5dp-selrow"><span class="c5dp-selk">Control</span><div class="c5dp-select"><select id="c5dp-target">'+(tOpts||'<option>—</option>')+'</select></div></div>'+rev+
-    '</div></div>';
-  host.innerHTML=
-    '<div class="c5dp-wrap">'+
-    '<div class="c5dp-sec"><div class="c5dp-h">Decisions blocking risk reduction</div><div class="c5dp-hd">'+c5esc(answer)+'</div>'+summary+evPanel+'</div>'+
-    '<div class="c5dp-sec"><div class="c5dp-h">My decision queue</div><div class="c5dp-hd">The decisions waiting on your sign-off — click any to see the exposure it unlocks and the controls it moves.</div>'+mine+'</div>'+
-    blBox+
-    '<div class="c5dp-sec"><div class="c5dp-h">Partner accountability queue</div><div class="c5dp-hd">Risk acceptances &amp; attestations routed to each partner. Click a leader for the detail and to jump to their cockpit.</div>'+panelB+'</div>'+
-    planner+
-    '</div>';
-  var pb=document.getElementById('c5dp-plannerbtn');if(pb)pb.addEventListener('click',function(){C5_DP_PLANNER_OPEN=!C5_DP_PLANNER_OPEN;c5DecProj();});
-  var s2=document.getElementById('c5dp-target');if(s2)s2.addEventListener('change',function(){C5_DECPROJ_TARGET=s2.value;c5DecProj();});
+  host.innerHTML=c5header()+
+    c5shell('Decisions · what needs your sign-off?',(levers.length?(levers.length+' funding decision'+(levers.length>1?'s':'')+' waiting — commit or defer each.'):'Connect your tools and the funded decisions that move your posture appear here.'),null,'Each decision funds a control that improves your posture and reduces modeled exposure. Choosing one stamps it with your name and time, keeps it editable for 24 hours, and opens a tracked project.')+
+    (list.length?c5decisions(list):'<div class="c5note">◐ Connect your security tools and upload your policies, and the funded decisions that move your posture appear here — each with the exact controls it improves.</div>')+
+    '<div class="c5foot">Each decision is priced from your control model. Every figure traces to its source.</div>';
 }
-/* One control's projected movement, with a note when its automation caps it below 5. */
 function c5dpMeterRow(p){
   var cap=(p.ceil!=null&&p.to>=p.ceil&&p.ceil<5)?('<span class="c5dp-cap">'+(p.auto==='manual'?'manual · caps at 3':'semi-automated · caps at 4')+'</span>'):'';
   return '<div class="c5dp-mrow"><div class="c5dp-mlabel"><b>'+p.id+'</b><span>'+c5esc(p.name||'')+'</span></div>'+

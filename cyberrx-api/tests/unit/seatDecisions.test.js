@@ -31,12 +31,33 @@ function fnBody(name) {
 }
 
 describe('every executive seat uses the standardized c5dec decision panel', () => {
-  ['c5ceDecisions', 'c5cfDecisions', 'c5coDecisions', 'c5crDecisions', 'c5clDecisions', 'c5ctDecisions', 'c5bdDecisions'].forEach((f) => {
+  // c5DecProj is the CISO seat's decision tab.
+  ['c5ceDecisions', 'c5cfDecisions', 'c5coDecisions', 'c5crDecisions', 'c5clDecisions', 'c5ctDecisions', 'c5bdDecisions', 'c5DecProj'].forEach((f) => {
     it(f + ' renders via c5decisions(list)', () => {
       const region = fnBody(f);
       expect(region.length).toBeGreaterThan(50);
       expect(region).toContain('c5decisions(list)');
     });
+  });
+});
+
+describe('CISO decision tab (c5DecProj) is standardized and renamed "Decisions"', () => {
+  const region = fnBody('c5DecProj');
+  const seatsFile = fs.readFileSync(path.resolve(__dirname, '../../../CyberRXNew/public/cockpit-seats.js'), 'utf8');
+  it('builds standardized c5dec items from the funding levers', () => {
+    expect(region).toContain("c5dec('cs',i+1,'Fund '+l.name+'?'");
+    expect(region).toContain('c5shell(');
+    expect(region).toContain('Decisions · what needs your sign-off?');
+  });
+  it('drops the old bespoke 3-panel projection tool', () => {
+    expect(ciso).not.toContain('Partner accountability queue');
+    expect(ciso).not.toContain('My decision queue');
+    expect(ciso).not.toContain('control improvement planner');
+    expect(ciso).not.toContain('class="c5dp-wrap"');
+  });
+  it('the CISO section is titled just "Decisions" (not "Decisions & projections")', () => {
+    expect(seatsFile).toContain("sec('08','Decisions','','<div id=\"c5-decproj\"></div>')");
+    expect(seatsFile).not.toContain('Decisions &amp; projections');
   });
 });
 
