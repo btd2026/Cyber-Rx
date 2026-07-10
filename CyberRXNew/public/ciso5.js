@@ -3764,6 +3764,25 @@ function c5bdGovernance(){
     c5bl('For the board','Note and support — no approval required.',null,'Cyber is a managed, improving risk with clear accountability and nothing material. The board’s role this quarter is to note management’s funded action on the top exposure and confirm oversight is working. No approval is required.',{act:'openBoardPack()',txt:'Open the board pack'})+
     '<div class="c5foot">Governance items from the cyber program and risk register.</div>';
 }
+/* Tab 05 — Board decisions, in the same standardized decision format as every other seat
+   (c5dec / c5decisions). Board items are oversight actions — note / attest — not funding
+   decisions; the driver naming is data-ranked (c5TopDriver), nothing hard-coded. */
+function c5bdDecisions(){
+  var host=document.getElementById('bd-decisions');if(!host)return;
+  var TD=c5TopDriver(),dm=c5get(TD.mid);
+  var list=[
+    c5dec('bd',1,'Note and endorse management’s top action?','Cyber is a managed risk this quarter and nothing crosses the disclosure threshold. Management’s highest-value action — the '+TD.short+' fix — is funded and underway'+(dm.connected?(' ('+dm.displayValue+' modeled exposure)'):'')+'.',
+      {on:'Note & endorse',osum:'Records board awareness — no approval required',pros:['Confirms the board is informed of the top action.','Endorses management’s funded remediation.','Documents oversight of the largest exposure.'],cons:['None — this is oversight, not funding.']},
+      [{on:'Request a deeper brief',osum:'Ask management for more detail before endorsing',pros:['Deeper diligence on the top action.'],cons:['Defers the endorsement a cycle.']}]),
+    c5dec('bd',2,'Attest the materiality-determination process (SEC Item 106)?','Confirm the cyber materiality process is sound and every above-appetite risk has a named owner.',
+      {on:'Attest — the process is sound',osum:'Records the board’s Item 106 attestation',pros:['Documents Item 106 oversight.','Confirms every above-appetite risk is owned.'],cons:['Requires the process evidence to be on file.']},
+      [{on:'Request changes to the process',osum:'Send it back for revision before attesting',pros:['Strengthens the materiality process.'],cons:['Attestation deferred until revised.']}])
+  ];
+  host.innerHTML=c5header()+
+    c5shell('Board decisions · what should the board note?','Two items for the board — the choice is the board’s.',null,'Each item is an oversight action, not a funding decision. Recording one stamps it with the board’s note and time; management funds and fixes.')+
+    c5decisions(list)+
+    '<div class="c5foot">Governance-grade; each item traces to its basis and source.</div>';
+}
 
 /* ================= CPO (Chief Product Officer) seat — identity as a product opportunity ================= */
 /* Tab 01 — Product security posture */
@@ -4407,9 +4426,11 @@ function c5Asks(seat){
       '<div class="c5ask-acts">'+acts+'</div></div>';
   }).join('');
 }
-/* Render both tabs for every non-CISO seat (the brief header is added in the
-   seat body; the curated panels are filled by their existing renderers). */
-function c5SeatViews(){['board','ceo','cfo','clo','cro','cio','coo','cpo','audit'].forEach(function(s){try{c5Asks(s);}catch(_){}});}
+/* The per-seat "asks" cards (c5Asks) are retired in favour of the standardized decision
+   panels (c5dec / c5<seat>Decisions) — one consistent decision format on every seat.
+   c5SeatViews now just clears any legacy "-asks" containers so nothing renders above the
+   decisions. c5AskModel / c5Asks remain for the record but are no longer rendered. */
+function c5SeatViews(){['board','ceo','cfo','clo','cro','cio','coo','cpo','audit'].forEach(function(s){try{var h=document.getElementById(s+'-asks');if(h)h.innerHTML='';}catch(_){}});}
 document.addEventListener('click',function(e){
   var r=e.target.closest('[data-askreset]');if(r){var id=r.getAttribute('data-askreset');var m=c5AskStore();delete m[id];try{localStorage.setItem('cyberrx_asks',JSON.stringify(m));}catch(_){}if(typeof CUR!=='undefined'&&CUR)c5Asks(CUR);if(document.getElementById('c5-decproj'))c5DecProj();return;}
   var b=e.target.closest('[data-ask]');if(!b||!b.getAttribute('data-askval'))return;
