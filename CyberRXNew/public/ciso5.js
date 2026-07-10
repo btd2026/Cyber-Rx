@@ -43,7 +43,7 @@
     '.c5aic:hover{border-color:color-mix(in srgb,var(--ac,var(--muted)) 55%,var(--line));box-shadow:0 6px 20px -8px color-mix(in srgb,var(--ac,var(--muted)) 45%,transparent);transform:translateY(-1px)}',
     '.c5aic-t{font-size:13.5px;font-weight:650;color:var(--ink);line-height:1.25}',
     '.c5aic-v{font-size:12px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;margin-top:3px}',
-    '.c5aic-s{font-size:12.5px;color:var(--ink-2);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+    '.c5aic-s{font-size:12.5px;color:var(--ink-2);margin-top:3px;line-height:1.4;overflow-wrap:anywhere}',
     '.c5briefhead{border:1px solid var(--line);border-left:3px solid var(--blue);background:var(--surface-2);border-radius:12px;padding:14px 16px;margin:6px 0 18px}',
     '.c5briefhead .k{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--blue)}',
     '.c5briefhead .t{font-size:13.5px;color:var(--ink-2);line-height:1.6;margin-top:5px}',
