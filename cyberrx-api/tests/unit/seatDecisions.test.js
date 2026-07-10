@@ -68,11 +68,14 @@ describe('Board now has a standardized decisions panel (formatted like the other
     expect(region).toContain("c5dec('bd',2,");
     expect(region).toContain('c5decisions(list)');
   });
-  it('board items are oversight actions (note / attest), driver data-ranked not hard-coded', () => {
-    expect(region).toContain('var TD=c5TopDriver()');
+  it('board items are oversight actions — note/endorse the funded fix + commission assurance — driver from the shared config', () => {
+    // Restructured Board Decisions: the driver now comes from the shared identity-fix config
+    // (c5IdFix, which is data-ranked via c5TopDriver), Decision 1 notes/endorses the funded
+    // action, and Decision 2 commissions independent assurance (the new Assurance tab's call).
+    expect(region).toContain('var IDF=c5IdFix()');
     expect(region).toContain('Note and endorse management');
-    expect(region).toContain('Attest the materiality-determination process (SEC Item 106)');
-    expect(region).not.toContain('identity fix'); // driver naming comes from TD.short
+    expect(region).toContain('Commission independent assurance over cyber reporting');
+    expect(region).toContain("c5convergeStrip('board')");
   });
   it('the board seat body renders bd-decisions (not the legacy board-asks)', () => {
     expect(seats).toContain('<div id="bd-decisions"></div>');

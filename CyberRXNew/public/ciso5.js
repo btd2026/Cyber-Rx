@@ -4597,35 +4597,67 @@ function c5iaAttention(){
    approves, patches, or sees a control/ATT&CK detail. Identity appears only as
    "management's funded top action, not currently material". */
 /* Tab 01 — Cyber-business health */
+/* Tab 01 — Oversight · the board's fiduciary top-level view. Reads the shared principal-
+   risk register (c5RiskRegister) so cyber's rank / inherent→residual / appetite / direction
+   / owner / review cadence / confidence never drift from the CRO or CLO. The headline is
+   DERIVED from the register (rank + over/within appetite + direction) so it can't contradict
+   the matrix; the identity fix is the funded treatment for the top risk. */
 function c5bdHealth(){
   var host=document.getElementById('bd-health');if(!host)return;
-  var TD=c5TopDriver(),dm=c5get(TD.mid),O=c5Objectives();var T=c5T();
+  var RR=c5RiskRegister();var IDF=c5IdFix();var dm=c5get(IDF.mid);var T=c5T();
+  var over=(RR.appetite>0&&RR.cyberResidual>RR.appetite);
+  var rankStr=RR.cyberRank?('#'+RR.cyberRank+' of '+RR.total+' principal risks'):'a principal risk';
+  var dirWord=T.improving?'trending down':T.worsening?'trending up':'steady';
+  // Every above-appetite risk on the register must have a named owner — the board's core test.
+  var ownedAll=RR.rows.every(function(r){return !!r.owner;});
+  var rows=RR.rows.map(function(r){
+    var isOver=(r.appetite!=null&&r.residual>r.appetite);
+    var dirPill=r.direction==='Falling'?'g':r.direction==='Rising'?'a':'n';
+    var sq=r.cyber?(isOver?'a':'b'):'n';
+    var sub=r.cyber
+      ? ('Owner: '+r.owner+' · reviewed '+r.cadence+' · inherent '+usd(r.inherent)+' → residual '+usd(r.residual)+' (controls −'+usd(Math.max(0,r.inherent-r.residual))+') · '+r.confidence)
+      : ('Owner: '+r.owner+' · reviewed '+r.cadence+' · '+r.confidence);
+    return '<div class="c5prow" data-c5m="'+(r.cyber?IDF.mid:'exp_total')+'"><span class="c5sq '+sq+'" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">'+c5esc(r.label)+(r.cyber&&isOver?' <span class="c5pill a" style="margin-left:6px">Above appetite</span>':'')+'</div><div class="c5row-s">'+c5esc(sub)+'</div></div><div class="c5prow-v" style="width:auto;font-weight:600">'+usd(r.residual)+'</div><span class="c5pill '+dirPill+'" style="flex:none">'+r.direction+'</span></div>';
+  }).join('');
+  var strip='<div class="c5prow" style="cursor:default;background:var(--surface-2)"><div style="flex:1;min-width:0"><div class="c5row-s">Controls reduce cyber <b>inherent '+usd(RR.cyberResidual+RR.controlsRemoved)+'</b> → <b>residual '+usd(RR.cyberResidual)+'</b> — a modeled buy-down of '+usd(RR.controlsRemoved)+'. The residual '+(over?'sits above':'sits within')+' the board-set appetite'+(RR.appetite>0?(' of '+usd(RR.appetite)):'')+'.</div></div></div>';
+  var evN=[true,(typeof LIVE!=='undefined'&&LIVE&&LIVE.portfolio),dm.connected].filter(Boolean).length;
   host.innerHTML=c5header()+
-    c5shell('Cyber-business health · is the enterprise secure and resilient?','Cyber is a managed risk'+(T.improving?' — improving,':' —')+' with nothing currently material.',null,'The enterprise is resilient this quarter'+(T.improving?', and cyber risk is trending down':'')+', and no matter is currently material for disclosure. Management has funded the top exposure. Every figure traces to its source.')+
-    '<div class="c5cards">'+c5card('ceo_health')+c5card('bd_material')+c5card('direction')+'</div>'+
-    '<div class="c5tiles">'+
-      c5tile('ceo_objectives','g','Resilient',(O.protected+' of '+O.total+' objectives protected · one carries a funded action'))+
-      c5tile(TD.mid,'a','Action underway',(dm.connected?(cap(TD.short)+' gap · '+dm.displayValue+' · management action underway'):'top exposure · management action underway'))+
-    '</div>'+
-    c5bl('For the board','Note and support management’s top action.',null,(dm.connected?('The largest exposure — an '+TD.short+' gap, '+dm.displayValue+' — has a funded fix underway. It is not currently material, and closing it improves resilience. Nothing requires board action beyond awareness.'):'The largest exposure has a funded action underway. It is not currently material. Nothing requires board action beyond awareness.'),{act:'openBoardPack()',txt:'Open the board pack'})+
-    '<div class="c5foot">Board figures are governance-grade and traceable to source (SEC Item 106).</div>';
+    c5shell('Oversight · is cyber owned, within appetite, and improving?','Cyber is '+(over?'above its appetite share — owned and funded':'a managed risk within oversight')+', '+rankStr+', '+dirWord+'.',(over?'warn':null),'The board’s fiduciary view: every principal risk with its inherent vs residual, board-set appetite, direction, named owner and review cadence — read from one register the CRO and CLO share. Cyber is '+rankStr+'; its residual is Modeled. '+(ownedAll?'Every above-appetite risk has a named owner.':'One above-appetite risk still lacks a named owner.')+' Each row traces to the register.')+
+    '<div class="c5cards">'+c5card('ceo_health')+c5card('direction')+c5card('bd_material')+'</div>'+
+    '<div class="c5rank" style="padding:4px 15px;margin-top:14px"><div class="c5rank-h" style="border:0;background:transparent;padding:11px 0">Principal-risk register · inherent → residual · appetite · direction · owner · cadence</div>'+rows+strip+'</div>'+
+    c5convergeStrip('board')+
+    c5bl('For the board','Note and endorse management’s funded action on the top risk.',null,(dm.connected?('The largest exposure — the '+IDF.short+' gap, '+dm.displayValue+' — has a funded treatment underway ('+IDF.owner+' · '+IDF.timeline+'). It is the one action that moves cyber down the register and bends the trend. Nothing requires board action beyond noting and endorsing it — the honest caveat is that interim exposure persists until the fix lands.'):'The largest exposure has a funded treatment underway. Noting and endorsing it is the board’s role — the gap is not closed on day one.'),{mid:IDF.mid,txt:'Note & endorse the funded action'})+
+    '<div class="c5foot">Principal-risk register — cyber inherent/residual Modeled, ERM inputs self-reported; appetite board-set. Governance-grade, traceable to SEC Item 106. · '+RR.total+' risks on the register · '+evN+' sources connected</div>';
 }
-/* Tab 02 — Material risk & disclosure */
+/* Tab 02 — Regulatory & disclosure · the disclosure regimes in scope, each with its clock
+   and the board's readiness, plus the materiality determination under SEC Item 106. The
+   named regimes are the same set the CLO seat carries so classifications never diverge; the
+   identity gap is the exposure most likely to trigger a material/disclosable event. Regime
+   facts (clocks) are real regulatory obligations; readiness is honest (process documented,
+   forensic thin on the identity path), never a blanket "compliant" claim. */
 function c5bdMaterial(){
   var host=document.getElementById('bd-material');if(!host)return;
-  var TD=c5TopDriver(),dm=c5get(TD.mid),m=(typeof LIVE!=='undefined'&&LIVE&&LIVE.economics&&LIVE.economics.materiality)||{};
+  var IDF=c5IdFix(),dm=c5get(IDF.mid),m=(typeof LIVE!=='undefined'&&LIVE&&LIVE.economics&&LIVE.economics.materiality)||{};
+  var ir=(typeof LIVE!=='undefined'&&LIVE&&LIVE.governance&&LIVE.governance.ir)||{};var tested=/yes|tested|tabletop/i.test(ir.tested||'');
   var below=(dm.connected&&m.value!=null);
+  var regimes=[
+    {n:'SEC — Item 1.05 / Item 106',ob:'Material cybersecurity incident + governance disclosure',clock:'4 business days from materiality',ready:true,r:'Process documented'},
+    {n:'GDPR / CCPA',ob:'Personal-data breach notification',clock:'72 hours (GDPR)',ready:tested,r:tested?'Runbook tested':'Watch'},
+    {n:'DORA',ob:'ICT major-incident reporting (EU financial entities)',clock:'Initial ≤4h / intermediate / final',ready:tested,r:tested?'Runbook tested':'Watch'},
+    {n:'EU AI Act',ob:'Serious-incident reporting for high-risk AI (Art. 73)',clock:'≤15 days',ready:false,r:'Mapping pending'},
+    {n:'EU CRA',ob:'Actively-exploited vuln / severe incident (early warning)',clock:'24h early warning',ready:false,r:'Scanner not wired'}
+  ];
+  var regRows=regimes.map(function(r){var pill=r.ready?'g':'a';var pt=r.ready?'Ready':'Watch';
+    return '<div class="c5prow" data-c5m="bd_mat_process"><span class="c5sq '+(r.ready?'g':'a')+'" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">'+c5esc(r.n)+'</div><div class="c5row-s">'+c5esc(r.ob)+' · '+c5esc(r.r)+'</div></div><div class="c5prow-v" style="width:auto">'+c5esc(r.clock)+'</div><span class="c5pill '+pill+'" style="flex:none">'+pt+'</span></div>';
+  }).join('');
   host.innerHTML=c5header()+
-    c5shell('Material risk & disclosure · anything the board must know?','Nothing is currently material — and the process to decide is sound.',null,'Whether any cyber matter is material for disclosure under SEC Item 106. Nothing crosses the threshold this quarter; the materiality process is documented and applied. The board confirms the process; the disclosure call is management’s and counsel’s. Each item traces to its assessment and basis.')+
-    '<div class="c5cards">'+c5card('bd_material')+c5card('bd_reportable')+c5card('bd_mat_process')+'</div>'+
-    '<div class="c5tiles">'+
-      c5tile('bd_incidents_assessed','g','None material','None met the materiality threshold')+
-      c5tile(TD.mid,'g','Below threshold',(below?(cap(TD.short)+' · '+dm.displayValue+' · below the '+usd(m.value)+' threshold · monitored and funded'):'below threshold · monitored and funded'))+
-      c5tile('bd_disclosure_controls','g','Effective','Controls over disclosure operating')+
-      c5tile('bd_threshold_basis','g','Documented','Quantitative + qualitative basis, applied consistently')+
+    c5shell('Regulatory & disclosure · what must we disclose, and are we ready?','Nothing is currently material — the clocks and process are ready; two newer regimes are still being wired.',null,'Whether any cyber matter is material for disclosure, and whether the board could meet the notification clocks if it were. The SEC 8-K clock is the tightest (4 business days from a materiality call); GDPR/DORA readiness follows your tested runbooks; the EU AI Act and CRA mappings are still being wired. The board confirms the process; the disclosure call is management’s and counsel’s. Each regime traces to its ruleset and basis.')+
+    '<div class="c5cards">'+c5card('bd_material')+c5card('bd_reportable')+c5card('bd_threshold_basis')+'</div>'+
+    '<div class="c5rank" style="padding:4px 15px;margin-top:14px"><div class="c5rank-h" style="border:0;background:transparent;padding:11px 0">Disclosure regimes in scope · obligation · clock · readiness</div>'+regRows+
+      '<div class="c5prow" style="cursor:default;background:var(--surface-2)"><div style="flex:1;min-width:0"><div class="c5row-s">Materiality: an incident modeled above '+(m.value!=null?usd(m.value):'the board threshold')+' is presumptively material → starts the 4-business-day SEC clock. Nothing crosses it this quarter; the '+IDF.short+' gap sits '+(below?'below threshold':'as the most likely trigger')+', monitored and funded.</div></div></div>'+
     '</div>'+
-    c5bl('For the board','Note the assessment; confirm the process.',null,'No cyber matter is currently material for disclosure. The largest exposure sits below threshold and is being managed. The board’s role is to confirm the materiality process is sound — which the documented basis supports.',{mid:'bd_mat_process',txt:'Review the materiality assessment'})+
-    '<div class="c5foot">Materiality assessed under SEC Item 106; basis documented and traceable. Not disclosure advice.</div>';
+    c5bl('For the board','Lower the odds of a disclosable event at the source.',null,(dm.connected?('No cyber matter is currently material, and the '+IDF.short+' gap ('+dm.displayValue+') is the exposure most likely to cross the threshold and start the clocks. Closing it ('+IDF.owner+' · '+IDF.timeline+') reduces the most probable material-incident and breach-notification trigger — the honest caveat is that the AI Act and CRA mappings still need wiring before those regimes can be scored.'):'Connect the controls and the exposure most likely to trigger a disclosable event — the '+IDF.short+' gap — surfaces here, tied to its funded fix.'),{mid:IDF.mid,txt:'Fund the fix — reduce the disclosure trigger'})+
+    '<div class="c5foot">Materiality assessed under SEC Item 106; regimes named (SEC · GDPR/CCPA · DORA · EU AI Act · EU CRA), clocks from each ruleset. Not disclosure advice. · '+regimes.length+' regimes in scope</div>';
 }
 /* Tab 03 — Trend over time */
 function c5bdTrend(){
@@ -4660,39 +4692,60 @@ function c5bdInvestment(){
     c5bl('For the board','Endorse the investment direction.',null,(er.connected?('Cyber spend returns '+er.displayValue+' and the one investment that sustains the improving trend — the '+TD.short+' fix — is funded by management. The board’s role is to endorse the direction, which the numbers support.'):'Cyber spend is proportionate and the investment that sustains the improving trend is funded. The board’s role is to endorse the direction.'),{mid:'eff_return',txt:'Endorse the investment direction'})+
     '<div class="c5foot">Return and spend from the program model; peer benchmark anonymized.</div>';
 }
-/* Tab 05 — Governance */
+/* Tab 03 — Assurance · independent validation. The fiduciary "trust but verify" lens: how
+   much of what the board is being shown is tool-evidenced (Live/Computed) vs management-
+   reported (Modeled/Self-reported) vs independently assured by a third party. The honest
+   answer today is that NONE of the cyber reporting carries independent third-party assurance
+   — which is precisely what Decision 2 commissions. Control-family assurance is evidence-
+   based (tests + telemetry) via the shared c5Assurance() helper, so it matches the CRO. */
 function c5bdGovernance(){
   var host=document.getElementById('bd-governance');if(!host)return;
-  var TD=c5TopDriver(),dm=c5get(TD.mid),tp=c5get('thirdparty_risk');
-  var q='<div class="c5rank"><div class="c5rank-h">Governance items · note, confirm, be aware — nothing to approve</div>'+
-    '<div class="c5row" data-c5m="'+TD.mid+'"><div class="c5row-main"><div class="c5row-t"><span class="c5pill b" style="margin-right:8px">Note</span>Management’s top action</div><div class="c5row-s">'+cap(TD.short)+' fix funded and underway · not material · improves resilience</div></div><div class="c5row-v">'+(dm.connected?dm.displayValue:'—')+'</div><span class="c5pill g" style="align-self:center">For awareness</span></div>'+
-    '<div class="c5row" data-c5m="bd_mat_process"><div class="c5row-main"><div class="c5row-t"><span class="c5pill n" style="margin-right:8px">Confirm</span>Oversight is functioning</div><div class="c5row-s">Risk owned, reported, and trending down · process sound</div></div><div class="c5row-v">—</div><span class="c5pill n" style="align-self:center">Informational</span></div>'+
-    '<div class="c5row" data-c5m="thirdparty_risk"><div class="c5row-main"><div class="c5row-t"><span class="c5pill a" style="margin-right:8px">Aware</span>Acme vendor</div><div class="c5row-s">Falling-rated payments vendor · management is mitigating</div></div><div class="c5row-v">'+(tp.connected?tp.displayValue:'—')+'</div><span class="c5pill a" style="align-self:center">Watch</span></div>'+
+  var A=c5Assurance();var IDF=c5IdFix();
+  var toolEvidenced=A.fams.filter(function(f){return f.connected;}).length;
+  var famRows=A.fams.map(function(f){var pill=f.status==='Assured'?'g':f.status==='Partial'?'a':f.status==='Gap'?'r':'n';
+    return '<div class="c5prow" data-c5m="cr_families"><span class="c5sq '+pill+'" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">'+c5esc(f.l)+'</div><div class="c5row-s">'+c5esc(f.sub)+'</div></div><span class="c5pill '+pill+'" style="flex:none">'+f.status+'</span></div>';
+  }).join('');
+  // Provenance ladder — the confidence the board should attach to each layer of the reporting.
+  function pv(label,sub,src,cls,pill){return '<div class="c5prow" style="cursor:default"><span class="c5sq '+cls+'" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">'+c5esc(label)+'</div><div class="c5row-s">'+c5esc(sub)+'</div></div><span class="c5pill '+pill+'" style="flex:none">'+c5esc(src)+'</span></div>';}
+  var prov='<div class="c5rank" style="padding:4px 15px;margin-top:14px"><div class="c5rank-h" style="border:0;background:transparent;padding:11px 0">Reporting provenance · how much of this is independently validated</div>'+
+    pv('Tool-evidenced (Live / Computed)',toolEvidenced+' of '+A.fams.length+' control families report from live telemetry + tests',(toolEvidenced>=Math.ceil(A.fams.length/2)?'Higher confidence':'Partial'),(toolEvidenced>=Math.ceil(A.fams.length/2)?'g':'a'),(toolEvidenced>=Math.ceil(A.fams.length/2)?'g':'a'))+
+    pv('Management-reported (Modeled / Self-reported)','Loss model, appetite, ERM inputs — management’s figures, not externally checked','Self-reported','a','a')+
+    pv('Independently assured (third-party)','No external assurance over cyber reporting is on file yet','None yet','r','r')+
     '</div>';
+  var head=(toolEvidenced>=Math.ceil(A.fams.length/2))
+    ? 'Most control reporting is tool-evidenced — but none of it is independently assured yet.'
+    : 'Much of the reporting is still management-attested — and none of it is independently assured yet.';
   host.innerHTML=c5header()+
-    c5shell('Governance · what needs oversight or awareness?','Governance is sound — one item to note, nothing to approve.',null,'The board’s cyber governance items this quarter. Oversight is functioning: management is accountable, the top risk is owned and funded, and nothing is material. One item to note; nothing requires board approval.')+
-    q+
-    c5bl('For the board','Note and support — no approval required.',null,'Cyber is a managed, improving risk with clear accountability and nothing material. The board’s role this quarter is to note management’s funded action on the top exposure and confirm oversight is working. No approval is required.',{act:'openBoardPack()',txt:'Open the board pack'})+
-    '<div class="c5foot">Governance items from the cyber program and risk register.</div>';
+    c5shell('Assurance · is what we’re shown independently validated?',head,'warn','Independent validation of the cyber reporting the board relies on. Control families are assured from tests and telemetry (not self-attestation) via the same evidence the CRO reads. Above that, the loss model and ERM figures are management-reported and Modeled. The gap the board should note: no third-party assurance sits over any of it — an external validation would raise the confidence attached to every other tab. Each layer traces to its evidence.')+
+    '<div class="c5cards">'+c5card('cr_families')+c5card('cr_gaps')+c5card('cr_evidence')+'</div>'+
+    '<div class="c5rank" style="padding:4px 15px;margin-top:14px"><div class="c5rank-h" style="border:0;background:transparent;padding:11px 0">Control families · evidence-based assurance (tests + telemetry)</div>'+famRows+'</div>'+
+    prov+
+    c5bl('For the board','Commission independent assurance over the cyber reporting.',null,'The control evidence is real, but nothing the board is shown carries third-party validation. Commissioning an independent assurance review — Internal Audit or an external provider, on a set cadence — would raise the confidence on every tab and close the strongest '+IDF.short+' control gap under an evidenced test rather than a self-attestation.',{mid:IDF.mid,txt:'Close the top control gap — fund the fix'})+
+    '<div class="c5foot">Control assurance is evidence-based (tests + telemetry), not self-attestation; provenance labels each layer’s confidence. No independent third-party assurance is on file. · '+toolEvidenced+' of '+A.fams.length+' families evidenced</div>';
 }
 /* Tab 05 — Board decisions, in the same standardized decision format as every other seat
    (c5dec / c5decisions). Board items are oversight actions — note / attest — not funding
    decisions; the driver naming is data-ranked (c5TopDriver), nothing hard-coded. */
 function c5bdDecisions(){
   var host=document.getElementById('bd-decisions');if(!host)return;
-  var TD=c5TopDriver(),dm=c5get(TD.mid);
+  var IDF=c5IdFix(),dm=c5get(IDF.mid);
   var list=[
-    c5dec('bd',1,'Note and endorse management’s top action?','Cyber is a managed risk this quarter and nothing crosses the disclosure threshold. Management’s highest-value action — the '+TD.short+' fix — is funded and underway'+(dm.connected?(' ('+dm.displayValue+' modeled exposure)'):'')+'.',
-      {on:'Note & endorse',osum:'Records board awareness — no approval required',pros:['Confirms the board is informed of the top action.','Endorses management’s funded remediation.','Documents oversight of the largest exposure.'],cons:['None — this is oversight, not funding.']},
-      [{on:'Request a deeper brief',osum:'Ask management for more detail before endorsing',pros:['Deeper diligence on the top action.'],cons:['Defers the endorsement a cycle.']}]),
-    c5dec('bd',2,'Attest the materiality-determination process (SEC Item 106)?','Confirm the cyber materiality process is sound and every above-appetite risk has a named owner.',
-      {on:'Attest — the process is sound',osum:'Records the board’s Item 106 attestation',pros:['Documents Item 106 oversight.','Confirms every above-appetite risk is owned.'],cons:['Requires the process evidence to be on file.']},
-      [{on:'Request changes to the process',osum:'Send it back for revision before attesting',pros:['Strengthens the materiality process.'],cons:['Attestation deferred until revised.']}])
+    // Decision 1 — the convergent identity treatment, in the board's oversight language, with
+    // its honest interim-exposure downside. The board notes and endorses; management funds.
+    c5dec('bd',1,'Note and endorse management’s '+IDF.short+' action?','One funded action is the treatment for the top principal risk and the exposure most likely to trigger a disclosable event'+(dm.connected?(' ('+dm.displayValue+' modeled)'):'')+'. It moves cyber down the register, bends the trend, and is the control the next assurance review will test.',
+      {on:'Note & endorse the funded action',osum:'Records board oversight — management funds and fixes',pros:['Confirms the board is informed of the top action.','Endorses the funded '+IDF.short+' treatment ('+IDF.owner+' · '+IDF.timeline+').','Documents oversight of the largest exposure and the disclosure trigger.'],cons:['Interim exposure persists across the '+IDF.timeline+' rollout — the gap is not closed on day one.','This is oversight, not funding — the board endorses, management must execute.']},
+      [{on:'Request a deeper brief',osum:'Ask management for more detail before endorsing',pros:['Deeper diligence on the top action.'],cons:['Defers the endorsement a cycle while exposure persists.']}]),
+    // Decision 2 — the board's domain call: commission independent assurance/validation of the
+    // cyber reporting, since none is on file today (see the Assurance tab).
+    c5dec('bd',2,'Commission independent assurance over cyber reporting?','No third-party assurance sits over the cyber figures the board relies on. An independent review — Internal Audit or an external provider — would validate the reporting and raise the confidence on every tab.',
+      {on:'Commission it — assign scope, provider and cadence',osum:'external validation of the reporting',pros:['Raises the confidence attached to every board tab.','Tests controls under an evidenced review, not self-attestation.','Gives the board a defensible, independent basis for its oversight.'],cons:['Cost and provider-onboarding effort.','Findings may surface gaps the board must then act on.']},
+      [{on:'Defer — rely on management attestation for now',osum:'no external validation this cycle',pros:['No spend this cycle.'],cons:['The board’s oversight continues to rest on self-reported figures.','No independent check on the loss model or control claims.']}])
   ];
   host.innerHTML=c5header()+
-    c5shell('Board decisions · what should the board note?','Two items for the board — the choice is the board’s.',null,'Each item is an oversight action, not a funding decision. Recording one stamps it with the board’s note and time; management funds and fixes.')+
+    c5shell('Board decisions · what should the board note?','One fix converges across the board’s risk view — then the assurance call that’s the board’s to make.',null,'Each item is an oversight action, not a funding decision. Recording one stamps it with the board’s note and time, keeps it editable for 24 hours, and opens a tracked item in the governance system connected at onboarding — status pulled back on refresh.')+
+    c5convergeStrip('board')+
     c5decisions(list)+
-    '<div class="c5foot">Governance-grade; each item traces to its basis and source.</div>';
+    '<div class="c5foot">Governance-grade; each item traces to its basis and source · no AI/LLM at run-time.</div>';
 }
 
 /* ================= CPO (Chief Product Officer) seat — identity as a product opportunity ================= */
