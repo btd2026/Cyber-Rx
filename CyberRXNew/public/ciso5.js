@@ -390,7 +390,7 @@ function c5get(id){
         formula:'crown jewels at greatest risk = crown-jewel systems whose live exposure path is currently material',
         method:'Crown jewels come from your Crown Jewel Register (derived from your CMDB inventory). Risk to each is read from live EDR detections and open critical vulnerabilities (VM) on that asset.',
         inputs:(Scr.list||[]).map(function(x){
-          var val=x.status+(x.why&&x.status==='At risk'?(' <span data-c5m="'+x.why+'" style="color:var(--blue);cursor:pointer;white-space:nowrap">· why? ›</span>'):'');
+          var val=x.status+(x.status==='At risk'?(' <span data-c5crownwhy="'+c5esc(x.name)+'" style="color:var(--blue);cursor:pointer;white-space:nowrap" title="Plain-English: why this crown jewel is at risk">· why? ›</span>'):'');
           return {name:x.name+(x.tier?(' · '+x.tier):''),value:val,color:(x.status==='At risk'?'warn':'good'),source:x.src||(x.sub||'EDR · VM')};
         }).concat([{name:'= At greatest risk',value:atr+' of '+Scr.total,source:'crown jewels with a material path'}]),
         sources:[{tool:'Crown Jewel Register + CMDB',connector:'cmdb',field:'crown_jewels',lastRefresh:c5ago()},{tool:'EDR',connector:'edr',field:'detections'},{tool:'Vulnerability mgmt (VM)',connector:'vuln',field:'critical_vulns'}],
@@ -1391,6 +1391,38 @@ function c5Services(){
   var total=(typeof LIVE!=='undefined'&&LIVE&&LIVE.counts&&Number(LIVE.counts.crown_jewels))||list.length;
   return {list:list,total:total,atRisk:list.filter(function(x){return x.status==='At risk';}).length};
 }
+/* Plain-English "why is this crown jewel at risk?" — opened from the "why?" link in the
+   crown-jewels inspector. Explains, in prose, that the identity/access path is the
+   exposed route to the asset, and names the two identity controls (MFA / PAM) with their
+   real deployment gaps — instead of dropping the user into the modeled-dollars metric. */
+function c5CrownWhy(name){
+  try{
+    function dep(k){try{return (typeof CAP_BY_KEY!=='undefined'&&CAP_BY_KEY[k]&&typeof capDeploy==='function')?capDeploy(CAP_BY_KEY[k]):null;}catch(_){return null;}}
+    function gapLi(label,p){
+      if(p==null)return '<li style="margin-bottom:6px"><b>'+label+'</b> — not fully rolled out yet, so some accounts stay unprotected.</li>';
+      var g=Math.max(0,100-Math.round(p));
+      return '<li style="margin-bottom:6px"><b>'+label+'</b> is <b>'+Math.round(p)+'% deployed</b>'+(g>0?(' — <b style="color:var(--warn)">'+g+'% of accounts are still unprotected</b>.'):' — fully covered.')+'</li>';
+    }
+    var mfa=dep('mfa'),pam=dep('pam');
+    var body=
+      '<p style="margin:0 0 12px;font-size:13.5px;line-height:1.6;color:var(--ink)"><b>'+c5esc(name)+'</b> is flagged <b style="color:var(--warn)">At risk</b> because the <b>identity &amp; access path</b> that reaches it is exposed right now.</p>'+
+      '<p style="margin:0 0 9px;font-size:13px;line-height:1.6;color:var(--ink-2)">Identity is how people — and attackers — get to this system. The two controls that guard that path still have deployment gaps, so not every account is protected:</p>'+
+      '<ul style="margin:0 0 12px;padding-left:20px;font-size:13px;line-height:1.55;color:var(--ink-2)">'+gapLi('Multi-factor authentication (MFA)',mfa)+gapLi('Privileged-access management (PAM)',pam)+'</ul>'+
+      '<p style="margin:0 0 12px;font-size:13px;line-height:1.6;color:var(--ink-2)">That leaves a credible route: compromise one unprotected account and there is a path straight to this crown jewel — which is why it stands out while every other one shows no active detection and adequate coverage.</p>'+
+      '<p style="margin:0;font-size:13px;line-height:1.6;color:var(--ink)"><b>What to do:</b> finish the MFA and privileged-access rollout on the remaining accounts. Closing those gaps takes <b>'+c5esc(name)+'</b> off the at-risk list.</p>';
+    var old=document.getElementById('c5whyOverlay');if(old&&old.parentNode)old.parentNode.removeChild(old);
+    var wrap=document.createElement('div');wrap.id='c5whyOverlay';
+    wrap.style.cssText='position:fixed;inset:0;z-index:86;display:flex;align-items:center;justify-content:center;background:rgba(20,33,72,.5)';
+    wrap.innerHTML='<div style="width:min(560px,94vw);max-height:88vh;display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 24px 60px rgba(20,33,72,.45);overflow:hidden">'+
+      '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line);background:var(--surface-2)"><b style="font-family:var(--serif);font-size:15px;min-width:0">Why is this at risk?</b><button type="button" id="c5whyClose" style="flex:none;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 13px;font-weight:600;font-size:12.5px;cursor:pointer">Close</button></div>'+
+      '<div style="padding:16px 20px;overflow:auto">'+body+'</div>'+
+    '</div>';
+    document.body.appendChild(wrap);
+    function close(){if(wrap.parentNode)wrap.parentNode.removeChild(wrap);}
+    wrap.addEventListener('click',function(e){if(e.target===wrap)close();});
+    var cb=document.getElementById('c5whyClose');if(cb)cb.onclick=close;
+  }catch(_){}
+}
 /* Critical processes from the operations model; at-risk status computed from whether
    a material exposure driver / flagged vendor maps to the process. */
 function c5Processes(){
@@ -1776,7 +1808,7 @@ function c5Connect(tool){
   try{window.postMessage(msg,'*');}catch(_){}
   try{window.location.href='onboarding.html';}catch(_){}
 }
-document.addEventListener('click',function(e){if(e.target.closest('[data-c5onb]'))return;var el=e.target.closest('[data-c5m]');if(el&&el.getAttribute('data-c5m'))c5Inspect(el.getAttribute('data-c5m'));});
+document.addEventListener('click',function(e){var w=e.target.closest('[data-c5crownwhy]');if(w&&w.getAttribute('data-c5crownwhy')){e.stopPropagation();c5CrownWhy(w.getAttribute('data-c5crownwhy'));return;}if(e.target.closest('[data-c5onb]'))return;var el=e.target.closest('[data-c5m]');if(el&&el.getAttribute('data-c5m'))c5Inspect(el.getAttribute('data-c5m'));});
 /* A tile's "Connect: <source> →" prompt → the exact onboarding section for it. */
 document.addEventListener('click',function(e){var el=e.target.closest('[data-c5onb]');if(el){e.stopPropagation();c5Connect(el.getAttribute('data-c5onb'));}});
 /* Protection summary-card detail inspector — opens the list behind each count. */
