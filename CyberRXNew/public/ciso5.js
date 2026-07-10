@@ -2018,34 +2018,106 @@ function c5RingGrid(defs,opts){
 }
 
 /* ---------- CISO tab — AI & Software Supply-Chain Security ---------- */
-/* Six enterprise-risk reads, Program-Health design (tile grid + bottom line).
-   Each tile is a provenance metric; posture is self-reported from onboarding
-   until the named live tool connects. */
+/* Command model for the six AI / supply-chain fronts: safer statuses (never
+   "Healthy"), a next action on the fronts needing action, and honest evidence
+   labels (self-reported / partial / demo) so inventory or scanning alone never
+   reads as readiness. */
+var AIS_NEXT={
+  ais_aiml:'Complete posture review for the AI system with an open gap.',
+  ais_nhi:'Validate service-account ownership, rotation, and privileged access.',
+  ais_genai:'Connect CASB/SSE and extend DLP to AI so shadow-AI leakage is measured.',
+  ais_aicode:'Validate leakage, license, and policy controls for AI-assisted code.',
+  ais_pipeline:'Add build-provenance (SLSA) evidence to scanning and signing.',
+  ais_pqc:'Start post-quantum migration planning for business-critical crypto.'
+};
+var AIS_DRILL={ais_aiml:'Open AI posture gaps',ais_nhi:'Review machine-identity exposure',ais_genai:'Review GenAI leakage',ais_aicode:'Review AI-coding controls',ais_pipeline:'Review build provenance',ais_pqc:'Open PQC migration plan'};
+function aisStatus(m){
+  if(!m||!m.connected)return {t:'Not Enough Evidence',c:'muted'};
+  if(m.id==='ais_pqc')return {t:'Monitor',c:'warn'};                 // inventory is not readiness
+  if(m.color==='crit')return {t:'Escalation needed',c:'crit'};
+  if(m.color==='warn')return {t:'Action needed',c:'warn'};
+  return {t:'Monitored',c:'good'};
+}
+function aisSub(m){
+  if(!m||!m.connected)return 'Source not connected — connect to measure this front.';
+  switch(m.id){
+    case 'ais_aiml':     return (m.color==='good')?'Inventoried and governed':String(m.displayValue);
+    case 'ais_genai':    return (m.color==='good')?'No confirmed leakage detected':String(m.displayValue);
+    case 'ais_aicode':   return 'Code scanned; leakage, license, and policy controls under validation';
+    case 'ais_pipeline': return (m.label==='connected')?'Scanned, signed, and provenance tracked':'Scanned and signed; provenance evidence needed';
+    case 'ais_nhi':      return (m.color==='good')?'Inventoried; ownership and rotation validated':'Ownership, rotation, and privilege under review';
+    case 'ais_pqc':      return 'Crypto inventory complete; migration planning needed';
+    default:             return String(m.displayValue);
+  }
+}
+function aisEvidence(m,demo){if(!m||!m.connected)return 'Missing Telemetry';if(demo)return 'Demo';if(m.id==='ais_aicode'||m.id==='ais_pipeline')return 'Evidence Partial';return (m.label==='connected')?'Telemetry Validated':'Self-reported';}
+function c5AisCard(m,ic,demo){
+  var st=aisStatus(m),next=AIS_NEXT[m.id],ev=aisEvidence(m,demo);
+  var show=(st.t==='Action needed'||st.t==='Escalation needed'||st.t==='Monitor'||ev==='Evidence Partial');
+  var meta='Evidence: '+ev+' · '+((m.label==='connected')?'Live':'Self-reported until tool connects');
+  return '<div class="c5aic" data-c5m="'+m.id+'" style="--ac:var(--'+st.c+')" title="'+c5tip(m)+'">'+
+    '<span class="c5tile-ic" style="--ac:var(--'+st.c+')">'+c5icon(ic)+'</span>'+
+    '<div style="min-width:0;flex:1">'+
+      '<div class="c5aic-t">'+m.name+'</div>'+
+      '<div class="c5aic-v" style="color:var(--'+st.c+')">'+st.t+'</div>'+
+      '<div class="c5aic-s">'+(m.connected?(c5esc(String(m.displayValue))+' · '):'')+c5esc(aisSub(m))+'</div>'+
+      '<div class="c5esub" style="font-size:11px;color:var(--muted);margin-top:2px">'+c5esc(meta)+'</div>'+
+      ((show&&next)?('<div class="c5esub" style="margin-top:2px;color:var(--ink-2)"><b>Next action:</b> '+c5esc(next)+' <span style="color:var(--blue)">'+c5esc(AIS_DRILL[m.id]||'')+' ›</span></div>'):'<div class="c5esub" style="color:var(--muted);font-size:11px;margin-top:2px">Click for the record ›</div>')+
+    '</div></div>';
+}
+/* Evidence confidence for the AI & supply-chain tab. AI security posture (AI-SPM) is a
+   critical source that is self-reported until connected, so this can never read High
+   while AI posture is self-reported; demo telemetry surfaces as "Demo". */
+function c5AisEvidence(byId,demo){
+  var g=function(id){return !!(byId[id]&&byId[id].connected);};
+  var live=function(id){return !!(byId[id]&&byId[id].label==='connected');};
+  var sources=[
+    {label:'AI asset inventory',            connected:g('ais_aiml'),      critical:true},
+    {label:'AI security posture (AI-SPM)',  connected:live('ais_aiml'),   critical:true, partial:!live('ais_aiml')},
+    {label:'Shadow-AI / GenAI usage telemetry',connected:live('ais_genai'),critical:false, partial:g('ais_genai')&&!live('ais_genai')},
+    {label:'Code scanning',                 connected:live('ais_aicode'), critical:false, partial:g('ais_aicode')&&!live('ais_aicode')},
+    {label:'CI/CD pipeline telemetry',      connected:live('ais_pipeline'),critical:false},
+    {label:'Build signing / provenance',    connected:false,              critical:false, partial:true},
+    {label:'Machine-identity inventory',    connected:g('ais_nhi'),       critical:false},
+    {label:'Crypto inventory / PQC migration',connected:g('ais_pqc'),     critical:false, partial:true}
+  ];
+  var conf=(typeof TrustLogic!=='undefined')?TrustLogic.evidenceConfidence(sources):{level:'—'};
+  return {sources:sources,level:demo?'Demo':conf.level,demo:demo};
+}
+function c5AisEvidencePanel(E){
+  var SL=(typeof TrustLogic!=='undefined')?TrustLogic.sourceStatus:function(o){return o&&o.connected?{label:'Connected',cls:'g'}:{label:'Not Connected',cls:'n'};};
+  var lvlCls={'High':'g','Medium':'a','Low':'a','Demo':'n','Not Enough Evidence':'n'}[E.level]||'n';
+  var chips=E.sources.map(function(s){var st=SL({connected:s.connected,partial:s.partial});if(E.demo&&s.connected)st={label:'Demo',cls:'a'};return '<span class="c5pill '+st.cls+'" style="display:inline-block;margin:2px 5px 2px 0">'+s.label+': '+st.label+'</span>';}).join('');
+  return '<div style="margin-top:14px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)">'+
+    '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:12px;font-weight:600;color:var(--ink-2)">Evidence confidence</span><span class="c5pill '+lvlCls+'">'+E.level+'</span></div>'+
+    '<div style="margin-top:7px;line-height:2">'+chips+'</div>'+
+    '<div style="margin-top:7px;font-size:11.5px;color:var(--muted)">'+(E.demo?'Values based on demo telemetry.':'CI/CD and code scanning connect live; AI posture is partly self-reported until AI inventory and usage telemetry connect.')+'</div></div>';
+}
 function c5AiSupply(){
   var host=document.getElementById('c5-aisupply');if(!host)return;
-  // Graphical, low-text tiles: a status ring + one-word verdict per read, drilling
-  // to the full detail. No paragraph of "connect X …" on the surface — just a
-  // subtle connect link that jumps to the right onboarding section.
-  var defs=[{id:'ais_aiml',ic:'cpu',onb:'ai supply chain'},{id:'ais_genai',ic:'store',onb:'ai supply chain'},{id:'ais_aicode',ic:'file',onb:'ai supply chain'},{id:'ais_pipeline',ic:'box',onb:'ai supply chain'},{id:'ais_nhi',ic:'key',onb:'ai supply chain'},{id:'ais_pqc',ic:'lock',onb:'ai supply chain'}];
+  var demo=(typeof signalsAreDemo==='function')&&signalsAreDemo();
+  var defs=[{id:'ais_aiml',ic:'cpu'},{id:'ais_genai',ic:'store'},{id:'ais_aicode',ic:'file'},{id:'ais_pipeline',ic:'box'},{id:'ais_nhi',ic:'key'},{id:'ais_pqc',ic:'lock'}];
   var ms=defs.map(function(d){return c5get(d.id);});
+  var byId={};ms.forEach(function(m){byId[m.id]=m;});
   var anyRisk=ms.some(function(m){return m.connected&&(m.color==='warn'||m.color==='crit');});
-  var worst=null,worstR=0;ms.forEach(function(m){var r=(m.color==='crit'?2:m.color==='warn'?1:0);if(m.connected&&r>worstR){worst=m;worstR=r;}});
-  var tiles=c5RingGrid(defs);
-  var blHead,blPara,blMid,blBtn;
-  if(worst){blMid=worst.id;blHead='Close your highest AI & supply-chain exposure first.';
-    blPara='Across the six reads, your most exposed area is <b>'+c5esc(worst.name)+'</b> — '+worst.displayValue+'. '+(worst.note||'');
-    blBtn='Prioritize '+c5esc(worst.name.toLowerCase());}
-  else if(ms.some(function(m){return m.connected;})){blMid='ais_aiml';blHead='Your AI and software supply chain is in good shape.';
-    blPara='No open exposure across your AI systems, GenAI usage, AI-assisted coding, build pipeline, machine identities or post-quantum readiness. Hold the posture and keep the sources live.';
-    blBtn='Review AI/ML posture';}
-  else {blMid='ais_aiml';blHead='Connect your AI and supply-chain sources to light this up.';
-    blPara='Add your AI asset inventory, CASB/DLP, coding-assistant logs, CI/CD scanning, machine-identity tooling and a cryptographic inventory, and each read populates with your own posture.';
-    blBtn='Start with AI/ML posture';}
+  var E=c5AisEvidence(byId,demo);
+  var cards='<div class="c5aigrid">'+defs.map(function(d){return c5AisCard(byId[d.id],d.ic,demo);}).join('')+'</div>';
+  // Bottom line — business-run AI systems + machine identities are the concentration.
+  var aiml=byId.ais_aiml, blMid='ais_aiml', blBtn='Close AI posture gap', blHead, blPara;
+  if(aiml&&aiml.connected){
+    blHead='Your highest AI and supply-chain exposure is in business-run AI systems.';
+    blPara='Exposure is concentrated in business-run AI systems and machine identities — '+c5esc(String(aiml.displayValue))+'. Close the AI posture gap and validate machine-identity ownership, rotation, and privilege before expanding AI usage.';
+  } else {
+    blHead='Connect your AI and supply-chain sources to rank the exposure.';
+    blPara='Add your AI asset inventory, CASB/DLP, coding-assistant logs, CI/CD scanning, machine-identity tooling and a cryptographic inventory, and each front populates with your own posture — the concentration is expected to be business-run AI systems and machine identities.';
+    blBtn='Start with AI posture';
+  }
   host.innerHTML=c5header()+
-    c5shell('AI &amp; software supply-chain security · where is the AI and build chain exposed?','The AI systems you run, the AI your people use, the code and pipeline that ship it, your machine identities and your post-quantum readiness.',anyRisk?'warn':null,'The six dimensions of AI and software-supply-chain risk the board now asks about — each traces to its source. Drill any tile to defend it.')+
-    tiles+
+    c5shell('AI &amp; software supply-chain security · where are we exposed across AI and software supply chain?','AI exposure is no longer just model risk — it now includes shadow AI, code, pipelines, identities, and crypto readiness.',anyRisk?'warn':null,'Nerion tracks six AI and software supply-chain exposure fronts. The priority is to close business-run AI posture gaps and validate machine-identity exposure before AI usage expands.')+
+    cards+
+    c5AisEvidencePanel(E)+
     c5bl('Bottom line',blHead,null,blPara,{mid:blMid,txt:blBtn})+
-    '<div class="c5foot">Each tile traces to its exact sources. Posture is self-reported until the named tool connects — figures shown are illustrative.</div>';
+    '<div class="c5foot">Each card traces to its exact sources. Posture is self-reported until the named tool connects'+(demo?' — values shown are demo telemetry.':'.')+'</div>';
 }
 
 /* ---------- Tab 02 — Top exposure ---------- */
