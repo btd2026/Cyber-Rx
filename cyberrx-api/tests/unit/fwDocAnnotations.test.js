@@ -56,3 +56,22 @@ describe('framework control detail — document reference & annotations', () => 
     expect(src).toMatch(/getElementById\('c5doc-'\+cid\)/);
   });
 });
+
+describe('demo document scores carry attributes with verbatim evidence', () => {
+  const cock = fs.readFileSync(path.resolve(__dirname, '../../../CyberRXNew/public/cockpit.html'), 'utf8');
+  const seed = cock.slice(cock.indexOf('function demoDocAttrs('), cock.indexOf('function seedDemoDocScores(') + 600);
+  it('demoDocAttrs supplies evidence for found attributes and a reason for missing ones', () => {
+    expect(seed).toContain('function demoDocAttrs(cmmi)');
+    expect(seed).toMatch(/if\(found\)\{o\.evidence=a\.ev;\}else\{o\.reasoning=/);
+    expect(seed).toContain('This policy establishes the requirements and responsibilities');
+  });
+  it('seedDemoDocScores now seeds real attrs (not an empty list)', () => {
+    expect(seed).toContain('var attrs=demoDocAttrs(sample[id])');
+    expect(seed).toContain('attrs:attrs');
+    expect(seed).not.toMatch(/attrs:\[\]\}\)/);
+  });
+  it('which attributes are found scales with the control maturity (honest gaps)', () => {
+    expect(seed).toMatch(/var found=cmmi>=a\.min/);
+    expect(seed).toMatch(/min:4/); // higher-maturity attributes only present at higher CMMI
+  });
+});

@@ -1846,9 +1846,27 @@ function fwRow(id,name,cov){var cc=controlCmmi(id,cov);
 }
 /* Silently seed the sample document-review scores in demo mode (the upload UI now
    lives in onboarding; this keeps the 📄 document provenance visible in a demo). */
+/* Representative policy attributes with verbatim evidence excerpts for the DEMO
+   workspace, so the document-review annotations show real quoted evidence (not an
+   empty list) until a customer's own policies are analyzed. The excerpts are generic,
+   Nerion-authored ISMS language — not copied from any copyrighted framework — and the
+   whole workspace is labelled Demo. Which attributes are "found" scales with the
+   control's demo maturity, so lower-maturity controls honestly show missing attributes. */
+function demoDocAttrs(cmmi){
+  var A=[
+    {label:'Policy purpose statement',min:1,ev:'This policy establishes the requirements and responsibilities for protecting the confidentiality, integrity and availability of company information and systems.'},
+    {label:'Scope definition',min:2,ev:'This policy applies to all employees, contractors and third parties who access company systems, data or facilities.',miss:'The policy does not clearly define the population and systems it applies to.'},
+    {label:'Roles & responsibilities',min:3,ev:'The CISO owns this policy; system and data owners are accountable for implementing the controls it requires within their areas.',miss:'No accountable owner or roles are named for this control.'},
+    {label:'Enforcement provisions',min:3,ev:'Violations may result in disciplinary action up to and including termination and, where applicable, referral to the relevant authorities.',miss:'The requirement is stated but the policy does not say how non-compliance is enforced.'},
+    {label:'Review cadence',min:4,ev:'This policy is reviewed at least annually, and after any significant change to the business or threat environment, by the security steering committee.',miss:'No stated review cadence — add an annual or event-driven review requirement.'},
+    {label:'Exception process',min:4,ev:'Exceptions require documented risk acceptance approved by the control owner and the CISO, with a defined expiry and review date.',miss:'No formal exception / risk-acceptance process is defined in the policy.'}
+  ];
+  return A.map(function(a){var found=cmmi>=a.min;var o={label:a.label,found:found};if(found){o.evidence=a.ev;}else{o.reasoning=a.miss||('Expected attribute “'+a.label.toLowerCase()+'” not evidenced in the analyzed policy.');}return o;});
+}
 function seedDemoDocScores(){if(!demoActive()||Object.keys(docScores()).length)return;
   var sample={'GV.OC-01':4,'GV.OC-03':3,'GV.RM-01':3,'GV.PO-01':4,'GV.PO-02':3,'PR.AA-01':4,'PR.AA-05':3,'PR.AT-01':3,'ID.RA-01':3,'ID.RA-05':2,'DE.CM-01':2,'RS.MA-01':3};
-  Object.keys(sample).forEach(function(id){saveDocScore(id,{cmmi:sample[id],doc:'Information Security Policy (sample).pdf',matched:Math.min(6,sample[id]+2),total:6,attrs:[]});});}
+  Object.keys(sample).forEach(function(id){var attrs=demoDocAttrs(sample[id]);var matched=attrs.filter(function(a){return a.found;}).length;
+    saveDocScore(id,{cmmi:sample[id],doc:'Information Security Policy (sample).pdf',matched:matched,total:attrs.length,attrs:attrs});});}
 /* ---- Business → cyber value chain (Framework report) ----------------------------
    Joins the two halves the platform already computes into one line:
      Function ($/yr,$/day) → Process (fraction) → Technology → Cyber risk ($ stop) →
