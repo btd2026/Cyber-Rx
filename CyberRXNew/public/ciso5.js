@@ -4876,6 +4876,36 @@ function c5CrownTreeInput(){
     return {org:org,RISKS:RISKS,C:C,DATA:DATA,CATALOG:106};
   }catch(e){try{console.warn('crown-tree adapter',e&&e.message);}catch(_){}return null;}
 }
+/* Coverage-stats detail — the evidence breakdown + gap-closing steps that used to sit
+   inline under the header, now opened in the right-side detail drawer from the
+   "📊 Coverage stats" button, so the header stays uncrowded. Data-driven from the
+   assessment totals; nothing hard-coded. */
+function c5FwEvidenceStats(T,sel){
+  var sc=c5fwSrcCounts(T);
+  function row(ic,label,val,col){return '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid var(--line)"><span style="color:var(--ink-2)">'+ic+' '+label+'</span><b style="color:var(--'+(col||'ink')+');font-variant-numeric:tabular-nums">'+val+'</b></div>';}
+  var evidenced=(T.native?sc.native:(sc.sys+sc.doc+(sc.mapped||0)));
+  var h='<div class="ev-claim">Framework coverage · '+T.total+' controls</div>'+
+    '<div style="display:flex;align-items:center;gap:14px;margin:12px 0 2px;padding:14px 16px;border-radius:12px;border:1px solid var(--line);border-left:3px solid var(--good);background:var(--surface-2)">'+
+      '<div style="min-width:0;flex:1"><div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">Evidenced</div><div style="font-size:24px;font-weight:700;line-height:1.1;color:var(--good)">'+evidenced+' of '+T.total+'</div></div>'+
+      (sc.none>0?('<div style="text-align:right"><span class="c5pill a">'+sc.none+' to close</span></div>'):'<div style="text-align:right"><span class="c5pill g">Fully evidenced</span></div>')+
+    '</div>'+
+    '<div class="ev-sec">How these controls are evidenced today</div>';
+  if(T.native){
+    h+=row('🧪','Natively assessed',sc.native,'good')+row('—','Not yet tested',sc.none,'muted');
+    h+='<div class="drill-p" style="margin-top:8px">These controls are assessed framework-natively from their own machine-verifiable evidence (no crosswalk). Controls without that evidence read “not yet tested”. CSF ids shown per control are related mappings, informational only.</div>';
+  } else {
+    h+=row('🔌','From connected tools',sc.sys,'blue')+row('📄','From your policies',sc.doc,'good')+(sc.mapped?row('🔗','By framework mapping',sc.mapped,'ink'):'')+row('—','Not yet evidenced',sc.none,'muted');
+    h+='<div class="drill-p" style="margin-top:8px">Connecting more tools moves controls from policy evidence to live telemetry.</div>';
+    if(sc.none>0){var gaps=c5fwGaps(T);if(gaps.length){var docg=gaps.filter(function(x){return x.kind==='d';}),tg=gaps.filter(function(x){return x.kind==='t';});
+      h+='<div class="ev-sec">To close the gap</div><div class="drill-p">'+
+        (docg.length?('Upload <b>'+docg.map(function(x){return c5esc(x.label)+' ('+x.n+')';}).join('</b>, <b>')+'</b>'):'')+
+        (docg.length&&tg.length?'<br>':'')+
+        (tg.length?('Connect <b>'+tg.map(function(x){return c5esc(x.label)+' ('+x.n+')';}).join('</b>, <b>')+'</b>'):'')+
+        ' — then press <b>↻ Re-score documents</b> in the header.</div>';}}
+  }
+  h+='<div class="c5foot">Coverage for '+(((typeof FW_NAMES!=='undefined')&&FW_NAMES[sel])||'this framework')+'. Every control traces to its source — open any control in the tree for its evidence.</div>';
+  return h;
+}
 /* Program Health dispatcher — renders the tab strip, then the active panel.
    Lazy-mounts: the island is only built while "Nerion's View" is active. */
 function c5Frameworks(){
@@ -4949,20 +4979,9 @@ function c5FrameworksClassic(host){
     cadCtrl+
     '<div class="c5fw-refresh" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"><span>Refreshed <b>'+cad+'</b> · last assessed <b>'+fmt(now)+'</b> · next refresh <b>'+fmt(nextD)+'</b></span>'+
       '<span style="display:flex;gap:8px">'+
+      '<button id="c5fwStatsBtn" type="button" style="border:1px solid var(--line);background:var(--surface);color:var(--ink-2);font-weight:600;font-size:12px;padding:6px 12px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:6px">📊 Coverage stats'+(function(){var s=c5fwSrcCounts(T);return s.none>0?(' · '+s.none+' to close'):'';})()+'</button>'+
       '<button id="c5reanalyzeBtn" type="button" style="border:1px solid var(--line);background:var(--surface);color:var(--ink-2);font-weight:600;font-size:12px;padding:6px 12px;border-radius:8px;cursor:pointer">↻ Re-score documents</button>'+
       '<button id="c5docsBtn" type="button" style="border:1px solid var(--line);background:var(--surface);color:var(--blue);font-weight:600;font-size:12px;padding:6px 12px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:6px">📄 Documents reviewed'+(function(){var n=(typeof c5DocCount==="function")?c5DocCount():0;return n?(' · '+n):"";})()+'</button></span></div>'+
-    (function(){var sc=c5fwSrcCounts(T);
-      var line=T.native
-        ? ('<div class="c5fw-refresh" style="margin-top:4px">These '+T.total+' controls are assessed <b>framework-natively</b> (no crosswalk): <b style="color:var(--good)">🧪 '+sc.native+'</b> natively assessed · <b style="color:var(--muted)">— '+sc.none+'</b> not yet tested (require the control-specific API evidence). CSF ids shown per control are <b>related mappings, informational only</b>.</div>')
-        : ('<div class="c5fw-refresh" style="margin-top:4px">How these '+T.total+' controls are evidenced <b>today</b>: <b style="color:var(--blue)">🔌 '+sc.sys+'</b> from connected tools · <b style="color:var(--good)">📄 '+sc.doc+'</b> from your policies'+(sc.mapped?(' · <b>🔗 '+sc.mapped+'</b> by mapping'):'')+' · <b style="color:var(--muted)">— '+sc.none+'</b> not yet evidenced. Connecting more tools moves controls from policy evidence to live telemetry.</div>');
-      if(T.native)return line;
-      if(sc.none>0){var gaps=c5fwGaps(T);if(gaps.length){var docg=gaps.filter(function(x){return x.kind==='d';}),tg=gaps.filter(function(x){return x.kind==='t';});
-        line+='<div class="c5fw-refresh" style="margin-top:3px">To close the gap: '+
-          (docg.length?('upload <b>'+docg.map(function(x){return c5esc(x.label)+' ('+x.n+')';}).join('</b>, <b>')+'</b>'):'')+
-          (docg.length&&tg.length?' · ':'')+
-          (tg.length?('connect <b>'+tg.map(function(x){return c5esc(x.label)+' ('+x.n+')';}).join('</b>, <b>')+'</b>'):'')+
-          ' — then press <b>↻ Re-score documents</b>.</div>';}}
-      return line;})()+
     pills+
     cards+
     peerBox+
@@ -4972,6 +4991,7 @@ function c5FrameworksClassic(host){
   // record cadence snapshot
   if(typeof fwRecord==='function'){try{fwRecord(T.overall);}catch(_){}}
   var _pb=document.getElementById('c5fwPeerBox');if(_pb)_pb.onclick=function(){c5fwPeerOpen();};
+  var _st=document.getElementById('c5fwStatsBtn');if(_st)_st.onclick=function(){if(typeof openDrill==='function')openDrill('Framework coverage & evidence',c5FwEvidenceStats(T,sel));};
   var _db=document.getElementById('c5docsBtn');if(_db)_db.onclick=function(){c5OpenDocsReview();};
   var _ra=document.getElementById('c5reanalyzeBtn');if(_ra)_ra.onclick=function(){
     if(typeof window.reanalyzeStoredDocs!=='function'){c5OpenDocsReview();return;}
