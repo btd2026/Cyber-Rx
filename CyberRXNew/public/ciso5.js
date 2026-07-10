@@ -4824,10 +4824,21 @@ function c5FrameworksClassic(host){
   // Last-assessed line with a "N documents reviewed" link that opens the review.
   var docN=(typeof c5DocCount==='function')?c5DocCount():0;
   var lastAssessed='<div style="font-size:12.5px;color:var(--ink-2)">Last assessed <b>'+fmt(now)+'</b> · next refresh <b>'+fmt(nextD)+'</b>'+(docN?(' · <a id="c5docsLink" style="color:var(--blue);font-weight:600;cursor:pointer">'+docN+' documents reviewed</a>'):'')+'</div>';
-  // Top card: framework pills · reassess · last-assessed · export buttons.
+  // Peer-benchmark box — sits inside the top card, in the empty space to the right
+  // of the Reassess row. Its eyebrow names the selected framework so it reads e.g.
+  // "Peer benchmark · NIST CSF 2.0 · sample preview" and re-titles on pill switch.
+  var fwShort={csf:'NIST CSF 2.0',r53:'NIST 800-53',soc2:'SOC 2',hipaa:'HIPAA',cis:'CIS v8',iso:'ISO 27001'}[sel]||'framework';
+  var peerBox='<div id="c5fwPeerBox" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface-2);cursor:pointer;transition:border-color .15s,background .15s"'+
+    ' onmouseover="this.style.borderColor=\'var(--blue)\'" onmouseout="this.style.borderColor=\'var(--line)\'">'+
+    '<div style="display:flex;align-items:center;gap:11px;min-width:0">'+
+      '<span style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:9px;flex:none;background:var(--surface);color:var(--blue)">'+c5icon('scale')+'</span>'+
+      '<div style="min-width:0"><div style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--blue)">Peer benchmark · '+fwShort+' · '+(c5peerLive()?'view comparison':'sample preview')+'</div>'+
+      '<div style="font-size:12px;color:var(--ink-2);margin-top:1px">'+(c5peerLive()?('See how your '+((typeof FW_NAMES!=='undefined'&&FW_NAMES[sel])||'framework')+' maturity compares to the DTNKShield community — anonymously.'):('Preview how your '+((typeof FW_NAMES!=='undefined'&&FW_NAMES[sel])||'framework')+' maturity will compare — the live cohort unlocks at '+c5peerMin()+' clients (anonymous, k-anonymity-gated).'))+'</div></div>'+
+    '</div><span class="peer-badge">'+(c5peerLive()?'DTNKShield ›':'Sample ›')+'</span></div>';
+  // Top card: framework pills · (reassess + peer benchmark) · last-assessed · export buttons.
   var topCard='<div style="border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:6px">'+
     pills+
-    '<div style="margin-top:12px">'+reassessRow+'</div>'+
+    '<div style="margin-top:12px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">'+reassessRow+'<div style="flex:1;min-width:300px">'+peerBox+'</div></div>'+
     '<div style="border-top:1px solid var(--line);margin:14px 0 12px"></div>'+
     lastAssessed+
     '<div style="margin-top:11px;display:flex;gap:8px;flex-wrap:wrap">'+exportBtns+'</div>'+
@@ -4866,21 +4877,11 @@ function c5FrameworksClassic(host){
     return '<div class="c5fw-g"><div class="c5fw-grow" data-c5fwexp="'+g.id+'"><span class="c5fw-tw">'+(open?'▾':'▸')+'</span><span class="c5fw-dot" style="background:var(--'+gc+')"></span><span class="c5fw-id">'+g.id+'</span><span class="c5fw-nm">'+g.name+'</span><span class="c5fw-lvl">'+c5fwLvl(g.score)+'</span><span class="c5fw-sc" style="color:var(--'+gc+')">'+g.score.toFixed(1)+'</span></div>'+inner+'</div>';
   }).join('')+'</div>';
   var xnote=(typeof FW_XNOTE!=='undefined'&&FW_XNOTE[sel])?('<div class="c5note" style="margin-top:12px">🔗 '+FW_XNOTE[sel]+'</div>'):'';
-  // Small opt-in box in the maturity summary area (opens the full benchmark on click).
-  var pOpt=(typeof peerOptin==='function')&&peerOptin();
-  var peerBox='<div id="c5fwPeerBox" style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;padding:11px 15px;border:1px solid var(--line);border-radius:12px;background:var(--surface-2);cursor:pointer;transition:border-color .15s,background .15s"'+
-    ' onmouseover="this.style.borderColor=\'var(--blue)\'" onmouseout="this.style.borderColor=\'var(--line)\'">'+
-    '<div style="display:flex;align-items:center;gap:11px;min-width:0">'+
-      '<span style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:9px;flex:none;background:var(--surface);color:var(--blue)">'+c5icon('scale')+'</span>'+
-      '<div style="min-width:0"><div style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--blue)">'+(c5peerLive()?'Peer benchmark · view comparison':'Peer benchmark · sample preview')+'</div>'+
-      '<div style="font-size:12px;color:var(--ink-2);margin-top:1px">'+(c5peerLive()?('See how your '+((typeof FW_NAMES!=='undefined'&&FW_NAMES[sel])||'framework')+' maturity compares to the DTNKShield community — anonymously.'):('Preview how your '+((typeof FW_NAMES!=='undefined'&&FW_NAMES[sel])||'framework')+' maturity will compare — the live cohort unlocks at '+c5peerMin()+' clients (anonymous, k-anonymity-gated).'))+'</div></div>'+
-    '</div><span class="peer-badge">'+(c5peerLive()?'DTNKShield ›':'Sample ›')+'</span></div>';
   host.innerHTML=c5header()+
     c5shell('Program health · how is the security program performing?','Your security program, scored against the framework you follow.',null,'Each function is scored from your live control evidence and kept current. Open a function to see the controls behind its score.')+
     topCard+
     cards+
     evBox+
-    peerBox+
     xnote+
     '<div class="c5fw-wrap"><div class="c5fw-right">'+tree+'</div><div class="c5fw-left" id="c5fw-detail">'+c5fwFinding(sel,selNode)+'</div></div>'+
     '<div class="c5foot">CMMI 0 None · 1 Initial · 2 Managed · 3 Defined · 4 Quant. Managed · 5 Optimizing. Meets target ≥ '+C5FW_TARGET.toFixed(1)+' (green) · Observation ≥ '+C5FW_FLOOR+' (amber) · Deficiency &lt; '+C5FW_FLOOR+' (red).'+((sel==='cis'||sel==='soc2'||sel==='hipaa'||sel==='iso')?' '+((typeof FW_NAMES!=='undefined'&&FW_NAMES[sel])||'This framework')+' is assessed <b>framework-natively</b> — each control is concluded from its OWN machine-verifiable API evidence, never derived from the CSF assessment. Controls without that evidence are shown as “Not tested / Not enough evidence”, not scored. The CSF ids per control are related mappings for navigation only.':'')+(sel==='r53'?' NIST SP 800-53 Rev 5 is assessed by crosswalk from your CSF 2.0 assessment (a readiness indicator, per-family): the ~20 controls Nerion scores directly show 📄/🔌; the rest inherit their family’s governing-policy maturity.':'')+'</div>';
@@ -5218,11 +5219,44 @@ function c5fwPeerFetch(){
     .then(function(d){C5FW_PEER=d||{sufficient:false};C5FW_PEER_BUSY=false;c5fwPeerRender();})
     .catch(function(){C5FW_PEER={error:true};C5FW_PEER_BUSY=false;c5fwPeerRender();});
 }
+/* Illustrative cohort for the sample preview — a fixed, defensible distribution so
+   the "you vs peers" comparison can be shown BEFORE the live cohort (5+ orgs)
+   exists. Deterministic; nothing here leaves the browser. */
+function c5peerSampleData(){
+  function band(m){m=Math.max(1,Math.min(4.6,m));return {p25:Math.max(0,+(m-0.6).toFixed(2)),p50:+m.toFixed(2),p75:Math.min(5,+(m+0.6).toFixed(2))};}
+  var fns={},meds={Govern:3.2,Identify:3.4,Protect:3.1,Detect:2.8,Respond:2.7,Recover:2.6};
+  Object.keys(meds).forEach(function(k){fns[k]=band(meds[k]);});
+  return {overall:band(3.1),overall_values:[2.3,2.6,2.8,2.9,3.0,3.1,3.2,3.4,3.6,3.9],functions:fns,n:c5peerMin()-1};
+}
+/* The framework-specific EXAMPLE comparison shown when the peer box is opened
+   before the live cohort unlocks (the "Sample ›" state). Full hero + per-function
+   bars, clearly labelled SAMPLE, using the org's OWN real scores against the
+   illustrative cohort so a user sees exactly how their benchmark will present. */
+function c5fwPeerSampleHTML(fwName){
+  var snap=(typeof window!=='undefined'&&window.FW_SNAPSHOT)||{overall:null,functions:{}};
+  var over=(typeof window!=='undefined'&&window.C5FW_OVERALL!=null)?Number(window.C5FW_OVERALL):(snap.overall!=null?Number(snap.overall):null);
+  var S=c5peerSampleData();
+  var pctile=(typeof peerPercentileOf==='function')?peerPercentileOf(over,S.overall_values):null;
+  var ordCol=pctile==null?'ink':(pctile>=50?'good':(pctile>=25?'warn':'crit'));
+  var banner='<div class="c5note" style="margin-top:2px;margin-bottom:10px">🔍 <b>Sample preview · '+fwName+'.</b> An illustrative cohort so you can see exactly how your comparison will present. The live '+fwName+' benchmark unlocks once <b>'+c5peerMin()+'</b> organizations have joined (anonymous, k-anonymity-gated) — nothing here has left your browser.</div>';
+  var hero='<div class="peer-hero"><div><div class="peer-hero-l">My Organization · '+fwName+' vs sample cohort</div>'+
+    '<div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-top:2px"><div class="peer-hero-v" style="color:var(--'+((typeof cmmiColor==='function')?cmmiColor(Math.round(over||0)):'ink')+')">'+(over!=null?Number(over).toFixed(1):'—')+'<span>/ 5</span></div>'+
+    (pctile!=null?'<div class="peer-hero-d">You would rank in the <b style="color:var(--'+ordCol+')">'+((typeof peerOrdinal==='function')?peerOrdinal(pctile):pctile)+' percentile</b> — '+(pctile>=50?'ahead of':'behind')+' the sample median of '+S.overall.p50.toFixed(1)+'.</div>':'')+'</div></div>'+
+    '<div class="peer-n"><b>SAMPLE</b>illustrative</div></div>';
+  var bars='<div style="margin-top:12px">'+((typeof peerBar==='function')?peerBar('Overall',over,S.overall):'');
+  var order=['Govern','Identify','Protect','Detect','Respond','Recover'],snf=snap.functions||{};
+  order.forEach(function(fn){if(S.functions[fn]&&typeof peerBar==='function')bars+=peerBar(fn,snf[fn],S.functions[fn]);});
+  bars+='</div>';
+  var legend='<div class="peer-legend" style="margin-top:6px"><span><i style="background:var(--blue-soft);border:1px solid rgba(37,99,235,.35)"></i>cohort band (p25–p75)</span><span><i style="background:var(--blue);width:2px"></i>cohort median</span><span><i style="background:var(--good)"></i>My Organization ≥ median</span><span><i style="background:var(--crit)"></i>below 25th</span></div>';
+  return banner+hero+bars+legend;
+}
 /* Open the full community benchmark (preview → verify → compare) in the drill
-   panel, triggered by the small opt-in box in the Frameworks maturity summary. */
+   panel, triggered by the peer box in the top card. */
 function c5fwPeerOpen(){
   if(typeof openDrill!=='function')return;
-  openDrill('Community benchmark · how do we compare?','<div id="c5fwPeer"></div>');
+  var sel=(typeof FW_SEL!=='undefined')?FW_SEL:'csf';
+  var fwName=(typeof FW_NAMES!=='undefined'&&FW_NAMES[sel])||'this framework';
+  openDrill('Community benchmark · '+fwName+' · how do we compare?','<div id="c5fwPeer"></div>');
   try{c5fwPeerRender();}catch(_){}
 }
 function c5fwPeerRender(){
@@ -5235,7 +5269,8 @@ function c5fwPeerRender(){
   var head='<div class="peer-head"><div class="ck">Community benchmark · how do we compare?</div><span class="peer-badge">DTNKShield portal</span></div>';
   var body='';
   if(!optedIn&&!C5PEER_PREVIEW){
-    body='<div class="cn" style="margin-top:8px;line-height:1.55">See how your <b>'+fwName+'</b> maturity compares to the DTNKShield community — anonymously. This is the <b>only</b> feature that reaches the internet. If you share, only your <b>anonymized scores</b> and cohort tags (industry, region, revenue band) leave your browser — <b>no organization name, no inventory, no dollar figures</b>. The comparison unlocks once at least '+minC+' organizations have joined a cohort, so no single peer can be identified.</div>'+
+    body=c5fwPeerSampleHTML(fwName)+
+      '<div class="cn" style="margin-top:14px;line-height:1.55">See how your <b>'+fwName+'</b> maturity compares to the DTNKShield community — anonymously. This is the <b>only</b> feature that reaches the internet. If you share, only your <b>anonymized scores</b> and cohort tags (industry, region, revenue band) leave your browser — <b>no organization name, no inventory, no dollar figures</b>. The comparison unlocks once at least '+minC+' organizations have joined a cohort, so no single peer can be identified.</div>'+
       '<div style="margin-top:12px"><button class="c5btn" id="c5peerPreview">Preview what would be shared →</button></div>';
   } else if(!optedIn&&C5PEER_PREVIEW){
     var rows=c5peerShared().map(function(f){return '<tr><td style="padding:6px 10px;color:var(--ink-2);white-space:nowrap">'+f.k+'</td><td style="padding:6px 10px;font-weight:600">'+f.v+(f.note?(' <span style="font-weight:400;color:var(--muted)">— '+f.note+'</span>'):'')+'</td></tr>';}).join('');
