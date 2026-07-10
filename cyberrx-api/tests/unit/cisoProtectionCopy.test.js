@@ -76,7 +76,8 @@ describe('Protection tab — simplified rows & score/status clarity', () => {
   });
   it('detailed open-risks list is moved to drill-down, not rendered inline on the row', () => {
     expect(region).not.toMatch(/Open risks: '\+a\.risks\.slice/);
-    expect(region).toMatch(/Click for open risks/);
+    expect(region).toMatch(/data-c5area="/); // row stays click-through to the drill-down
+    expect(region).toMatch(/click for open risks/i); // in the row title tooltip
   });
   it('explains why a high-scoring area still needs strengthening', () => {
     expect(region).toMatch(/keeps residual exposure elevated/);

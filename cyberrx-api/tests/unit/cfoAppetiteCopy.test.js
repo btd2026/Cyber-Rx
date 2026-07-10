@@ -77,7 +77,7 @@ describe('CFO Within Appetite — funding block (no ROI without cost)', () => {
 
 describe('CFO Within Appetite — evidence confidence & labels', () => {
   it('renders an evidence-confidence panel that caps below High while appetite is self-reported', () => {
-    expect(fn).toContain('Evidence confidence');
+    expect(fn).toMatch(/var evPanel=c5EvLine\(evLevel,/); // compact one-line evidence strip
     expect(fn).toMatch(/var evLevel=demo\?'Demo':\(ap\.connected&&evConf\.level==='High'\?'Medium':evConf\.level\)/);
   });
   it('labels demo / manual / self-reported / modeled values', () => {
