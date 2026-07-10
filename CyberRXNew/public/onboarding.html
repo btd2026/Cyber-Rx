@@ -691,9 +691,11 @@
         if(fc>=0){var fv=String(row[fc]||'').toLowerCase();if(/yes|true|1|customer|external|decision|automat/.test(fv))cust=true;}
       });
       AI_INV={ai_system:tally.ai_system,genai_app:tally.genai_app,machine_identity:tally.machine_identity,crypto_asset:tally.crypto_asset,sensitivity:topSensL,customerFacing:cust,customerFacingCol:(fc>=0),_loaded:true};
+      AI_INV._count=rows.length; // remember the classified total so the state restores visibly
       renderAiInv();if(typeof computeAiGov==='function')computeAiGov();
       if(msg)msg.textContent='✓ '+rows.length+' assets classified.';
       var b=document.getElementById('bas');if(b){b.textContent='✓ '+rows.length+' assets';b.classList.add('done');}
+      if(typeof obSaveSoon==='function')obSaveSoon(); // persist the loaded inventory immediately
     };
     r.readAsText(f.files[0]);
   }
@@ -988,7 +990,21 @@
         return '<div class="field"><label>'+f.label+'</label><input type="'+(f.type||'text')+'"'+(f.type==='number'?' step="any"':'')+' class="'+f.cls+'" placeholder="'+(f.ph||'')+'"></div>';
       }).join('')+'<button class="rl-del" type="button" title="Remove" style="height:38px;border:1px solid var(--line);background:#fff;border-radius:8px;cursor:pointer;color:var(--muted)">✕</button>';
       wrap.appendChild(row);
-      fields.forEach(function(f){if(v[f.cls]!=null){var el=row.querySelector('.'+f.cls);if(el)el.value=v[f.cls];}});
+      // Populate from EITHER the CSV/import shape (keyed by cls) OR the snapshot /
+      // backend shape (keyed by key) so uploaded rows survive save→restore — collect()
+      // emits key-shaped objects, and that is what a reload feeds back to add(). Money
+      // fields: an import passes just the number part (unit stays the field default);
+      // a snapshot passes a full dollar figure, so rescale it back to a clean unit.
+      fields.forEach(function(f){
+        var raw=(v[f.cls]!=null)?v[f.cls]:(v[f.key]!=null?v[f.key]:null);
+        if(raw==null)return;
+        var el=row.querySelector('.'+f.cls);if(!el)return;
+        if(f.type==='money'){
+          var num=parseFloat(String(raw).replace(/[^0-9.]/g,''));if(isNaN(num))return;
+          if(v[f.cls]!=null){el.value=raw;}
+          else{var unit=num>=1e9?1e9:(num>=1e6?1e6:(num>=1e3?1e3:1)),uu=row.querySelector('.'+f.cls+'u');el.value=(unit>1?String(+(num/unit).toFixed(4)):String(num));if(uu)uu.value=String(unit);}
+        } else el.value=raw;
+      });
       row.querySelector('.rl-del').addEventListener('click',function(){row.remove();upd();});
       ['input','change'].forEach(function(ev){row.addEventListener(ev,upd);});
       wrap.setAttribute('data-coll','0');wrap.style.display=''; // adding a row expands the list
@@ -1048,6 +1064,7 @@
       });
       if(any){rowList.add(v);n++;}
     });
+    if(n&&typeof obSaveSoon==='function')obSaveSoon(); // persist uploaded rows immediately
     return n;
   }
   // Adds "⤓ Upload CSV" + "⚡ Connect" beside a register's "+ Add" button.
@@ -1710,7 +1727,12 @@
       if(Array.isArray(s.risk)&&s.risk.length){RISK=s.risk;showRows(document.getElementById('resRisk'),RISK,function(x){return '<div class="xrow"><span class="nm">'+x.title+'</span><span class="mt">'+(x.asset||'')+(x.exposure?(' · '+x.exposure):'')+' · '+(x.severity||'')+'</span></div>';});var b6=document.getElementById('b6');if(b6){b6.dataset.n=RISK.length;badgeDone('b6');}}
       if(typeof INIT!=='undefined'&&Array.isArray(s.init)&&s.init.length){INIT=s.init;try{showRows(document.getElementById('resInit'),INIT,function(x){return '<div class="xrow"><span class="nm">'+x.name+'</span><span class="mt">'+(x.owner||'')+(x.cost?(' · '+x.cost):'')+' · '+(x.status||'')+'</span></div>';});var bi=document.getElementById('binit');if(bi){bi.textContent='✓ '+INIT.length+' loaded';bi.classList.add('done');}}catch(_){}}
       if(typeof VENDORS!=='undefined'&&Array.isArray(s.vendors)&&s.vendors.length){VENDORS=s.vendors;try{vendRows();}catch(_){}}
-      if(s.aiInv&&typeof AI_INV!=='undefined'){AI_INV=s.aiInv;try{renderAiInv();}catch(_){}}
+      if(s.aiInv&&typeof AI_INV!=='undefined'){AI_INV=s.aiInv;try{renderAiInv();}catch(_){}
+        // Bring back the visible "loaded" affordances (badge + message) so the restored
+        // inventory reads as saved, not as needing a re-upload.
+        try{if(AI_INV._loaded){var cnt=AI_INV._count||((AI_INV.ai_system||0)+(AI_INV.genai_app||0)+(AI_INV.machine_identity||0)+(AI_INV.crypto_asset||0));
+          var bas=document.getElementById('bas');if(bas&&cnt){bas.textContent='✓ '+cnt+' assets';bas.classList.add('done');}
+          ['aiInvMsg','aiGovInvMsg'].forEach(function(mid){var mm=document.getElementById(mid);if(mm&&cnt)mm.textContent='✓ '+cnt+' assets classified.';});}}catch(_){}}
       // Rebuild the repeatable-row registers (capability map, SBOM, risk appetite, …).
       if(s.registers&&typeof OB_REGISTERS!=='undefined'){Object.keys(s.registers).forEach(function(k){var reg=OB_REGISTERS[k],rows=s.registers[k];if(!reg||!Array.isArray(rows)||!rows.length)return;try{if(reg.clear)reg.clear();rows.forEach(function(v){reg.add(v);});}catch(_){}});}
       // Re-mark the tools the user connected (or demo-connected) so the grid + the

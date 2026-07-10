@@ -84,8 +84,9 @@ describe('the Frameworks peer box lives inside the top card, named per framework
   it('is embedded beside the Reassess row (not a standalone row below the cards)', () => {
     expect(classic.indexOf('var peerBox=')).toBeGreaterThan(0);
     expect(classic.indexOf('var peerBox=')).toBeLessThan(classic.indexOf('var topCard='));
-    expect(classic).toContain('flex:1;min-width:300px">\'+peerBox+\'</div>');
-    expect(classic).toMatch(/reassessRow\+'<div style="flex:1;min-width:300px">'\+peerBox/);
+    // sits at ~half width, pushed to the right of the Reassess row
+    expect(classic).toContain('flex:0 1 48%;min-width:300px;margin-left:auto">\'+peerBox+\'</div>');
+    expect(classic).toMatch(/reassessRow\+'<div style="flex:0 1 48%;min-width:300px;margin-left:auto">'\+peerBox/);
     expect(classic).not.toMatch(/evBox\+\s*peerBox\+/);
   });
   it('the eyebrow names the selected framework via a short-label map', () => {
