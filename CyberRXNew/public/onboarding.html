@@ -63,9 +63,12 @@
   .chips{display:flex;flex-wrap:wrap;gap:8px}
   .chip{font-size:12.5px;font-weight:600;color:var(--ink-2);background:var(--plane);border:1px solid var(--line-2);border-radius:99px;padding:7px 13px;cursor:pointer}
   .chip.on{color:#fff;background:var(--blue);border-color:var(--blue)}
-  .drop{border:1.5px dashed var(--line-2);border-radius:11px;padding:20px;text-align:center;cursor:pointer;transition:border-color .12s}
-  .drop:hover{border-color:var(--blue)}
-  .drop .ic{font-size:22px;color:var(--blue)}.drop .t{font-weight:600;font-size:13.5px;margin-top:6px}.drop .s{font-size:12px;color:var(--muted);margin-top:3px}
+  /* Compact upload button (matches the register cards' "Upload CSV" style) instead of a
+     big dashed drop-zone — consistent document-upload UI across onboarding. Drag-and-drop
+     still works (wired by wireDrop); the label carries the section-specific text. */
+  .drop{display:inline-flex;align-items:center;gap:8px;border:none;border-radius:8px;padding:10px 16px;cursor:pointer;transition:filter .12s,box-shadow .12s;background:var(--blue);color:#fff;box-shadow:0 1px 2px rgba(16,24,40,.08)}
+  .drop:hover{filter:brightness(1.06);box-shadow:0 3px 8px -3px rgba(16,24,40,.28)}
+  .drop .ic{font-size:15px;color:#fff;margin:0}.drop .t{font-weight:700;font-size:12.5px;color:#fff;margin:0}.drop .s{display:none}
   .tmpl{font-family:var(--mono);font-size:11px;color:var(--muted);background:var(--plane);border:1px solid var(--line);border-radius:7px;padding:7px 10px;margin-top:10px;overflow-x:auto;white-space:nowrap}
   .tmpl b{color:var(--ink-2)}
   .result{margin-top:12px;font-size:12.5px}
@@ -247,12 +250,12 @@
     <div class="row" style="margin-top:14px"><div class="field"><label>Compliance frameworks in scope <span style="color:var(--muted)">(drives live audit-readiness — leave blank to infer from your industry &amp; certifications)</span></label><div class="certgrid" id="scopeFrameworks">
       <label class="ckchip"><input type="checkbox" value="SOC 2"> SOC 2</label>
       <label class="ckchip"><input type="checkbox" value="ISO 27001"> ISO 27001</label>
-      <label class="ckchip"><input type="checkbox" value="HITRUST"> HITRUST</label>
       <label class="ckchip"><input type="checkbox" value="FedRAMP"> FedRAMP</label>
-      <label class="ckchip"><input type="checkbox" value="CMMC"> CMMC</label>
       <label class="ckchip"><input type="checkbox" value="PCI DSS"> PCI DSS</label>
       <label class="ckchip"><input type="checkbox" value="HIPAA"> HIPAA</label>
       <label class="ckchip"><input type="checkbox" value="NIST CSF"> NIST CSF</label>
+      <label class="ckchip"><input type="checkbox" value="NIST SP 800-53"> NIST SP 800-53</label>
+      <label class="ckchip"><input type="checkbox" value="CIS v8"> CIS v8</label>
     </div></div></div>
   </div>
 
@@ -1057,10 +1060,22 @@
   function obSaveDocs(a){try{localStorage.setItem('cyberrx_docs',JSON.stringify(a.slice(0,20)));}catch(_){}}
   function updateDocBadge(){var n=obDocDocs().length,b=document.getElementById('bdoc');if(b){if(n){b.textContent='✓ '+n+' analyzed';b.classList.add('done');}else{b.textContent='optional';b.classList.remove('done');}}}
   function obRenderDocList(){var docs=obDocDocs(),host=document.getElementById('obDocList');if(!host)return;
+    if(!docs.length){host.innerHTML='<div class="sd">No documents uploaded yet — upload one above to evidence controls by document review.</div>';return;}
+    // The uploaded-document list is collapsible so a long list (many policies) can be
+    // hidden to simplify the page — auto-collapsed once it grows past a few.
+    if(typeof window.__obDocCollapsed==='undefined')window.__obDocCollapsed=docs.length>3;
+    var collapsed=!!window.__obDocCollapsed;
     // Show the document, its type, and how many control attributes Nerion tests
     // for it — no scores/results at this level (those live in the cockpit).
-    host.innerHTML=docs.length?(docs.map(function(d){return '<div class="xrow"><span class="nm">'+d.name+'</span><span class="mt">'+d.type+' · '+(d.total||0)+' attributes tested</span></div>';}).join('')+'<div style="margin-top:8px"><button class="conn-go" id="obDocClear" type="button">Clear uploaded documents</button></div>'):'<div class="sd">No documents uploaded yet — upload one above to evidence controls by document review.</div>';
-    var c=document.getElementById('obDocClear');if(c)c.addEventListener('click',function(){try{localStorage.removeItem('cyberrx_doc_scores');localStorage.removeItem('cyberrx_docs');localStorage.removeItem('cyberrx_doc_text');}catch(_){}updateDocBadge();obRenderDocList();if(typeof renderAiGovDocList==='function')renderAiGovDocList();if(typeof computeAiGov==='function')computeAiGov();});}
+    var rows=docs.map(function(d){return '<div class="xrow"><span class="nm">'+d.name+'</span><span class="mt">'+d.type+' · '+(d.total||0)+' attributes tested</span></div>';}).join('');
+    host.innerHTML=
+      '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px">'+
+        '<button type="button" id="obDocToggle" title="Show / hide the uploaded documents" style="background:none;border:none;cursor:pointer;font-weight:700;font-size:13px;color:var(--ink);display:inline-flex;align-items:center;gap:7px;padding:0"><span style="font-size:11px">'+(collapsed?'▸':'▾')+'</span>'+docs.length+' document'+(docs.length>1?'s':'')+' uploaded</button>'+
+        '<button class="conn-go" id="obDocClear" type="button" style="padding:6px 12px;font-size:11.5px">Clear all</button>'+
+      '</div>'+
+      '<div id="obDocRows" style="margin-top:8px;display:'+(collapsed?'none':'block')+'">'+rows+'</div>';
+    var t=document.getElementById('obDocToggle');if(t)t.addEventListener('click',function(){window.__obDocCollapsed=!window.__obDocCollapsed;obRenderDocList();});
+    var c=document.getElementById('obDocClear');if(c)c.addEventListener('click',function(){try{localStorage.removeItem('cyberrx_doc_scores');localStorage.removeItem('cyberrx_docs');localStorage.removeItem('cyberrx_doc_text');}catch(_){}window.__obDocCollapsed=undefined;updateDocBadge();obRenderDocList();if(typeof renderAiGovDocList==='function')renderAiGovDocList();if(typeof computeAiGov==='function')computeAiGov();});}
   // The AI-governance document types (derived from OB_DOC_TYPES — single source of
   // truth), each kept and shown separately so a user can upload all of them and see
   // every one's analysis persist, not just the latest.
