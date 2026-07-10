@@ -1866,11 +1866,21 @@ function c5keyEvHtml(m){
    nothing client-specific is hard-coded. ── */
 function c5severity(m){if(m&&m.severity)return m.severity;if(!m||!m.connected)return 'Not enough evidence';return m.color==='crit'?'High':m.color==='warn'?'Medium':m.color==='blue'?'Monitor':m.color==='good'?'Low':'Monitor';}
 function c5sevColor(m){if(!m||!m.connected)return 'muted';return m.color==='crit'?'crit':m.color==='warn'?'warn':m.color==='blue'?'blue':m.color==='good'?'good':'ink';}
-/* Accountable owner — a ROLE (never a client name), inferred from the metric domain,
-   overridable via m.owner. */
-function c5ownerOf(m){if(m&&m.owner)return m.owner;var id=String((m&&m.id)||'');
-  var map=[[/^cf_|roi|insur|premium|_fin/,'CFO'],[/^coo_|recover|_ops|process|continu/,'COO'],[/^ceo_|growth|trust|objective/,'CEO'],[/^cro_|appetite/,'CRO'],[/^clo_|legal|regulat|material|disclos/,'CLO'],[/^bd_|board/,'Board'],[/^er_|^ctl_|^tac_|^ais_|^cp_|^ia_|^dom_|^exp_|prot|peer|fw|control/,'CISO']];
-  for(var i=0;i<map.length;i++)if(map[i][0].test(id))return map[i][1];return 'Accountable owner';}
+/* The accountable SEAT for a measure (a key like 'ciso'), inferred from its domain,
+   overridable via m.seat, and finally the seat the cockpit is currently addressing. */
+function c5ownerSeat(m){if(m&&m.seat)return String(m.seat).toLowerCase();var id=String((m&&m.id)||'');
+  var map=[[/^cf_|roi|insur|premium|_fin/,'cfo'],[/^coo_|recover|_ops|process|continu/,'coo'],[/^ceo_|growth|trust|objective/,'ceo'],[/^cro_|appetite/,'cro'],[/^clo_|legal|regulat|material|disclos/,'clo'],[/^bd_|board/,'board'],[/^er_|^ctl_|^tac_|^ais_|^cp_|^ia_|^dom_|^exp_|prot|peer|fw|control/,'ciso']];
+  for(var i=0;i<map.length;i++)if(map[i][0].test(id))return map[i][1];
+  try{if(typeof CUR!=='undefined'&&CUR)return String(CUR).toLowerCase();}catch(_){}return '';}
+/* Accountable owner — m.owner override, else the named leader for the accountable seat
+   (from onboarding), else the seat role. Never a fabricated name. */
+function c5ownerOf(m){if(m&&m.owner)return m.owner;var seat=c5ownerSeat(m);if(!seat)return 'Accountable owner';
+  var role={ciso:'CISO',cfo:'CFO',coo:'COO',ceo:'CEO',cro:'CRO',clo:'CLO',cio:'CIO',board:'Board',cpo:'CPO',audit:'Internal Audit'}[seat]||seat.toUpperCase();
+  var name='';try{if(typeof c5SeatNameOf==='function')name=c5SeatNameOf(seat);}catch(_){}
+  return (name&&role)?(name+' · '+role):(role||'Accountable owner');}
+/* ETA / due — m.due override, else the earliest due date on an open gap, else null so the
+   caller shows an honest "Not scheduled" (no fabricated deadline). */
+function c5etaOf(m){if(m&&m.due)return m.due;if(m&&m.gaps&&m.gaps.length){for(var i=0;i<m.gaps.length;i++){if(m.gaps[i]&&m.gaps[i].due)return m.gaps[i].due;}}return null;}
 /* Business impact — the consequence in business terms (m.impact override, else the
    durable "why it matters"). */
 function c5impactText(m){if(m&&m.impact)return m.impact;if(!m||!m.connected)return 'Cannot be quantified until the source is connected — no confident conclusion yet.';return c5why(m)||('Bears on '+String((m&&m.name)||'this measure').toLowerCase()+'.');}
@@ -1905,12 +1915,13 @@ function c5InspectObj(m){
   var why=c5why(m);
   var _xcol=(m.color==='crit'?'crit':m.color==='warn'?'warn':'blue');
   function _xr(label,txt,c){return txt?('<div style="margin-bottom:11px"><div style="font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--'+(c||'muted')+')">'+label+'</div><div style="font-size:12.5px;color:var(--ink-2);line-height:1.5;margin-top:2px">'+txt+'</div></div>'):'';}
-  function _chip(label,val,c){return '<div style="border:1px solid var(--line);border-radius:9px;padding:6px 11px;background:var(--surface-2)"><div style="font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)">'+label+'</div><div style="font-size:12.5px;font-weight:600;color:var(--'+(c||'ink')+');margin-top:1px">'+c5esc(val)+'</div></div>';}
+  function _chip(label,val,c,title){return '<div'+(title?(' title="'+c5esc(title)+'"'):'')+' style="border:1px solid var(--line);border-radius:9px;padding:6px 11px;background:var(--surface-2)"><div style="font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)">'+label+'</div><div style="font-size:12.5px;font-weight:600;color:var(--'+(c||'ink')+');margin-top:1px">'+c5esc(val)+'</div></div>';}
   // ── HEADER FACTS — what a leader asks first: severity · owner · ETA · evidence confidence.
+  var _eta=c5etaOf(m);
   h+='<div style="display:flex;flex-wrap:wrap;gap:8px;margin:11px 0 2px">'+
     _chip('Severity',c5severity(m),c5sevColor(m))+
-    _chip('Owner',c5ownerOf(m))+
-    _chip('ETA / due',(m.due||(m.connected?'—':'n/a')))+
+    _chip('Owner',c5ownerOf(m),'ink','Accountable seat for this measure — the leader named at onboarding, or the seat you’re currently viewing.')+
+    _chip('ETA / due',(_eta||(m.connected?'Not scheduled':'n/a')),(_eta?'ink':'muted'),'The remediation / decision due date. Shows “Not scheduled” until a decision or remediation with a date is logged for this item.')+
     _chip('Evidence confidence',ev.level,((ev.level==='Not Enough Evidence'||ev.level==='Demo')?'muted':'ink'))+
   '</div>';
   // BUSINESS IMPACT — the consequence, one line.
