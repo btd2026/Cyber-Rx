@@ -108,3 +108,40 @@ describe('derivation helpers exist and are override-friendly (source scan)', () 
     expect(src).toContain("rows.push(['Decision needed if this worsens',m.decisionThreshold,'warn']);");
   });
 });
+
+describe('authored risk narrative (vendors) is accurate and data-driven', () => {
+  function runVendors(v, sbom) {
+    const start = src.indexOf("case 'er_thirdparty':");
+    const end = src.indexOf("case 'exp_total':", start);
+    const body = src.slice(start + "case 'er_thirdparty':".length, end).trim().replace(/^\{/, '').replace(/\}$/, '');
+    global.c5esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+    global.c5ago = () => '2m'; global.usd = (n) => '$' + n; global.capColor = () => 'warn';
+    global.vendorUrl = () => null; global.vendorDomain = () => '';
+    global.c5obj = (o) => { o.inputs = o.inputs || []; o.sources = o.sources || []; return o; };
+    global.LIVE = { sbom: sbom || [] };
+    global.c5vendors = () => v;
+    // eslint-disable-next-line no-new-func
+    const m = new Function('id', 'var conn,Vtp;' + body)('er_thirdparty');
+    ['c5esc', 'c5ago', 'usd', 'capColor', 'vendorUrl', 'vendorDomain', 'c5obj', 'LIVE', 'c5vendors'].forEach((k) => { delete global[k]; });
+    return m;
+  }
+  it('business impact = what could go wrong (names the weakest vendor, from data)', () => {
+    const m = runVendors({ seed: [1], worst: { name: 'Acme Cloud', score: 41 }, atRisk: [{}, {}], vs: { vendor: 'SecurityScorecard' }, p: { vendors: [{ name: 'Acme Cloud', score: 41 }] } }, [{ critical_vulns: 2 }]);
+    expect(m.impact).toMatch(/attacker inherits a path into the services it supports/);
+    expect(m.impact).toContain('Acme Cloud'); // dynamic — not hard-coded
+    expect(m.impact).toContain('41/100');
+  });
+  it('what-this-means = consequences · who-affected = services/systems · why-now = residual risk', () => {
+    const m = runVendors({ seed: [1], worst: { name: 'Acme Cloud', score: 41 }, atRisk: [{}, {}, {}], vs: null, p: { vendors: [{ name: 'Acme Cloud', score: 41 }] } });
+    expect(m.found).toMatch(/could disrupt the business service it supports, or be used to reach your data/);
+    expect(m.affected).toMatch(/business services your flagged suppliers support/);
+    expect(m.whyNow).toMatch(/residual risk keeps rising/);
+    expect(m.whyNow).toContain('Acme Cloud');
+  });
+  it('the generic why-now fallback is risk-framed (residual risk), not a bland status', () => {
+    const w = src.indexOf('function c5whyNow(');
+    const fn = src.slice(w, src.indexOf('\nfunction ', w + 10));
+    expect(fn).toMatch(/residual risk stays elevated/);
+    expect(fn).toMatch(/residual risk keeps rising toward the critical range/);
+  });
+});
