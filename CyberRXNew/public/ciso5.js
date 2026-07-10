@@ -432,7 +432,14 @@ function c5get(id){
       var actAlt=null;rowsC.forEach(function(c){var n=(Number(c.gaps)||0)+(Number(c.open_risk)||0);if(n>0&&(!actAlt||n>actAlt._n)){actAlt=c;actAlt._n=n;}});
       var topActionable=!!(topc&&((Number(topc.gaps)||0)>0||(Number(topc.open_risk)||0)>0));
       var altDiffers=!!(actAlt&&topc&&actAlt.name!==topc.name);
-      var found=topc?('Nerion found '+topc.name+' carries the highest modeled exposure'+(topc.exposure>0?(' at '+usd(topc.exposure)):'')+'. It currently has '+(topc.gaps!=null?topc.gaps:'no connected')+' open control gap'+(Number(topc.gaps)===1?'':'s')+' and '+(topc.open_risk!=null?topc.open_risk:'no connected')+' open risk scenario'+(Number(topc.open_risk)===1?'':'s')+'.'+(altDiffers?(' '+actAlt.name+' carries the largest actionable open set ('+actAlt._n+' open item'+(actAlt._n===1?'':'s')+').'):'')):'';
+      // Executive risk narrative — the consequence, not the methodology. Dynamic from the
+      // top capability's name, exposure and gap/risk counts.
+      var _cN=topc?c5esc(topc.name):'',_cE=(topc&&topc.exposure>0)?usd(topc.exposure):null,_cG=topc?(Number(topc.gaps)||0):0,_cR=topc?(Number(topc.open_risk)||0):0;
+      var _cContra=!!(topc&&topc.exposure>0&&_cG===0&&_cR===0);
+      var capImpact=conn&&topc?('A cyber incident in this area carries the <b>largest business consequence</b> of any capability'+(_cE?(' — <b>'+_cE+'</b> of business value sits behind '+_cN):'')+'. It is the single biggest hit the business could take from a cyber event.'):'';
+      var capMeans=conn&&topc?('If '+_cN+' is disrupted or breached, up to '+(_cE||'its full modeled value')+' of business value is in the blast radius — felt in revenue, operations and customer trust, not just in IT.'+(_cContra?(' It shows <b>0</b> connected control gaps and <b>0</b> open risks today, so this exposure rests on how critical the capability is — not on a proven weakness. If your risk/GRC data isn’t connected, real gaps could be hiding here.'):(' It carries <b>'+_cG+'</b> open control gap'+(_cG===1?'':'s')+' and <b>'+_cR+'</b> open risk scenario'+(_cR===1?'':'s')+' — concrete ways that incident could happen.'))):'';
+      var capAffected=conn&&topc?('The business services '+_cN+' delivers, and everything downstream that depends on it'+(altDiffers?('. For connected open findings today, '+c5esc(actAlt.name)+' carries the most'):'')+'.'):'';
+      var capWhyNow=conn&&topc?(_cContra?('Left unvalidated, the business keeps carrying '+(_cE||'this concentrated exposure')+' of loss potential in its most critical area with no confirmed read of the risk — connect risk/dependency data so a real weakness can’t hide behind a “0 gaps” reading.'):('Until '+_cN+'’s '+_cG+' gap'+(_cG===1?'':'s')+' and '+_cR+' risk'+(_cR===1?'':'s')+' are closed, this stays the area where a cyber event would hurt the business most — residual risk is concentrated here.')):'';
       var action=topc
         ?(topActionable
           ?('Prioritise '+topc.name+': remediate its '+(Number(topc.gaps)||0)+' open control gap'+(Number(topc.gaps)===1?'':'s')+' and treat its '+(Number(topc.open_risk)||0)+' open risk scenario'+(Number(topc.open_risk)===1?'':'s')+', then work down the exposure-ranked list.')
@@ -443,7 +450,7 @@ function c5get(id){
         label:'computed',color:conn?((topc&&topc.exposure>0)?'warn':'good'):'muted',
         formula:'exposure = (open control-gaps + open risk) × capability-tier weight; ranked exposure-desc',
         method:'Nerion joins your business capability map to your connected control posture and open risk data. For each capability it holds three separate measures — the modeled exposure (business value at risk, weighted by how critical the capability is), the open control gaps, and the open risk scenarios — and ranks by modeled exposure. A capability can top the list on business value alone even with no open gaps or risks.',
-        rankItemLabel:'Business capability',ranking:ranking,found:found,
+        rankItemLabel:'Business capability',ranking:ranking,impact:capImpact,found:capMeans,affected:capAffected,whyNow:capWhyNow,
         notProve:'This ranks modeled exposure from your capability map and connected control/risk data. It does not prove a realised loss, an active incident, or that a top-ranked item with zero connected gaps is genuinely low-risk when its risk or dependency data is incomplete.',
         sources:(caps2[0]&&caps2[0].derived)
           ?[{tool:'Business functions (value chain)',connector:'capmap',field:'function · at-risk exposure',lastRefresh:c5ago(),role:'Capability inventory & criticality'},{tool:'Live control posture',connector:'grc',field:'control maturity → coverage · gaps',role:'Open control-gap count'},{tool:'Risk register',status:'Not connected',role:'Open risk-scenario count',missing:'per-capability open risks'}]
