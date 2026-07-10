@@ -170,7 +170,7 @@ describe('5 · Open document renders the auditor annotations (highlights + margi
     expect(ciso).toContain('function c5DocAnnotations(fname)');
     expect(ciso).toContain('function c5AnnotateText(text,met)');
     expect(ciso).toContain('mark class="c5ann"'); // green highlight mark
-    expect(ciso).toContain('✦ Auditor-annotated'); // header badge
+    expect(ciso).toContain('✦ Nauditor-annotated'); // header badge (Nerion Auditor branding)
     expect(ciso).toContain('Evidenced requirements'); // margin panel
     expect(ciso).toContain('Gaps — expected, not found');
   });

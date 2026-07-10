@@ -2,7 +2,7 @@
  * Guards for the classic Program-Health header layout (matches the reference design) and
  * the onboarding seat list:
  *  - top card = framework pills · reassess · last-assessed (+ documents-reviewed link) ·
- *    Auditor pack (PPTX) / Final / Scorecard + POA&M,
+ *    Nauditor pack (PPTX) / Final / Scorecard + POA&M,
  *  - inline "How N controls are evidenced" bar + "Close the gap" (with Re-score button),
  *  - onboarding collects only the seats that exist in the cockpit (CTO→CIO; no CPO /
  *    Internal Audit).
@@ -17,8 +17,8 @@ const cStart = ciso.indexOf('function c5FrameworksClassic(');
 const classic = ciso.slice(cStart, ciso.indexOf('\nfunction ', cStart + 10));
 
 describe('classic Program-Health header — export buttons', () => {
-  it('has Auditor pack (PPTX), Upload Final, and Scorecard + POA&M', () => {
-    expect(classic).toContain('>Auditor pack (PPTX)</button>');
+  it('has Nauditor pack (PPTX), Upload Final, and Scorecard + POA&M', () => {
+    expect(classic).toContain('>Nauditor pack (PPTX)</button>');
     expect(classic).toMatch(/id="c5fwUploadFinalBtn"[^>]*>↥ Upload Final<\/button>/);
     expect(classic).toContain('>Scorecard + POA&amp;M</button>');
   });

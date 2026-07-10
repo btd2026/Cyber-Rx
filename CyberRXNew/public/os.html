@@ -1077,7 +1077,7 @@
       <button class="seg" data-fw="mitre">MITRE ATT&amp;CK</button>
     </div>
     <div class="fw-actions">
-      <button class="fwa primary act-edit" id="auditReportBtn">⬇ Auditor report</button>
+      <button class="fwa primary act-edit" id="auditReportBtn">⬇ Nauditor report</button>
       <button class="fwa act-edit" id="evidenceBtn">⬇ Evidence package</button>
       <button class="fwa" id="benchBtn">📊 Benchmark · NIST CSF 2.0</button>
       <span class="fwa-note">Generated on demand · LLM-written narrative over signed, cited evidence</span>
@@ -1218,7 +1218,7 @@
 <!-- AUDITOR EXPORT MODAL -->
 <div class="overlay" id="auditExportModal">
   <div class="modal" style="max-width:620px">
-    <div class="modal-h"><div class="t">Auditor assessment package <span class="badge" id="aeFw">NIST CSF 2.0</span></div><button class="modal-x" data-close>×</button></div>
+    <div class="modal-h"><div class="t">Nauditor assessment package <span class="badge" id="aeFw">NIST CSF 2.0</span></div><button class="modal-x" data-close>×</button></div>
     <div class="modal-b">
       <p class="ae-intro">A complete, defensible assessment generated on demand: an LLM-written narrative grounded entirely in your signed, cited evidence — plus the underlying evidence package auditors can verify line by line.</p>
       <div class="ae-grid">
@@ -3656,7 +3656,7 @@ document.getElementById('seatDyn').innerHTML=renderView(_blocks,title);document.
     gaps.sort((a,b)=>a.c.level-b.c.level);
     sections.push({h:'Gaps, risks & prioritized recommendations',lines:gaps.length?gaps.slice(0,16).map((x,i)=>(i+1)+'. '+x.c.id+' '+x.c.name+' — '+statusLabel(x.c.status)+' (CMMI '+x.c.level+'; '+x.g+')'):['No gaps — every control met.']});
     sections.push({h:'Attestation',bullet:false,lines:['Every score and claim traces to the evidence manifest. Evidence is cryptographically signed and chain-verified; this report regenerates as evidence changes.']});
-    return {file:'Nerion_Assessment_'+curFwName.replace(/[^A-Za-z0-9]+/g,'_'),title:'Auditor Assessment — '+r.name,subtitle:_orgName()+'  ·  '+_indLabel(),meta:r.total+' '+r.unit+' · overall '+r.overall.toFixed(1)+'/5',sections};
+    return {file:'Nerion_Assessment_'+curFwName.replace(/[^A-Za-z0-9]+/g,'_'),title:'Nauditor Assessment — '+r.name,subtitle:_orgName()+'  ·  '+_indLabel(),meta:r.total+' '+r.unit+' · overall '+r.overall.toFixed(1)+'/5',sections};
   }
   function evidenceCSVlive(){
     const r=frameworkResults();const rows=['control_id,group,control,cmmi_level,status,evidence_source,method,result'];
