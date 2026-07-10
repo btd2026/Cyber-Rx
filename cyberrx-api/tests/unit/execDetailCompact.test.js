@@ -24,7 +24,7 @@ function renderDrawer(m, opts) {
   const np = src.slice(src.indexOf('var C5_NOTPROVE='), src.indexOf('function c5notProve('));
   const code = ['c5srcLabelText', 'c5statusText', 'c5notProve', 'c5evConfObj', 'c5foundText', 'c5whyRanked',
     'c5riskCard', 'c5rankTable', 'c5basisText', 'c5srcRow', 'c5acc', 'c5keyEvidence', 'c5keyEvHtml',
-    'c5severity', 'c5sevColor', 'c5ownerSeat', 'c5ownerOf', 'c5etaOf', 'c5impactText', 'c5affected', 'c5whyNow', 'c5decisionRows', 'c5InspectObj']
+    'c5severity', 'c5sevColor', 'c5ownerSeat', 'c5ownerOf', 'c5etaOf', 'c5domainKey', 'c5risk', 'c5impactText', 'c5affected', 'c5whyNow', 'c5decisionRows', 'c5InspectObj']
     .map(grab).join('\n');
   // eslint-disable-next-line no-eval
   eval(np + '\n' + code + '\n;c5InspectObj(' + JSON.stringify(m) + ');');

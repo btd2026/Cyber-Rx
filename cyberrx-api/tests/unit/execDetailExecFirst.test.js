@@ -24,7 +24,7 @@ function render(m, opts) {
   const np = src.slice(src.indexOf('var C5_NOTPROVE='), src.indexOf('function c5notProve('));
   const bundle = ['c5srcLabelText', 'c5statusText', 'c5notProve', 'c5evConfObj', 'c5foundText', 'c5whyRanked',
     'c5riskCard', 'c5rankTable', 'c5basisText', 'c5srcRow', 'c5acc', 'c5keyEvidence', 'c5keyEvHtml',
-    'c5severity', 'c5sevColor', 'c5ownerSeat', 'c5ownerOf', 'c5etaOf', 'c5impactText', 'c5affected', 'c5whyNow', 'c5decisionRows', 'c5InspectObj']
+    'c5severity', 'c5sevColor', 'c5ownerSeat', 'c5ownerOf', 'c5etaOf', 'c5domainKey', 'c5risk', 'c5impactText', 'c5affected', 'c5whyNow', 'c5decisionRows', 'c5InspectObj']
     .map(grab).join('\n');
   // eslint-disable-next-line no-eval
   eval(np + '\n' + bundle + '\n;c5InspectObj(' + JSON.stringify(m) + ');');
@@ -183,5 +183,45 @@ describe('Owner and ETA/Due come from real sources, honestly', () => {
     const H = render(CRIT); // no m.due, no gaps
     expect(H).toContain('Not scheduled');
     expect(H).toContain('The remediation / decision due date'); // source explained in the chip tooltip
+  });
+});
+
+describe('domain consequence engine — every detail window reads as an executive risk brief', () => {
+  function narr(id) {
+    global.c5esc = (s) => String(s == null ? '' : s);
+    global.c5why = () => 'method'; global.c5whyRanked = () => '';
+    // eslint-disable-next-line no-eval
+    const api = eval(grab('c5domainKey') + '\n' + grab('c5risk') + '\n' + grab('c5impactText') + '\n' + grab('c5foundText') + '\n' + grab('c5affected') + '\n' + grab('c5whyNow')
+      + '\n;({k:c5domainKey,impact:c5impactText,means:c5foundText,affected:c5affected,why:c5whyNow})');
+    const m = { id, name: 'X', displayValue: '$382M', color: 'warn', connected: true };
+    const out = { domain: api.k(m), impact: api.impact(m), means: api.means(m), affected: api.affected(m), why: api.why(m) };
+    ['c5esc', 'c5why', 'c5whyRanked'].forEach((x) => { delete global[x]; });
+    return out;
+  }
+  it('maps ids to the right domain', () => {
+    expect(narr('exp_identity').domain).toBe('exposure');
+    expect(narr('tac_lateral').domain).toBe('threat');
+    expect(narr('coo_recovery').domain).toBe('operations');
+    expect(narr('ais_aiml').domain).toBe('aisupply');
+    expect(narr('dom_govern').domain).toBe('maturity');
+    expect(narr('ceo_trust').domain).toBe('growth');
+    expect(narr('er_crown').domain).toBe('crownjewel');
+  });
+  it('impact = what could go wrong, means = if-X-then-Y, why = risk of not acting (per domain)', () => {
+    const e = narr('exp_identity');
+    expect(e.impact).toMatch(/modeled loss exposure/);
+    expect(e.means).toMatch(/up to that amount of loss is on the table/);
+    expect(e.why).toMatch(/exposure sits on the books/);
+    const o = narr('coo_recovery');
+    expect(o.means).toMatch(/outage extends into lost revenue, missed SLAs/);
+    const t = narr('tac_lateral');
+    expect(t.means).toMatch(/advance toward your crown jewels before you catch them/);
+  });
+  it('an authored m.* field always overrides the domain default', () => {
+    global.c5esc = (s) => String(s == null ? '' : s); global.c5why = () => 'm'; global.c5whyRanked = () => '';
+    // eslint-disable-next-line no-eval
+    const impact = eval(grab('c5domainKey') + '\n' + grab('c5risk') + '\n' + grab('c5impactText') + '\n;c5impactText');
+    expect(impact({ id: 'exp_x', connected: true, impact: 'BESPOKE IMPACT' })).toBe('BESPOKE IMPACT');
+    delete global.c5esc; delete global.c5why; delete global.c5whyRanked;
   });
 });

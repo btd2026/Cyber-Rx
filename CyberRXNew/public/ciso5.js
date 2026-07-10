@@ -1774,6 +1774,7 @@ function c5foundText(m){
   if(!m)return '';
   if(!m.connected)return 'No reading yet — '+(m.connectTool?('connect '+m.connectTool):'the source is not connected')+' and Nerion will populate this from your data.';
   if(m.found)return m.found;
+  var _r=c5risk(m);if(_r.means)return _r.means; // consequence ("if X, then Y") by domain
   return 'Nerion found '+m.displayValue+' for '+String(m.name||'this measure').toLowerCase()+'.';
 }
 /* "Why ranked here" — why the top item sits where it does. Uses an authored m.whyRanked,
@@ -1890,12 +1891,12 @@ function c5ownerOf(m){if(m&&m.owner)return m.owner;var seat=c5ownerSeat(m);if(!s
 function c5etaOf(m){if(m&&m.due)return m.due;if(m&&m.gaps&&m.gaps.length){for(var i=0;i<m.gaps.length;i++){if(m.gaps[i]&&m.gaps[i].due)return m.gaps[i].due;}}return null;}
 /* Business impact — the consequence in business terms (m.impact override, else the
    durable "why it matters"). */
-function c5impactText(m){if(m&&m.impact)return m.impact;if(!m||!m.connected)return 'Cannot be quantified until the source is connected — no confident conclusion yet.';return c5why(m)||('Bears on '+String((m&&m.name)||'this measure').toLowerCase()+'.');}
+function c5impactText(m){if(m&&m.impact)return m.impact;if(!m||!m.connected)return 'Cannot be quantified until the source is connected — no confident conclusion yet.';var _r=c5risk(m);if(_r.impact)return _r.impact;return c5why(m)||('Bears on '+String((m&&m.name)||'this measure').toLowerCase()+'.');}
 /* Who / what is affected — m.affected override, else the top-ranked item, else the reading. */
-function c5affected(m){if(m&&m.affected)return m.affected;if(!m||!m.connected)return 'Not established yet — the source is not connected.';var r=m.ranking&&m.ranking[0];if(r&&r.itemName)return c5esc(r.itemName)+' (highest-ranked) and the items below it — plus the business services they support.';return 'The systems and services behind '+String((m&&m.name)||'this measure').toLowerCase()+' (see key evidence).';}
+function c5affected(m){if(m&&m.affected)return m.affected;if(!m||!m.connected)return 'Not established yet — the source is not connected.';var r=m.ranking&&m.ranking[0];if(r&&r.itemName)return c5esc(r.itemName)+' (highest-ranked) and the items below it — plus the business services they support.';var _r=c5risk(m);if(_r.affected)return _r.affected;return 'The systems and services behind '+String((m&&m.name)||'this measure').toLowerCase()+' (see key evidence).';}
 /* Why it matters now — m.whyNow override, else the ranking rationale, else a risk read
    ("if we don't act, residual risk rises"). */
-function c5whyNow(m){if(m&&m.whyNow)return m.whyNow;var wr=c5whyRanked(m);if(wr)return wr;if(!m||!m.connected)return 'It can’t be acted on until the evidence is connected.';return m.color==='crit'?'Left unaddressed it is an open, escalating exposure — residual risk stays elevated until it is remediated, and a decision is needed now.':m.color==='warn'?'If it is not addressed this cycle the exposure persists and residual risk keeps rising toward the critical range.':m.color==='blue'?'It is within tolerance for now, but drift would raise residual risk — worth monitoring on the current cadence.':'It is within target — no material risk pressure right now.';}
+function c5whyNow(m){if(m&&m.whyNow)return m.whyNow;var wr=c5whyRanked(m);if(wr)return wr;if(!m||!m.connected)return 'It can’t be acted on until the evidence is connected.';if(m.color==='crit'||m.color==='warn'){var _r=c5risk(m);if(_r.whyNow)return _r.whyNow;}return m.color==='crit'?'Left unaddressed it is an open, escalating exposure — residual risk stays elevated until it is remediated, and a decision is needed now.':m.color==='warn'?'If it is not addressed this cycle the exposure persists and residual risk keeps rising toward the critical range.':m.color==='blue'?'It is within tolerance for now, but drift would raise residual risk — worth monitoring on the current cadence.':'It is within target — no material risk pressure right now.';}
 /* Decision rows — [label, text, color]. Always resolves to something explicit, including
    "No executive decision needed now". A threshold (m.decisionThreshold) is shown clearly. */
 function c5decisionRows(m){var rows=[];
@@ -1906,6 +1907,44 @@ function c5decisionRows(m){var rows=[];
   else if(m&&m.connected&&m.color==='warn')rows.push(['Decision needed if this worsens','If it crosses into the critical range, escalate for a funding / remediation decision.','warn']);
   if(!rows.length)rows.push(['No executive decision needed now',(m&&m.connected)?'Monitor on the current cadence; Nerion surfaces a decision here if the status changes.':'Connect the source to establish whether a decision is required.','blue']);
   return rows;}
+/* Domain of a measure (by id) — so the consequence narrative is written in the language
+   of that risk area, not one generic template. */
+function c5domainKey(m){var id=String((m&&m.id)||'');
+  if(/^er_crown|crown/.test(id))return 'crownjewel';
+  if(/^exp_/.test(id))return 'exposure';
+  if(/^ctl_|control.?value/.test(id))return 'control';
+  if(/^tac_/.test(id))return 'threat';
+  if(/^ais_/.test(id))return 'aisupply';
+  if(/^coo_|recover|continu|_ops|process/.test(id))return 'operations';
+  if(/^cf_|roi|insur|premium/.test(id))return 'financial';
+  if(/^ceo_|growth|trust|objective/.test(id))return 'growth';
+  if(/^dom_|^peer|^fw/.test(id))return 'maturity';
+  if(/^clo_|legal|regulat|material|disclos/.test(id))return 'legal';
+  if(/^cro_|appetite/.test(id))return 'appetite';
+  if(/^er_/.test(id))return 'enterprise';
+  return 'generic';}
+/* Consequence-framed narrative for any measure: what could go wrong (impact), if-X-then-Y
+   (means), who/what is affected, and the risk of not acting (whyNow) — written per domain
+   and filled with the measure's reading. The base layer beneath any authored m.* override,
+   so EVERY detail window reads like an executive risk brief, not a methodology note. */
+function c5risk(m){
+  if(!m||!m.connected)return {};
+  var V=m.displayValue||'the current reading';
+  var T={
+    crownjewel:{impact:'These are your most valuable systems — where a breach does the most damage, so they are the first thing to harden.',means:'If a crown jewel is compromised, the impact is concentrated: the data, revenue or operations it underpins are hit directly, not diffusely.',affected:'The crown-jewel systems and the business services that depend on them.',whyNow:'A single high-risk crown jewel is where an incident hurts most — leaving it exposed keeps your worst-case loss high.'},
+    exposure:{impact:'This is modeled loss exposure — the business value at risk if the weakness behind it is exploited (<b>'+V+'</b>).',means:'If this exposure is realized, up to that amount of loss is on the table — a real financial and operational hit, not a hypothetical.',affected:'The assets and processes behind this exposure driver (see key evidence).',whyNow:'Until the driver is reduced the exposure sits on the books — residual risk stays at this level.'},
+    control:{impact:'This control is what blocks a specific attack path. A gap here means that path is not reliably stopped.',means:'If the control is not operating, the risk it was holding down comes back — the loss it prevents is no longer being prevented.',affected:'The systems and processes this control is meant to protect.',whyNow:'Every cycle it stays below target, the un-reduced risk is exposure you are carrying unnecessarily.'},
+    threat:{impact:'This is a technique attackers actually use to move through an environment. Thin coverage means an intrusion using it could progress with less chance of detection.',means:'If an attacker uses this tactic, weak coverage (<b>'+V+'</b>) means they could advance toward your crown jewels before you catch them.',affected:'The detection/response coverage for this attacker technique and the assets it would target.',whyNow:'Until coverage improves this remains a viable path an adversary can take right now.'},
+    aisupply:{impact:'This is exposure in your AI systems and software supply chain — attack surface expanding faster than traditional controls cover it.',means:'If one of these AI systems or components is abused or compromised, it becomes a path to your data or a source of unsafe automated decisions.',affected:'The AI systems, models and third-party components in scope, and the data they touch.',whyNow:'AI and supply-chain risk is growing — leaving this unaddressed widens a surface attackers increasingly target.'},
+    operations:{impact:'This is whether the business can keep running — or recover — through a cyber disruption. A gap means an incident becomes a prolonged outage.',means:'If the affected service goes down and cannot recover in time, the outage extends into lost revenue, missed SLAs and customer impact — not just an IT problem.',affected:'The critical business services and their recovery / dependency paths.',whyNow:'Recovery readiness only matters before the incident — unaddressed, a disruption would run longer and cost more.'},
+    financial:{impact:'This is the financial exposure or return behind the cyber program — the money at stake, or the payoff of the spend.',means:'If the underlying risk is realized, the modeled financial impact (<b>'+V+'</b>) lands on the P&L; if spend is not justified, it is capital not reducing risk.',affected:'The financial lines and cyber investments this measure ties to.',whyNow:'The number moves with each decision — acting, or not, changes the financial exposure the business carries.'},
+    growth:{impact:'This ties cyber to the business’s ability to grow and keep customer trust — revenue and reputation cyber can protect or cost.',means:'If trust or a growth-critical control slips, the consequence shows up in churn, stalled deals and brand damage — well beyond the security budget.',affected:'Customer trust, deals in flight, and the growth objectives cyber underpins.',whyNow:'Trust erodes fast and is expensive to rebuild — unaddressed weaknesses put growth-tied value at risk now.'},
+    maturity:{impact:'This is how mature the program is against the framework you are held to — the baseline auditors, regulators and the board measure you against.',means:'If maturity sits below target, the control deficiencies behind it are the findings an auditor writes up first — and the gaps most likely to be exploited.',affected:'The control domains below target and the frameworks in scope.',whyNow:'Every reassessment it stays below target, those deficiencies remain open exposures and audit risk.'},
+    legal:{impact:'This is legal, regulatory or disclosure exposure — where a cyber event becomes a compliance or reporting obligation.',means:'If a reportable event occurs and the process is not sound, the consequence is regulatory penalty, disclosure risk and legal liability on top of the incident.',affected:'The regulatory obligations, disclosure controls and legal exposure in scope.',whyNow:'Regulators expect a defensible process before an event — gaps here become findings and liability after one.'},
+    appetite:{impact:'This is where residual risk sits against the appetite the board set — the line between acceptable and not.',means:'If exposure runs above appetite, the business is knowingly carrying more risk than it agreed to — a governance problem, not just a technical one.',affected:'The risk categories running against board appetite.',whyNow:'Sitting above appetite without a decision is an open governance gap the board owns.'},
+    enterprise:{impact:'This is enterprise cyber risk framed for the business — exposure the organization owns and must decide on.',means:'If it is realized, the impact lands on the business it maps to — operations, revenue or trust — not just on IT.',affected:'The business areas and assets this risk maps to (see key evidence).',whyNow:'Left unaddressed this stays an open exposure the business is carrying — residual risk does not fall on its own.'}
+  };
+  return T[c5domainKey(m)]||{};}
 function c5InspectObj(m){
   if(!m)return;
   var chip='<span class="c5chip c5-'+String(m.label).replace(/[^a-z]/g,'')+'">'+c5srcLabelText(m)+'</span>';
