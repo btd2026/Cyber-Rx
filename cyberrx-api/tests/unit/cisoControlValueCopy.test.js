@@ -59,13 +59,27 @@ describe('Control Value tab — descriptions are business-language, not overbroa
   });
 });
 
-describe('Control Value tab — per-row evidence, gap and next action', () => {
-  it('each row shows an evidence status badge', () => {
-    expect(w3).toMatch(/ctrlEvidenceStatus\(cov,demoCV\)/);
+describe('Control Value tab — card style (matches the Cyber-operations tab)', () => {
+  it('renders each control as a c5aic card in a c5aigrid, not a flat ranked row', () => {
+    expect(w3).toMatch(/<div class="c5aic" data-c5cv="/);
+    expect(cv).toContain('<div class="c5aigrid">');
+    expect(w3).not.toContain('class="c5erow"');
   });
-  it('each row shows remaining gap and next action (compact)', () => {
-    expect(w3).toMatch(/· Gap '\+c5esc\(gapShort\)/);
-    expect(w3).toMatch(/· Next<\/span> '\+c5esc\(next\)/);
+  it('each card carries a status (Within target / Action needed / Gap / Evidence Incomplete)', () => {
+    expect(w3).toContain("{t:'Within target',c:'good'}");
+    expect(w3).toContain("{t:'Action needed',c:'warn'}");
+    expect(w3).toContain("{t:'Gap',c:'crit'}");
+    expect(w3).toContain("{t:'Evidence Incomplete',c:'muted'}");
+    expect(w3).toMatch(/class="c5aic-v"/);
+  });
+  it('each card shows an evidence status, remaining gap, next action and a record link', () => {
+    expect(w3).toMatch(/ctrlEvidenceStatus\(cov,demoCV\)/);
+    expect(w3).toMatch(/· Gap: '\+gapShort/);
+    expect(w3).toMatch(/Next action:<\/b> '\+c5esc\(next\)/);
+    expect(w3).toContain('Click for the record ›');
+  });
+  it('leads the card with the modeled $ reduction', () => {
+    expect(w3).toMatch(/<b style="color:var\(--good\)">'\+usd\(o\.usd\)\+'<\/b> modeled reduction/);
   });
   it('marks rows Demo when signals are demo (mock marking)', () => {
     const fn = src.slice(src.indexOf('function ctrlEvidenceStatus'), src.indexOf('function ctrlEvidenceStatus') + 200);
@@ -73,7 +87,7 @@ describe('Control Value tab — per-row evidence, gap and next action', () => {
   });
   it('preserves drill-down / source traceability', () => {
     expect(w3).toMatch(/data-c5cv="/);
-    expect(w3).toMatch(/click for source/i); // in the row title tooltip
+    expect(w3).toMatch(/click for source/i); // in the card title tooltip
   });
 });
 
@@ -100,8 +114,11 @@ describe('Control Value tab — bottom line & button', () => {
   it('flags PAM-style largest remaining gap as the next investment priority', () => {
     expect(cv).toMatch(/has the largest remaining coverage gap \('\+topGap\.p\+'%\) and should be evaluated as the next investment priority/);
   });
-  it('button says Close remaining identity gaps', () => {
-    expect(cv).toContain("txt:'Close remaining identity gaps'");
+  it('the remaining-priority driver + button are data-ranked (c5TopDriver), not literal identity', () => {
+    expect(cv).toContain('var TDcv=c5TopDriver()');
+    expect(cv).toContain("The remaining priority is to reduce your largest exposure driver — '+TDcv.phrase");
+    expect(cv).toContain("txt:'Close the '+c5esc(TDcv.short)+' gap'");
+    expect(cv).not.toContain("txt:'Close remaining identity gaps'");
   });
   it('footer keeps source traceability language', () => {
     expect(cv).toContain('Click any control for source traceability and calculation basis');

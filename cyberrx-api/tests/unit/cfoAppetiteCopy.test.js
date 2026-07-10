@@ -23,8 +23,10 @@ describe('CFO Within Appetite — no overclaiming button', () => {
     expect(fn).not.toMatch(/eliminates/i);
     expect(fn).not.toMatch(/guaranteed/i);
   });
-  it('displays "reduce modeled exposure" on the primary action', () => {
-    expect(fn).toContain('Approve identity remediation — reduce modeled exposure');
+  it('displays "reduce modeled exposure" on the primary action, driver-parameterized', () => {
+    // driver is data-ranked (c5TopDriver), so the button text is composed, not literal
+    expect(fn).toContain("txt:'Approve '+drvS+' remediation — reduce modeled exposure'");
+    expect(fn).not.toContain('Approve identity remediation — reduce modeled exposure');
     expect(fn).toContain('Defer with risk acceptance');
   });
 });
@@ -95,9 +97,12 @@ describe('CFO Within Appetite — clean executive view', () => {
     expect(fn).not.toMatch(/\bCMMI\b/);
     expect(fn).not.toMatch(/PR\.[A-Z]{2}|ID\.AM/);
   });
-  it('bottom line identifies identity risk as the largest financial driver', () => {
-    expect(fn).toContain('identity risk is the largest financial driver');
-    expect(fn).toContain('largest financial exposure driver is customer-platform identity risk');
+  it('bottom line names the data-ranked largest driver, not a hard-coded identity conclusion', () => {
+    // driver comes from c5TopDriver() (c5expModel drivers ranked by modeled USD)
+    expect(fn).toMatch(/var TD=c5TopDriver\(\),dm=c5get\(TD\.mid\)/);
+    expect(fn).toContain("'The largest financial exposure driver is '+drvL");
+    expect(fn).not.toContain('identity risk is the largest financial driver');
+    expect(fn).not.toContain('largest financial exposure driver is customer-platform identity risk');
   });
   it('cards/tiles remain click-through for source traceability', () => {
     expect(fn).toMatch(/data-c5m="'\+mid\+'"/);
