@@ -4511,9 +4511,9 @@ function c5fwSource(node){
         var _ic=cc.src==='document'?'📄 document review':cc.src==='system'?'🔌 connected tool':'— not evidenced';
         var _dn=(cc.doc&&cc.doc.doc)?(' · '+c5esc(cc.doc.doc)):'';
         return '<div style="font-size:11px;color:var(--ink-2);line-height:1.4"><b>'+c5esc(cid)+'</b> — '+_ic+_dn+' · CMMI '+(cc.score!=null?cc.score:0)+'</div>';}).join('');
-      h+='<div class="c5fw-src"><span class="c5fw-srcic">🔗</span><div style="flex:1;min-width:0">Framework crosswalk — this control has no native API test yet, so it inherits the maturity of the <b>'+_mids.length+'</b> NIST CSF 2.0 subcategor'+(_mids.length===1?'y':'ies')+' it maps to. Each of those is scored from <b>your evidence</b>:'+
-        (_rows?('<div style="margin-top:6px;display:flex;flex-direction:column;gap:2px;border-left:2px solid var(--line);padding-left:9px">'+_rows+(_mids.length>8?('<div style="font-size:11px;color:var(--muted)">+ '+(_mids.length-8)+' more</div>'):'')+'</div>'):' none of the mapped CSF controls are evidenced yet.')+
-        '<div style="font-size:11px;color:var(--muted);margin-top:6px">A <b>readiness indicator</b> from the public crosswalk — not an independent '+((typeof FW_NAMES!=='undefined'&&FW_NAMES[sel])||'framework')+' audit opinion. Connect the native assessment engine to test this control directly.</div></div></div>';
+      h+='<div class="c5fw-src"><span class="c5fw-srcic">🔗</span><div style="flex:1;min-width:0">Scored by crosswalk from <b>your evidence</b> — this control inherits the maturity of the <b>'+_mids.length+'</b> NIST CSF 2.0 subcategor'+(_mids.length===1?'y':'ies')+' it shares an objective with. Each of those is evidenced from your connected tools + reviewed documents:'+
+        (_rows?('<div style="margin-top:6px;display:flex;flex-direction:column;gap:2px;border-left:2px solid var(--line);padding-left:9px">'+_rows+(_mids.length>8?('<div style="font-size:11px;color:var(--muted)">+ '+(_mids.length-8)+' more</div>'):'')+'</div>'):' none of the mapped CSF controls are evidenced yet — connect the tool or upload the document they await.')+
+        '<div style="font-size:11px;color:var(--muted);margin-top:6px">A <b>readiness indicator</b> from the public crosswalk — a defensible estimate of where you stand, not a certified '+((typeof FW_NAMES!=='undefined'&&FW_NAMES[sel])||'framework')+' audit opinion (your assessor issues that).</div></div></div>';
     }
   } else {
     // Not evidenced yet — name the EXACT source this control is mapped to, so the
@@ -5205,7 +5205,7 @@ function c5FrameworksClassic(host){
     evBox+
     xnote+
     '<div class="c5fw-wrap"><div class="c5fw-right">'+tree+'</div><div class="c5fw-left" id="c5fw-detail">'+c5fwFinding(sel,selNode)+'</div></div>'+
-    '<div class="c5foot">CMMI 0 None · 1 Initial · 2 Managed · 3 Defined · 4 Quant. Managed · 5 Optimizing. Meets target ≥ '+C5FW_TARGET.toFixed(1)+' (green) · Observation ≥ '+C5FW_FLOOR+' (amber) · Deficiency &lt; '+C5FW_FLOOR+' (red).'+((sel==='cis'||sel==='soc2'||sel==='hipaa'||sel==='iso')?' '+((typeof FW_NAMES!=='undefined'&&FW_NAMES[sel])||'This framework')+' is assessed <b>framework-natively</b> where the native engine has concluded a control — each such control comes from its OWN machine-verifiable evidence, never derived from the CSF assessment. Controls the native engine hasn’t concluded yet fall back to a <b>crosswalk readiness</b> indicator from your NIST CSF 2.0 evidence (your connected tools + reviewed documents) — a readiness estimate, <b>not</b> an independent native audit opinion; only controls with neither show “Not tested”. Native results always take precedence.':'')+(sel==='r53'?' NIST SP 800-53 Rev 5 is assessed by crosswalk from your CSF 2.0 assessment (a readiness indicator, per-family): the ~20 controls Nerion scores directly show 📄/🔌; the rest inherit their family’s governing-policy maturity.':'')+'</div>';
+    '<div class="c5foot">CMMI 0 None · 1 Initial · 2 Managed · 3 Defined · 4 Quant. Managed · 5 Optimizing. Meets target ≥ '+C5FW_TARGET.toFixed(1)+' (green) · Observation ≥ '+C5FW_FLOOR+' (amber) · Deficiency &lt; '+C5FW_FLOOR+' (red).'+((sel==='cis'||sel==='soc2'||sel==='hipaa'||sel==='iso')?' '+((typeof FW_NAMES!=='undefined'&&FW_NAMES[sel])||'This framework')+' is scored by <b>crosswalk readiness</b> from the evidence you provided at onboarding: each control is mapped to the NIST CSF 2.0 subcategories it shares an objective with, and inherits their maturity — and those subcategories are themselves evidenced from your <b>connected tools + reviewed documents</b>. We reference the framework by ID and use our own plain-English labels, so no licensed control text is reproduced. This is a readiness estimate, <b>not</b> a certified assessment (your assessor issues that); a control whose mapped CSF evidence is missing shows “Not tested” until you connect the tool or upload the document it awaits.':'')+(sel==='r53'?' NIST SP 800-53 Rev 5 is assessed by crosswalk from your CSF 2.0 assessment (a readiness indicator, per-family): the ~20 controls Nerion scores directly show 📄/🔌; the rest inherit their family’s governing-policy maturity.':'')+'</div>';
   // record cadence snapshot
   if(typeof fwRecord==='function'){try{fwRecord(T.overall);}catch(_){}}
   var _pb=document.getElementById('c5fwPeerBox');if(_pb)_pb.onclick=function(){c5fwPeerOpen();};
@@ -5513,7 +5513,8 @@ function c5DocAnnotations(fname){
         e.items.push({control:cid,label:a.label});
       } else if(a.found){ // matched by KEYWORD (no quote) — still drove the score; show it
         var mk=String(a.label||'').trim().toLowerCase();if(!mk)return;
-        var mm=matched[mk]||(matched[mk]={label:a.label,items:[]});
+        var mm=matched[mk]||(matched[mk]={label:a.label,pat:'',items:[]});
+        if(!mm.pat&&a.pat)mm.pat=a.pat; // the matcher, so we can locate WHERE it hit in the text
         if(mm.items.indexOf(cid)<0)mm.items.push(cid);
       } else { // expected but not found → a gap
         var gk=cid+'|'+a.label;if(seenGap[gk])return;seenGap[gk]=1;
@@ -5523,27 +5524,63 @@ function c5DocAnnotations(fname){
   });
   return {met:Object.keys(met).map(function(k){return met[k];}),gaps:gaps,matched:Object.keys(matched).map(function(k){return matched[k];})};
 }
-/* Highlight each evidence quote in the document text (whitespace-tolerant, anchored on a
-   prefix so truncated quotes still land), numbered to match the margin panel. Returns the
-   escaped, mark-wrapped HTML and how many annotations were located inline. */
-function c5AnnotateText(text,met){
+/* Highlight, in the document text, WHERE each reviewed requirement was found — so the
+   reader can see the exact spot, not just that it matched. Two kinds, both numbered to
+   the margin panel:
+     · quoted passages (met)      → green highlight, anchored on the verbatim quote
+       (whitespace-tolerant, prefix-anchored so a truncated quote still lands).
+     · keyword matches (matched)  → blue highlight on the sentence the keyword hit, using
+       the SAME matcher that drove the score (a.pat), or the label's words as a fallback.
+   Keyword annotations are numbered continuing after the quoted ones. Returns the escaped,
+   mark-wrapped HTML, how many of each were located, and — per keyword item — the
+   annotation number it got (or null when it couldn't be located), so the panel can add a
+   jump link to the ones that were pinpointed. */
+function c5AnnotateText(text,met,matched){
+  met=met||[];matched=matched||[];
+  // Build a case-insensitive locator for a keyword requirement, preferring the exact
+  // pattern the score used, falling back to the label's significant words.
+  function kwRe(mm){
+    var src=String(mm&&mm.pat||'').trim();
+    if(!src){var ws=String(mm&&mm.label||'').toLowerCase().match(/[a-z]{4,}/g)||[];src=ws.join('|');}
+    if(!src)return null;try{return new RegExp('('+src+')','i');}catch(_){return null;}
+  }
+  // Expand a hit to the sentence around it, so the highlight reads as context, not a bare word.
+  function sentence(t,mi,ml){
+    var lo=t.lastIndexOf('\n',mi),ld=t.lastIndexOf('. ',mi),start=Math.max(lo,ld);start=start<0?0:start+1;
+    while(start<mi&&/\s/.test(t.charAt(start)))start++;
+    var nn=t.indexOf('\n',mi+ml),nd=t.indexOf('. ',mi+ml),ends=[];if(nn>=0)ends.push(nn);if(nd>=0)ends.push(nd+1);
+    var end=ends.length?Math.min.apply(null,ends):t.length;
+    if(end-start>360)end=Math.min(end,mi+ml+180);
+    if(end<mi+ml)end=Math.min(t.length,mi+ml);
+    return {start:start,end:end};
+  }
   var ranges=[];
   met.forEach(function(m,idx){
     var q=String(m.quote||'').trim();if(q.length<8)return;
     var anchor=q.slice(0,140).replace(/[.*+?^${}()|[\]\\]/g,'\\$&').replace(/\s+/g,'\\s+');
     var re;try{re=new RegExp(anchor);}catch(_){return;}
-    var mm=re.exec(text);if(mm)ranges.push({start:mm.index,end:mm.index+mm[0].length,ann:idx});
+    var mm=re.exec(text);if(mm)ranges.push({start:mm.index,end:mm.index+mm[0].length,ann:idx,kind:'q'});
+  });
+  var kwHits=matched.map(function(){return null;});
+  matched.forEach(function(mm,j){
+    var re=kwRe(mm);if(!re)return;var hit=re.exec(text);if(!hit)return;
+    var sp=sentence(text,hit.index,hit[0].length);
+    ranges.push({start:sp.start,end:sp.end,ann:met.length+j,kind:'k',kw:j});
   });
   ranges.sort(function(a,b){return a.start-b.start;});
   var kept=[],lastEnd=-1;ranges.forEach(function(r){if(r.start>=lastEnd){kept.push(r);lastEnd=r.end;}});
-  var out='',pos=0;
+  var out='',pos=0,located=0,kwLocated=0;
   kept.forEach(function(r){
     out+=c5esc(text.slice(pos,r.start));
-    out+='<mark class="c5ann" data-annidx="'+r.ann+'" title="Requirement evidenced — click for the finding" style="background:color-mix(in srgb,var(--good) 20%,transparent);border-bottom:2px solid var(--good);border-radius:2px;cursor:pointer;padding:0 1px">'+c5esc(text.slice(r.start,r.end))+'<sup style="font-size:9px;font-weight:800;color:var(--good);margin-left:1px">'+(r.ann+1)+'</sup></mark>';
+    if(r.kind==='k'){kwLocated++;kwHits[r.kw]=r.ann;
+      out+='<mark class="c5ann c5annkw" data-annidx="'+r.ann+'" title="Keyword match — where this requirement’s language appears" style="background:color-mix(in srgb,var(--blue) 16%,transparent);border-bottom:2px solid var(--blue);border-radius:2px;cursor:pointer;padding:0 1px">'+c5esc(text.slice(r.start,r.end))+'<sup style="font-size:9px;font-weight:800;color:var(--blue);margin-left:1px">'+(r.ann+1)+'</sup></mark>';
+    } else {located++;
+      out+='<mark class="c5ann" data-annidx="'+r.ann+'" title="Requirement evidenced — click for the finding" style="background:color-mix(in srgb,var(--good) 20%,transparent);border-bottom:2px solid var(--good);border-radius:2px;cursor:pointer;padding:0 1px">'+c5esc(text.slice(r.start,r.end))+'<sup style="font-size:9px;font-weight:800;color:var(--good);margin-left:1px">'+(r.ann+1)+'</sup></mark>';
+    }
     pos=r.end;
   });
   out+=c5esc(text.slice(pos));
-  return {html:out,located:kept.length};
+  return {html:out,located:located,kwLocated:kwLocated,kwHits:kwHits};
 }
 /* Open the uploaded document with the auditor's annotations rendered in place — the
    policy text with each evidencing sentence highlighted and numbered, alongside a margin
@@ -5555,10 +5592,11 @@ function c5ViewDoc(fname){
     var old=document.getElementById('c5docViewer');if(old&&old.parentNode)old.parentNode.removeChild(old);
     var wrap=document.createElement('div');wrap.id='c5docViewer';
     wrap.style.cssText='position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;background:rgba(20,33,72,.5)';
-    var annotated=txt?c5AnnotateText(txt,met):{html:'',located:0};
+    var annotated=txt?c5AnnotateText(txt,met,matched):{html:'',located:0,kwLocated:0,kwHits:[]};
+    var _locTot=(annotated.located||0)+(annotated.kwLocated||0),_reqTot=met.length+matched.length;
     // Left column — the annotated document (or an honest note if the text wasn't retained).
     var docCol=txt
-      ?('<div style="font-size:11px;color:var(--muted);margin-bottom:10px"><span style="background:color-mix(in srgb,var(--good) 20%,transparent);border-bottom:2px solid var(--good);padding:0 3px;border-radius:2px">highlighted</span> = a requirement Nerion evidenced · the number ties to the margin note. '+annotated.located+' of '+met.length+' evidenced passages located in the text.</div>'+
+      ?('<div style="font-size:11px;color:var(--muted);margin-bottom:10px"><span style="background:color-mix(in srgb,var(--good) 20%,transparent);border-bottom:2px solid var(--good);padding:0 3px;border-radius:2px">green</span> = a quoted passage · <span style="background:color-mix(in srgb,var(--blue) 16%,transparent);border-bottom:2px solid var(--blue);padding:0 3px;border-radius:2px">blue</span> = a keyword match — each shows <b>where in the document</b> the requirement was found; the number ties to the margin note. '+_locTot+' of '+_reqTot+' requirements located in the text.</div>'+
          '<div id="c5annDoc" style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.7;color:var(--ink)">'+annotated.html+'</div>')
       :('<div style="color:var(--ink-2);font-size:13px;line-height:1.6">The document text isn’t retained in this browser, so it can’t be shown inline — but the auditor findings Nerion recorded are in the panel. Re-upload the policy in onboarding to read it with the highlights in place.</div>');
     // Right column — the requirements panel (evidenced + gaps).
@@ -5578,11 +5616,22 @@ function c5ViewDoc(fname){
         (g.reason?('<div style="font-size:11.5px;color:var(--ink-2);line-height:1.5;margin-top:4px">'+c5esc(g.reason.slice(0,200))+'</div>'):'')+
       '</div>';
     }
-    // A keyword-matched requirement (drove the score, but no quoted passage to highlight).
-    function matchItem(mm){return '<div style="border:1px solid var(--line);border-left:3px solid color-mix(in srgb,var(--good) 55%,var(--line));border-radius:8px;padding:7px 11px;margin-bottom:6px;background:var(--surface)"><div style="display:flex;align-items:center;gap:7px"><span style="color:var(--good);font-weight:800">✓</span><b style="font-size:12px;color:var(--ink)">'+c5esc(mm.label)+'</b></div><div style="font-size:11px;color:var(--muted);margin-top:2px">matched for '+mm.items.map(c5esc).join(' · ')+'</div></div>';}
+    // A keyword-matched requirement. When we located it in the text (kwHits[j] is its
+    // annotation number) the card is numbered + clickable, and jumps to the blue highlight —
+    // so the reader sees exactly where in the document it was found. When it couldn't be
+    // pinpointed, it still shows as met (it drove the score) but without a jump.
+    function matchItem(mm,j){
+      var ann=(annotated&&annotated.kwHits)?annotated.kwHits[j]:null;
+      if(ann!=null){
+        return '<div class="c5annp" id="c5annp-'+ann+'" data-annidx="'+ann+'" style="border:1px solid var(--line);border-left:3px solid var(--blue);border-radius:8px;padding:8px 11px;margin-bottom:7px;background:var(--surface);cursor:pointer">'+
+          '<div style="display:flex;align-items:center;gap:7px"><span style="flex:none;width:18px;height:18px;border-radius:50%;background:var(--blue);color:#fff;font-size:10px;font-weight:800;display:inline-flex;align-items:center;justify-content:center">'+(ann+1)+'</span><b style="font-size:12.5px;color:var(--ink)">'+c5esc(mm.label)+'</b></div>'+
+          '<div style="font-size:11px;color:var(--muted);margin-top:3px">matched for '+mm.items.map(c5esc).join(' · ')+' · <span style="color:var(--blue)">click to see it in the document →</span></div></div>';
+      }
+      return '<div style="border:1px solid var(--line);border-left:3px solid color-mix(in srgb,var(--good) 55%,var(--line));border-radius:8px;padding:7px 11px;margin-bottom:6px;background:var(--surface)"><div style="display:flex;align-items:center;gap:7px"><span style="color:var(--good);font-weight:800">✓</span><b style="font-size:12px;color:var(--ink)">'+c5esc(mm.label)+'</b></div><div style="font-size:11px;color:var(--muted);margin-top:2px">matched for '+mm.items.map(c5esc).join(' · ')+'</div></div>';
+    }
     var panel='<div style="font-size:12px;color:var(--ink-2);margin-bottom:12px;line-height:1.5"><b style="color:var(--good)">'+(met.length+matched.length)+'</b> requirement'+((met.length+matched.length)===1?'':'s')+' met'+(met.length?(' ('+met.length+' with a quoted passage)'):'')+' · <b style="color:var(--warn)">'+gaps.length+'</b> gap'+(gaps.length===1?'':'s')+' — what drove this document’s control scores.</div>'+
       (met.length?('<div style="font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--good);margin:4px 0 8px">✓ Evidenced — quoted in the text</div>'+met.map(metItem).join('')):'')+
-      (matched.length?('<div style="font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--good);margin:14px 0 6px">✓ Matched — keyword review (no quoted passage)</div><div style="font-size:11px;color:var(--muted);margin-bottom:8px">These requirements were found and scored; the analyst-grade (LLM) review would add the exact quoted passage.</div>'+matched.map(matchItem).join('')):'')+
+      (matched.length?('<div style="font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--blue);margin:14px 0 6px">✓ Matched — keyword review</div><div style="font-size:11px;color:var(--muted);margin-bottom:8px">These requirements were found and scored. The numbered ones are highlighted in <b style="color:var(--blue)">blue</b> where they appear in the document — click one to jump to it. (The analyst-grade LLM review adds the exact quoted passage.)</div>'+matched.map(matchItem).join('')):'')+
       (gaps.length?('<div style="font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--warn);margin:14px 0 8px">⚠ Gaps — expected, not found</div>'+gaps.map(gapItem).join('')):'')+
       ((!met.length&&!gaps.length&&!matched.length)?('<div style="font-size:12.5px;color:var(--ink-2);line-height:1.6">No attribute-level review is on file for this document, so it isn’t contributing to any control score. This happens when a policy was uploaded but not analysed. Run the review to score it against the control catalog.</div>'+((typeof window!=='undefined'&&typeof window.reanalyzeStoredDocs==='function')?('<button type="button" id="c5annReanalyze" style="margin-top:12px;border:1px solid var(--line);background:var(--surface);color:var(--blue);font-weight:600;font-size:12.5px;padding:8px 14px;border-radius:8px;cursor:pointer">↻ Run document review</button>'):'<div style="margin-top:10px;font-size:11.5px;color:var(--muted)">Re-upload and analyse this policy in onboarding to score it.</div>')):'');
     wrap.innerHTML='<div style="width:min(1160px,96vw);max-height:92vh;display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 24px 60px rgba(20,33,72,.45);overflow:hidden">'+

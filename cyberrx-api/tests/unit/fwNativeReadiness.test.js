@@ -81,10 +81,11 @@ describe('the fallback is labelled honestly (not presented as a native audit)', 
     expect(fn).toContain("cw=caCrosswalkScore(it[2],cov)");
     expect(fn).toContain("src='mapped';status='Readiness (crosswalk)';tested=true;readiness=true;");
   });
-  it('the footnote explains the crosswalk-readiness fallback and that it is not a native audit', () => {
-    expect(src).toContain('fall back to a <b>crosswalk readiness</b> indicator');
-    expect(src).toContain('not</b> an independent native audit opinion');
-    expect(src).toContain('Native results always take precedence');
+  it('the footnote explains crosswalk-readiness scoring from the user evidence, and that it is not a certified audit', () => {
+    expect(src).toContain('scored by <b>crosswalk readiness</b> from the evidence you provided at onboarding');
+    expect(src).toContain('connected tools + reviewed documents');
+    expect(src).toContain('not</b> a certified assessment');
+    expect(src).toContain('no licensed control text is reproduced');
   });
 });
 
@@ -96,8 +97,8 @@ describe('the crosswalk finding names the mapped CSF controls and shows they are
     expect(fn).toContain('mapped:mappedIds,'); // put them on the node so the finding can name them
   });
   it('the finding lists each mapped CSF control with its own evidence source + score', () => {
-    expect(src).toContain('it inherits the maturity of the <b>');
-    expect(src).toContain('Each of those is scored from <b>your evidence</b>');
+    expect(src).toContain('inherits the maturity of the <b>');
+    expect(src).toContain('Each of those is evidenced from your connected tools + reviewed documents');
     expect(src).toContain("cc.src==='document'?'📄 document review':cc.src==='system'?'🔌 connected tool'");
   });
 });
