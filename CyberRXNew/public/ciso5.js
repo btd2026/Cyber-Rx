@@ -239,6 +239,15 @@ function c5IdFix(){
   var TD=(typeof c5TopDriver==='function')?c5TopDriver():{mid:'exp_identity',short:'identity',name:'Identity sprawl in cloud',ok:false};
   var dm=(typeof c5get==='function')?c5get(TD.mid):{connected:false};
   return {mid:TD.mid,short:TD.short,name:TD.name,usd:(dm&&dm.connected)?dm.displayValue:null,timeline:'90–180 days',owner:'CISO / CIO'};}
+/* Shared EU AI Act risk-class vocabulary — one taxonomy any AI-related view across seats
+   can reuse so class names and colours stay consistent. High = red, Limited = amber,
+   Minimal = green. c5aiRiskCls(class) → the semantic colour token. NOTE: real
+   classifications must come from the model registry + an actual EU AI Act mapping; any
+   placeholder must stay conservative (a legally-high-risk system is never shown Minimal)
+   and behind the Illustrative badge. */
+var C5_AI_RISK={High:{col:'crit',rank:0},Limited:{col:'warn',rank:1},Minimal:{col:'good',rank:2}};
+function c5aiRiskCls(k){return (C5_AI_RISK[k]&&C5_AI_RISK[k].col)||'muted';}
+function c5aiRiskRank(k){return (C5_AI_RISK[k]&&C5_AI_RISK[k].rank!=null)?C5_AI_RISK[k].rank:9;}
 
 /* Vendor-concentration matrix — vendor CATEGORY (not real company names) mapped to the
    SAME critical services as the Resilience / Recovery tabs. Illustrative until a live
@@ -4131,16 +4140,68 @@ function c5ctReliability(){
 /* Tab 03 — AI & innovation risk */
 function c5ctAi(){
   var host=document.getElementById('ct-ai');if(!host)return;
-  var da=c5get('ct_ai_dataaccess'),TD=c5TopDriver(),dm=c5get(TD.mid);
+  var demo=(typeof signalsAreDemo==='function')&&signalsAreDemo();
+  var IDF=c5IdFix();                              // shared identity-fix config (cost/owner/framing)
+  var inv=c5get('ct_ai_inventory'),gov=c5get('ct_ai_governed');
+  var g=(typeof LIVE!=='undefined'&&LIVE&&LIVE.aiRisk&&LIVE.aiRisk.governance)||{};
+  var frameworkInPlace=/nist|iso|rmf/i.test(g.framework||'');   // a FORMAL framework (≠ guardrails)
+  var invN=inv.connected?inv.displayValue:'—';
+  // ── AI-systems matrix (centerpiece). Placeholder classifications stay conservative and
+  //    behind the Illustrative badge until the model registry + a real EU AI Act mapping
+  //    are wired — a legally-high-risk system is never shown Minimal. Status is per-row. ──
+  var systems=[
+    {name:'Customer support assistant',sub:'Customer-facing · reads customer data · relies on identity gap',risk:'High',gov:'Guardrails only'},
+    {name:'Fraud & risk scoring',sub:'Payments · transaction data',risk:'Limited',gov:'Governed'},
+    {name:'Third-party vendor models',sub:'External (6) · terms + data flows reviewed',risk:'Limited',gov:'Under review'},
+    {name:'Developer copilot',sub:'Engineering · internal code',risk:'Minimal',gov:'Guardrails'},
+    {name:'Demand forecasting',sub:'Supply chain · internal data',risk:'Minimal',gov:'Governed'},
+    {name:'Marketing content gen',sub:'No sensitive data',risk:'Minimal',gov:'Governed'}
+  ];
+  var highN=systems.filter(function(s){return s.risk==='High';}).length; // ← the "high-risk uses" count, DERIVED
+  // ── three metric cards (drill-through preserved via data-c5m); sub can carry its own colour ──
+  function acard(mid,title,val,pill,pillCls,valCol,sub,subCol){return '<div class="c5card" data-c5m="'+mid+'"><div class="c5card-top"><span class="c5card-l">'+c5esc(title)+'</span><span class="c5pill '+pillCls+'" style="font-size:9px">'+c5esc(pill)+'</span></div><div class="c5card-v" style="color:var(--'+(valCol||'ink')+')">'+c5esc(String(val))+'</div><div class="c5esub" style="font-size:11px;color:var(--'+(subCol||'muted')+');margin-top:2px">'+c5esc(sub)+'</div></div>';}
+  var cards='<div class="c5cards">'+
+    acard('ct_ai_inventory','AI systems',invN,'Self-reported','n','ink','Shadow AI not yet verified','warn')+
+    acard('ct_ai_governed','Governance framework',(frameworkInPlace?'In place':'Not in place'),'Computed','n',(frameworkInPlace?'good':'warn'),'Guardrails operational · policy pending')+
+    acard('ct_ai_highrisk','High-risk uses',highN,'EU AI Act','a','warn','Customer-facing · reads customer data')+
+    '</div>';
+  // ── AI-systems matrix ──
+  var illus='<span class="c5pill n" style="font-size:9px">Illustrative</span>';
+  function govPill(s){return s==='Governed'?'g':s==='Under review'?'b':'a';} // guardrails-only / guardrails ⇒ amber
+  var sorted=systems.slice().sort(function(a,b){return c5aiRiskRank(a.risk)-c5aiRiskRank(b.risk);});
+  var amRows=sorted.map(function(s){var rc=c5aiRiskCls(s.risk);var mid=(s.risk==='High')?IDF.mid:'ct_ai_governed';
+    return '<div class="c5prow" data-c5m="'+mid+'" style="cursor:pointer">'+
+      '<div style="flex:1;min-width:0"><div class="c5row-t">'+c5esc(s.name)+'</div><div class="c5row-s">'+c5esc(s.sub)+'</div></div>'+
+      '<div style="text-align:right;flex:none;min-width:58px;margin-right:12px;font-weight:600;color:var(--'+rc+')">'+c5esc(s.risk)+'</div>'+
+      '<span class="c5pill '+govPill(s.gov)+'" style="flex:none">'+c5esc(s.gov)+'</span></div>';
+  }).join('');
+  var matrix='<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:16px 0 8px"><span style="font-size:12.5px;font-weight:600;color:var(--ink)">AI systems — risk class and governance '+illus+'</span><span style="font-size:11px;color:var(--muted)">Sorted by risk</span></div><div class="c5card" style="padding:2px 14px">'+amRows+'</div>';
+  // ── regulatory & data strip (Illustrative) — identity refs from the shared config ──
+  var sep='<span style="color:var(--line)">·</span>';
+  var strip='<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-top:14px;padding:12px 16px;border-radius:12px;background:var(--surface-2)">'+
+    '<span style="font-size:12px;color:var(--ink-2);font-weight:600">Regulatory &amp; data:</span>'+
+    '<span style="font-size:12.5px;color:var(--warn);font-weight:600">high-risk use carries EU AI Act obligations</span>'+sep+
+    '<span style="font-size:12px;color:var(--muted)">customer-data AI relies on the '+IDF.short+' gap</span>'+illus+'</div>';
+  // ── evidence footnote ──
+  var evSrcs=[
+    {label:'AI model registry / inventory',connected:inv.connected},
+    {label:'AI governance framework',connected:gov.connected},
+    {label:'EU AI Act risk classification',connected:true},
+    {label:'AI data-access mapping',connected:true},
+    {label:'Identity exposure model',connected:c5get(IDF.mid).connected},
+    {label:'Third-party AI / vendor review',connected:c5get('thirdparty_risk').connected}
+  ];
+  var connN=evSrcs.filter(function(s){return s.connected;}).length;
+  // ── data-driven headline + supporting line ──
+  var head='AI is inventoried and guardrailed in practice — but a formal governance framework isn’t in place yet, and the '+(highN===1?'one high-risk use':(highN+' high-risk uses'))+' lean'+(highN===1?'s':'')+' on the same '+IDF.short+' gap.';
+  var support='Two watch items: stand up the governance framework (policy, EU AI Act mapping, inventory verification), and secure the customer-facing AI that reads customer data through the identity fix. Every figure traces to its source.';
   host.innerHTML=c5header()+
-    c5shell('AI & innovation risk · are we shipping safely?','You’re shipping AI under governance — one access watch item.',null,'Your AI posture: models inventoried, guardrails in place, shipping under governance. One watch item — AI features that touch customer data rely on the same '+TD.short+' controls that carry the gap. Every figure traces to its source.')+
-    '<div class="c5cards">'+c5card('ct_ai_inventory')+c5card('ct_ai_governed')+c5card('ct_ai_highrisk')+'</div>'+
-    '<div class="c5tiles">'+
-      c5tile('ct_ai_dataaccess',(da.connected&&da.color==='warn')?'a':'g',(da.connected&&da.color==='warn')?'Watch':'Controlled','Relies on the same '+TD.short+' controls as the gap')+
-      c5tile('thirdparty_risk','b','Monitored','Vendor models · terms and data flows reviewed')+
-    '</div>'+
-    c5bl('Bottom line','Secure the access your AI relies on.',null,(dm.connected?('Your AI features that touch customer data depend on the same '+TD.short+' controls that carry the gap. Closing it ('+dm.displayValue+') secures AI’s access to data — safer innovation, cleaner governance.'):'Connect your controls and the AI-data-access watch item — the shared '+TD.short+' gap — surfaces here with its funded fix.'),{mid:TD.mid,txt:'Secure AI access — fund the '+c5esc(TD.short)+' fix'})+
-    '<div class="c5foot">AI inventory and governance from your model registry and pipeline.</div>';
+    c5shell('AI &amp; innovation risk · are we shipping safely?',head,'warn',support)+
+    cards+
+    matrix+
+    strip+
+    c5bl('The decision — two moves','Secure the access your AI relies on, and make governance provable.',null,'The AI features that read customer data depend on the same identity controls that carry the gap — funding the identity fix secures AI’s access to data. Separately, stand up the governance framework (policy, EU AI Act mapping, inventory verification) so “under governance” is provable, not asserted. Identity is the same fix across the cockpit ('+IDF.owner+'); governance is this seat’s own call.',{mid:IDF.mid,txt:'Secure AI access — fund the identity fix'},{mid:'ct_ai_governed',txt:'Stand up AI governance framework'})+
+    '<div class="c5foot">AI inventory and governance from your model registry and pipeline; risk classification and data-access mapping are connected demo values. · '+connN+' sources connected'+(demo?' · demo':'')+'</div>';
 }
 /* Tab 04 — Software supply chain · PRIMARY decision is the advisory patch, NOT identity */
 function c5ctSupply(){
