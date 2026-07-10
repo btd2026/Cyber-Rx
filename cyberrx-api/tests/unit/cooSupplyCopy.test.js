@@ -106,8 +106,9 @@ describe('COO Vendors — impact strip, decision callout, footnote', () => {
   it('Illustrative impact strip reuses the Resilience/Recovery hourly figure', () => {
     expect(fn).toContain('If the cloud host fails:');
     expect(fn).toContain('no failover for the customer platform');
-    expect(fn).toContain('(R.top_downtime_per_hr||R.downtime_per_hour_usd)');
-    expect(fn).toContain('40M customers');
+    // hourly + customers now come from the shared cross-cutting source (single-source)
+    expect(fn).toContain('c5xDowntimeHr().str');
+    expect(fn).toContain('c5xCustomers()');
     expect(fn).toMatch(/Illustrative/);
   });
   it('decision callout keeps BOTH buttons wired (mitigate vendor + fund identity)', () => {
