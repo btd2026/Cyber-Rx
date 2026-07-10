@@ -133,9 +133,9 @@ describe('drawer wiring — section rendered, table used, formula gated', () => 
     expect(fn).toContain('var wr=c5whyRanked(m)');
     expect(fn).toContain('Why ranked here');
   });
-  it('uses the ranking table when a metric supplies m.ranking', () => {
-    expect(fn).toContain('if(m.ranking&&m.ranking.length){');
-    expect(fn).toContain('h+=c5rankTable(m);');
+  it('uses the ranking table when a metric supplies m.ranking (now inside a collapsed accordion)', () => {
+    expect(fn).toContain('if(m.ranking&&m.ranking.length){_tbl=c5rankTable(m);}');
+    expect(fn).toContain("c5acc(m.ranking&&m.ranking.length?'View ranking details':'View supporting evidence'");
   });
   it('raw formula stays behind debug mode (not in the normal executive view)', () => {
     expect(src).toContain('function c5debugOn()');

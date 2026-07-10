@@ -172,7 +172,15 @@
     '.c5delta{font-size:13px;font-weight:500;width:52px;text-align:right}',
     '.c5kanon{display:flex;align-items:flex-start;gap:8px;background:var(--surface-2);border-radius:8px;padding:10px 13px;margin-top:14px;font-size:12px;color:var(--ink-2);line-height:1.5}',
     '.c5kanon svg{width:15px;height:15px;color:var(--ink-2);flex:none;margin-top:1px}',
-    '@media(max-width:720px){.c5tiles{grid-template-columns:1fr}.c5aigrid{grid-template-columns:1fr}.c5attgrid{grid-template-columns:repeat(2,1fr)}.c5prow-n{width:120px}.c5statgrid{grid-template-columns:1fr}.c5opgrid{grid-template-columns:1fr}}'
+    '@media(max-width:720px){.c5tiles{grid-template-columns:1fr}.c5aigrid{grid-template-columns:1fr}.c5attgrid{grid-template-columns:repeat(2,1fr)}.c5prow-n{width:120px}.c5statgrid{grid-template-columns:1fr}.c5opgrid{grid-template-columns:1fr}}',
+    /* Collapsed accordions in the executive detail drawer — deeper evidence, closed by default. */
+    '.c5acc{margin-top:10px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);overflow:hidden}',
+    '.c5acc>summary{cursor:pointer;list-style:none;padding:10px 14px;font-size:12.5px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:9px}',
+    '.c5acc>summary::-webkit-details-marker{display:none}',
+    '.c5acc>summary .c5acc-mk{color:var(--muted);font-size:11px;transition:transform .15s;flex:none}',
+    '.c5acc[open]>summary .c5acc-mk{transform:rotate(90deg)}',
+    '.c5acc>summary:hover{color:var(--blue)}',
+    '.c5acc-body{padding:2px 14px 14px}'
   ].join('');
   try{var s=document.createElement('style');s.textContent=css;document.head.appendChild(s);}catch(_){}
 })();
@@ -1810,6 +1818,39 @@ function c5srcRow(m,s){
   var role=s.role||s.field||'';var missing=s.missing?(' · missing: '+c5esc(s.missing)):'';
   return '<div class="src-row"><span class="sd"></span><b>'+c5esc(s.tool)+'</b> — '+c5esc(status)+fresh+(role?(' · role: '+c5esc(role)):'')+missing+'</div>';
 }
+/* A collapsed accordion for deeper evidence — closed by default, expands on click. */
+function c5acc(label,inner){
+  if(!inner)return '';
+  return '<details class="c5acc"><summary><span class="c5acc-mk">▸</span>'+c5esc(label)+'</summary><div class="c5acc-body">'+inner+'</div></details>';
+}
+/* Key evidence — 3–5 compact points for the default view (never a full table). Derived
+   from the top ranking row (exposure / gaps / risks / driver / evidence gap) or, for a
+   non-ranked metric, the first few inputs. Authorable via m.keyEvidence:[{k,v,color?}]. */
+function c5keyEvidence(m){
+  if(m&&m.keyEvidence&&m.keyEvidence.length)return m.keyEvidence.slice(0,5);
+  var out=[],r=m&&m.ranking&&m.ranking[0];
+  if(r){
+    out.push({k:'Modeled exposure',v:String(r.modeledExposure!=null?r.modeledExposure:'—')});
+    out.push({k:'Open control gaps',v:String(r.openControlGaps!=null?r.openControlGaps:'—')});
+    var rN=(r.openRiskScenarios!=null)?r.openRiskScenarios:((r.risks&&r.risks.length)||0);
+    out.push({k:'Open risk scenarios',v:String(rN)});
+    if(r.mainDriver)out.push({k:'Main driver',v:String(r.mainDriver)});
+    var notConn=(m.sources||[]).filter(function(s){return /not connected/i.test(s.status||'')||s.connected===false;});
+    if(notConn.length)out.push({k:'Evidence gap',v:notConn.map(function(s){return s.tool;}).slice(0,2).join(', ')+' not connected'});
+    else if(m.sources&&m.sources.length)out.push({k:'Source status',v:m.sources.map(function(s){return s.tool;}).slice(0,2).join(', ')+' connected'});
+    return out.slice(0,5);
+  }
+  if(m&&m.inputs&&m.inputs.length){
+    m.inputs.slice(0,4).forEach(function(i){out.push({k:String(i.name).replace(/<[^>]+>/g,'').trim(),v:String(i.value).replace(/<[^>]+>/g,'').trim(),color:i.color});});
+  }
+  return out;
+}
+function c5keyEvHtml(m){
+  var ke=c5keyEvidence(m);if(!ke.length)return '';
+  return '<div style="display:grid;grid-template-columns:auto 1fr;gap:5px 16px;margin-top:4px">'+ke.map(function(e){
+    return '<div style="font-size:12px;color:var(--muted)">'+c5esc(e.k)+'</div><div style="font-size:12.5px;color:var(--'+(e.color||'ink')+');font-weight:600">'+c5esc(e.v)+'</div>';
+  }).join('')+'</div>';
+}
 function c5InspectObj(m){
   if(!m)return;
   var chip='<span class="c5chip c5-'+String(m.label).replace(/[^a-z]/g,'')+'">'+c5srcLabelText(m)+'</span>';
@@ -1823,39 +1864,19 @@ function c5InspectObj(m){
     '<div style="text-align:right;flex:none"><span class="c5pill '+(m.color==='crit'?'r':m.color==='warn'?'a':m.color==='good'?'g':m.color==='blue'?'b':'n')+'">'+c5esc(statusTxt)+'</span><div style="font-size:10px;color:var(--muted);margin-top:5px;text-transform:uppercase;letter-spacing:.05em">'+c5srcLabelText(m)+'</div></div>'+
   '</div>';
   if(m.visual)h+=m.visual;
-  // 2) WHY IT MATTERS — durable, business-relevant definition (not today's result).
-  var why=c5why(m);if(why)h+='<div class="ev-sec">Why it matters</div><div class="conf">'+why+'</div>';
-  // 2b) WHY RANKED HERE — for ranked metrics, why the top item sits first (explains the
-  //     high-exposure / 0-gap / 0-risk case instead of leaving it contradictory).
-  var wr=c5whyRanked(m);if(m.connected&&wr)h+='<div class="ev-sec">Why ranked here</div><div class="conf" style="border-left:3px solid var(--'+(m.color==='crit'?'crit':m.color==='warn'?'warn':'blue')+')">'+wr+'</div>';
-  // 3) EVIDENCE CONFIDENCE — always, with a short reason.
-  h+='<div class="ev-sec">Evidence confidence</div><div class="conf"><b>'+c5esc(ev.level)+'</b>'+(ev.why?(' — '+ev.why):'')+'</div>';
-  // 4) WHAT NERION FOUND — the evidence-backed finding, dynamic.
-  h+='<div class="ev-sec">What Nerion found</div><div class="conf">'+c5foundText(m)+'</div>';
-  // Supporting evidence for the finding: the reasoning table or the numbers behind it
-  // (compact). Raw formulas are NOT shown here — see the calculation basis below.
-  if(m.connected){
-    if(m.ranking&&m.ranking.length){
-      h+=c5rankTable(m);
-    } else if(m.table&&m.table.cols&&m.table.rows&&m.table.rows.length){
-      var tcell=function(cell,cls){var t=(cell&&cell.text!=null)?cell.text:(cell==null?'':cell);var sty=(cell&&(cell.color||cell.bold))?(' style="'+(cell.color?('color:var(--'+cell.color+')'):'')+(cell.bold?';font-weight:600':'')+'"'):'';return '<td class="'+cls+'"'+sty+'>'+t+'</td>';};
-      h+='<div style="overflow-x:auto;margin-top:8px"><table class="itbl"><thead><tr>'+m.table.cols.map(function(c){return '<th>'+c+'</th>';}).join('')+'</tr></thead><tbody>'+
-        m.table.rows.map(function(r){return '<tr>'+r.map(function(cell,ci){return tcell(cell,ci===0?'':'src');}).join('')+'</tr>';}).join('')+'</tbody></table></div>';
-    } else if(m.inputs&&m.inputs.length){
-      h+='<table class="itbl" style="margin-top:8px"><thead><tr><th>Item</th><th>Value</th><th>Source</th></tr></thead><tbody>'+m.inputs.map(function(i){
-        var dot=i.color?('<span class="c5sq '+c5sqClass(i.color)+'" style="display:inline-block;width:9px;height:9px;margin-right:7px;vertical-align:middle"></span>'):'';
-        return '<tr><td>'+dot+i.name+'</td><td class="v">'+i.value+'</td><td class="src">'+i.source+'</td></tr>';}).join('')+'</tbody></table>';
-    }
-  }
-  // 5) WHAT NERION DOES NOT PROVE — prevents overclaiming; audit-defensible.
-  h+='<div class="ev-sec">What Nerion does not prove</div><div class="conf">'+c5notProve(m)+'</div>';
-  // 6) OPEN GAPS / EXCEPTIONS — only when the metric supplies them.
-  if(m.gaps&&m.gaps.length){
-    h+='<div class="ev-sec">Open gaps / exceptions</div>'+m.gaps.map(function(g){
-      return '<div class="conf" style="border-left:3px solid var(--warn);margin-bottom:8px"><b>'+c5esc(g.title||'Gap')+'</b>'+(g.meaning?('<div style="margin-top:3px">'+c5esc(g.meaning)+'</div>'):'')+(g.close?('<div style="margin-top:4px;color:var(--ink-2)">How to close: '+c5esc(g.close)+'</div>'):'')+((g.owner||g.due)?('<div style="margin-top:4px;font-size:11px;color:var(--muted)">'+[g.owner?('Owner: '+c5esc(g.owner)):'',g.due?('Due: '+c5esc(g.due)):''].filter(Boolean).join(' · ')+'</div>'):'')+'</div>';
-    }).join('');
-  }
-  // 7) RECOMMENDED ACTION (+ owner / due / expected result).
+  var why=c5why(m);
+  var wr=c5whyRanked(m);
+  // ── DEFAULT VIEW: the five answers, compact. Everything deeper is collapsed below. ──
+  // Evidence confidence — a one-line strip right under the result.
+  h+='<div style="margin:9px 2px 2px;font-size:12px;color:var(--ink-2)"><b>Evidence confidence:</b> '+c5esc(ev.level)+(ev.why?(' <span style="color:var(--muted)">— '+ev.why+'</span>'):'')+'</div>';
+  // Executive explanation — why ranked · what found · what not prove (1–2 lines each).
+  var _xcol=(m.color==='crit'?'crit':m.color==='warn'?'warn':'blue');
+  function _xr(label,txt,c){return txt?('<div style="margin-bottom:11px"><div style="font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--'+(c||'muted')+')">'+label+'</div><div style="font-size:12.5px;color:var(--ink-2);line-height:1.5;margin-top:2px">'+txt+'</div></div>'):'';}
+  var explain=[(m.connected&&wr)?_xr('Why ranked here',wr,_xcol):'',_xr('What Nerion found',c5foundText(m),'good'),_xr('What Nerion does not prove',c5notProve(m),'muted')].join('');
+  if(explain)h+='<div style="margin-top:11px;padding:13px 16px 2px;border:1px solid var(--line);border-radius:12px;background:var(--surface)">'+explain+'</div>';
+  // Key evidence — 3–5 compact points (not a table).
+  if(m.connected){var _ke=c5keyEvHtml(m);if(_ke)h+='<div class="ev-sec">Key evidence</div>'+_ke;}
+  // Recommended action — the single next step, visible by default.
   if(m.connected&&m.action){
     var meta=[m.owner?('Owner: '+c5esc(m.owner)):'',m.due?('Due: '+c5esc(m.due)):'',m.expected?('Expected result: '+c5esc(m.expected)):''].filter(Boolean).join(' · ');
     h+='<div class="ev-sec">Recommended action</div><div class="conf" style="border-left:3px solid var(--blue)">'+m.action+(meta?('<div style="margin-top:6px;font-size:11px;color:var(--muted)">'+meta+'</div>'):'')+'</div>';
@@ -1863,11 +1884,33 @@ function c5InspectObj(m){
     var src=m.connectTool?('<b>'+c5esc(m.connectTool)+'</b>'):'its data source';
     h+='<div class="ev-sec">Recommended action</div><div class="conf" style="border-left:3px solid var(--blue)">Not enough evidence to conclude — connect '+src+' to validate this result. Until then Nerion shows the honest not-connected state, never a placeholder number.</div>';
   }
-  // 8) SOURCES & FRESHNESS — status, freshness, evidence role, missing fields.
-  if(m.sources&&m.sources.length)h+='<div class="ev-sec">Sources &amp; freshness</div>'+m.sources.map(function(s){return c5srcRow(m,s);}).join('');
-  // 9) CALCULATION BASIS — plain English only; the raw formula is gated to debug.
-  h+='<div class="ev-sec">How Nerion calculated this</div><div class="drill-p">'+c5basisText(m)+'</div>';
-  if(c5debugOn()&&m.formula)h+='<div class="ev-sec">Formula (admin/debug)</div><div class="formula">'+m.formula+'</div>';
+  // ── COLLAPSED: deeper evidence, closed by default (traceability preserved). ──
+  if(m.connected){
+    // Ranking table / comparison / supporting inputs.
+    var _tbl='';
+    if(m.ranking&&m.ranking.length){_tbl=c5rankTable(m);}
+    else if(m.table&&m.table.cols&&m.table.rows&&m.table.rows.length){
+      var tcell=function(cell,cls){var t=(cell&&cell.text!=null)?cell.text:(cell==null?'':cell);var sty=(cell&&(cell.color||cell.bold))?(' style="'+(cell.color?('color:var(--'+cell.color+')'):'')+(cell.bold?';font-weight:600':'')+'"'):'';return '<td class="'+cls+'"'+sty+'>'+t+'</td>';};
+      _tbl='<div style="overflow-x:auto"><table class="itbl"><thead><tr>'+m.table.cols.map(function(c){return '<th>'+c+'</th>';}).join('')+'</tr></thead><tbody>'+
+        m.table.rows.map(function(r){return '<tr>'+r.map(function(cell,ci){return tcell(cell,ci===0?'':'src');}).join('')+'</tr>';}).join('')+'</tbody></table></div>';
+    } else if(m.inputs&&m.inputs.length){
+      _tbl='<table class="itbl"><thead><tr><th>Item</th><th>Value</th><th>Source</th></tr></thead><tbody>'+m.inputs.map(function(i){
+        var dot=i.color?('<span class="c5sq '+c5sqClass(i.color)+'" style="display:inline-block;width:9px;height:9px;margin-right:7px;vertical-align:middle"></span>'):'';
+        return '<tr><td>'+dot+i.name+'</td><td class="v">'+i.value+'</td><td class="src">'+i.source+'</td></tr>';}).join('')+'</tbody></table>';
+    }
+    h+=c5acc(m.ranking&&m.ranking.length?'View ranking details':'View supporting evidence',_tbl);
+    // Open gaps / exceptions.
+    var _gaps=(m.gaps&&m.gaps.length)?m.gaps.map(function(g){
+      return '<div class="conf" style="border-left:3px solid var(--warn);margin-bottom:8px"><b>'+c5esc(g.title||'Gap')+'</b>'+(g.meaning?('<div style="margin-top:3px">'+c5esc(g.meaning)+'</div>'):'')+(g.close?('<div style="margin-top:4px;color:var(--ink-2)">How to close: '+c5esc(g.close)+'</div>'):'')+((g.owner||g.due)?('<div style="margin-top:4px;font-size:11px;color:var(--muted)">'+[g.owner?('Owner: '+c5esc(g.owner)):'',g.due?('Due: '+c5esc(g.due)):''].filter(Boolean).join(' · ')+'</div>'):'')+'</div>';
+    }).join(''):'';
+    h+=c5acc('View open risks and gaps',_gaps);
+  }
+  // Sources & freshness.
+  var _src=(m.sources&&m.sources.length)?m.sources.map(function(s){return c5srcRow(m,s);}).join(''):'';
+  h+=c5acc('View sources and freshness',_src);
+  // Calculation basis (plain English) + why it matters + debug formula (admin only).
+  var _basis='<div class="drill-p">'+c5basisText(m)+'</div>'+(why?('<div style="margin-top:9px;font-size:12px;color:var(--ink-2)"><b>Why it matters:</b> '+why+'</div>'):'')+((c5debugOn()&&m.formula)?('<div class="ev-sec">Formula (admin/debug)</div><div class="formula">'+m.formula+'</div>'):'');
+  h+=c5acc('View calculation basis',_basis);
   // Connect CTA when not connected.
   if(!m.connected&&m.connectTool)h+='<div style="margin-top:12px"><button class="c5btn" onclick="c5Connect(\''+String(m.connectTool).replace(/'/g,'')+'\')">Connect '+m.connectTool+'</button></div>';
   h+='<div class="c5foot">as of '+c5ago()+' · '+c5srcLabelText(m)+'</div>';
