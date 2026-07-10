@@ -846,6 +846,26 @@
       if(msg){msg.innerHTML='✓ Loaded your growth signals from the file into the fields below. Edit any before continuing.';msg.style.color='var(--good)';}
       updateSummary();}
     else if(msg){msg.textContent='No recognized rows. Use two columns: metric, value (e.g. Pipeline in security review, $48M).';msg.style.color='var(--warn)';}});});
+  // ---- shared collapse header for the hand-built repeatable-row lists ----
+  // Mirrors makeRowList's rl-collapse so the bespoke registers (strategic
+  // initiatives, objectives, capability map) fold exactly like the policy
+  // document list and the CSV registers. Call from each list's update fn; it
+  // adds/removes a "N items ▾/▸" toggle above the rows and hides the rows when
+  // collapsed. `singular` pluralizes to `singular+'s'` unless `plural` is given.
+  function obRowCollapse(wrapId,rowCls,singular,plural){
+    plural=plural||(singular+'s');
+    var wrap=document.getElementById(wrapId);if(!wrap)return;
+    var headId=wrapId+'-collhead',head=document.getElementById(headId);
+    var total=wrap.querySelectorAll('.'+rowCls).length;
+    if(total>0){
+      if(!head){head=document.createElement('div');head.id=headId;head.style.cssText='margin:2px 0 8px';wrap.parentNode.insertBefore(head,wrap);}
+      var collapsed=wrap.getAttribute('data-coll')==='1';
+      head.innerHTML='<button type="button" class="rl-collapse" title="Show / hide the '+plural+'" style="background:none;border:none;cursor:pointer;font-weight:700;font-size:12.5px;color:var(--ink);display:inline-flex;align-items:center;gap:7px;padding:0"><span style="font-size:11px">'+(collapsed?'▸':'▾')+'</span>'+total+' '+(total>1?plural:singular)+'</button>';
+      head.querySelector('.rl-collapse').onclick=function(){var c=wrap.getAttribute('data-coll')==='1';wrap.setAttribute('data-coll',c?'0':'1');wrap.style.display=c?'':'none';obRowCollapse(wrapId,rowCls,singular,plural);};
+      wrap.style.display=collapsed?'none':'';
+    } else if(head){head.remove();}
+  }
+
   // ---- strategic initiatives (CEO per-initiative go/no-go + decision brief) ----
   var STRAT_TYPES=['Acquisition / M&A','Cloud platform or migration','AI product or feature','Market / geographic expansion','New digital product','Outsourcing / offshoring','Data / analytics initiative'];
   function addStratRow(v){v=v||{};var wrap=document.getElementById('stratRows');if(!wrap)return;
@@ -866,6 +886,7 @@
     else if(v.value!=null&&String(v.value).trim()!=='')row.querySelector('.s-val').value=String(v.value).replace(/[^0-9.]/g,'');
     row.querySelector('.s-del').addEventListener('click',function(){row.remove();updateStratBadge();});
     ['input','change'].forEach(function(ev){row.addEventListener(ev,updateStratBadge);});
+    wrap.setAttribute('data-coll','0');wrap.style.display=''; // adding a row expands the list
     updateStratBadge();
   }
   function collectStrategic(){return Array.prototype.slice.call(document.querySelectorAll('#stratRows .strat-row')).map(function(r){
@@ -873,7 +894,7 @@
     var val=parseFloat(r.querySelector('.s-val').value||'')||null,unit=parseFloat(r.querySelector('.s-valu').value)||1;
     return {name:name,type:r.querySelector('.s-type').value,valueUsd:val!=null?Math.round(val*unit):null,horizon:r.querySelector('.s-horizon').value};
   }).filter(Boolean);}
-  function updateStratBadge(){var n=collectStrategic().length,b=document.getElementById('bstrat');if(b){if(n){b.textContent='✓ '+n+' initiative'+(n>1?'s':'');b.classList.add('done');}else{b.textContent='optional';b.classList.remove('done');}}}
+  function updateStratBadge(){var n=collectStrategic().length,b=document.getElementById('bstrat');if(b){if(n){b.textContent='✓ '+n+' initiative'+(n>1?'s':'');b.classList.add('done');}else{b.textContent='optional';b.classList.remove('done');}}obRowCollapse('stratRows','strat-row','initiative');}
   (function(){var a=document.getElementById('addStrat');if(a)a.addEventListener('click',function(){addStratRow();});})();
 
   // ---- strategic objectives (CEO "objectives protected" — cyber mapped to strategy) ----
@@ -889,13 +910,14 @@
     if(v.map)row.querySelector('.o-map').value=v.map;
     row.querySelector('.o-del').addEventListener('click',function(){row.remove();updateObjBadge();});
     ['input','change'].forEach(function(ev){row.addEventListener(ev,updateObjBadge);});
+    wrap.setAttribute('data-coll','0');wrap.style.display=''; // adding a row expands the list
     updateObjBadge();
   }
   function collectObjectives(){return Array.prototype.slice.call(document.querySelectorAll('#objRows .obj-row')).map(function(r){
     var name=(r.querySelector('.o-name').value||'').trim();if(!name)return null;
     return {name:name,map:r.querySelector('.o-map').value||''};
   }).filter(Boolean);}
-  function updateObjBadge(){var n=collectObjectives().length,b=document.getElementById('bobj');if(b){if(n){b.textContent='✓ '+n+' objective'+(n>1?'s':'');b.classList.add('done');}else{b.textContent='optional';b.classList.remove('done');}}}
+  function updateObjBadge(){var n=collectObjectives().length,b=document.getElementById('bobj');if(b){if(n){b.textContent='✓ '+n+' objective'+(n>1?'s':'');b.classList.add('done');}else{b.textContent='optional';b.classList.remove('done');}}obRowCollapse('objRows','obj-row','objective');}
   (function(){var a=document.getElementById('addObj');if(a)a.addEventListener('click',function(){addObjRow();});})();
 
   // ---- business capability map (CISO Enterprise-Risk: capabilities with highest exposure) ----
@@ -922,6 +944,7 @@
     else if(v.exposure!=null&&String(v.exposure).trim()!=='')row.querySelector('.cap-val').value=String(v.exposure).replace(/[^0-9.]/g,'');
     row.querySelector('.cap-del').addEventListener('click',function(){row.remove();updateCapBadge();});
     ['input','change'].forEach(function(ev){row.addEventListener(ev,updateCapBadge);});
+    wrap.setAttribute('data-coll','0');wrap.style.display=''; // adding a row expands the list
     updateCapBadge();
   }
   function collectCapabilities(){return Array.prototype.slice.call(document.querySelectorAll('#capRows .cap-row')).map(function(r){
@@ -930,7 +953,7 @@
     var gaps=parseFloat(r.querySelector('.cap-gaps').value||'');var risk=parseFloat(r.querySelector('.cap-risk').value||'');
     return {name:name,exposure_usd:val!=null?Math.round(val*unit):null,grc_status:r.querySelector('.cap-grc').value,control_gaps:isNaN(gaps)?null:gaps,open_risk:isNaN(risk)?null:risk};
   }).filter(Boolean);}
-  function updateCapBadge(){var n=collectCapabilities().length,b=document.getElementById('bcap');if(b){if(n){b.textContent='✓ '+n+' capabilit'+(n>1?'ies':'y');b.classList.add('done');}else{b.textContent='optional';b.classList.remove('done');}}}
+  function updateCapBadge(){var n=collectCapabilities().length,b=document.getElementById('bcap');if(b){if(n){b.textContent='✓ '+n+' capabilit'+(n>1?'ies':'y');b.classList.add('done');}else{b.textContent='optional';b.classList.remove('done');}}obRowCollapse('capRows','cap-row','capability','capabilities');}
   (function(){var a=document.getElementById('addCap');if(a)a.addEventListener('click',function(){addCapRow();});})();
   // Register the capability map so its rows (typed or CSV-uploaded) save & restore.
   OB_REGISTERS.cap={add:addCapRow,collect:collectCapabilities,clear:function(){var w=document.getElementById('capRows');if(w)w.innerHTML='';updateCapBadge();}};

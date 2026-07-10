@@ -56,6 +56,30 @@ describe('onboarding — register rows (strategic initiatives, SBOM, …) are co
   });
 });
 
+describe('onboarding — the bespoke registers fold like the rest (shared obRowCollapse)', () => {
+  const orc = onb.slice(onb.indexOf('function obRowCollapse('), onb.indexOf('function obRowCollapse(') + 1100);
+  it('obRowCollapse mirrors makeRowList\'s rl-collapse toggle + data-coll hide', () => {
+    expect(orc).toContain('class="rl-collapse"');
+    expect(orc).toContain("wrap.getAttribute('data-coll')");
+    expect(orc).toContain("wrap.style.display=c?'':'none'");
+    expect(orc).toMatch(/total>1\?plural:singular/);
+    expect(orc).toContain("plural=plural||(singular+'s')");
+  });
+  it('strategic initiatives, objectives, and the capability map each call it', () => {
+    expect(onb).toContain("obRowCollapse('stratRows','strat-row','initiative')");
+    expect(onb).toContain("obRowCollapse('objRows','obj-row','objective')");
+    expect(onb).toContain("obRowCollapse('capRows','cap-row','capability','capabilities')");
+  });
+  it('adding a row to each bespoke list expands it', () => {
+    const strat = onb.slice(onb.indexOf('function addStratRow('), onb.indexOf('function collectStrategic('));
+    const obj = onb.slice(onb.indexOf('function addObjRow('), onb.indexOf('function collectObjectives('));
+    const cap = onb.slice(onb.indexOf('function addCapRow('), onb.indexOf('function collectCapabilities('));
+    [strat, obj, cap].forEach((fn) => {
+      expect(fn).toContain("wrap.setAttribute('data-coll','0');wrap.style.display=''");
+    });
+  });
+});
+
 describe('onboarding — Compliance frameworks in scope', () => {
   it('removes HITRUST and CMMC from the framework selector', () => {
     expect(scope).not.toContain('value="HITRUST"');
