@@ -22,7 +22,9 @@ describe('Threats — no overclaiming', () => {
   });
   it('displays "No confirmed active intrusion"', () => {
     expect(src).toContain('No confirmed active intrusion in connected telemetry');
-    expect(region).toContain('No confirmed active intrusion, but identity-driven attack paths remain the highest threat exposure.');
+    // the highest-threat path is the data-ranked top driver, not a hard-coded "identity"
+    expect(region).toContain("No confirmed active intrusion, but the attack path through '+TD.phrase+' remains the highest threat exposure.");
+    expect(region).toContain('var TD=c5TopDriver()');
   });
   it('tactic coverage is labelled "coverage", never "defended"', () => {
     expect(tm).toMatch(/cov\+'% coverage'/);
@@ -88,15 +90,17 @@ describe('Threats — evidence confidence', () => {
 });
 
 describe('Threats — bottom line', () => {
-  it('identifies identity-driven access into customer-platform services as the material path', () => {
-    expect(region).toContain('The most material threat path is identity-driven access into customer-platform services.');
+  it('identifies the data-ranked top driver as the material path, not hard-coded identity', () => {
+    expect(region).toContain("The most material threat path runs through '+TD.phrase+'.");
+    expect(region).not.toContain('The most material threat path is identity-driven access into customer-platform services.');
   });
   it('does not use the old "toward full" / "removes your single largest exposure" claims', () => {
     expect(region).not.toContain('One move takes your coverage toward full');
     expect(region).not.toMatch(/removes your single largest exposure/);
   });
-  it('button says Close identity attack-path gaps', () => {
-    expect(region).toContain("txt:'Close identity attack-path gaps'");
+  it('button closes the computed driver attack-path gaps', () => {
+    expect(region).toContain("txt:'Close '+c5esc(TD.short)+' attack-path gaps'");
+    expect(region).not.toContain("txt:'Close identity attack-path gaps'");
   });
   it('preserves drill-down / source traceability', () => {
     expect(region).toMatch(/data-c5m="tac_'\+t\+'"/);

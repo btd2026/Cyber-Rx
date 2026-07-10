@@ -30,8 +30,10 @@ describe('Cyber Exposure tab — executive-safe wording', () => {
     expect(region).not.toMatch(/eliminat\w* risk/i);
   });
 
-  it('the action button says it reduces the top exposure', () => {
-    expect(region).toContain('Approve identity remediation — reduce top exposure');
+  it('the action button says it reduces the top exposure, driver-parameterized', () => {
+    // driver is data-ranked (c5TopDriver), so button text is composed, not a literal
+    expect(region).toContain("'Approve '+c5esc(TD.short)+' remediation — reduce top exposure'");
+    expect(region).not.toContain('Approve identity remediation — reduce top exposure');
   });
 
   it('the bottom line states approval reduces exposure, not removes all risk', () => {
@@ -45,8 +47,8 @@ describe('Cyber Exposure tab — executive-safe wording', () => {
   });
 
   it('the $ exposure is shown with a modeled business label, never bare', () => {
-    // The modeled figure (ec.displayValue) must be introduced by a business label.
-    expect(region).toMatch(/modeled (demo )?(business )?exposure of '\+ec\.displayValue/i);
+    // The modeled figure (the data-ranked top driver's value) must carry a business label.
+    expect(region).toMatch(/modeled (demo )?(business )?exposure of '\+TD\.displayValue/i);
     // And the basis explanation is pulled in.
     expect(region).toContain('TrustLogic.EXPOSURE_BASIS');
   });

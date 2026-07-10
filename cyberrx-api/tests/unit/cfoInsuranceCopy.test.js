@@ -56,9 +56,11 @@ describe('CFO Insurance — coverage terms, driver, evidence', () => {
     expect(fn).toContain('Coverage terms review');
     expect(fn).toMatch(/Exclusions, sublimits, retention.*business interruption.*vendor\/supply-chain/);
   });
-  it('names customer-platform identity risk as the largest tail driver', () => {
-    expect(fn).toContain('Largest tail driver');
-    expect(fn).toContain('Customer-platform identity risk is the largest contributor to the modeled tail.');
+  it('names the data-ranked largest tail driver, not a hard-coded identity conclusion', () => {
+    expect(fn).toContain('Largest tail driver'); // card title stays
+    expect(fn).toMatch(/var TD=c5TopDriver\(\),dm=c5get\(TD\.mid\)/);
+    expect(fn).toMatch(/cap\(drvL\)\+' is the largest contributor to the modeled tail\.'/);
+    expect(fn).not.toContain('Customer-platform identity risk is the largest contributor to the modeled tail.');
   });
   it('renders an evidence-confidence strip; policy terms are a critical not-connected source', () => {
     expect(fn).toMatch(/var evPanel=c5EvLine\(evLevel,/);
@@ -68,11 +70,13 @@ describe('CFO Insurance — coverage terms, driver, evidence', () => {
 });
 
 describe('CFO Insurance — bottom line & buttons', () => {
-  it('recommends reducing the tail before buying more coverage', () => {
-    expect(fn).toContain('reduce the largest tail driver — customer-platform identity risk — before buying more coverage');
+  it('recommends reducing the computed largest tail driver before buying more coverage', () => {
+    expect(fn).toContain("reduce the largest tail driver — '+drvL+' — before buying more coverage");
+    expect(fn).not.toContain('reduce the largest tail driver — customer-platform identity risk — before buying more coverage');
   });
-  it('buttons say Fund identity remediation and Model additional coverage', () => {
-    expect(fn).toContain("txt:'Fund identity remediation'");
+  it('buttons fund the computed driver remediation and model additional coverage', () => {
+    expect(fn).toContain("txt:'Fund '+drvS+' remediation'");
+    expect(fn).not.toContain("txt:'Fund identity remediation'");
     expect(fn).toContain("txt:'Model additional coverage'");
     expect(fn).not.toContain('Model buying up cover');
   });

@@ -44,11 +44,19 @@ describe('CFO Spend ROI — spend-not-connected state', () => {
   it('shows Not connected / Not enough evidence / Partial', () => {
     expect(fn).toContain('Not connected');
     expect(fn).toContain('Not enough evidence');
-    expect(fn).toMatch(/'Partial','Exposure model connected'/);
+    // ROI readiness is Partial once the exposure model connects (now guarded by redConn)
+    expect(fn).toMatch(/redConn\?'Partial':'Not enough evidence',redConn\?'Exposure model connected'/);
   });
-  it('primary action connects spend; secondary reviews identity as a candidate', () => {
+  it('primary action connects spend; secondary reviews the computed top driver as a candidate', () => {
     expect(fn).toContain("txt:'Connect security spend data'");
-    expect(fn).toContain("txt:'Review identity ROI candidate'");
+    // reallocation candidate is data-ranked (c5TopDriver), not a literal "identity"
+    expect(fn).toContain("txt:'Review '+cand+' ROI candidate'");
+    expect(fn).not.toContain("txt:'Review identity ROI candidate'");
+    expect(fn).toMatch(/var TD=c5TopDriver\(\)/);
+  });
+  it('does not fall back to a hard-coded $604M exposure-reduction default', () => {
+    expect(fn).not.toContain('$604M');
+    expect(fn).toMatch(/redConn\?er\.displayValue:'Not connected'/);
   });
   it('only computes return per dollar when spend is attributed', () => {
     expect(fn).toMatch(/var haveSpend=!!\(st&&st\.invested>0&&st\.riskRemoved>0\)/);

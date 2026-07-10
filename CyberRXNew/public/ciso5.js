@@ -235,6 +235,31 @@ function c5expModel(){
   drivers.sort(function(a,b){return b.usd-a.usd;});
   return {drivers:drivers,total:drivers.reduce(function(s,d){return s+d.usd;},0),ale:ale};
 }
+/* c5TopDriver — the ONE data-ranked top exposure driver, shared by every narrative
+   surface that names "the largest driver". Reads c5expModel(), whose drivers are sorted
+   by computed modeled USD, so drivers[0] is the largest by the data — never a hard-coded
+   conclusion. If the drivers reorder (different org, different telemetry, different
+   business area), this reorders with them and every headline / bottom-line / button that
+   reads it changes automatically.
+   Returns: {ok, name, phrase, threatens, mid, usd, displayValue, connected, demo}.
+     name        — driver label, e.g. "Identity sprawl in cloud" (Title case, for buttons)
+     phrase      — lower-case inline form, e.g. "identity sprawl in cloud"
+     threatens   — the business area/process it threatens, e.g. "customer-platform uptime"
+     mid         — the driver's metric id (for click-through + decision wiring)
+     displayValue— the driver's modeled exposure, or "—" when not connected */
+function c5TopDriver(){
+  var demo=(typeof signalsAreDemo==='function')&&signalsAreDemo();
+  var m;try{m=c5expModel();}catch(_){m=null;}
+  var d=(m&&m.drivers&&m.drivers.length)?m.drivers[0]:null;
+  if(!d)return {ok:false,demo:demo,name:null,phrase:'the largest exposure driver',short:'the top driver',threatens:'',mid:'exp_total',usd:0,displayValue:'—',connected:false};
+  var em;try{em=c5get(d.id);}catch(_){em={connected:false,displayValue:'—'};}
+  // Short noun per driver id — a mechanical label map (not a conclusion) for compact
+  // button/action text; the ranking that decides WHICH driver is still fully data-driven.
+  var SHORT={exp_identity:'identity',exp_patch:'patching',exp_vendor:'vendor risk',exp_endpoint:'endpoint',exp_email:'phishing'};
+  return {ok:true,demo:demo,connected:!!(d.connected&&em&&em.connected),
+    name:d.name,phrase:String(d.name||'').toLowerCase(),short:SHORT[d.id]||d.name,threatens:d.threatens||'',
+    mid:d.id,usd:d.usd||0,displayValue:(em&&em.connected)?em.displayValue:'—'};
+}
 function c5trendPill(d){
   if(!d)return {t:'Steady',c:'st'};
   var p;if(d.caps&&d.caps[0]==='__vendor'){var V=c5vendors();p=V.worst?V.worst.score:null;}else p=c5avgDeploy(d.caps);
@@ -407,7 +432,7 @@ function c5get(id){
         method:'Scenarios come from your threat-intel feed (who targets your sector), mapped to the MITRE ATT&CK techniques matching your stack, joined to the business-impact (BIA) of the process each would disrupt. Ranked by priority; the table shows one row per scenario. Technique likelihood is quantified once a threat-intel feed is connected — until then it reads “pending threat-intel” and the ranking is by business impact.',
         table:(srows.length?{title:'Scenarios · ranked by priority',cols:['Scenario','MITRE techniques','Likelihood','Business impact','Rank'],rows:srows}:null),
         sources:[{tool:'Threat intelligence',connector:'threatintel',field:'sector_actors · likelihood',lastRefresh:c5ago()},{tool:'MITRE ATT&CK',connector:'mitre',field:'techniques'},{tool:'BIA',connector:'bia',field:'business_impact'}],
-        action:conn?('Exercise the top scenario ('+stz.scenario+(stz.target?(' → '+stz.target):'')+') in a tabletop and confirm the recovery runbook for '+(stz.target||'the target process')+'. Then close the identity/access gap that makes it most likely — it is the same gap driving your largest exposure, so one fix lowers both.'):'Connect your threat-intel feed and BIA so scenarios rank by real likelihood × business impact, then tabletop the top one.',
+        action:conn?('Exercise the top scenario ('+stz.scenario+(stz.target?(' → '+stz.target):'')+') in a tabletop and confirm the recovery runbook for '+(stz.target||'the target process')+'. Then close the access-control gaps that make it most likely.'):'Connect your threat-intel feed and BIA so scenarios rank by real likelihood × business impact, then tabletop the top one.',
         note:conn?('The most likely disruption is a '+stz.scenario+' affecting '+(stz.target||'a crown-jewel process')+'.'):'The disruption scenarios most likely to hit the business.',
         connectTool:'your threat-intel feed + BIA (onboarding)'});}
     case 'er_thirdparty':{var Vtp=c5vendors();var sbom=(typeof LIVE!=='undefined'&&LIVE&&LIVE.sbom)||[];var conn=Vtp.seed.length>0||sbom.length>0;var ntp=Vtp.atRisk.length,worsttp=Vtp.worst;
@@ -935,7 +960,7 @@ function c5get(id){
         formula:'identity recovery = readiness to restore access quickly, from identity-control deployment',
         inputs:[{name:'Identity controls deployed',value:conn?(p+'%'):'—',source:'MFA + PAM telemetry'}],
         sources:[c5capSrc('mfa'),c5capSrc('pam')],
-        action:gap?('Identity controls are only '+p+'% deployed — the slowest link in a customer-platform recovery. Extend MFA + PAM coverage toward 100% and rehearse an identity-first recovery so access is restored fast.'):'Identity controls are fully deployed — rehearse identity-first recovery so access restoration stays the fast link, not the slow one.',note:'Restoring access is often the slowest link in a customer-platform recovery — the same identity gap that drives your top exposure.',connectTool:'your identity + PAM tools'});}
+        action:gap?('Identity controls are only '+p+'% deployed — the slowest link in a customer-platform recovery. Extend MFA + PAM coverage toward 100% and rehearse an identity-first recovery so access is restored fast.'):'Identity controls are fully deployed — rehearse identity-first recovery so access restoration stays the fast link, not the slow one.',note:'Restoring access is often the slowest link in a customer-platform recovery.',connectTool:'your identity + PAM tools'});}
     case 'coo_tier1':{var V=c5vendors();var t1=(V.p&&V.p.tier1!=null)?V.p.tier1:((V.seed||[]).filter(function(x){return /1/.test(x.tier);}).length);var conn=V.seed.length>0;
       return c5obj({id:id,name:'Tier-1 vendors',connected:conn,displayValue:conn?String(t1):'—',label:'self-reported',color:'ink',
         formula:'tier-1 vendors = suppliers you classified tier-1 at onboarding',
@@ -979,7 +1004,7 @@ function c5get(id){
         formula:'forensic gap = the path where evidence to prove what happened is thin, from identity + logging telemetry',
         inputs:[{name:'Identity + logging deployed',value:conn?(p+'%'):'—',source:'MFA + PAM + SIEM telemetry'}],
         sources:[c5capSrc('mfa'),c5capSrc('siem')],
-        action:conn?(gap?('Evidence to prove what happened is thin on the identity path (MFA·PAM·SIEM at '+p+'%). Close it — extend identity + privileged-access logging and SIEM retention — so an incident can be reconstructed for regulators and litigation.'):('Forensic coverage across identity + logging is adequate ('+p+'%) — hold retention and log integrity so evidence stands up.')):'Connect your identity + SIEM tools to assess forensic readiness.',note:'The one area where proving what happened in an incident is hardest — here, the identity path. It is the same identity gap driving the top exposure.',connectTool:'your identity + SIEM tools'});}
+        action:conn?(gap?('Evidence to prove what happened is thin on the identity path (MFA·PAM·SIEM at '+p+'%). Close it — extend identity + privileged-access logging and SIEM retention — so an incident can be reconstructed for regulators and litigation.'):('Forensic coverage across identity + logging is adequate ('+p+'%) — hold retention and log integrity so evidence stands up.')):'Connect your identity + SIEM tools to assess forensic readiness.',note:'The one area where proving what happened in an incident is hardest — here, the identity path.',connectTool:'your identity + SIEM tools'});}
     case 'cl_dsar_sla':{var open=sig('dsar_open'),over=sig('dsar_overdue');var conn=open!=null;var within=(open!=null&&open>0)?Math.round((open-(over||0))/open*100):(open===0?100:null);
       return c5obj({id:id,name:'DSARs within SLA',connected:conn,displayValue:conn?(within!=null?within+'%':'—'):'—',label:'live',color:conn?((within==null||within>=95)?'good':within>=80?'warn':'crit'):'muted',
         formula:'DSARs within SLA = (open requests − overdue) ÷ open requests',
@@ -996,7 +1021,7 @@ function c5get(id){
         formula:'access hygiene = access-review completeness and dormant-account count near personal data',
         inputs:[{name:'Access reviews complete',value:rev!=null?(rev+'%'):'—',source:'identity · access_review_pct'},{name:'Dormant accounts',value:dorm!=null?dorm:'—',source:'identity · dormant_accounts'}],
         sources:[c5capSrc('mfa'),c5capSrc('pam')],
-        action:conn?(watch?('Access near personal data is over-permissioned — access reviews at '+(rev!=null?rev+'%':'—')+', '+(dorm!=null?(dorm+' dormant account'+(dorm===1?'':'s')):'dormant accounts')+'. Complete the access review and disable dormant accounts to shrink unlawful-access exposure under GDPR/CCPA.'):'Access near personal data is clean — hold review cadence and dormant-account cleanup.'):'Connect your identity + PAM tools to assess access hygiene near personal data.',note:'Over-permissioned or stale access near personal data — a privacy risk that is part of the identity gap.',connectTool:'your identity + PAM tools'});}
+        action:conn?(watch?('Access near personal data is over-permissioned — access reviews at '+(rev!=null?rev+'%':'—')+', '+(dorm!=null?(dorm+' dormant account'+(dorm===1?'':'s')):'dormant accounts')+'. Complete the access review and disable dormant accounts to shrink unlawful-access exposure under GDPR/CCPA.'):'Access near personal data is clean — hold review cadence and dormant-account cleanup.'):'Connect your identity + PAM tools to assess access hygiene near personal data.',note:'Over-permissioned or stale access near personal data — a privacy risk tied to access-control hygiene.',connectTool:'your identity + PAM tools'});}
     case 'cl_litigation':{var lh=sig('legal_holds');var conn=lh!=null;
       return c5obj({id:id,name:'Active legal holds',connected:conn,displayValue:conn?String(lh):'—',label:'live',color:conn?(lh>0?'warn':'good'):'muted',
         formula:'active legal holds = litigation holds currently in effect for cyber matters',
@@ -1012,7 +1037,7 @@ function c5get(id){
         formula:'platform-tied contracts = contracts that warrant customer-platform uptime / security',
         inputs:[{name:'CLM uptime warranties',value:'not connected',source:'CLM'}],
         sources:[{tool:'Contract-lifecycle system',connector:'clm',field:'uptime_warranties',lastRefresh:c5ago()}],
-        action:'Contracts warranting customer-platform uptime/security are not quantified — an identity-driven outage could breach SLAs you cannot currently list. Connect your CLM to identify each platform-tied contract and its breach exposure; the identity gap is the common root to remediate.',note:'How many contracts an identity-driven platform outage could breach — needs your CLM connected. The identity gap is the common root.',connectTool:'your CLM'});}
+        action:'Contracts warranting customer-platform uptime/security are not quantified — a cyber-driven outage could breach SLAs you cannot currently list. Connect your CLM to identify each platform-tied contract and its breach exposure; your top exposure driver is the common root to remediate.',note:'How many contracts a cyber-driven platform outage could breach — needs your CLM connected. Your top exposure driver is the common root.',connectTool:'your CLM'});}
     /* ---- CTO metrics (engineering-estate lens; shared exposure/vendor objects reused) ---- */
     case 'ct_platform_health':{var oi=sig('open_incidents');var caps=CAPS.filter(function(c){return capDeploy(c)!=null;}).length;var conn=(oi!=null||caps>0);var strong=(oi==null||oi===0);
       return c5obj({id:id,name:'Platform health',connected:conn,displayValue:conn?(strong?'Strong':'Watch'):'—',label:'computed',color:conn?(strong?'good':'warn'):'muted',
@@ -1290,7 +1315,7 @@ function c5get(id){
         formula:'recurring blocker = the exposure that repeatedly gates releases — from the top exposure driver',
         inputs:[{name:'Top exposure driver',value:M.drivers[0]?M.drivers[0].name:'—',source:'exposure model'}],
         sources:[{tool:'Product + security backlog',connector:'backlog',field:'recurring_blocker',lastRefresh:c5ago()}],
-        action:conn?(idMat?'The identity/access model is the recurring release blocker — fund the identity remediation (MFA + PAM) once to remove it from the pipeline for good.':'No recurring blocker is gating releases — keep the pipeline clear.'):'Connect your controls + backlog to identify the recurring blocker.',note:'The one thing that keeps coming back in the pipeline — the identity/access model, fixable once.',connectTool:'your controls + backlog'});}
+        action:conn?(idMat?('The '+(M.drivers[0]?M.drivers[0].name.toLowerCase():'top-driver')+' area is the recurring release blocker — fund its remediation once to clear it from the pipeline for good.'):'No recurring blocker is gating releases — keep the pipeline clear.'):'Connect your controls + backlog to identify the recurring blocker.',note:'The one thing that keeps coming back in the pipeline — the '+(M.drivers[0]?M.drivers[0].name.toLowerCase():'top-driver')+' area, fixable once.',connectTool:'your controls + backlog'});}
     case 'cp_open_items':{var css4=sig('code_scanning_open'),dep4=sig('dependabot_critical');var conn=(css4!=null||dep4!=null);var n=(css4||0)+(dep4||0);
       return c5obj({id:id,name:'Open security items',connected:conn,displayValue:conn?String(n):'—',label:'live',color:conn?(n<=15?'good':'warn'):'muted',
         formula:'open security items = product-security work queued (open SAST findings + critical dependency alerts)',
@@ -1308,7 +1333,7 @@ function c5get(id){
         formula:'funded = whether the top product-security item is covered by the funded initiative portfolio',
         inputs:[{name:'Funded initiatives',value:st?st.n:'—',source:'initiatives portfolio'},{name:'Invested',value:yes?usd(st.invested):'—',source:'ticketing + decisions'}],
         sources:[{tool:'Program model',connector:'nerion',field:'funded_portfolio',lastRefresh:c5ago()}],
-        action:yes?'The top product-security item (identity/access remediation) is funded — track it to delivery.':'The top product-security item (identity/access remediation) is not yet funded — add it to the funded initiative portfolio.',note:'Whether the top backlog item is funded — the identity/access remediation.',connectTool:'your funded initiatives (import)'});}
+        action:yes?('The top product-security item ('+c5TopDriver().short+' remediation) is funded — track it to delivery.'):('The top product-security item ('+c5TopDriver().short+' remediation) is not yet funded — add it to the funded initiative portfolio.'),note:'Whether the top backlog item is funded — the '+c5TopDriver().short+' remediation.',connectTool:'your funded initiatives (import)'});}
   }
   return c5obj({id:id,name:id,connected:false,displayValue:'—',color:'muted',note:'No metric definition.'});
 }
@@ -1712,7 +1737,7 @@ function c5ctrlValueInspect(k){
       {name:'Share of total control value',value:(total>0?sharePct+'%':'—')+(rank?(' · ranked #'+rank+' of '+ranked.length):''),source:'this control ÷ Σ all controls'}
     ],
     sources:[{tool:srcTool,connector:c.k,field:'deployment_pct',lastRefresh:c5ago()},{tool:'NIST CSF 2.0 / 800-53 mapping',connector:'framework',field:'control_weight'}],
-    note:nm+(rank===1?' is your single highest-value control':(rank?(' ranks #'+rank+' of your controls by business value'):' returns business value'))+'. Its '+(p!=null?p+'% deployment':'deployment')+' across '+prot+', weighted by the framework-critical controls it satisfies ('+fwIds+'), removes '+usd(usdv)+' of modeled expected loss — '+sharePct+'% of the total your controls buy down. That is why it sits where it does in the ranking.',
+    note:nm+(rank===1?' is your single highest-value control':(rank?(' ranks #'+rank+' of your controls by business value'):' returns business value'))+'. Its '+(p!=null?p+'% deployment':'deployment')+' across '+prot+', weighted by the framework-critical controls it satisfies ('+fwIds+'), reduces '+usd(usdv)+' of modeled expected loss — '+sharePct+'% of the total your controls buy down. That is why it sits where it does in the ranking.',
     connectTool:'per-control security spend (to convert value into return-on-dollar)'});
   c5InspectObj(m);
 }
@@ -1964,13 +1989,14 @@ function c5Health(){
   if(topCj){blMid='er_crown';blHead='Act on your highest-risk crown jewel first.';
     blPara='Across the four reads, your highest-risk crown jewel is <b>'+c5esc(topCj.asset)+'</b> (risk '+topCj.risk+(topCj.active_threat?', active threat':'')+', '+topCj.high_crit_vuln_count+' high/critical vulns)'+(CJRk.mocked?' — VM/EDR figures illustrative until those tools are connected':'')+'. Harden it to reduce its exposure before it becomes an incident. This reduces the top exposure; it does not remove all cyber risk.';
     blBtn='Prioritize '+c5esc(topCj.asset)+' — reduce exposure';}
-  else if(ec.connected){blMid='exp_identity';blHead='One decision reduces the top exposure.';
-    blPara='The largest exposure driver is <b>cloud identity sprawl</b> affecting customer-platform services. '+(demoExp?('Nerion currently shows a <b>modeled demo exposure of '+ec.displayValue+'</b>'):('Nerion models <b>'+mLbl.toLowerCase()+' of '+ec.displayValue+'</b>'))+' — '+mBasis+' The remediation plan is scoped; approval is needed to accelerate execution ahead of lower-risk work. Approval reduces the top exposure; it does not remove all cyber risk.';
-    blBtn='Approve identity remediation — reduce top exposure';}
-  else {blMid='exp_identity';blHead='Connect your tools to surface the top fix.';
+  else if(ec.connected){var TD=c5TopDriver();blMid=TD.mid;blHead='One decision reduces the top exposure.';
+    blPara='The largest exposure driver is <b>'+c5esc(TD.phrase)+'</b>'+(TD.threatens?(' affecting '+c5esc(TD.threatens)):'')+'. '+(demoExp?('Nerion currently shows a <b>modeled demo exposure of '+TD.displayValue+'</b>'):('Nerion models <b>'+mLbl.toLowerCase()+' of '+TD.displayValue+'</b>'))+' — '+mBasis+' The remediation plan is scoped; approval is needed to accelerate execution ahead of lower-risk work. Approval reduces the top exposure; it does not remove all cyber risk.';
+    blBtn='Approve '+c5esc(TD.short)+' remediation — reduce top exposure';}
+  else {blMid='exp_total';blHead='Connect your tools to surface the top fix.';
     blPara='Connect your identity, control and crown-jewel sources and Nerion surfaces your most exposed asset here, with the scoped remediation ready to prioritize.';
     blBtn='Approve the top remediation';}
-  var ans=(ec.connected||topCj)?'Exposure is concentrated in customer-platform identity risk; one decision can reduce the top exposure.':'Connect your identity, asset and control sources to rank where the business is most exposed.';
+  var TDa=c5TopDriver();
+  var ans=topCj?('Exposure is concentrated in your highest-risk crown jewel; one decision can reduce the top exposure.'):ec.connected?('Exposure is concentrated in '+c5esc(TDa.phrase)+'; one decision can reduce the top exposure.'):'Connect your identity, asset and control sources to rank where the business is most exposed.';
   host.innerHTML=c5header()+
     c5shell('Cyber exposure · where is the business most exposed?',ans,anyRisk?'warn':null,'The enterprise’s material cyber exposure, ranked across the four dimensions that move it. Every figure traces to its source — drill any tile to defend it to the board.')+
     tiles+
@@ -2364,11 +2390,12 @@ function c5Exposure(){
       '<div class="c5seclab">Controls delivering the most business value · '+ctrlConn.length+' control'+(ctrlConn.length>1?'s':'')+' · '+usd(rr.total)+' modeled exposure reduction</div><div>'+w3+'</div>';
     if(topCtrl){
       var gapLine=(topGap&&topGap.c.k!==topCtrl.c.k)?(' '+nm(topGap.c)+' has the largest remaining coverage gap ('+topGap.p+'%) and should be evaluated as the next investment priority.'):'';
+      var TDcv=c5TopDriver(); // remaining priority = the data-ranked top driver, not a literal
       bodyB+=c5bl('Bottom line',
         nm(topCtrl.c)+' delivers the highest modeled exposure reduction: '+usd(topCtrl.usd)+' at '+topCtrl.p+'% coverage.',
         null,
-        'It delivers the highest modeled exposure reduction among your current controls. The remaining priority is to close high-risk identity gaps — especially privileged users, cloud identities and customer-platform access.'+gapLine,
-        {mid:'exp_identity',txt:'Close remaining identity gaps'});
+        'It delivers the highest modeled exposure reduction among your current controls. The remaining priority is to reduce your largest exposure driver — '+TDcv.phrase+'.'+gapLine,
+        {mid:TDcv.mid,txt:'Close the '+c5esc(TDcv.short)+' gap'});
     }
     bodyB+='<div class="c5foot">Ranked by modeled exposure reduction. Click any control for source traceability and calculation basis.</div>';
   } else {
@@ -2657,15 +2684,16 @@ function c5Threats(){
   }).join('');
   var pathEv=demo?'Demo Telemetry':'Evidence Partial';
   var pathCards=THREAT_PATHS.map(function(p){return c5PathCard(p,(p.id==='ap_identity'&&!demo)?'Identity evidence partial':pathEv);}).join('');
+  var TD=c5TopDriver(); // data-ranked top driver, not hard-coded identity
   host.innerHTML=c5header()+
-    c5shell('Threats · are we ready for the behaviors most likely to hit us?','No confirmed active intrusion, but identity-driven attack paths remain the highest threat exposure.',null,'Nerion maps connected telemetry to MITRE ATT&CK tactics and business-relevant attack paths. The strongest signal today is not an active intrusion; it is the identity path that could enable access to customer-platform services.')+
+    c5shell('Threats · are we ready for the behaviors most likely to hit us?','No confirmed active intrusion, but the attack path through '+TD.phrase+' remains the highest threat exposure.',null,'Nerion maps connected telemetry to MITRE ATT&CK tactics and business-relevant attack paths. The strongest signal today is not an active intrusion; it is the path through '+TD.phrase+' that could enable access to customer-platform services.')+
     c5ThreatsStrip(ts,ta,E.level,demo)+
     '<div class="c5seclab" style="margin-top:16px">Top attack paths requiring attention</div><div class="c5aigrid">'+pathCards+'</div>'+
     c5ThreatsEvidencePanel(E)+
     '<div class="c5seclab" style="margin-top:16px">MITRE ATT&CK coverage · evidence-aware</div>'+
     '<div class="c5attgrid">'+cells+'</div>'+
     '<div class="c5foot" style="margin-top:10px">'+tactics.length+' tactics mapped; coverage strength varies by evidence and control type. Identity-dependent tactics remain partial while identity operating evidence is incomplete.</div>'+
-    c5bl('Bottom line','The most material threat path is identity-driven access into customer-platform services.',null,'Closing the identity gap improves coverage across Initial Access, Credential Access, Privilege Escalation, Persistence and Lateral Movement. Prioritize identity attack-path remediation.',{mid:'exp_identity',txt:'Close identity attack-path gaps'})+
+    c5bl('Bottom line','The most material threat path runs through '+TD.phrase+'.',null,'Closing the '+TD.short+' gap improves coverage across Initial Access, Credential Access, Privilege Escalation, Persistence and Lateral Movement. Prioritize '+TD.short+' attack-path remediation.',{mid:TD.mid,txt:'Close '+c5esc(TD.short)+' attack-path gaps'})+
     '<div class="c5foot">Coverage maps MITRE ATT&CK tactics to your detection and prevention controls.'+(demo?' Values are demo telemetry.':'')+'</div>';
 }
 
@@ -2684,14 +2712,15 @@ function c5Peers(){
     return '<div class="c5drow" data-c5m="dom_'+k+'"><div style="flex:1;min-width:0"><div class="c5dn">'+m.name+'</div></div>'+trk+'<div style="font-size:14px;font-weight:500;width:28px;text-align:right;color:var(--ink)">'+(m.mine!=null?Number(m.mine).toFixed(1):'—')+'</div><div class="c5delta" style="color:var(--'+yc+')">'+dtxt+'</div></div>';
   }).join('');
   var mat=c5get('peer_maturity'),med=c5get('peer_median'),pos=c5get('peer_position');
+  var TD=c5TopDriver(); // data-ranked top driver, not hard-coded identity
   var kanon='<div class="c5kanon">'+c5icon('lock')+'<div>Anonymous and opt-in. Cohorts use k-anonymity and are suppressed below a minimum size — nothing identifying leaves your environment. This is the only part of Nerion that reaches the internet.</div></div>';
   host.innerHTML=c5header()+
-    c5shell('Peer benchmark · how do we compare?','Ahead of your peers overall — with one domain you trail.',null,'Benchmarked against same-size, same-industry peers, your maturity sits in the top third. You lead on detection and data protection; you trail on identity and access — the same gap driving your exposure. Each domain carries its full comparison.')+
+    c5shell('Peer benchmark · how do we compare?','Ahead of your peers overall — with one domain you trail.',null,'Benchmarked against same-size, same-industry peers, your maturity sits in the top third. Your weakest domain versus peers is the one behind '+TD.phrase+' — the same gap driving your exposure. Each domain carries its full comparison.')+
     '<div class="c5statgrid">'+c5mc('peer_maturity','Your maturity',(mat.connected?mat.displayValue:'—'),null)+c5mc('peer_median','Peer median',(med.connected?med.displayValue:'—'),'ink-2')+c5mc('peer_position','Your position',(pos.connected?pos.displayValue:'—'),pos.connected?'good':null)+'</div>'+
     '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px"><span class="c5seclab" style="margin:0">By domain · your score vs. peer median</span><span style="font-size:11.5px;color:var(--muted)">▏ peer median</span></div>'+
     '<div>'+rows+'</div>'+
     kanon+
-    c5bl('Bottom line','Close the one domain where peers beat you.',null,'Identity and access is your only real gap versus peers — and it’s your largest exposure. Closing it moves you from below-median to top-quartile there, and removes your single largest exposure.',{mid:'exp_identity',txt:'Close the identity gap'})+
+    c5bl('Bottom line','Close the one domain where peers beat you.',null,'Your largest exposure driver — '+TD.phrase+' — is also where you trail peers most. Closing it moves you toward top-quartile in that domain and reduces your single largest exposure.',{mid:TD.mid,txt:'Close the '+c5esc(TD.short)+' gap'})+
     '<div class="c5foot">Benchmark is opt-in and anonymized against same-size industry peers. Figures shown are illustrative.</div>';
 }
 
@@ -2717,6 +2746,10 @@ function c5cfExposure(){
   var host=document.getElementById('cf-exposure');if(!host)return;
   var demo=(typeof signalsAreDemo==='function')&&signalsAreDemo();
   var expT=c5get('exp_total'),ap=c5get('cf_appetite'),hr=c5get('cf_headroom'),ec=c5get('exp_identity'),tail=c5get('cf_tail'),bi=c5get('cf_bi'),insCov=c5get('cf_ins_cov'),insGap=c5get('cf_ins_gap');
+  // The largest financial driver is data-ranked (c5TopDriver → c5expModel drivers[0]),
+  // never hard-coded to identity. dm is that driver's metric; drv/drvL/drvS its labels.
+  var TD=c5TopDriver(),dm=c5get(TD.mid);
+  var drv=TD.ok?TD.name:'the largest driver',drvL=TD.ok?TD.phrase:'the largest financial driver',drvS=TD.ok?TD.short:'the top driver';
   function num(m){try{var d=String(m.displayValue);var s=d.replace(/[^0-9.]/g,'');var mult=/B/.test(d)?1e9:/M/.test(d)?1e6:/K/.test(d)?1e3:1;return parseFloat(s)*mult;}catch(_){return NaN;}}
   var expN=expT.connected?num(expT):NaN, apN=ap.connected?num(ap):NaN;
   var apImplausible=(!isNaN(expN)&&!isNaN(apN)&&apN>expN*50); // $B appetite vs $M exposure ⇒ likely not cyber-loss tolerance
@@ -2743,30 +2776,33 @@ function c5cfExposure(){
   var evLevel=demo?'Demo':(ap.connected&&evConf.level==='High'?'Medium':evConf.level); // self-reported appetite caps below High
   var SL=(typeof TrustLogic!=='undefined')?TrustLogic.sourceStatus:function(o){return o&&o.connected?{label:'Connected',cls:'g'}:{label:'Not Connected',cls:'n'};};
   var evChips=evSrcs.map(function(s){var st=SL({connected:s.connected,computed:s.computed,partial:s.partial});if(demo&&s.connected)st={label:'Demo',cls:'a'};return '<span class="c5pill '+st.cls+'" style="display:inline-block;margin:2px 5px 2px 0">'+s.label+': '+st.label+'</span>';}).join('');
-  var evPanel=c5EvLine(evLevel,'exposure and tail loss are modeled; appetite is self-reported; insurance is manual; identity exposure is computed from connected telemetry.',evSrcs,demo);
+  var evPanel=c5EvLine(evLevel,'exposure and tail loss are modeled; appetite is self-reported; insurance is manual; the largest driver is computed from connected telemetry.',evSrcs,demo);
+  // ── evidence-aware wording: cautious when demo / low evidence; appetite verdict is data-driven ──
+  var soft=demo||evLevel==='Low'||evLevel==='Not Enough Evidence';
+  var withinTxt=!expT.connected?'not yet measured — connect your exposure model':!ap.connected?'measured against the board’s appetite once appetite connects':/Within/.test(status)?'within the board’s appetite':/Outside/.test(status)?'outside the board’s appetite':'approaching the board’s appetite';
+  var drvLead=TD.ok?(drv+(soft?' appears to be the largest financial driver':' is the largest financial driver')):'connect your telemetry to rank the largest financial driver';
   // ── funding decision block (no ROI/per-$1 without cost data) ──
   var funding='<div class="c5statgrid" style="margin-top:14px">'+
     cfCard('Funding required','Cost estimate needed','Connect the remediation cost to compute exposure reduction per $1','Not connected','muted')+
-    cfCard('Modeled exposure reduction',(ec.connected?ec.displayValue:'—'),'From reducing the largest financial driver','Modeled'+(demo?' · Demo':''),'good','exp_identity')+
+    cfCard('Modeled exposure reduction',(dm.connected?dm.displayValue:'—'),'From reducing the largest financial driver','Modeled'+(demo?' · Demo':''),'good',TD.mid)+
     cfCard('Timeline · owner','90–180 days','Owner: CISO / CIO','Estimate','ink')+
     '</div>';
-  var answer='Cyber exposure remains within appetite, but identity risk is the largest financial driver.';
   host.innerHTML=c5header()+
-    c5shell('Financial exposure · are we within the board’s appetite?','Cyber exposure is within appetite — identity risk is the largest financial driver.',null,'Modeled cyber exposure is below the board-approved cyber loss appetite. The largest driver is customer-platform identity risk; funding remediation reduces modeled exposure and protects financial headroom. Every dollar carries its source; drill any card for its basis.')+
+    c5shell('Financial exposure · are we within the board’s appetite?',(expT.connected?('Cyber exposure is '+withinTxt+' — '+drvLead+'.'):'Connect your exposure model to size cyber exposure against the board’s appetite.'),null,(expT.connected?('Modeled cyber exposure is '+(/Within/.test(status)?'below':/Outside/.test(status)?'above':'measured against')+' the board-approved cyber loss appetite. The largest driver is '+drvL+'; funding remediation reduces modeled exposure and protects financial headroom. Every dollar carries its source; drill any card for its basis.'):'Connect your exposure model, appetite and telemetry and this sizes cyber exposure against the board’s appetite and ranks the largest financial driver.'))+
     '<div class="c5cards">'+
       cfCard('Modeled cyber exposure',(expT.connected?expT.displayValue:'—'),'Status: '+status,'Modeled'+(demo?' · Demo':''),statusCol,'exp_total')+
       cfCard('Board-approved cyber loss appetite',(ap.connected?ap.displayValue:'Appetite not connected'),(apImplausible?'Confirm this is cyber-loss tolerance, not enterprise value':'Board-approved cyber loss tolerance'),apProv,'ink','cf_appetite')+
       cfCard('Financial headroom',(hr.connected?hr.displayValue:'—'),(hrCredible?'Headroom to cyber loss appetite':'Shown only when appetite is credible — treat as '+(demo?'demo':'illustrative')),(hrCredible?'Computed':(demo?'Demo headroom':'Illustrative')),(hrCredible?statusCol:'muted'),'cf_headroom')+
     '</div>'+
     '<div class="c5tiles">'+
-      cfTile('Largest financial exposure driver',(ec.connected?ec.displayValue:'—'),'Customer-platform identity risk','Largest','a','exp_identity')+
+      cfTile('Largest financial exposure driver',(dm.connected?dm.displayValue:'—'),(TD.ok?cap(drv):'Connect telemetry to rank'),'Largest','a',TD.mid)+
       cfTile('1-in-20 modeled loss scenario',(tail.connected?tail.displayValue:'—'),'Tail loss scenario','Modeled','a','cf_tail')+
       cfTile('Customer-platform outage impact',(bi.connected?bi.displayValue:'—'),'Business interruption estimate','If down','b','cf_bi')+
       cfTile('Insurance gap',(insGap.connected?(insGap.displayValue+' residual tail exposure'):(insCov.connected?'No residual gap':'—')),(covPct?(covPct+'% of modeled 1-in-20 scenario covered'):'coverage of the modeled tail'),'Manual','a','cf_ins_gap')+
     '</div>'+
     funding+
     evPanel+
-    c5bl('Bottom line','Current modeled cyber exposure remains within appetite — identity risk is the largest financial driver.',null,'The largest financial exposure driver is customer-platform identity risk'+(ec.connected?(': '+ec.displayValue+' modeled exposure'):'')+'. Funding the remediation reduces the largest modeled driver, protects financial headroom, and narrows residual exposure. Approve identity remediation funding, or defer with accepted residual exposure.',{mid:'exp_identity',txt:'Approve identity remediation — reduce modeled exposure'},{mid:'exp_identity',txt:'Defer with risk acceptance'})+
+    c5bl('Bottom line',(expT.connected?('Current modeled cyber exposure is '+withinTxt+' — '+drvLead+'.'):'Connect your exposure model to rank the largest financial driver.'),null,'The largest financial exposure driver is '+drvL+(dm.connected?(': '+dm.displayValue+' modeled exposure'):'')+'. Funding the remediation reduces the largest modeled driver, protects financial headroom, and narrows residual exposure. Approve '+drvS+' remediation funding, or defer with accepted residual exposure.',{mid:TD.mid,txt:'Approve '+drvS+' remediation — reduce modeled exposure'},{mid:TD.mid,txt:'Defer with risk acceptance'})+
     '<div class="c5foot">Exposure and tail are modeled (ALE and Monte-Carlo); appetite is self-reported; insurance is manual. Every input traces to its source'+(demo?' — values shown are demo/illustrative.':'.')+'</div>';
 }
 /* Tab 02 — Cyber ROI */
@@ -2777,28 +2813,33 @@ function c5cfRoi(){
   var host=document.getElementById('cf-roi');if(!host)return;
   var st=(typeof ROI_STATE!=='undefined')?ROI_STATE:null;
   var haveSpend=!!(st&&st.invested>0&&st.riskRemoved>0);
-  var er=c5get('eff_removed');var redVal=er.connected?er.displayValue:'$604M';
+  var er=c5get('eff_removed');var redConn=!!er.connected;var redVal=redConn?er.displayValue:'Not connected';
+  var TD=c5TopDriver(); // data-ranked reallocation candidate — never hard-coded to identity
+  var cand=TD.ok?TD.name:'the largest driver',candL=TD.ok?TD.phrase:'the largest driver';
   function card(t,v,badge,badgeCls,sub,col){return '<div class="c5card" style="min-width:200px"><div class="c5card-top"><span class="c5card-l">'+t+'</span><span class="c5pill '+(badgeCls||'n')+'" style="font-size:9px">'+badge+'</span></div><div class="c5card-v" style="color:var(--'+(col||'ink')+')">'+v+'</div><div class="c5esub" style="font-size:11px;color:var(--muted);margin-top:2px">'+sub+'</div></div>';}
+  var redCard=redConn
+    ?card('Modeled exposure reduction',redVal,'Modeled','a','Estimated exposure reduced by current controls.','good')
+    :card('Modeled exposure reduction','Not connected','Model not connected','n','Connect your control ledger to model exposure reduction.','muted');
   var cards,blHead,blBody,primaryBtn,secondaryBtn;
   if(haveSpend){
     var mult=(typeof roiMult==='function')?roiMult(st.ret):Math.round(st.ret);
-    cards=card('Modeled exposure reduction',redVal,'Modeled','a','Estimated exposure reduced by current controls.','good')+
+    cards=redCard+
       card('Security spend attributed',usd(st.invested),'Connected','g','Budget, vendor spend and project cost attributed.','ink')+
       card('Return per dollar',mult+'×','Computed','a','Modeled exposure reduction ÷ attributed spend.','good')+
       card('ROI readiness','Complete','Spend connected','g','Exposure model and spend both connected.','good');
     blHead='Spend ROI is computed on attributed spend.';
-    blBody='Your program returns '+mult+'× on '+usd(st.invested)+' of attributed spend. Identity delivers the most modeled exposure reduction per dollar — the strongest reallocation candidate.';
-    primaryBtn={mid:'ctl_identity',txt:'Review identity ROI'};
+    blBody='Your program returns '+mult+'× on '+usd(st.invested)+' of attributed spend. Reducing '+candL+' delivers the most modeled exposure reduction per dollar — the strongest reallocation candidate.';
+    primaryBtn={mid:TD.mid,txt:'Review '+cand+' ROI'};
     secondaryBtn={mid:'eff_spend',txt:'Review spend attribution'};
   } else {
-    cards=card('Modeled exposure reduction',redVal,'Modeled','a','Estimated exposure reduced by current controls.','good')+
+    cards=redCard+
       card('Security spend attributed','Not connected','Spend data needed','n','Connect budget, GL, vendor spend, and project cost data.','muted')+
       card('Return per dollar','Not enough evidence','Pending spend data','n','ROI cannot be calculated until spend is attributed.','muted')+
-      card('ROI readiness','Partial','Exposure model connected','a','Spend attribution is the missing input.','warn');
+      card('ROI readiness',redConn?'Partial':'Not enough evidence',redConn?'Exposure model connected':'Model + spend needed',redConn?'a':'n','Spend attribution is the missing input.',redConn?'warn':'muted');
     blHead='Modeled exposure reduction is real; spend ROI is pending.';
-    blBody='Nerion shows '+redVal+' in modeled exposure reduction, but cannot prove cyber spend ROI until spend data is connected. Identity appears to be the strongest exposure-reduction candidate; connect spend data to confirm return per dollar.';
+    blBody=(redConn?('Nerion shows '+redVal+' in modeled exposure reduction, but cannot prove cyber spend ROI until spend data is connected. '):'Connect your control ledger and security spend to model exposure reduction and prove return per dollar. ')+'Reducing '+candL+' appears to be the strongest exposure-reduction candidate; connect spend data to confirm return per dollar.';
     primaryBtn={mid:'eff_spend',txt:'Connect security spend data'};
-    secondaryBtn={mid:'ctl_identity',txt:'Review identity ROI candidate'};
+    secondaryBtn={mid:TD.mid,txt:'Review '+cand+' ROI candidate'};
   }
   host.innerHTML=c5header()+
     c5shell('Cyber ROI · is our security spend paying off?','Modeled exposure reduction is visible, but spend ROI is not complete until security spend is connected.',null,'Nerion can show modeled exposure reduction today. To prove return per dollar, connect budget, vendor spend, project cost, and labor allocation data.')+
@@ -2818,7 +2859,10 @@ function c5covBar(){
 function c5cfInsurance(){
   var host=document.getElementById('cf-insurance');if(!host)return;
   var demo=(typeof signalsAreDemo==='function')&&signalsAreDemo();
-  var tailM=c5get('cf_tail'),limM=c5get('cf_ins_limit'),gap=c5get('cf_ins_gap'),ec=c5get('exp_identity');
+  var tailM=c5get('cf_tail'),limM=c5get('cf_ins_limit'),gap=c5get('cf_ins_gap');
+  // Largest tail driver is data-ranked (c5TopDriver), never hard-coded to identity.
+  var TD=c5TopDriver(),dm=c5get(TD.mid);
+  var drvL=TD.ok?TD.phrase:'the largest driver',drvS=TD.ok?TD.short:'the top driver';
   var hasGap=gap.connected&&gap.color==='warn';
   var tailV=tailM.connected?tailM.displayValue:'—',limV=limM.connected?limM.displayValue:'—',gapV=gap.connected?gap.displayValue:'—';
   // Premium — hide the implausible $B-vs-$M slip; show Not connected until a credible value exists.
@@ -2835,7 +2879,7 @@ function c5cfInsurance(){
     {label:'Annual premium',connected:premUsable,critical:false},
     {label:'Exclusions / sublimits / retention',connected:false,critical:true,partial:true},
     {label:'Business-interruption cover',connected:false,critical:false,partial:true},
-    {label:'Largest tail driver',connected:ec.connected,critical:false,computed:true}
+    {label:'Largest tail driver',connected:dm.connected,critical:false,computed:true}
   ];
   var evConf=(typeof TrustLogic!=='undefined')?TrustLogic.evidenceConfidence(evSrcs):{level:'—'};
   var evLevel=demo?'Demo':evConf.level;
@@ -2851,10 +2895,10 @@ function c5cfInsurance(){
     '<div class="c5cards" style="margin-top:14px">'+
       cfCard('Annual premium',(premUsable?(usd(pv)+' / yr'):'Not connected'),(premUsable?(demo?'Demo':'Self-reported'):'Premium data needed'),(premUsable?'n':'n'),(premUsable?'Annual cyber policy cost · renewal is a lever.':'Connect policy premium and renewal data.'),(premUsable?'ink':'muted'),premUsable?'cf_premium':null)+
       cfCard('Coverage terms review','Needs review','Policy terms not connected','a','Exclusions, sublimits, retention, waiting periods, ransomware, business interruption, dependent-BI and vendor/supply-chain coverage need review.','warn')+
-      cfCard('Largest tail driver',(ec.connected?(ec.displayValue+' modeled exposure'):'—'),'Tail driver','a','Customer-platform identity risk is the largest contributor to the modeled tail.','warn','exp_identity')+
+      cfCard('Largest tail driver',(dm.connected?(dm.displayValue+' modeled exposure'):'—'),'Tail driver','a',(TD.ok?(cap(drvL)+' is the largest contributor to the modeled tail.'):'Connect telemetry to rank the largest tail contributor.'),'warn',TD.mid)+
     '</div>'+
     evPanel+
-    c5bl('Bottom line',(hasGap?('Modeled 1-in-20 cyber loss is '+tailV+'; insurance transfers '+limV+', leaving '+gapV+' retained.'):'The modeled tail is transferred — reduce the tail to improve efficiency.'),null,'The fastest way to improve efficiency is to reduce the largest tail driver — customer-platform identity risk — before buying more coverage. Fund identity remediation to reduce the tail, or model additional coverage if retained exposure remains outside appetite.',{mid:'exp_identity',txt:'Fund identity remediation'},{mid:'cf_ins_gap',txt:'Model additional coverage'})+
+    c5bl('Bottom line',(hasGap?('Modeled 1-in-20 cyber loss is '+tailV+'; insurance transfers '+limV+', leaving '+gapV+' retained.'):'The modeled tail is transferred — reduce the tail to improve efficiency.'),null,'The fastest way to improve efficiency is to reduce the largest tail driver — '+drvL+' — before buying more coverage. Fund '+drvS+' remediation to reduce the tail, or model additional coverage if retained exposure remains outside appetite.',{mid:TD.mid,txt:'Fund '+drvS+' remediation'},{mid:'cf_ins_gap',txt:'Model additional coverage'})+
     '<div class="c5foot">Cover vs. modeled tail; limits and premium are self-reported from your policy record'+(demo?' — values shown are demo.':'.')+'</div>';
 }
 /* Tab 04 — Cost optimization */
@@ -2877,16 +2921,18 @@ function c5dqRow(type,typeCls,name,mid,sub,rec,recCls){var m=c5get(mid);
 function c5cfDecisions(){
   var host=document.getElementById('cf-decisions');if(!host)return;
   var ec=c5get('exp_identity'),gap=c5get('cf_ins_gap'),em=c5get('exp_email');
+  // Driver naming is data-ranked (c5TopDriver), never hard-coded to identity.
+  var TD=c5TopDriver(),dm=c5get(TD.mid);
   var list=[
-    c5dec('cf',1,'Fund the identity fix?','Your single largest exposure driver'+(ec.connected?(' — '+ec.displayValue):'')+'. Funding it removes the exposure and keeps modeled loss within appetite.',
-      {on:'Approve & fund the identity fix',osum:(ec.connected?('Removes '+ec.displayValue+' · keeps you within appetite'):'Removes the top exposure driver'),pros:['Removes your single largest exposure driver.','Highest return per dollar of the choices here.','Keeps modeled loss within the board-approved appetite.'],cons:['Requires capital this cycle (scoped with your team).']}),
+    c5dec('cf',1,'Fund the '+TD.short+' fix?','Your single largest exposure driver'+(dm.connected?(' — '+dm.displayValue):'')+'. Funding it reduces the modeled exposure and keeps modeled loss within appetite.',
+      {on:'Approve & fund the '+TD.short+' fix',osum:(dm.connected?('Reduces '+dm.displayValue+' · keeps you within appetite'):'Reduces the top exposure driver'),pros:['Reduces your single largest exposure driver.','Highest return per dollar of the choices here.','Keeps modeled loss within the board-approved appetite.'],cons:['Requires capital this cycle (scoped with your team).']}),
     c5dec('cf',2,'Close the insurance gap — buy up, or reduce the tail?','Weigh transferring more risk to insurance against reducing the modeled tail at its source.',
-      {on:'Reduce the tail — fund the identity fix',osum:'Cheaper than extra premium in most cases',pros:['Lowers the severe-year tail at source.','Improves your renewal position.'],cons:['Takes a cycle to land vs. an immediate transfer.']},
+      {on:'Reduce the tail — fund the '+TD.short+' fix',osum:'Cheaper than extra premium in most cases',pros:['Lowers the severe-year tail at source.','Improves your renewal position.'],cons:['Takes a cycle to land vs. an immediate transfer.']},
       [{on:'Buy up cover — raise the limit',osum:'Immediate transfer · higher premium',pros:['Caps the financial loss immediately.'],cons:['Adds recurring premium.','Transfers the loss; does not reduce it.']},
        {on:'Defer to renewal',osum:'Revisit at the next policy renewal',pros:['No action now.'],cons:['The residual gap persists in the interim.']}]),
-    c5dec('cf',3,'Accept the residual phishing risk?','Modeled and within tolerance — a reasonable acceptance if the rationale is recorded.',
-      {on:'Accept — record the rationale',osum:'Within tolerance · monitored',pros:['Well within appetite on current modeling.','Avoids spend on a low-return control.'],cons:['Requires a recorded risk-acceptance rationale.','Revisit if the phishing signal rises.']},
-      [{on:'Fund additional awareness / email security',osum:'Extra spend · marginal reduction',pros:['Further lowers an already-small exposure.'],cons:['Low return per dollar vs. identity.']}])
+    c5dec('cf',3,'Accept the smallest residual driver'+(em.connected?(' — '+em.name.toLowerCase()):'')+'?','Modeled and within tolerance — a reasonable acceptance if the rationale is recorded.',
+      {on:'Accept — record the rationale',osum:'Within tolerance · monitored',pros:['Well within appetite on current modeling.','Avoids spend on a low-return control.'],cons:['Requires a recorded risk-acceptance rationale.','Revisit if that signal rises.']},
+      [{on:'Fund additional mitigation for this driver',osum:'Extra spend · marginal reduction',pros:['Further lowers an already-small exposure.'],cons:['Low return per dollar vs. the top driver.']}])
   ];
   host.innerHTML=c5header()+
     c5shell('Risk decisions · what needs my sign-off?','Three decisions are waiting — one clear yes, one to weigh, one to accept.',null,'Each decision below gives you the options — the recommended call is marked, but the choice is yours. Choosing one stamps it with your name and time, keeps it editable for 24 hours, and (where you connected Jira / ServiceNow at onboarding) opens a tracked project whose status is pulled back on refresh.')+
@@ -2899,6 +2945,7 @@ function c5cfDecisions(){
 function c5ceHealth(){
   var host=document.getElementById('ce-health');if(!host)return;
   var O=c5Objectives(),ec=c5get('exp_identity');
+  var TD=c5TopDriver(),dm=c5get(TD.mid); // data-ranked top driver, not hard-coded identity
   var atPill=O.atRisk>0?'a':'g';var atTxt=O.atRisk>0?(O.atRisk+' at risk'):'All protected';
   var hr=c5get('cf_headroom');var T=c5T();
   host.innerHTML=c5header()+
@@ -2909,37 +2956,40 @@ function c5ceHealth(){
       c5tile('exp_total','g','Within appetite',(hr.connected?('Well inside your '+c5get('cf_appetite').displayValue+' tolerance'):'Your modeled cyber loss this year'))+
       c5tile('ceo_cust_incidents','g','Intact','Customer-impacting incidents this quarter')+
     '</div>'+
-    c5bl('Bottom line','Back the one move that protects your top objective.',null,(ec.connected?('The customer platform — central to your growth strategy — carries the only real cyber exposure, an identity gap of '+ec.displayValue+'. The fix is funded; backing it keeps your #1 objective on track.'):'Connect your controls and the one exposure to your top objective — an identity gap — surfaces here, with its funded fix.'),{mid:'exp_identity',txt:'Back the identity fix — protects the platform'})+
+    c5bl('Bottom line','Back the one move that protects your top objective.',null,(ec.connected?('The customer platform — central to your growth strategy — carries the largest cyber exposure: <b>'+c5esc(TD.phrase)+'</b>'+(dm.connected?(' ('+dm.displayValue+')'):'')+'. The fix is funded; backing it keeps your #1 objective on track.'):'Connect your controls and the one exposure to your top objective surfaces here, with its funded fix.'),{mid:TD.mid,txt:'Back the '+c5esc(TD.short)+' fix — protects the platform'})+
     '<div class="c5foot">Figures are governance-grade and traceable to source.</div>';
 }
 /* Tab 02 — Strategic risk */
 function c5ceStrategic(){
   var host=document.getElementById('ce-strategic');if(!host)return;
   var O=c5Objectives();
+  var TD=c5TopDriver(); // data-ranked top driver, not hard-coded identity
   var rows=O.objs.map(function(o){var pill=o.status==='at risk'?'a':o.status==='watch'?'b':'g';var pt=o.status==='at risk'?'At risk':o.status==='watch'?'Watch':'Safe';
     return '<div class="c5prow" data-c5m="ceo_objectives"><span class="c5sq '+(o.c==='warn'?'a':o.c==='blue'?'b':'g')+'" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">'+o.name+'</div><div class="c5row-s">'+o.sub+'</div></div><span class="c5pill '+pill+'">'+pt+'</span></div>';
   }).join('');
+  var atN=O.atRisk||0,safeN=(O.protected!=null?O.protected:(O.total-atN));
   host.innerHTML=c5header()+
-    c5shell('Strategic risk · which objectives are exposed?','Six of your seven objectives are cyber-safe — one needs attention.',null,'Cyber risk mapped to your strategic objectives. Only growing the customer platform carries real exposure — the identity gap threatens its uptime and the trust it runs on. Each objective traces to its drivers.')+
+    c5shell('Strategic risk · which objectives are exposed?',(atN>0?(safeN+' of your '+O.total+' objectives are cyber-safe — '+atN+' need'+(atN===1?'s':'')+' attention.'):'All '+O.total+' of your objectives are cyber-safe.'),null,'Cyber risk mapped to your strategic objectives. The at-risk objective is exposed by '+TD.phrase+', which threatens its uptime and the trust it runs on. Each objective traces to its drivers.')+
     '<div class="c5rank" style="padding:4px 15px"><div class="c5rank-h" style="border:0;background:transparent;padding:11px 0">Strategic objectives · cyber status</div>'+rows+'</div>'+
-    c5bl('Bottom line','Protect the objective that drives growth.',null,'Growing the customer platform is your #1 objective and your only at-risk one — the identity gap threatens its uptime and the trust it runs on. The fix is funded.',{mid:'exp_identity',txt:'Back the identity fix — protects growth'})+
+    c5bl('Bottom line','Protect the objective that drives growth.',null,'Your at-risk objective is exposed by '+TD.phrase+', which threatens its uptime and the trust it runs on. The fix is funded.',{mid:TD.mid,txt:'Back the '+c5esc(TD.short)+' fix — protects growth'})+
     '<div class="c5foot">Objectives are mapped from your strategy inputs; cyber exposure traces to source.</div>';
 }
 /* Tab 03 — Financial exposure (shared objects with CFO/CISO) */
 function c5ceFinancial(){
   var host=document.getElementById('ce-financial');if(!host)return;
   var ec=c5get('exp_identity'),hr=c5get('cf_headroom'),ap=c5get('cf_appetite');
+  var TD=c5TopDriver(),dm=c5get(TD.mid); // data-ranked top driver, not hard-coded identity
   host.innerHTML=c5header()+
     c5shell('Financial exposure · what could this cost us?','Cyber could cost real money — comfortably within tolerance.',null,'The headline: your modeled annual cyber loss against the board’s appetite, with the severe-year tail. The single largest driver already has a funded fix. Every figure traces to its model and inputs.')+
     '<div class="c5cards">'+c5card('exp_total')+c5card('cf_appetite')+c5card('cf_tail')+'</div>'+
     // Exposure drivers behind the total — distinct from the three summary cards
     // above (no repeat of exp_total / cf_tail), so nothing is shown twice.
     '<div class="c5tiles">'+
-      c5tile('exp_identity','b','Largest driver','The single biggest share of the total · funded fix')+
+      c5tile(TD.mid,'b','Largest driver','The single biggest share of the total · funded fix')+
       c5tile('cf_bi','a','If down','Cost if the customer platform is down')+
       c5tile('cf_ins_cov','g','Insured','Share of the severe-year tail your policy covers')+
     '</div>'+
-    c5bl('Bottom line','The one number that moves the headline down.',null,(ec.connected?('A single identity gap drives '+ec.displayValue+' of the total — the largest single share. Funding its fix lowers both the everyday cost and the severe-year tail, and it’s already scoped.'):'Connect your controls and the single largest loss driver — an identity gap — surfaces here with its funded fix.'),{mid:'exp_identity',txt:ec.connected?('Back the identity fix — cuts '+ec.displayValue):'Back the identity fix'})+
+    c5bl('Bottom line','The one number that moves the headline down.',null,(ec.connected?('The largest single driver — '+TD.phrase+' — accounts for '+(dm.connected?dm.displayValue:'the biggest share')+' of the total. Funding its fix lowers both the everyday cost and the severe-year tail, and it’s already scoped.'):'Connect your controls and the single largest loss driver surfaces here with its funded fix.'),{mid:TD.mid,txt:ec.connected&&dm.connected?('Back the '+c5esc(TD.short)+' fix — cuts '+dm.displayValue):('Back the '+c5esc(TD.short)+' fix')})+
     '<div class="c5foot">Loss figures are modeled (ALE and tail); every input traces to its source.</div>';
 }
 /* Tab 04 — Brand & customer trust. A CISO's briefing to the CEO: are customers
@@ -2947,7 +2997,7 @@ function c5ceFinancial(){
    what decision is needed. Safer-than-mockup wording, evidence-aware. */
 function c5ceTrust(){
   var host=document.getElementById('ce-trust');if(!host)return;
-  var TI=c5TrustInputs();var ec=c5get('exp_identity');
+  var TI=c5TrustInputs();var ec=c5get('exp_identity');var TD=c5TopDriver();
   var ans=(typeof TrustLogic!=='undefined')?TrustLogic.trustAnswer(TI):'';
   var blHead=(typeof TrustLogic!=='undefined')?TrustLogic.bottomLineHead(TI):'Customer trust';
   var demo=(typeof signalsAreDemo==='function')&&signalsAreDemo();
@@ -2960,7 +3010,7 @@ function c5ceTrust(){
       c5TrustRiskTile(ec)+
       c5TrustEvidence(TI)+
     '</div>'+
-    c5bl('Bottom line',blHead,null,'The risk is not an active breach; it is an unresolved identity exposure in the customer platform — the one thing that could put customer data or platform uptime, and the trust that depends on them, at risk. CEO action: approve or accelerate the customer-platform identity remediation plan. The fix is funded.',{mid:'exp_identity',txt:'Approve identity remediation'})+
+    c5bl('Bottom line',blHead,null,'The risk is not an active breach; it is an unresolved '+TD.short+' exposure in the customer platform — the one thing that could put customer data or platform uptime, and the trust that depends on them, at risk. CEO action: approve or accelerate the customer-platform '+TD.short+' remediation plan. The fix is funded.',{mid:TD.mid,txt:'Approve '+c5esc(TD.short)+' remediation'})+
     '<div class="c5foot">Incident, breach/privacy and identity-exposure figures trace to source; availability is not yet connected — see Evidence confidence.</div>';
 }
 /* "Top trust risk" tile — the identity exposure in plain business language, with the
@@ -2997,13 +3047,13 @@ function c5TrustEvidence(TI){
    the shared decision object so it stays consistent with the CISO/CFO/CRO/CLO seats. */
 function c5ceDecisions(){
   var host=document.getElementById('ce-decisions');if(!host)return;
-  var ec=c5get('exp_identity');
+  var TD=c5TopDriver(),dm=c5get(TD.mid);
   var demo=(typeof signalsAreDemo==='function')&&signalsAreDemo();
-  var exp=ec.connected?ec.displayValue:'—';
-  var evLevel=demo?'Demo':(ec.connected?'Medium':'Not Enough Evidence');
+  var exp=dm.connected?dm.displayValue:'—';
+  var evLevel=demo?'Demo':(dm.connected?'Medium':'Not Enough Evidence');
   var meta={
     recommendation:'Approve remediation now',
-    modeledExposure:(ec.connected?(demo?(exp+' (modeled demo)'):exp):'—'),
+    modeledExposure:(dm.connected?(demo?(exp+' (modeled demo)'):exp):'—'),
     exposureLabel:'Modeled exposure',
     exposureBasis:'Estimated business exposure tied to customer-platform services dependent on affected identity controls.',
     evidenceConfidence:evLevel,
@@ -3011,12 +3061,12 @@ function c5ceDecisions(){
     requestedBy:'CISO',
     sourceStatus:demo?'Modeled demo':'Modeled'
   };
-  var recSum='Reduces '+(ec.connected?exp:'the')+' modeled exposure tied to customer-platform identity risk and supports the customer trust objective.';
+  var recSum='Reduces '+(dm.connected?exp:'the')+' modeled exposure tied to customer-platform '+TD.short+' risk and supports the customer trust objective.';
   var list=[
-    c5dec('ce',1,'Approve customer-platform identity remediation',
-      'Recommended: approve remediation now. This reduces '+(ec.connected?exp:'')+' modeled exposure tied to customer-platform identity risk and supports the customer trust objective.',
-      {on:'Approve remediation now',osum:'Fund and prioritize the identity remediation project',
-        pros:['Reduces modeled exposure tied to customer-platform identity risk.','Supports the customer trust objective.','Opens a tracked remediation project.'],
+    c5dec('ce',1,'Approve customer-platform '+TD.short+' remediation',
+      'Recommended: approve remediation now. This reduces '+(dm.connected?exp:'')+' modeled exposure tied to customer-platform '+TD.short+' risk and supports the customer trust objective.',
+      {on:'Approve remediation now',osum:'Fund and prioritize the '+TD.short+' remediation project',
+        pros:['Reduces modeled exposure tied to customer-platform '+TD.short+' risk.','Supports the customer trust objective.','Opens a tracked remediation project.'],
         cons:['Requires executive sponsorship and capital this cycle.'],
         consequence:'Opens a tracked remediation project and begins modeled-exposure-reduction tracking.',
         btn:'Choose &amp; record'},
@@ -3033,7 +3083,7 @@ function c5ceDecisions(){
       meta)
   ];
   host.innerHTML=c5header()+
-    c5shell('Decisions for the CEO · what needs my sign-off?','The strategic cyber decision waiting on you: approve identity remediation now, defer it, or formally accept the residual exposure.',null,'No technical detail — just the business choice. Choosing an option records your decision, timestamp and rationale where required, keeps it editable for 24 hours, and triggers the appropriate workflow.')+
+    c5shell('Decisions for the CEO · what needs my sign-off?','The strategic cyber decision waiting on you: approve '+TD.short+' remediation now, defer it, or formally accept the residual exposure.',null,'No technical detail — just the business choice. Choosing an option records your decision, timestamp and rationale where required, keeps it editable for 24 hours, and triggers the appropriate workflow.')+
     c5decisions(list)+
     '<div class="c5foot">Choosing an option records your decision, timestamp, rationale where required, and triggers the appropriate workflow. Every figure traces to its basis'+(demo?' — values are modeled demo exposure.':'.')+'</div>';
 }
@@ -3042,21 +3092,21 @@ function c5ceDecisions(){
 /* Tab 01 — Cyber on one scale */
 function c5crScale(){
   var host=document.getElementById('cr-scale');if(!host)return;
-  var P=c5Principal(),ec=c5get('exp_identity');
+  var P=c5Principal(),TD=c5TopDriver(),dm=c5get(TD.mid);
   var rows=P.rows.map(function(r){var pf=Math.max(6,Math.round(r.v/P.max*100));var barCls=r.cyber?'a':'';
     return '<div class="c5row" data-c5m="'+(r.cyber?'exp_total':'cr_rank')+'"><div class="c5row-main"><div class="c5row-t">'+r.l+(r.cyber?'<span class="c5tag">You are here</span>':'')+'</div><div class="c5retbar" style="width:100%;max-width:340px"><i class="'+barCls+'" style="width:'+pf+'%"></i></div></div><div class="c5row-v">'+usd(r.v)+'</div><span class="c5tr '+r.tc+'">'+r.tr+'</span></div>';
   }).join('');
   host.innerHTML=c5header()+
-    c5shell('Cyber on one scale · how does it compare to our other risks?','Cyber sits mid-pack among your principal risks — watch its direction.',null,'On one enterprise scale, cyber sits against market, credit, operational and compliance risk. Its direction — not just its size — is what the risk committee tracks; a single identity gap drives most of it. Each risk traces to its basis.')+
+    c5shell('Cyber on one scale · how does it compare to our other risks?','Cyber sits mid-pack among your principal risks — watch its direction.',null,'On one enterprise scale, cyber sits against market, credit, operational and compliance risk. Its direction — not just its size — is what the risk committee tracks; a single '+TD.short+' gap drives most of it. Each risk traces to its basis.')+
     '<div class="c5cards">'+c5card('cr_rank')+c5card('exp_total')+c5card('cr_trend')+'</div>'+
     '<div class="c5rank"><div class="c5rank-h">Principal risks · residual on one scale</div>'+rows+'</div>'+
-    c5bl('Bottom line','The one lever that moves cyber down the scale.',null,(ec.connected?('A single identity gap drives most of cyber’s residual. Treating it removes '+ec.displayValue+' — moving cyber down the enterprise scale.'):'Connect your controls and the single identity gap driving most of cyber’s residual surfaces here, with its funded treatment.'),{mid:'exp_identity',txt:ec.connected?('Treat the identity risk — removes '+ec.displayValue):'Treat the identity risk'})+
+    c5bl('Bottom line','The one lever that moves cyber down the scale.',null,(dm.connected?('A single '+TD.short+' gap drives most of cyber’s residual. Treating it reduces '+dm.displayValue+' — moving cyber down the enterprise scale.'):'Connect your controls and the single '+TD.short+' gap driving most of cyber’s residual surfaces here, with its funded treatment.'),{mid:TD.mid,txt:dm.connected?('Treat the '+c5esc(TD.short)+' risk — reduces '+dm.displayValue):('Treat the '+c5esc(TD.short)+' risk')})+
     '<div class="c5foot">Risks are normalized to one residual-loss scale; cyber traces to its model, the rest to your ERM inputs.</div>';
 }
 /* Tab 02 — Risk appetite & acceptance */
 function c5crAppetite(){
   var host=document.getElementById('cr-appetite');if(!host)return;
-  var C=c5Categories(),ec=c5get('exp_identity');
+  var C=c5Categories(),TD=c5TopDriver(),dm=c5get(TD.mid);
   var rows=C.drivers.map(function(d){var over=(C.limit>0&&d.usd>C.limit);var rp=Math.max(4,Math.min(98,d.usd/C.max*100));var lp=C.limit>0?Math.max(2,Math.min(98,C.limit/C.max*100)):null;
     return '<div class="c5prow" data-c5m="'+d.id+'"><div class="c5prow-n">'+d.name.replace(/ — .*/,'')+(over?'<span class="c5tag rev">Over limit</span>':'')+'</div><div class="c5track">'+(lp!=null?('<span class="c5track-tick" style="left:'+lp+'%"></span>'):'')+'<span class="c5track-dot" style="left:'+rp+'%;background:var(--'+(over?'warn':'good')+')"></span></div><div class="c5prow-v">'+usd(d.usd)+'</div><div class="c5prow-d" style="color:var(--muted)">'+(C.limit>0?('/ '+usd(C.limit)):'—')+'</div></div>';
   }).join('');
@@ -3064,13 +3114,13 @@ function c5crAppetite(){
     c5shell('Risk appetite & acceptance · are we within tolerance?','Within appetite overall — but one category is over its limit.',null,'Cyber residual sits against the board’s appetite with headroom overall. By category, the largest driver is over its share of that appetite. Each category traces to its appetite basis and residual model.')+
     '<div class="c5cards">'+c5card('exp_total')+c5card('cf_appetite')+c5card('cf_headroom')+'</div>'+
     '<div class="c5rank" style="padding:4px 15px"><div class="c5rank-h" style="border:0;background:transparent;padding:11px 0">By category · residual vs. limit <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)">(| = category limit · even allocation of appetite until your framework’s limits connect)</span></div>'+rows+'</div>'+
-    c5bl('Bottom line','One category is over its limit.',null,(ec.connected?('Identity residual ('+ec.displayValue+') exceeds its category share of appetite. Treating it brings the category back within tolerance and restores category-level headroom.'):'Connect your controls and the over-limit category — identity — surfaces here with its funded treatment.'),{mid:'exp_identity',txt:'Bring identity within appetite'})+
+    c5bl('Bottom line','One category is over its limit.',null,(dm.connected?(cap(TD.short)+' residual ('+dm.displayValue+') exceeds its category share of appetite. Treating it brings the category back within tolerance and restores category-level headroom.'):'Connect your controls and the over-limit category — '+TD.short+' — surfaces here with its funded treatment.'),{mid:TD.mid,txt:'Bring '+c5esc(TD.short)+' within appetite'})+
     '<div class="c5foot">Overall appetite from your risk framework; category limits are an even allocation (labeled) until your framework’s category limits connect; residuals from the cyber model.</div>';
 }
 /* Tab 03 — Control assurance */
 function c5crAssurance(){
   var host=document.getElementById('cr-assurance');if(!host)return;
-  var A=c5Assurance();
+  var A=c5Assurance();var TD=c5TopDriver();
   var rows=A.fams.map(function(f){var pill=f.status==='Assured'?'g':f.status==='Partial'?'a':f.status==='Gap'?'r':'n';
     return '<div class="c5prow" data-c5m="cr_families"><span class="c5sq '+(pill==='g'?'g':pill==='a'?'a':pill==='r'?'r':'n')+'" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">'+f.l+'</div><div class="c5row-s">'+f.sub+'</div></div><span class="c5pill '+pill+'">'+f.status+'</span></div>';
   }).join('');
@@ -3078,7 +3128,7 @@ function c5crAssurance(){
     c5shell('Control assurance · are the controls working?','Controls are largely assured — with gaps where it matters.',null,'Assurance across your control families — evidenced from tests and telemetry, not self-attestation. Most are assured; identity and third-party carry a partial-assurance gap. Each family traces to its evidence and last test.')+
     '<div class="c5cards">'+c5card('cr_families')+c5card('cr_gaps')+c5card('cr_evidence')+'</div>'+
     '<div class="c5rank" style="padding:4px 15px"><div class="c5rank-h" style="border:0;background:transparent;padding:11px 0">Control families · evidence-based assurance</div>'+rows+'</div>'+
-    c5bl('Bottom line','Close the assurance gap where it matters most.',null,'Identity controls are only partially assured — and they drive your largest residual risk. The funded fix closes the control gap and the assurance gap together.',{mid:'exp_identity',txt:'Close the identity control gap'})+
+    c5bl('Bottom line','Close the assurance gap where it matters most.',null,cap(TD.short)+' controls are only partially assured — and they drive your largest residual risk. The funded fix closes the control gap and the assurance gap together.',{mid:TD.mid,txt:'Close the '+c5esc(TD.short)+' control gap'})+
     '<div class="c5foot">Assurance is evidence-based (tests and telemetry), not self-attestation.</div>';
 }
 /* Tab 04 — Trend & ownership */
@@ -3090,28 +3140,28 @@ function c5crTrend(){
   var rows=O.rows.map(function(r){var pill=r.c;var pt=r.status;
     return '<div class="c5prow" data-c5m="cr_owned"><span class="c5sq '+(r.c==='a'?'a':r.c==='b'?'b':r.c==='n'?'n':'g')+'" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">'+r.risk+'</div><div class="c5row-s">Owner: '+r.owner+' · '+r.act+'</div></div><span class="c5pill '+pill+'">'+pt+'</span></div>';
   }).join('');
-  var T=c5T();
+  var T=c5T(),TD=c5TopDriver();
   host.innerHTML=c5header()+
-    c5shell('Trend & ownership · are we improving, and who owns what?',(T.improving?'The direction is good — with clear owners.':T.worsening?'The direction is worsening — but every risk has an owner.':'Clear owners on every top risk — the trend builds as quarters record.'),null,'Direction and accountability. '+(T.has?'Cyber residual’s quarter-over-quarter trend is below':'Your residual trend builds quarter over quarter — no history is invented')+', and every top risk has a named owner and an action; one — identity — needs your governance push.')+
+    c5shell('Trend & ownership · are we improving, and who owns what?',(T.improving?'The direction is good — with clear owners.':T.worsening?'The direction is worsening — but every risk has an owner.':'Clear owners on every top risk — the trend builds as quarters record.'),null,'Direction and accountability. '+(T.has?'Cyber residual’s quarter-over-quarter trend is below':'Your residual trend builds quarter over quarter — no history is invented')+', and every top risk has a named owner and an action; one — '+TD.short+' — needs your governance push.')+
     '<div class="c5cards">'+c5card('direction')+c5card('cr_consec')+c5card('cr_owned')+'</div>'+
     '<div class="c5rank" style="padding:12px 15px"><div class="c5rank-h" style="border:0;background:transparent;padding:0 0 8px">'+(T.has?('Residual risk, last '+((tr.vals||[]).length)+' quarters'):'Residual risk — builds as you record quarters')+'</div>'+bars+'</div>'+
     '<div class="c5rank" style="padding:4px 15px;margin-top:14px"><div class="c5rank-h" style="border:0;background:transparent;padding:11px 0">Top risks · owner and action</div>'+rows+'</div>'+
-    c5bl('Bottom line',(T.improving?'The trend is good — keep the one action moving.':'Keep the one action moving.'),null,'Every top risk is owned and moving. The identity action is funded but needs your governance push to land this quarter — it’s the biggest single reduction available.',{mid:'exp_identity',txt:'Sponsor the identity action'})+
+    c5bl('Bottom line',(T.improving?'The trend is good — keep the one action moving.':'Keep the one action moving.'),null,'Every top risk is owned and moving. The '+TD.short+' action is funded but needs your governance push to land this quarter — it’s the biggest single reduction available.',{mid:TD.mid,txt:'Sponsor the '+c5esc(TD.short)+' action'})+
     '<div class="c5foot">Trend from the residual-risk series; owners from your risk register.</div>';
 }
 /* Tab 05 — Decisions for the CRO */
 function c5crDecisions(){
   var host=document.getElementById('cr-decisions');if(!host)return;
-  var ec=c5get('exp_identity'),ev=c5get('exp_vendor'),em=c5get('exp_email');var V=c5vendors();var tvName=V.worst?V.worst.name:'your top vendor';
+  var TD=c5TopDriver(),dm=c5get(TD.mid),ev=c5get('exp_vendor'),em=c5get('exp_email');var V=c5vendors();var tvName=V.worst?V.worst.name:'your top vendor';
   var list=[
-    c5dec('cr',1,'Treat the identity gap?','The only principal-risk driver over its appetite share'+(ec.connected?(' — treating it removes '+ec.displayValue):'')+'.',
-      {on:'Treat it — fund the identity fix',osum:(ec.connected?('Biggest single reduction available · −'+ec.displayValue):'The biggest single reduction available'),pros:['Brings the identity category back within its appetite share.','Largest single residual-risk reduction available.'],cons:['Requires funding and a governance push this cycle.']}),
+    c5dec('cr',1,'Treat the '+TD.short+' gap?','The only principal-risk driver over its appetite share'+(dm.connected?(' — treating it reduces '+dm.displayValue):'')+'.',
+      {on:'Treat it — fund the '+TD.short+' fix',osum:(dm.connected?('Biggest single reduction available · −'+dm.displayValue):'The biggest single reduction available'),pros:['Brings the '+TD.short+' category back within its appetite share.','Largest single residual-risk reduction available.'],cons:['Requires funding and a governance push this cycle.']}),
     c5dec('cr',2,'Third-party concentration — '+tvName,'Within limit but the rating is one to watch.',
       {on:'Monitor — keep the vendor under watch',osum:'Within limit · rating to watch',pros:['No spend; appropriate for a within-limit risk.'],cons:['A rating slide could push it over — reassess on refresh.']},
       [{on:'Treat now — add a resilience option',osum:'Backup provider or contractual SLA',pros:['Reduces single-point-of-failure exposure.'],cons:['Cost and vendor-onboarding effort for a within-limit risk.']}]),
     c5dec('cr',3,'Accept the residual phishing risk?','Modeled and within tolerance — reasonable to accept with a recorded rationale.',
       {on:'Accept — record the rationale',osum:'Within tolerance · monitored',pros:['Within appetite on current modeling.'],cons:['Requires a recorded risk-acceptance.','Revisit if the phishing signal rises.']},
-      [{on:'Treat — fund awareness / email security',osum:'Extra spend · marginal reduction',pros:['Lowers an already-small residual.'],cons:['Low return per dollar vs. the identity gap.']}])
+      [{on:'Treat — fund awareness / email security',osum:'Extra spend · marginal reduction',pros:['Lowers an already-small residual.'],cons:['Low return per dollar vs. the '+TD.short+' gap.']}])
   ];
   host.innerHTML=c5header()+
     c5shell('Decisions for the CRO · what needs your call?','Each risk decision below gives you the options — the recommended call is marked, the choice is yours.',null,'Each carries its residual, appetite and recommendation. Choosing one stamps it with your name and time, keeps it editable for 24 hours, and opens a tracked project in the ticketing system connected at onboarding — whose status is pulled back on refresh.')+
@@ -3123,17 +3173,17 @@ function c5crDecisions(){
 /* Tab 01 — Operational resilience */
 function c5coResilience(){
   var host=document.getElementById('co-resilience');if(!host)return;
-  var P=c5Processes(),ec=c5get('exp_identity'),tp=c5get('thirdparty_risk');var V=c5vendors();var tvName=V.worst?V.worst.name:'a vendor';
+  var P=c5Processes(),TD=c5TopDriver(),dm=c5get(TD.mid),tp=c5get('thirdparty_risk');var V=c5vendors();var tvName=V.worst?V.worst.name:'a vendor';
   var atPill=P.atRisk>0?'a':'g';
   host.innerHTML=c5header()+
-    c5shell('Operational resilience · can we keep running?','Operations are resilient — one process carries the only real risk.',null,'Your critical operations are healthy and continuity-ready. Of your critical processes, most are fully protected; the customer platform carries a single cyber exposure — identity. Every figure traces to its source.')+
+    c5shell('Operational resilience · can we keep running?','Operations are resilient — one process carries the only real risk.',null,'Your critical operations are healthy and continuity-ready. Of your critical processes, most are resilient; the customer platform carries a single cyber exposure — '+TD.short+'. Every figure traces to its source.')+
     '<div class="c5cards">'+c5card('coo_resilience')+c5card('coo_processes')+c5card('coo_recovery_ready')+'</div>'+
     '<div class="c5tiles">'+
       c5tile('coo_bc','g','Ready','Recovery plans tested this quarter')+
       c5tile('thirdparty_risk','a','Flagged',(tp.connected?('Rating to watch · touches operations'):'add your tier-1/2 vendors'))+
       c5tile('coo_rto','g','Recovery','Time to recover the slowest critical service')+
     '</div>'+
-    c5bl('Bottom line','Protect the one process that can’t go down.',null,(ec.connected?('The customer platform is your most critical process, and its only real cyber exposure is an identity gap ('+ec.displayValue+'). The fix is funded — it protects both uptime and recovery.'):'Connect your controls and the one exposure to your most critical process — an identity gap — surfaces here, with its funded fix.'),{mid:'exp_identity',txt:'Fund the identity fix — protects uptime'})+
+    c5bl('Bottom line','Protect the one process that can’t go down.',null,(dm.connected?('The customer platform is your most critical process, and its only real cyber exposure is an '+TD.short+' gap ('+dm.displayValue+'). The fix is funded — it protects both uptime and recovery.'):'Connect your controls and the one exposure to your most critical process — an '+TD.short+' gap — surfaces here, with its funded fix.'),{mid:TD.mid,txt:'Fund the '+c5esc(TD.short)+' fix — protects uptime'})+
     '<div class="c5foot">Resilience and recovery figures trace to source.</div>';
 }
 /* Tab 02 — Critical process health */
@@ -3145,17 +3195,17 @@ function c5coProcesses(){
   else{body='<div class="c5rank" style="padding:4px 15px"><div class="c5rank-h" style="border:0;background:transparent;padding:11px 0">Critical processes · cyber status</div>'+P.list.map(function(p){var pill=p.status==='At risk'?'a':p.status==='Watch'?'b':'g';
     return '<div class="c5prow" data-c5m="coo_processes"><span class="c5sq '+(p.c==='warn'?'a':p.c==='blue'?'b':'g')+'" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">'+p.name+'</div><div class="c5row-s">'+p.sub+'</div></div><span class="c5pill '+pill+'">'+p.status+'</span></div>';
   }).join('')+'</div>';}
-  var ec=c5get('exp_identity');
+  var TD=c5TopDriver(),dm=c5get(TD.mid);
   host.innerHTML=c5header()+
     c5shell('Critical process health · which processes are exposed?','Most critical processes are cyber-safe — one needs attention.',null,'Cyber risk mapped to your critical operational processes. Only the customer platform carries real exposure; a payments process is on watch through a vendor. Each process traces to its drivers and dependencies.')+
     body+
-    c5bl('Bottom line','Protect the process customers touch.',null,(ec.connected?('The customer platform is your only at-risk critical process — the identity gap threatens its uptime. The fix is funded.'):'Connect your controls and the at-risk process — the customer platform — surfaces here with its funded fix.'),{mid:'exp_identity',txt:'Fund the identity fix — protects the platform'})+
+    c5bl('Bottom line','Protect the process customers touch.',null,(dm.connected?('The customer platform is your only at-risk critical process — the '+TD.short+' gap threatens its uptime. The fix is funded.'):'Connect your controls and the at-risk process — the customer platform — surfaces here with its funded fix.'),{mid:TD.mid,txt:'Fund the '+c5esc(TD.short)+' fix — protects the platform'})+
     '<div class="c5foot">Processes and dependencies mapped from your operations model; exposure traces to source.</div>';
 }
 /* Tab 03 — Supply chain & third parties · PRIMARY decision is the Acme mitigation, NOT identity */
 function c5coSupply(){
   var host=document.getElementById('co-supply');if(!host)return;
-  var V=c5vendors();var seed=V.seed;
+  var V=c5vendors();var seed=V.seed;var TD=c5TopDriver();
   var rows;
   if(!seed.length){rows='<div class="c5note">◐ Add your tier-1/2 vendors (CSV or a TPRM pull) and connect a monitoring service to rank suppliers by live rating and flag single points of failure. Until then this stays honestly empty.</div>';}
   else{var rs=(typeof LIVE!=='undefined'&&LIVE&&LIVE.resilience)||{};var blastVendor=(rs.top_vendor_blast&&rs.top_vendor_blast.vendor)||null;var blastSys=(rs.top_vendor_blast&&rs.top_vendor_blast.systems)||[];
@@ -3167,13 +3217,13 @@ function c5coSupply(){
     c5shell('Supply chain & third parties · can a vendor stop us?','Your supply chain is steady — one Tier-1 vendor needs watching.',null,'Third-party risk to your operations. Among your Tier-1 vendors, the worst-rated is a single point of failure for a critical process. The rest are healthy. Each vendor traces to its rating and the processes it touches.')+
     '<div class="c5cards">'+c5card('coo_tier1')+c5card('thirdparty_risk')+c5card('coo_spof')+'</div>'+
     rows+
-    c5bl('Bottom line','Reduce the one dependency that touches your critical process.',null,'Your worst-rated Tier-1 vendor is a falling-rated single point of failure. Add a resilience option — a backup provider or a contractual SLA. Separately, closing the identity gap limits how far a compromised vendor could reach.',{mid:'thirdparty_risk',txt:'Mitigate the vendor dependency'},{mid:'exp_identity',txt:'Fund identity — limits blast radius'})+
+    c5bl('Bottom line','Reduce the one dependency that touches your critical process.',null,'Your worst-rated Tier-1 vendor is a falling-rated single point of failure. Add a resilience option — a backup provider or a contractual SLA. Separately, closing the '+TD.short+' gap limits how far a compromised vendor could reach.',{mid:'thirdparty_risk',txt:'Mitigate the vendor dependency'},{mid:TD.mid,txt:'Fund '+c5esc(TD.short)+' — limits blast radius'})+
     '<div class="c5foot">Vendor ratings from your third-party monitoring; dependencies from your operations model.</div>';
 }
 /* Tab 04 — Recovery readiness */
 function c5coRecovery(){
   var host=document.getElementById('co-recovery');if(!host)return;
-  var ir=c5get('coo_identity_recovery'),ec=c5get('exp_identity');
+  var ir=c5get('coo_identity_recovery'),TD=c5TopDriver(),dm=c5get(TD.mid);
   host.innerHTML=c5header()+
     c5shell('Recovery readiness · can we bounce back?','Recovery is tested — watch the identity path.',null,'Your recovery posture: RTO and RPO against target from the last test, backups verified. The one gap — restoring identity and access quickly — could slow a customer-platform restore. Every figure traces to its test evidence.')+
     '<div class="c5cards">'+c5card('coo_rto')+c5card('coo_rpo')+c5card('coo_last_test')+'</div>'+
@@ -3181,18 +3231,18 @@ function c5coRecovery(){
       c5tile('coo_backups','g','Verified','Restore-tested this quarter')+
       c5tile('coo_identity_recovery',(ir.connected&&ir.color==='warn')?'a':'g',(ir.connected&&ir.color==='warn')?'Gap':'Ready','Access recovery — often the weak link')+
     '</div>'+
-    c5bl('Bottom line','Close the recovery gap in your critical path.',null,(ec.connected?('Recovery meets targets where measured, but slow identity restoration could delay a customer-platform recovery. The identity fix improves recovery too — resilient access means a faster restore.'):'Connect your identity tools and the recovery weak link — access restoration — surfaces here, tied to the funded identity fix.'),{mid:'exp_identity',txt:'Fund the identity fix — faster recovery'})+
+    c5bl('Bottom line','Close the recovery gap in your critical path.',null,(dm.connected?('Recovery meets targets where measured, but slow identity restoration could delay a customer-platform recovery. The '+TD.short+' fix improves recovery too — resilient access means a faster restore.'):'Connect your identity tools and the recovery weak link — access restoration — surfaces here, tied to the funded '+TD.short+' fix.'),{mid:TD.mid,txt:'Fund the '+c5esc(TD.short)+' fix — faster recovery'})+
     '<div class="c5foot">RTO/RPO and backup results from your last recovery test.</div>';
 }
 /* Tab 05 — Decisions for the COO */
 function c5coDecisions(){
   var host=document.getElementById('co-decisions');if(!host)return;
-  var ec=c5get('exp_identity'),tp=c5get('thirdparty_risk');
+  var TD=c5TopDriver(),dm=c5get(TD.mid),tp=c5get('thirdparty_risk');
   var list=[
-    c5dec('co',1,'Fund the identity fix?','It protects customer-platform uptime and recovery — your most critical process'+(ec.connected?(' ('+ec.displayValue+')'):'')+'.',
-      {on:'Fund it — protect uptime & recovery',osum:(ec.connected?('Protects your most critical process · −'+ec.displayValue):'Protects your most critical process'),pros:['Protects uptime and recovery of the customer platform.','Closes the slowest link in a platform recovery.'],cons:['Requires funding this cycle.']}),
+    c5dec('co',1,'Fund the '+TD.short+' fix?','It protects customer-platform uptime and recovery — your most critical process'+(dm.connected?(' ('+dm.displayValue+')'):'')+'.',
+      {on:'Fund it — protect uptime & recovery',osum:(dm.connected?('Protects your most critical process · −'+dm.displayValue):'Protects your most critical process'),pros:['Protects uptime and recovery of the customer platform.','Closes the slowest link in a platform recovery.'],cons:['Requires funding this cycle.']}),
     c5dec('co',2,'Reduce the vendor single point of failure?','A falling-rated Tier-1 vendor underpins a critical process — add resilience.',
-      {on:'Mitigate — add a backup provider or SLA',osum:'Reduces single-point-of-failure exposure',pros:['Removes a concentration risk to a critical process.'],cons:['Cost and vendor-onboarding effort.']},
+      {on:'Mitigate — add a backup provider or SLA',osum:'Reduces single-point-of-failure exposure',pros:['Reduces a concentration risk to a critical process.'],cons:['Cost and vendor-onboarding effort.']},
       [{on:'Monitor for now',osum:'Keep the vendor under watch',pros:['No spend now.'],cons:['A rating slide could disrupt operations before you act.']}])
   ];
   host.innerHTML=c5header()+
@@ -3210,37 +3260,37 @@ function c5legalRegimes(){var ob=(typeof LIVE!=='undefined'&&LIVE&&LIVE.legal&&L
 /* Tab 01 — Regulatory exposure */
 function c5clRegulatory(){
   var host=document.getElementById('cl-regulatory');if(!host)return;
-  var regs=c5legalRegimes();var ec=c5get('exp_identity');
+  var regs=c5legalRegimes();var TD=c5TopDriver(),dm=c5get(TD.mid);
   var body=regs.length?('<div class="c5rank" style="padding:4px 15px"><div class="c5rank-h" style="border:0;background:transparent;padding:11px 0">Regimes in scope · obligation and clock</div>'+regs.map(function(r){var pill=r.binding?'a':'b';var pt=r.binding?'Tightest clock':'In scope';
     return '<div class="c5prow" data-c5m="cl_obligations"><span class="c5sq '+(r.binding?'a':'b')+'" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">'+r.name+'</div><div class="c5row-s">'+r.obl+' · '+r.clock+'</div></div><span class="c5pill '+pill+'">'+pt+'</span></div>';
   }).join('')+'</div>'):'<div class="c5note">◐ Set your operating regions in onboarding to load the obligations register (regime · obligation · clock · penalty), each traceable to its ruleset.</div>';
   host.innerHTML=c5header()+
-    c5shell('Regulatory exposure · where are we exposed by jurisdiction?','Your obligations, by jurisdiction — with the exposure most likely to trigger a filing.',null,'Your cyber-regulatory obligations, by jurisdiction, each with its clock and penalty — surfaced, not judged (the compliance call is yours). The customer-platform identity gap is the exposure most likely to trigger a reportable event. Each regime traces to its obligation and evidence.')+
+    c5shell('Regulatory exposure · where are we exposed by jurisdiction?','Your obligations, by jurisdiction — with the exposure most likely to trigger a filing.',null,'Your cyber-regulatory obligations, by jurisdiction, each with its clock and penalty — surfaced, not judged (the compliance call is yours). The customer-platform '+TD.short+' gap is the exposure most likely to trigger a reportable event. Each regime traces to its obligation and evidence.')+
     '<div class="c5cards">'+c5card('cl_jurisdictions')+c5card('cl_obligations')+c5card('cl_binding_clock')+'</div>'+
     body+
-    c5bl('Bottom line','Close the exposure most likely to trigger a filing.',null,(ec.connected?('The customer-platform identity gap is the exposure most likely to cause a reportable breach — starting notification clocks across jurisdictions. Closing it ('+ec.displayValue+') reduces your most probable disclosure trigger.'):'Connect your controls and the exposure most likely to trigger a filing — the identity gap — surfaces here with its funded fix.'),{mid:'exp_identity',txt:'Close the top disclosure trigger — identity'})+
+    c5bl('Bottom line','Close the exposure most likely to trigger a filing.',null,(dm.connected?('The customer-platform '+TD.short+' gap is the exposure most likely to cause a reportable breach — starting notification clocks across jurisdictions. Closing it ('+dm.displayValue+') reduces your most probable disclosure trigger.'):'Connect your controls and the exposure most likely to trigger a filing — the '+TD.short+' gap — surfaces here with its funded fix.'),{mid:TD.mid,txt:'Close the top disclosure trigger — '+c5esc(TD.short)})+
     '<div class="c5foot">Obligations mapped to your jurisdictions; evidence traces to source. Not legal advice — the compliance determination is your counsel’s.</div>';
 }
 /* Tab 02 — Breach-notification readiness */
 function c5clNotification(){
   var host=document.getElementById('cl-notification');if(!host)return;
-  var regs=c5legalRegimes();var ir=(typeof LIVE!=='undefined'&&LIVE&&LIVE.governance&&LIVE.governance.ir)||{};var tested=/yes|tested|tabletop/i.test(ir.tested||'');var ec=c5get('exp_identity');
+  var regs=c5legalRegimes();var ir=(typeof LIVE!=='undefined'&&LIVE&&LIVE.governance&&LIVE.governance.ir)||{};var tested=/yes|tested|tabletop/i.test(ir.tested||'');var TD=c5TopDriver(),dm=c5get(TD.mid);
   var body=regs.length?('<div class="c5rank" style="padding:4px 15px"><div class="c5rank-h" style="border:0;background:transparent;padding:11px 0">Notification clocks · regime, deadline, readiness</div>'+regs.map(function(r){var ready=tested;var pill=ready?'g':'a';var pt=ready?'Ready':'Watch';
     return '<div class="c5prow" data-c5m="cl_runbooks"><span class="c5sq '+(ready?'g':'a')+'" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">'+r.name+'</div><div class="c5row-s">'+r.obl+'</div></div><div class="c5prow-v" style="width:auto">'+r.clock+'</div><span class="c5pill '+pill+'">'+pt+'</span></div>';
   }).join('')+'<div class="c5prow" data-c5m="cl_contracts"><span class="c5sq a" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">Customer SLAs</div><div class="c5row-s">Per enterprise contracts · needs your CLM</div></div><div class="c5prow-v" style="width:auto">24–48h</div><span class="c5pill a">Watch</span></div></div>'):'<div class="c5note">◐ Set your operating regions to load the notification clocks; connect your IR runbooks to score readiness.</div>';
   host.innerHTML=c5header()+
-    c5shell('Breach-notification readiness · are the clocks and evidence ready?','You can meet the clocks — if the evidence is ready.',null,'If a breach hit today, could you notify in time and prove what happened? Your fastest clock is below. Runbooks are the readiness signal; identity is the one area where forensic readiness is thin. Each clock traces to its runbook and evidence.')+
+    c5shell('Breach-notification readiness · are the clocks and evidence ready?','You can meet the clocks — if the evidence is ready.',null,'If a breach hit today, could you notify in time and prove what happened? Your fastest clock is below. Runbooks are the readiness signal; '+TD.short+' is the one area where forensic readiness is thin. Each clock traces to its runbook and evidence.')+
     '<div class="c5cards">'+c5card('cl_binding_clock')+c5card('cl_runbooks')+c5card('cl_forensic_gap')+'</div>'+
     body+
-    c5bl('Bottom line','Shore up forensic readiness on the identity path.',null,(ec.connected?('You can meet the clocks, but proving what happened in an identity-driven incident is your thin spot. The identity fix improves logging and evidence — faster, defensible notification.'):'Connect your identity + SIEM tools and the forensic-readiness gap on the identity path surfaces here, tied to the funded fix.'),{mid:'exp_identity',txt:'Improve identity forensics — fund the fix'})+
+    c5bl('Bottom line','Shore up forensic readiness on the '+TD.short+' path.',null,(dm.connected?('You can meet the clocks, but proving what happened in an '+TD.short+'-driven incident is your thin spot. The '+TD.short+' fix improves logging and evidence — faster, defensible notification.'):'Connect your identity + SIEM tools and the forensic-readiness gap on the '+TD.short+' path surfaces here, tied to the funded fix.'),{mid:TD.mid,txt:'Improve '+c5esc(TD.short)+' forensics — fund the fix'})+
     '<div class="c5foot">Clocks from your obligations; readiness from your IR runbooks.</div>';
 }
 /* Tab 03 — Contractual & litigation risk */
 function c5clContracts(){
   var host=document.getElementById('cl-contracts');if(!host)return;
-  var lit=c5get('cl_litigation'),ec=c5get('exp_identity');var V=c5vendors();var tvName=V.worst?V.worst.name:'a Tier-1 vendor';
+  var lit=c5get('cl_litigation'),TD=c5TopDriver(),dm=c5get(TD.mid);var V=c5vendors();var tvName=V.worst?V.worst.name:'a Tier-1 vendor';
   var rows='<div class="c5rank"><div class="c5rank-h">Cyber-related contractual &amp; litigation exposure</div>'+
-    '<div class="c5prow" data-c5m="cl_platform_tied"><span class="c5sq a" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">Enterprise SLAs — uptime warranties</div><div class="c5row-s">An identity-driven outage could breach them · count needs your CLM</div></div><span class="c5pill a">At risk</span></div>'+
+    '<div class="c5prow" data-c5m="cl_platform_tied"><span class="c5sq a" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">Enterprise SLAs — uptime warranties</div><div class="c5row-s">An '+TD.short+'-driven outage could breach them · count needs your CLM</div></div><span class="c5pill a">At risk</span></div>'+
     '<div class="c5prow" data-c5m="cl_contracts"><span class="c5sq n" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">Data-processing agreements</div><div class="c5row-s">Obligations surfaced on the Privacy tab · count needs your CLM</div></div><span class="c5pill n">Connect CLM</span></div>'+
     '<div class="c5prow" data-c5m="thirdparty_risk"><span class="c5sq a" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">Vendor indemnities — '+tvName+'</div><div class="c5row-s">Falling-rated vendor · review the indemnity</div></div><span class="c5pill a">Watch</span></div>'+
     '<div class="c5prow" data-c5m="cl_litigation"><span class="c5sq '+(lit.connected?(lit.color==='warn'?'a':'g'):'n')+'" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">Active legal holds</div><div class="c5row-s">'+(lit.connected?(lit.displayValue+' cyber-related hold'+(lit.displayValue==='1'?'':'s')):'connect your legal-hold system')+'</div></div><span class="c5pill '+(lit.connected?(lit.color==='warn'?'a':'g'):'n')+'">'+(lit.connected?(lit.displayValue==='0'?'Clear':'Open'):'—')+'</span></div>'+
@@ -3249,29 +3299,29 @@ function c5clContracts(){
     c5shell('Contractual & litigation risk · where is our liability?','Liability is contained — one cluster of contracts to watch.',null,'Your cyber-related contractual and litigation exposure. A cluster of enterprise contracts warrants customer-platform uptime and security; a falling-rated vendor’s indemnity is worth review. Contract counts need your CLM connected. Each item traces to its clause and exposure.')+
     '<div class="c5cards">'+c5card('cl_contracts')+c5card('cl_platform_tied')+c5card('cl_litigation')+'</div>'+
     rows+
-    c5bl('Bottom line','Protect the contracts tied to platform uptime.',null,(ec.connected?('The enterprise contracts that warrant customer-platform uptime and security could be breached by an identity-driven outage. Closing the identity gap ('+ec.displayValue+') protects those warranties and the revenue behind them.'):'Connect your controls and CLM and the platform-tied warranties an identity outage could breach surface here.'),{mid:'exp_identity',txt:'Protect the warranties — fund the identity fix'})+
+    c5bl('Bottom line','Protect the contracts tied to platform uptime.',null,(dm.connected?('The enterprise contracts that warrant customer-platform uptime and security could be breached by an '+TD.short+'-driven outage. Closing the '+TD.short+' gap ('+dm.displayValue+') protects those warranties and the revenue behind them.'):'Connect your controls and CLM and the platform-tied warranties an '+TD.short+' outage could breach surface here.'),{mid:TD.mid,txt:'Protect the warranties — fund the '+c5esc(TD.short)+' fix'})+
     '<div class="c5foot">Contract terms from your CLM; exposure mapped to the platform. Not legal advice.</div>';
 }
 /* Tab 04 — Privacy & DSAR */
 function c5clPrivacy(){
   var host=document.getElementById('cl-privacy');if(!host)return;
-  var ap=c5get('cl_access_pd'),ec=c5get('exp_identity');
+  var ap=c5get('cl_access_pd'),TD=c5TopDriver(),dm=c5get(TD.mid);
   host.innerHTML=c5header()+
-    c5shell('Privacy & DSAR · are we handling requests on time?','Privacy operations are running — access hygiene is the soft spot.',null,'Your privacy posture: data-subject requests against SLA, records of processing, consent. The one soft spot is access hygiene — over-permissioned or stale identities near personal data, part of the identity gap. Every figure traces to its source.')+
+    c5shell('Privacy & DSAR · are we handling requests on time?','Privacy operations are running — access hygiene is the soft spot.',null,'Your privacy posture: data-subject requests against SLA, records of processing, consent. The one soft spot is access hygiene — over-permissioned or stale identities near personal data, part of the '+TD.short+' gap. Every figure traces to its source.')+
     '<div class="c5cards">'+c5card('cl_dsar_sla')+c5card('cl_ropa')+c5card('cl_access_pd')+'</div>'+
     '<div class="c5tiles">'+
       c5tile('cl_litigation','g','Holds','Active cyber-related litigation holds')+
     '</div>'+
-    c5bl('Bottom line','Tighten access to personal data.',null,(ec.connected?('Over-permissioned or stale identities near personal data are a privacy risk and part of the identity gap. Closing it ('+ec.displayValue+') enforces least-privilege access — lower privacy exposure and cleaner audits.'):'Connect your identity tools and the access-hygiene soft spot near personal data surfaces here, tied to the funded identity fix.'),{mid:'exp_identity',txt:'Enforce least-privilege — fund the fix'})+
+    c5bl('Bottom line','Tighten access to personal data.',null,(dm.connected?('Over-permissioned or stale identities near personal data are a privacy risk and part of the '+TD.short+' gap. Closing it ('+dm.displayValue+') enforces least-privilege access — lower privacy exposure and cleaner audits.'):'Connect your identity tools and the access-hygiene soft spot near personal data surfaces here, tied to the funded '+TD.short+' fix.'),{mid:TD.mid,txt:'Enforce least-privilege — fund the fix'})+
     '<div class="c5foot">Privacy operations from your DSAR and records-of-processing systems.</div>';
 }
 /* Tab 05 — Decisions for the CLO */
 function c5clDecisions(){
   var host=document.getElementById('cl-decisions');if(!host)return;
-  var ec=c5get('exp_identity'),tp=c5get('thirdparty_risk');
+  var TD=c5TopDriver(),dm=c5get(TD.mid),tp=c5get('thirdparty_risk');
   var list=[
-    c5dec('cl',1,'Support the identity fix?','One action reduces your top disclosure trigger, protects platform warranties, and tightens access to personal data'+(ec.connected?(' ('+ec.displayValue+')'):'')+'.',
-      {on:'Support it — the highest-leverage legal reducer',osum:(ec.connected?('Reduces three legal exposures at once · −'+ec.displayValue):'Reduces three legal exposures at once'),pros:['Reduces your most probable breach-notification trigger.','Protects platform-tied contractual warranties.','Enforces least-privilege access to personal data.'],cons:['Depends on management funding the fix.']}),
+    c5dec('cl',1,'Support the '+TD.short+' fix?','One action reduces your top disclosure trigger, protects platform warranties, and tightens access to personal data'+(dm.connected?(' ('+dm.displayValue+')'):'')+'.',
+      {on:'Support it — the highest-leverage legal reducer',osum:(dm.connected?('Reduces three legal exposures at once · −'+dm.displayValue):'Reduces three legal exposures at once'),pros:['Reduces your most probable breach-notification trigger.','Protects platform-tied contractual warranties.','Enforces least-privilege access to personal data.'],cons:['Depends on management funding the fix.']}),
     c5dec('cl',2,'Review the vendor indemnity?','A falling-rated vendor — review the indemnity and exit terms.',
       {on:'Review the indemnity & exit terms now',osum:'Contain contractual liability',pros:['Confirms you can recover / exit if the vendor fails.'],cons:['Counsel time; may require renegotiation.']},
       [{on:'Defer to the contract renewal',osum:'Revisit at renewal',pros:['No action now.'],cons:['Exposure persists if the vendor deteriorates first.']}])
@@ -3286,50 +3336,50 @@ function c5clDecisions(){
 /* Tab 01 — Technology risk */
 function c5ctTech(){
   var host=document.getElementById('ct-tech');if(!host)return;
-  var ec=c5get('exp_identity'),cv=c5get('ct_critical_vulns'),td=c5get('ct_techdebt');
+  var TD=c5TopDriver(),dm=c5get(TD.mid),cv=c5get('ct_critical_vulns'),td=c5get('ct_techdebt');
   host.innerHTML=c5header()+
-    c5shell('Technology risk · is our stack secure and modern?','Your stack is secure and modernizing — one platform carries the risk.',null,'Your technology estate is largely secure and on its modernization path. Most core platforms are healthy; the customer platform carries the identity gap, and legacy tech carries mapped technical debt. Every figure traces to its source.')+
+    c5shell('Technology risk · is our stack secure and modern?','Your stack is secure and modernizing — one platform carries the risk.',null,'Your technology estate is largely secure and on its modernization path. Most core platforms are healthy; the customer platform carries the '+TD.short+' gap, and legacy tech carries mapped technical debt. Every figure traces to its source.')+
     '<div class="c5cards">'+c5card('ct_platform_health')+c5card('ct_critical_vulns')+c5card('ct_modernization')+'</div>'+
     '<div class="c5tiles">'+
       c5tile('ct_appsec','g','Healthy','In the SDLC for new builds')+
-      c5tile('exp_identity','a','Gap','The customer-platform exposure')+
+      c5tile(TD.mid,'a','Gap','The customer-platform exposure')+
       c5tile('ct_techdebt','b','Managed',(td.connected?'legacy mapped · modernization roadmap in place':'map your EOL systems'))+
     '</div>'+
-    c5bl('Bottom line','Fix the architecture gap in your top platform.',null,(ec.connected?('The identity architecture behind your customer platform is the biggest security gap in the stack ('+ec.displayValue+'). The fix is funded — it closes the exposure and simplifies the platform’s access model.'):'Connect your controls and the biggest architecture gap — the customer platform’s identity model — surfaces here with its funded fix.'),{mid:'exp_identity',txt:'Fund the identity fix — closes the gap'})+
+    c5bl('Bottom line','Fix the architecture gap in your top platform.',null,(dm.connected?('The '+TD.short+' architecture behind your customer platform is the biggest security gap in the stack ('+dm.displayValue+'). The fix is funded — it closes the exposure and simplifies the platform’s access model.'):'Connect your controls and the biggest architecture gap — the customer platform’s '+TD.short+' model — surfaces here with its funded fix.'),{mid:TD.mid,txt:'Fund the '+c5esc(TD.short)+' fix — closes the gap'})+
     '<div class="c5foot">Stack posture from your app/infra scans and architecture records.</div>';
 }
 /* Tab 02 — Digital-service reliability */
 function c5ctReliability(){
   var host=document.getElementById('ct-reliability');if(!host)return;
-  var S=c5Services(),ec=c5get('exp_identity');
+  var S=c5Services(),TD=c5TopDriver(),dm=c5get(TD.mid);
   var body=S.total?('<div class="c5rank" style="padding:4px 15px"><div class="c5rank-h" style="border:0;background:transparent;padding:11px 0">Customer-facing services · posture and status</div>'+S.list.map(function(s){var pill=s.status==='At risk'?'a':'g';
-    return '<div class="c5prow" data-c5m="'+(s.status==='At risk'?'exp_identity':'ct_sec_incidents')+'"><span class="c5sq '+(s.c==='warn'?'a':'g')+'" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">'+s.name+'</div><div class="c5row-s">'+s.sub+'</div></div><span class="c5pill '+pill+'">'+s.status+'</span></div>';
+    return '<div class="c5prow" data-c5m="'+(s.status==='At risk'?TD.mid:'ct_sec_incidents')+'"><span class="c5sq '+(s.c==='warn'?'a':'g')+'" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">'+s.name+'</div><div class="c5row-s">'+s.sub+'</div></div><span class="c5pill '+pill+'">'+s.status+'</span></div>';
   }).join('')+'</div>'):'<div class="c5note">◐ Map your crown-jewel / customer-facing services in onboarding to see reliability + security posture per service.</div>';
   host.innerHTML=c5header()+
-    c5shell('Digital-service reliability · are our services safe and available?','Services are reliable and secure — the platform’s access path is the risk.',null,'Your customer-facing services: available, performant, secure. The one reliability risk is the identity/access path to the customer platform — both a security and an availability concern. Availability and SLOs light up when your observability stack connects. Each service traces to its posture.')+
+    c5shell('Digital-service reliability · are our services safe and available?','Services are reliable and secure — the platform’s access path is the risk.',null,'Your customer-facing services: available, performant, secure. The one reliability risk is the '+TD.short+'/access path to the customer platform — both a security and an availability concern. Availability and SLOs light up when your observability stack connects. Each service traces to its posture.')+
     '<div class="c5cards">'+c5card('ct_availability')+c5card('ct_services_slo')+c5card('ct_sec_incidents')+'</div>'+
     body+
-    c5bl('Bottom line','Harden the access path to your top service.',null,(ec.connected?('The customer platform is your most-used service; its identity/access path is the one reliability-and-security risk. The identity fix hardens it — resilient access, fewer failure modes.'):'Connect your controls and the one reliability-and-security risk — the platform’s access path — surfaces here with its funded fix.'),{mid:'exp_identity',txt:'Fund the identity fix — hardens the platform'})+
+    c5bl('Bottom line','Harden the access path to your top service.',null,(dm.connected?('The customer platform is your most-used service; its '+TD.short+'/access path is the one reliability-and-security risk. The '+TD.short+' fix hardens it — resilient access, fewer failure modes.'):'Connect your controls and the one reliability-and-security risk — the platform’s access path — surfaces here with its funded fix.'),{mid:TD.mid,txt:'Fund the '+c5esc(TD.short)+' fix — hardens the platform'})+
     '<div class="c5foot">Availability and SLOs from your observability stack; security posture traces to source.</div>';
 }
 /* Tab 03 — AI & innovation risk */
 function c5ctAi(){
   var host=document.getElementById('ct-ai');if(!host)return;
-  var da=c5get('ct_ai_dataaccess'),ec=c5get('exp_identity');
+  var da=c5get('ct_ai_dataaccess'),TD=c5TopDriver(),dm=c5get(TD.mid);
   host.innerHTML=c5header()+
-    c5shell('AI & innovation risk · are we shipping safely?','You’re shipping AI under governance — one access watch item.',null,'Your AI posture: models inventoried, guardrails in place, shipping under governance. One watch item — AI features that touch customer data rely on the same identity controls that carry the gap. Every figure traces to its source.')+
+    c5shell('AI & innovation risk · are we shipping safely?','You’re shipping AI under governance — one access watch item.',null,'Your AI posture: models inventoried, guardrails in place, shipping under governance. One watch item — AI features that touch customer data rely on the same '+TD.short+' controls that carry the gap. Every figure traces to its source.')+
     '<div class="c5cards">'+c5card('ct_ai_inventory')+c5card('ct_ai_governed')+c5card('ct_ai_highrisk')+'</div>'+
     '<div class="c5tiles">'+
-      c5tile('ct_ai_dataaccess',(da.connected&&da.color==='warn')?'a':'g',(da.connected&&da.color==='warn')?'Watch':'Controlled','Relies on the same identity controls as the gap')+
+      c5tile('ct_ai_dataaccess',(da.connected&&da.color==='warn')?'a':'g',(da.connected&&da.color==='warn')?'Watch':'Controlled','Relies on the same '+TD.short+' controls as the gap')+
       c5tile('thirdparty_risk','b','Monitored','Vendor models · terms and data flows reviewed')+
     '</div>'+
-    c5bl('Bottom line','Secure the access your AI relies on.',null,(ec.connected?('Your AI features that touch customer data depend on the same identity controls that carry the gap. Closing it ('+ec.displayValue+') secures AI’s access to data — safer innovation, cleaner governance.'):'Connect your controls and the AI-data-access watch item — the shared identity gap — surfaces here with its funded fix.'),{mid:'exp_identity',txt:'Secure AI access — fund the identity fix'})+
+    c5bl('Bottom line','Secure the access your AI relies on.',null,(dm.connected?('Your AI features that touch customer data depend on the same '+TD.short+' controls that carry the gap. Closing it ('+dm.displayValue+') secures AI’s access to data — safer innovation, cleaner governance.'):'Connect your controls and the AI-data-access watch item — the shared '+TD.short+' gap — surfaces here with its funded fix.'),{mid:TD.mid,txt:'Secure AI access — fund the '+c5esc(TD.short)+' fix'})+
     '<div class="c5foot">AI inventory and governance from your model registry and pipeline.</div>';
 }
 /* Tab 04 — Software supply chain · PRIMARY decision is the advisory patch, NOT identity */
 function c5ctSupply(){
   var host=document.getElementById('ct-supply');if(!host)return;
-  var adv=c5get('ct_advisories'),ec=c5get('exp_identity');
+  var adv=c5get('ct_advisories'),TD=c5TopDriver(),dm=c5get(TD.mid);
   var advCount=adv.connected?adv.displayValue:'—';
   var rows='<div class="c5rank"><div class="c5rank-h">Dependencies · advisories and integrity</div>'+
     '<div class="c5prow" data-c5m="ct_advisories"><span class="c5sq '+(adv.connected&&adv.color==='warn'?'a':'g')+'" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">Auth-library advisory <span class="c5tag rev">High</span></div><div class="c5row-s">'+(adv.connected?(advCount+' critical dependency advisor'+(advCount==='1'?'y':'ies')+' · used by the customer platform · patch available'):'connect your SCA scanner')+'</div></div><span class="c5pill '+(adv.connected&&adv.color==='warn'?'a':'g')+'">'+(adv.connected?(adv.color==='warn'?'Prioritize':'Clear'):'—')+'</span></div>'+
@@ -3341,19 +3391,19 @@ function c5ctSupply(){
     c5shell('Software supply chain · are our dependencies safe?','Your dependencies are triaged — one high-severity advisory to clear.',null,'Your software supply chain: advisories triaged from your SCA scanner. A high-severity advisory affects an auth library used by the customer platform — worth prioritizing. SBOM coverage and build signing light up when those tools connect. Each item traces to its advisory.')+
     '<div class="c5cards">'+c5card('ct_deps')+c5card('ct_advisories')+c5card('ct_unsigned')+'</div>'+
     rows+
-    c5bl('Bottom line','Clear the advisory in your critical path.',null,(adv.connected?('A high-severity advisory in an auth library used by the customer platform is your top supply-chain item — patch it now. It also intersects the identity gap, so closing that reduces the blast radius of auth-library issues.'):'Connect your SCA scanner and the high-severity advisories on your critical path surface here — patch first, with identity reducing the blast radius.'),{mid:'ct_advisories',txt:'Patch the auth-library advisory'},{mid:'exp_identity',txt:'Fund identity — reduces blast radius'})+
+    c5bl('Bottom line','Clear the advisory in your critical path.',null,(adv.connected?('A high-severity advisory in an auth library used by the customer platform is your top supply-chain item — patch it now. It also intersects the '+TD.short+' gap, so closing that reduces the blast radius of auth-library issues.'):'Connect your SCA scanner and the high-severity advisories on your critical path surface here — patch first, with '+TD.short+' reducing the blast radius.'),{mid:'ct_advisories',txt:'Patch the auth-library advisory'},{mid:TD.mid,txt:'Fund '+c5esc(TD.short)+' — reduces blast radius'})+
     '<div class="c5foot">Dependencies and advisories from your SBOM and scanners.</div>';
 }
 /* Tab 05 — Decisions for the CTO */
 function c5ctDecisions(){
   var host=document.getElementById('ct-decisions');if(!host)return;
-  var ec=c5get('exp_identity'),adv=c5get('ct_advisories');
+  var TD=c5TopDriver(),dm=c5get(TD.mid),adv=c5get('ct_advisories');
   var list=[
     c5dec('ct',1,'Patch the auth-library advisory?','High-severity advisory'+(adv.connected?(' ('+adv.displayValue+' open)'):'')+' — used by the customer platform. The urgent tactical fix.',
-      {on:'Patch it now — highest-severity, in the critical path',osum:'Closes a known-exploitable path to customers',pros:['Removes an actively-exploitable dependency shipping to customers.','Fast, low-cost tactical fix.'],cons:['Requires a release / regression pass.']},
+      {on:'Patch it now — highest-severity, in the critical path',osum:'Closes a known-exploitable path to customers',pros:['Closes an actively-exploitable dependency shipping to customers.','Fast, low-cost tactical fix.'],cons:['Requires a release / regression pass.']},
       [{on:'Schedule for the next release',osum:'Batch with the next deploy',pros:['Avoids an out-of-band release.'],cons:['Leaves a known-exploitable path open in the interim.']}]),
-    c5dec('ct',2,'Fund the identity fix?','Closes the biggest architecture gap in the stack — the customer platform’s access model'+(ec.connected?(' ('+ec.displayValue+')'):'')+'.',
-      {on:'Fund it — closes & simplifies the access model',osum:(ec.connected?('Largest architecture gap · −'+ec.displayValue):'Largest architecture gap'),pros:['Closes the largest architecture gap and simplifies the access model.','Reduces blast radius across the platform.'],cons:['Larger, multi-sprint effort and cost.']})
+    c5dec('ct',2,'Fund the '+TD.short+' fix?','Closes the biggest architecture gap in the stack — the customer platform’s access model'+(dm.connected?(' ('+dm.displayValue+')'):'')+'.',
+      {on:'Fund it — closes & simplifies the access model',osum:(dm.connected?('Largest architecture gap · −'+dm.displayValue):'Largest architecture gap'),pros:['Closes the largest architecture gap and simplifies the access model.','Reduces blast radius across the platform.'],cons:['Larger, multi-sprint effort and cost.']})
   ];
   host.innerHTML=c5header()+
     c5shell('Decisions for the CTO · what needs your call?','Two technical calls — the recommended one is marked, the choice is yours.',null,'Each is tied to the stack. Choosing one stamps it with your name and time, keeps it editable for 24 hours, and opens a tracked ticket in the system connected at onboarding — status pulled back on refresh.')+
@@ -3373,56 +3423,60 @@ function c5iaAreaRows(kind,mid){
 /* Tab 01 — Audit universe & coverage */
 function c5iaCoverage(){
   var host=document.getElementById('ia-coverage');if(!host)return;
+  var TD=c5TopDriver();
   host.innerHTML=c5header()+
     c5shell('Audit universe & coverage · what’s in scope and covered?','Your cyber audit universe is well covered — one high-risk area needs review.',null,'The auditable cyber areas, their risk rating, and their coverage. Coverage is strong; identity & access — a high-risk area and the enterprise’s top exposure — is the one out of step. Each area traces to its scope and evidence; last-covered dates appear once your audit plan connects.')+
     '<div class="c5cards">'+c5card('ia_areas')+c5card('ia_coverage')+c5card('ia_overdue')+'</div>'+
     '<div class="c5rank" style="padding:4px 15px"><div class="c5rank-h" style="border:0;background:transparent;padding:11px 0">Audit universe · risk rating and status</div>'+c5iaAreaRows('universe','ia_coverage')+'</div>'+
-    c5bl('Bottom line','Schedule the overdue high-risk review.',null,'Identity &amp; access is a high-risk area and the enterprise’s top exposure, yet it’s the one out of step with coverage. Prioritizing it aligns coverage with risk — and lets you independently assure the board that management’s fix is real.',{mid:'exp_identity',txt:'Prioritize the identity audit'})+
+    c5bl('Bottom line','Schedule the overdue high-risk review.',null,'Identity &amp; access is a high-risk area and the enterprise’s top exposure, yet it’s the one out of step with coverage. Prioritizing it aligns coverage with risk — and lets you independently assure the board that management’s fix is real.',{mid:TD.mid,txt:'Prioritize the '+c5esc(TD.short)+' audit'})+
     '<div class="c5foot">Universe and coverage from your audit plan and history.</div>';
 }
 /* Tab 02 — Control-testing status */
 function c5iaTesting(){
   var host=document.getElementById('ia-testing');if(!host)return;
+  var TD=c5TopDriver();
   host.innerHTML=c5header()+
     c5shell('Control-testing status · what’s tested, what’s outstanding?','Testing is on plan — identity controls are the outstanding set.',null,'Your cyber control-testing progress this cycle. Most control sets are tested and passing; identity controls are the main outstanding set, and the last test found exceptions. Each control set traces to its test results and evidence.')+
     '<div class="c5cards">'+c5card('ia_tested')+c5card('ia_passrate')+c5card('ia_overdue')+'</div>'+
     '<div class="c5rank" style="padding:4px 15px"><div class="c5rank-h" style="border:0;background:transparent;padding:11px 0">Control sets · test status and result</div>'+c5iaAreaRows('test','ia_tested')+'</div>'+
-    c5bl('Bottom line','Close testing on the identity controls.',null,'Identity controls are the main outstanding set and carry open exceptions. Completing their testing gives you the evidence to assure the fix — and closes the biggest gap in this cycle’s coverage.',{mid:'exp_identity',txt:'Complete identity control testing'})+
+    c5bl('Bottom line','Close testing on the identity controls.',null,'Identity controls are the main outstanding set and carry open exceptions. Completing their testing gives you the evidence to assure the fix — and closes the biggest gap in this cycle’s coverage.',{mid:TD.mid,txt:'Complete '+c5esc(TD.short)+' control testing'})+
     '<div class="c5foot">Testing status from your audit workpapers.</div>';
 }
 /* Tab 03 — Findings & action plans */
 function c5iaFindings(){
   var host=document.getElementById('ia-findings');if(!host)return;
+  var TD=c5TopDriver(); // repeat-finding area is data-ranked, not hard-coded to identity
   host.innerHTML=c5header()+
-    c5shell('Findings & action plans · open, closed, and repeat?','Findings are closing — one repeat finding to escalate.',null,'Your open and closed cyber findings and their action plans. One finding — identity access — is a repeat from last cycle, which raises its priority. Each finding traces to its plan and owner.')+
+    c5shell('Findings & action plans · open, closed, and repeat?','Findings are closing — one repeat finding to escalate.',null,'Your open and closed cyber findings and their action plans. One finding — the '+TD.short+' area — is a repeat from last cycle, which raises its priority. Each finding traces to its plan and owner.')+
     '<div class="c5cards">'+c5card('ia_open_findings')+c5card('ia_closed_ontime')+c5card('ia_repeat')+'</div>'+
     '<div class="c5rank" style="padding:4px 15px"><div class="c5rank-h" style="border:0;background:transparent;padding:11px 0">Findings · severity and status</div>'+c5iaAreaRows('find','ia_repeat')+'</div>'+
-    c5bl('Bottom line','Escalate the repeat identity finding.',null,'Identity over-permissioning is a repeat finding — it wasn’t fully remediated last cycle. It’s now funded by management; escalating it ensures the action plan lands and the repeat closes for good.',{mid:'ia_repeat',txt:'Escalate the repeat finding'})+
+    c5bl('Bottom line','Escalate the repeat '+TD.short+' finding.',null,'The '+TD.short+' area carries a repeat finding — it wasn’t fully remediated last cycle. It’s now funded by management; escalating it ensures the action plan lands and the repeat closes for good.',{mid:'ia_repeat',txt:'Escalate the repeat finding'})+
     '<div class="c5foot">Findings and action plans from your issue-tracking system.</div>';
 }
 /* Tab 04 — Evidence readiness */
 function c5iaEvidence(){
   var host=document.getElementById('ia-evidence');if(!host)return;
+  var TD=c5TopDriver();
   host.innerHTML=c5header()+
     c5shell('Evidence readiness · can we prove it?','You can evidence most controls on demand — identity is the thin spot.',null,'Whether you can produce evidence for auditors and regulators on demand. Most control evidence is current and automated; identity-control evidence is incomplete — the same area driving your top risk. Each area traces to its evidence and freshness.')+
     '<div class="c5cards">'+c5card('ia_automated')+c5card('ia_evidence_current')+c5card('ia_overdue')+'</div>'+
     '<div class="c5rank" style="padding:4px 15px"><div class="c5rank-h" style="border:0;background:transparent;padding:11px 0">Evidence by area · freshness and readiness</div>'+c5iaAreaRows('evid','ia_automated')+'</div>'+
-    c5bl('Bottom line','Close the identity evidence gap.',null,'Identity-control evidence is the one area you couldn’t fully produce on demand — and it’s your top risk. Closing it (management’s fix improves logging) makes the control both effective and provable.',{mid:'exp_identity',txt:'Close the identity evidence gap'})+
+    c5bl('Bottom line','Close the '+TD.short+' evidence gap.',null,'Identity-control evidence is the one area you couldn’t fully produce on demand — and it’s your top risk. Closing it (management’s fix improves logging) makes the control both effective and provable.',{mid:TD.mid,txt:'Close the '+c5esc(TD.short)+' evidence gap'})+
     '<div class="c5foot">Evidence readiness from your GRC and control-monitoring systems.</div>';
 }
 /* Tab 05 — Attention for Internal Audit (schedule / assure / track — no fund/approve) */
 function c5iaAttention(){
   var host=document.getElementById('ia-attention');if(!host)return;
-  var tp=c5get('thirdparty_risk');
+  var tp=c5get('thirdparty_risk'),TD=c5TopDriver();
   var q='<div class="c5rank"><div class="c5rank-h">Audit actions · schedule, assure, track — Audit assures, management funds</div>'+
-    '<div class="c5row" data-c5m="exp_identity"><div class="c5row-main"><div class="c5row-t"><span class="c5pill b" style="margin-right:8px">Prioritize</span>Audit identity &amp; access</div><div class="c5row-s">Overdue review, open test exceptions, repeat finding, and evidence gap — all identity</div></div><div class="c5row-v">4 signals</div><span class="c5pill g" style="align-self:center">Recommended</span></div>'+
+    '<div class="c5row" data-c5m="'+TD.mid+'"><div class="c5row-main"><div class="c5row-t"><span class="c5pill b" style="margin-right:8px">Prioritize</span>Audit identity &amp; access</div><div class="c5row-s">Overdue review, open test exceptions, repeat finding, and evidence gap — all identity</div></div><div class="c5row-v">4 signals</div><span class="c5pill g" style="align-self:center">Recommended</span></div>'+
     '<div class="c5row" data-c5m="ia_coverage"><div class="c5row-main"><div class="c5row-t"><span class="c5pill n" style="margin-right:8px">Assure</span>Board assurance statement</div><div class="c5row-s">Independently confirm management’s fix is real and on track</div></div><div class="c5row-v">—</div><span class="c5pill n" style="align-self:center">Informational</span></div>'+
     '<div class="c5row" data-c5m="thirdparty_risk"><div class="c5row-main"><div class="c5row-t"><span class="c5pill a" style="margin-right:8px">Track</span>Acme vendor assessment</div><div class="c5row-s">Falling-rated vendor · confirm assessment cadence</div></div><div class="c5row-v">'+(tp.connected?tp.displayValue:'—')+'</div><span class="c5pill a" style="align-self:center">Advised</span></div>'+
     '</div>';
   host.innerHTML=c5header()+
     c5shell('Attention for Internal Audit · what needs follow-up?','One area ties the cycle together — plus board assurance to give.',null,'The audit actions on your desk. One area — identity — is your overdue review, outstanding test, repeat finding, and evidence gap at once. Internal Audit does not fund or fix; it schedules, tests, escalates and assures. Each item traces to the full picture and source.')+
     q+
-    c5bl('Bottom line','One area, four audit signals.',null,'Identity is simultaneously your overdue review, your outstanding test, your repeat finding, and your evidence gap. Prioritizing it is the highest-leverage audit action — and lets you give the board independent assurance that management’s fix is landing.',{mid:'exp_identity',txt:'Prioritize the identity audit'})+
+    c5bl('Bottom line','One area, four audit signals.',null,'Identity is simultaneously your overdue review, your outstanding test, your repeat finding, and your evidence gap. Prioritizing it is the highest-leverage audit action — and lets you give the board independent assurance that management’s fix is landing.',{mid:TD.mid,txt:'Prioritize the '+c5esc(TD.short)+' audit'})+
     '<div class="c5foot">Each item links to its plan, test, or finding. Internal Audit provides independent assurance — it does not fund or approve.</div>';
 }
 
@@ -3433,28 +3487,28 @@ function c5iaAttention(){
 /* Tab 01 — Cyber-business health */
 function c5bdHealth(){
   var host=document.getElementById('bd-health');if(!host)return;
-  var ec=c5get('exp_identity'),O=c5Objectives();var T=c5T();
+  var TD=c5TopDriver(),dm=c5get(TD.mid),O=c5Objectives();var T=c5T();
   host.innerHTML=c5header()+
     c5shell('Cyber-business health · is the enterprise secure and resilient?','Cyber is a managed risk'+(T.improving?' — improving,':' —')+' with nothing currently material.',null,'The enterprise is resilient this quarter'+(T.improving?', and cyber risk is trending down':'')+', and no matter is currently material for disclosure. Management has funded the top exposure. Every figure traces to its source.')+
     '<div class="c5cards">'+c5card('ceo_health')+c5card('bd_material')+c5card('direction')+'</div>'+
     '<div class="c5tiles">'+
       c5tile('ceo_objectives','g','Resilient',(O.protected+' of '+O.total+' objectives protected · one carries a funded action'))+
-      c5tile('exp_identity','a','Action underway',(ec.connected?('Identity gap · '+ec.displayValue+' · management action underway'):'top exposure · management action underway'))+
+      c5tile(TD.mid,'a','Action underway',(dm.connected?(cap(TD.short)+' gap · '+dm.displayValue+' · management action underway'):'top exposure · management action underway'))+
     '</div>'+
-    c5bl('For the board','Note and support management’s top action.',null,(ec.connected?('The largest exposure — an identity gap, '+ec.displayValue+' — has a funded fix underway. It is not currently material, and closing it improves resilience. Nothing requires board action beyond awareness.'):'The largest exposure has a funded action underway. It is not currently material. Nothing requires board action beyond awareness.'),{act:'openBoardPack()',txt:'Open the board pack'})+
+    c5bl('For the board','Note and support management’s top action.',null,(dm.connected?('The largest exposure — an '+TD.short+' gap, '+dm.displayValue+' — has a funded fix underway. It is not currently material, and closing it improves resilience. Nothing requires board action beyond awareness.'):'The largest exposure has a funded action underway. It is not currently material. Nothing requires board action beyond awareness.'),{act:'openBoardPack()',txt:'Open the board pack'})+
     '<div class="c5foot">Board figures are governance-grade and traceable to source (SEC Item 106).</div>';
 }
 /* Tab 02 — Material risk & disclosure */
 function c5bdMaterial(){
   var host=document.getElementById('bd-material');if(!host)return;
-  var ec=c5get('exp_identity'),m=(typeof LIVE!=='undefined'&&LIVE&&LIVE.economics&&LIVE.economics.materiality)||{};
-  var below=(ec.connected&&m.value!=null);
+  var TD=c5TopDriver(),dm=c5get(TD.mid),m=(typeof LIVE!=='undefined'&&LIVE&&LIVE.economics&&LIVE.economics.materiality)||{};
+  var below=(dm.connected&&m.value!=null);
   host.innerHTML=c5header()+
     c5shell('Material risk & disclosure · anything the board must know?','Nothing is currently material — and the process to decide is sound.',null,'Whether any cyber matter is material for disclosure under SEC Item 106. Nothing crosses the threshold this quarter; the materiality process is documented and applied. The board confirms the process; the disclosure call is management’s and counsel’s. Each item traces to its assessment and basis.')+
     '<div class="c5cards">'+c5card('bd_material')+c5card('bd_reportable')+c5card('bd_mat_process')+'</div>'+
     '<div class="c5tiles">'+
       c5tile('bd_incidents_assessed','g','None material','None met the materiality threshold')+
-      c5tile('exp_identity','g','Below threshold',(below?('Identity · '+ec.displayValue+' · below the '+usd(m.value)+' threshold · monitored and funded'):'below threshold · monitored and funded'))+
+      c5tile(TD.mid,'g','Below threshold',(below?(cap(TD.short)+' · '+dm.displayValue+' · below the '+usd(m.value)+' threshold · monitored and funded'):'below threshold · monitored and funded'))+
       c5tile('bd_disclosure_controls','g','Effective','Controls over disclosure operating')+
       c5tile('bd_threshold_basis','g','Documented','Quantitative + qualitative basis, applied consistently')+
     '</div>'+
@@ -3466,40 +3520,40 @@ function c5bdTrend(){
   var host=document.getElementById('bd-trend');if(!host)return;
   var tr=trajInfo();var vals=(tr.vals||[]).slice(-6);var maxV=Math.max.apply(null,vals.concat([1]));
   var bars='<div class="c5bars" style="height:44px">'+(vals.length?vals.map(function(v,i){var h=Math.round(8+(maxV>0?v/maxV:0)*34);var last=(i===vals.length-1);return '<i style="height:'+h+'px'+(last?';background:var(--blue)':'')+'"></i>';}).join(''):[1,2,3,4,5,6].map(function(){return '<i class="n" style="height:8px"></i>';}).join(''))+'</div>';
-  var er=c5get('eff_return');
+  var er=c5get('eff_return'),TD=c5TopDriver();
   var drivers='<div class="c5rank" style="padding:4px 15px;margin-top:14px"><div class="c5rank-h" style="border:0;background:transparent;padding:11px 0">What’s driving the improvement</div>'+
-    '<div class="c5prow" data-c5m="eff_return"><span class="c5sq g" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">Control effectiveness up</div><div class="c5row-s">Return on controls '+(er.connected?('is '+er.displayValue):'improving')+' — risk removed per dollar</div></div><span class="c5pill g">Improving</span></div>'+
+    '<div class="c5prow" data-c5m="eff_return"><span class="c5sq g" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">Control effectiveness up</div><div class="c5row-s">Return on controls '+(er.connected?('is '+er.displayValue):'improving')+' — risk reduced per dollar</div></div><span class="c5pill g">Improving</span></div>'+
     '<div class="c5prow" data-c5m="capability_coverage"><span class="c5sq g" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">Coverage expanded</div><div class="c5row-s">More assets monitored, fewer blind spots</div></div><span class="c5pill g">Improving</span></div>'+
-    '<div class="c5prow" data-c5m="exp_identity"><span class="c5sq a" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">Identity — still elevated</div><div class="c5row-s">The one remaining driver · funded, being addressed</div></div><span class="c5pill a">Addressing</span></div>'+
+    '<div class="c5prow" data-c5m="'+TD.mid+'"><span class="c5sq a" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">'+cap(TD.short)+' — still elevated</div><div class="c5row-s">The one remaining driver · funded, being addressed</div></div><span class="c5pill a">Addressing</span></div>'+
     '</div>';
   host.innerHTML=c5header()+
     c5shell('Trend over time · are we improving?','Cyber risk is falling — and ahead of peers.',null,'The board’s favorite question, answered over time. Cyber residual risk is falling quarter over quarter, and you sit in the top third of peers. Each point traces to its drivers.')+
     '<div class="c5cards">'+c5card('direction')+c5card('cr_consec')+c5card('peer_position')+'</div>'+
     '<div class="c5rank" style="padding:12px 15px;margin-top:14px"><div class="c5rank-h" style="border:0;background:transparent;padding:0 0 8px">Residual cyber risk · last 6 quarters</div>'+bars+'</div>'+
     drivers+
-    c5bl('For the board','Support the program’s trajectory.',null,'Consecutive quarters of improvement, ahead of peers. The one remaining driver — identity — is funded by management. Sustaining the trajectory is a matter of continued board support for the program.',{mid:'direction',txt:'Support the program trajectory'})+
+    c5bl('For the board','Support the program’s trajectory.',null,'Consecutive quarters of improvement, ahead of peers. The one remaining driver — '+TD.short+' — is funded by management. Sustaining the trajectory is a matter of continued board support for the program.',{mid:'direction',txt:'Support the program trajectory'})+
     '<div class="c5foot">Trend from the residual-risk series; peer comparison anonymized.</div>';
 }
 /* Tab 04 — Investment & resilience */
 function c5bdInvestment(){
   var host=document.getElementById('bd-investment');if(!host)return;
-  var er=c5get('eff_return'),ec=c5get('exp_identity');
+  var er=c5get('eff_return'),TD=c5TopDriver(),dm=c5get(TD.mid);
   host.innerHTML=c5header()+
-    c5shell('Investment & resilience · are we investing wisely?','The program pays for itself — one funded investment sustains it.',null,'Whether cyber investment is proportionate and effective. The program returns risk removed per dollar, spend is benchmarked against peers, and one funded investment — identity — sustains the improvement. Every figure traces to its basis.')+
+    c5shell('Investment & resilience · are we investing wisely?','The program pays for itself — one funded investment sustains it.',null,'Whether cyber investment is proportionate and effective. The program returns risk reduced per dollar, spend is benchmarked against peers, and one funded investment — '+TD.short+' — sustains the improvement. Every figure traces to its basis.')+
     '<div class="c5cards">'+c5card('eff_return')+c5card('bd_spend_peers')+c5card('bd_funded')+'</div>'+
     '<div class="c5tiles">'+
       c5tile('bd_resilience_inv','g','On track','Recovery tested · within RTO/RPO targets')+
-      c5tile('exp_identity','b','Funded',(ec.connected?('Identity fix · sustains the trend · '+ec.displayValue+' removed'):'the funded investment that sustains the trend'))+
+      c5tile(TD.mid,'b','Funded',(dm.connected?(cap(TD.short)+' fix · sustains the trend · '+dm.displayValue+' reduced'):'the funded investment that sustains the trend'))+
     '</div>'+
-    c5bl('For the board','Endorse the investment direction.',null,(er.connected?('Cyber spend returns '+er.displayValue+' and the one investment that sustains the improving trend — the identity fix — is funded by management. The board’s role is to endorse the direction, which the numbers support.'):'Cyber spend is proportionate and the investment that sustains the improving trend is funded. The board’s role is to endorse the direction.'),{mid:'eff_return',txt:'Endorse the investment direction'})+
+    c5bl('For the board','Endorse the investment direction.',null,(er.connected?('Cyber spend returns '+er.displayValue+' and the one investment that sustains the improving trend — the '+TD.short+' fix — is funded by management. The board’s role is to endorse the direction, which the numbers support.'):'Cyber spend is proportionate and the investment that sustains the improving trend is funded. The board’s role is to endorse the direction.'),{mid:'eff_return',txt:'Endorse the investment direction'})+
     '<div class="c5foot">Return and spend from the program model; peer benchmark anonymized.</div>';
 }
 /* Tab 05 — Governance */
 function c5bdGovernance(){
   var host=document.getElementById('bd-governance');if(!host)return;
-  var ec=c5get('exp_identity'),tp=c5get('thirdparty_risk');
+  var TD=c5TopDriver(),dm=c5get(TD.mid),tp=c5get('thirdparty_risk');
   var q='<div class="c5rank"><div class="c5rank-h">Governance items · note, confirm, be aware — nothing to approve</div>'+
-    '<div class="c5row" data-c5m="exp_identity"><div class="c5row-main"><div class="c5row-t"><span class="c5pill b" style="margin-right:8px">Note</span>Management’s top action</div><div class="c5row-s">Identity fix funded and underway · not material · improves resilience</div></div><div class="c5row-v">'+(ec.connected?ec.displayValue:'—')+'</div><span class="c5pill g" style="align-self:center">For awareness</span></div>'+
+    '<div class="c5row" data-c5m="'+TD.mid+'"><div class="c5row-main"><div class="c5row-t"><span class="c5pill b" style="margin-right:8px">Note</span>Management’s top action</div><div class="c5row-s">'+cap(TD.short)+' fix funded and underway · not material · improves resilience</div></div><div class="c5row-v">'+(dm.connected?dm.displayValue:'—')+'</div><span class="c5pill g" style="align-self:center">For awareness</span></div>'+
     '<div class="c5row" data-c5m="bd_mat_process"><div class="c5row-main"><div class="c5row-t"><span class="c5pill n" style="margin-right:8px">Confirm</span>Oversight is functioning</div><div class="c5row-s">Risk owned, reported, and trending down · process sound</div></div><div class="c5row-v">—</div><span class="c5pill n" style="align-self:center">Informational</span></div>'+
     '<div class="c5row" data-c5m="thirdparty_risk"><div class="c5row-main"><div class="c5row-t"><span class="c5pill a" style="margin-right:8px">Aware</span>Acme vendor</div><div class="c5row-s">Falling-rated payments vendor · management is mitigating</div></div><div class="c5row-v">'+(tp.connected?tp.displayValue:'—')+'</div><span class="c5pill a" style="align-self:center">Watch</span></div>'+
     '</div>';
@@ -3562,72 +3616,72 @@ function c5cpInventoryHtml(){
 }
 function c5cpSecurity(){
   var host=document.getElementById('cp-security');if(!host)return;
-  var ec=c5get('exp_identity'),adv=c5get('ct_advisories');
+  var TD=c5TopDriver(),dm=c5get(TD.mid),adv=c5get('ct_advisories');
   host.innerHTML=c5header()+
-    c5shell('Product security posture · is the product secure by design?','The product is secure by design — one part of the platform carries the risk.',null,'Security across your product surface. Every customer-facing product is listed below with how it is evaluated. New features ship secure-by-design and most of the platform is healthy; the one real exposure is the customer platform’s identity/access model. Every figure traces to its source.')+
+    c5shell('Product security posture · is the product secure by design?','The product is secure by design — one part of the platform carries the risk.',null,'Security across your product surface. Every customer-facing product is listed below with how it is evaluated. New features ship secure-by-design and most of the platform is healthy; the one real exposure is the customer platform’s '+TD.short+'/access model. Every figure traces to its source.')+
     '<div class="c5cards">'+c5card('cp_product_security')+c5card('cp_sbd_coverage')+c5card('cp_open_risks')+'</div>'+
     c5cpInventoryHtml()+
     '<div class="c5tiles">'+
-      c5tile('exp_identity','a','Gap','The customer-platform exposure')+
+      c5tile(TD.mid,'a','Gap','The customer-platform exposure')+
       c5tile('ct_advisories','b','Watch',(adv.connected?'Auth-library advisory · a dependency to patch':'connect your SCA scanner'))+
     '</div>'+
-    c5bl('Bottom line','Fix the access model in your flagship product.',null,(ec.connected?('The identity/access model behind the customer platform is your product’s one real security gap ('+ec.displayValue+'). The fix is funded — it closes the exposure and gives users a cleaner, safer access experience.'):'Connect your controls and the product’s one real security gap — the customer-platform access model — surfaces here with its funded fix.'),{mid:'exp_identity',txt:'Fund the identity fix — hardens the product'})+
+    c5bl('Bottom line','Fix the access model in your flagship product.',null,(dm.connected?('The '+TD.short+'/access model behind the customer platform is your product’s one real security gap ('+dm.displayValue+'). The fix is funded — it closes the exposure and gives users a cleaner, safer access experience.'):'Connect your controls and the product’s one real security gap — the customer-platform access model — surfaces here with its funded fix.'),{mid:TD.mid,txt:'Fund the '+c5esc(TD.short)+' fix — hardens the product'})+
     '<div class="c5foot">Product posture from your SDLC gates and product scans.</div>';
 }
 /* Tab 02 — Customer trust in the product */
 function c5cpTrust(){
   var host=document.getElementById('cp-trust');if(!host)return;
-  var ec=c5get('exp_identity');
+  var TD=c5TopDriver(),dm=c5get(TD.mid);
   host.innerHTML=c5header()+
-    c5shell('Customer trust in the product · are users safe and confident?','Users trust the product — the access experience is the one soft spot.',null,'How secure and confident your users are. No customer-impacting incidents, strong security-feature adoption, trust signals steady. The one soft spot is the identity/access experience — friction and risk in the same place. Every figure traces to its source.')+
+    c5shell('Customer trust in the product · are users safe and confident?','Users trust the product — the access experience is the one soft spot.',null,'How secure and confident your users are. No customer-impacting incidents, strong security-feature adoption, trust signals steady. The one soft spot is the '+TD.short+'/access experience — friction and risk in the same place. Every figure traces to its source.')+
     '<div class="c5cards">'+c5card('ceo_cust_incidents')+c5card('cp_mfa')+c5card('ceo_trust_signal')+'</div>'+
     '<div class="c5tiles">'+
       c5tile('ceo_customer_data','a','Evidence-gated','Confirmed only with SIEM + DLP connected')+
-      c5tile('exp_identity','a','Watch','The identity gap shows up here — friction + risk')+
+      c5tile(TD.mid,'a','Watch','The '+TD.short+' gap shows up here — friction + risk')+
     '</div>'+
-    c5bl('Bottom line','Turn the access pain point into a trust win.',null,(ec.connected?('The identity gap is both a security risk and a source of user friction. Fixing it ('+ec.displayValue+') removes the exposure and smooths the access experience — safer and better for customers at once.'):'Connect your controls and the access pain point — both risk and friction — surfaces here, with the fix that improves both.'),{mid:'exp_identity',txt:'Fund the identity fix — improves trust'})+
+    c5bl('Bottom line','Turn the access pain point into a trust win.',null,(dm.connected?('The '+TD.short+' gap is both a security risk and a source of user friction. Fixing it ('+dm.displayValue+') reduces the exposure and smooths the access experience — safer and better for customers at once.'):'Connect your controls and the access pain point — both risk and friction — surfaces here, with the fix that improves both.'),{mid:TD.mid,txt:'Fund the '+c5esc(TD.short)+' fix — improves trust'})+
     '<div class="c5foot">Trust and adoption from your product analytics and incident records.</div>';
 }
 /* Tab 03 — Ship velocity vs. security */
 function c5cpVelocity(){
   var host=document.getElementById('cp-velocity');if(!host)return;
-  var ec=c5get('exp_identity');
+  var TD=c5TopDriver(),dm=c5get(TD.mid);
   host.innerHTML=c5header()+
-    c5shell('Ship velocity vs. security · is security a tax or an enabler?','Security isn’t slowing you down — it’s clearing your path.',null,'Whether security helps or hinders delivery. The one recurring blocker is — again — the identity/access model; tech debt is roadmapped. Gate pass-rate and cycle-time light up when your CI/CD security-gate records connect. Every figure traces to its basis.')+
+    c5shell('Ship velocity vs. security · is security a tax or an enabler?','Security isn’t slowing you down — it’s clearing your path.',null,'Whether security helps or hinders delivery. The one recurring blocker is — again — the '+TD.short+'/access model; tech debt is roadmapped. Gate pass-rate and cycle-time light up when your CI/CD security-gate records connect. Every figure traces to its basis.')+
     '<div class="c5cards">'+c5card('cp_pass_rate')+c5card('cp_cycle_time')+c5card('cp_blocker')+'</div>'+
     '<div class="c5tiles">'+
       c5tile('ct_techdebt','b','Managed','Legacy access debt mapped · roadmapped')+
     '</div>'+
-    c5bl('Bottom line','Remove the one blocker that keeps recurring.',null,(ec.connected?('The identity/access model is the recurring blocker in your release pipeline. Fixing it once ('+ec.displayValue+') removes friction from future features — security stops being a repeat tax on velocity.'):'Connect your controls and the recurring release blocker — the identity/access model — surfaces here, fixable once.'),{mid:'exp_identity',txt:'Fund the identity fix — unblocks delivery'})+
+    c5bl('Bottom line','Remove the one blocker that keeps recurring.',null,(dm.connected?('The '+TD.short+'/access model is the recurring blocker in your release pipeline. Fixing it once ('+dm.displayValue+') reduces friction from future features — security stops being a repeat tax on velocity.'):'Connect your controls and the recurring release blocker — the '+TD.short+'/access model — surfaces here, fixable once.'),{mid:TD.mid,txt:'Fund the '+c5esc(TD.short)+' fix — unblocks delivery'})+
     '<div class="c5foot">Delivery metrics from your CI/CD and security-gate records.</div>';
 }
 /* Tab 04 — Product risk backlog */
 function c5cpBacklog(){
   var host=document.getElementById('cp-backlog');if(!host)return;
-  var ec=c5get('exp_identity'),adv=c5get('ct_advisories'),td=c5get('ct_techdebt');
+  var TD=c5TopDriver(),dm=c5get(TD.mid),adv=c5get('ct_advisories'),td=c5get('ct_techdebt');
   var rows='<div class="c5rank"><div class="c5rank-h">Backlog · priority and status</div>'+
-    '<div class="c5prow" data-c5m="exp_identity"><span class="c5sq a" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">Identity/access remediation <span class="c5tag rev">High</span></div><div class="c5row-s">Funded · leads the backlog'+(ec.connected?(' · '+ec.displayValue+' of exposure'):'')+'</div></div><span class="c5pill a">Leads</span></div>'+
+    '<div class="c5prow" data-c5m="'+TD.mid+'"><span class="c5sq a" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">'+cap(TD.short)+'/access remediation <span class="c5tag rev">High</span></div><div class="c5row-s">Funded · leads the backlog'+(dm.connected?(' · '+dm.displayValue+' of exposure'):'')+'</div></div><span class="c5pill a">Leads</span></div>'+
     '<div class="c5prow" data-c5m="ct_advisories"><span class="c5sq b" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">Auth-library patch <span class="c5tag rev">High</span></div><div class="c5row-s">'+(adv.connected?('Used in the customer platform · '+adv.displayValue+' open'):'used in the customer platform')+'</div></div><span class="c5pill b">Scheduled</span></div>'+
-    '<div class="c5prow" data-c5m="exp_identity"><span class="c5sq b" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">Session-management hardening <span class="c5tag">Medium</span></div><div class="c5row-s">Depends on the access remediation</div></div><span class="c5pill b">Scheduled</span></div>'+
+    '<div class="c5prow" data-c5m="'+TD.mid+'"><span class="c5sq b" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">Session-management hardening <span class="c5tag">Medium</span></div><div class="c5row-s">Depends on the access remediation</div></div><span class="c5pill b">Scheduled</span></div>'+
     '<div class="c5prow" data-c5m="ct_techdebt"><span class="c5sq g" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">Deprecate legacy access paths <span class="c5tag">Medium</span></div><div class="c5row-s">Reduces access debt'+(td.connected?(' · '+td.displayValue+' mapped'):'')+'</div></div><span class="c5pill g">Roadmapped</span></div>'+
     '<div class="c5prow" data-c5m="cp_mfa"><span class="c5sq n" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">Security-feature UX polish <span class="c5tag">Low</span></div><div class="c5row-s">Improves adoption</div></div><span class="c5pill n">Backlog</span></div>'+
     '</div>';
   host.innerHTML=c5header()+
-    c5shell('Product risk backlog · what security work is queued?','The backlog is healthy — one high-priority item leads it.',null,'The security work queued against your product. Most is routine and scheduled; one high-priority item — the identity/access remediation — leads the backlog and is funded. Each item traces to its scope and owner.')+
+    c5shell('Product risk backlog · what security work is queued?','The backlog is healthy — one high-priority item leads it.',null,'The security work queued against your product. Most is routine and scheduled; one high-priority item — the '+TD.short+'/access remediation — leads the backlog and is funded. Each item traces to its scope and owner.')+
     '<div class="c5cards">'+c5card('cp_open_items')+c5card('cp_high_priority')+c5card('cp_funded')+'</div>'+
     rows+
-    c5bl('Bottom line','Land the item at the top of the backlog.',null,(ec.connected?('The identity/access remediation leads your product-security backlog and is funded. Landing it ('+ec.displayValue+') clears the largest product risk and unblocks several dependent items below it.'):'The identity/access remediation leads your product-security backlog. Landing it clears the largest product risk and unblocks the dependent items below it.'),{mid:'exp_identity',txt:'Prioritize the identity remediation'})+
+    c5bl('Bottom line','Land the item at the top of the backlog.',null,(dm.connected?('The '+TD.short+'/access remediation leads your product-security backlog and is funded. Landing it ('+dm.displayValue+') clears the largest product risk and unblocks several dependent items below it.'):'The '+TD.short+'/access remediation leads your product-security backlog. Landing it clears the largest product risk and unblocks the dependent items below it.'),{mid:TD.mid,txt:'Prioritize the '+c5esc(TD.short)+' remediation'})+
     '<div class="c5foot">Backlog from your product and security issue trackers.</div>';
 }
 /* Tab 05 — Decisions for the CPO */
 function c5cpDecisions(){
   var host=document.getElementById('cp-decisions');if(!host)return;
-  var ec=c5get('exp_identity'),adv=c5get('ct_advisories');
+  var TD=c5TopDriver(),dm=c5get(TD.mid),adv=c5get('ct_advisories');
   var list=[
-    c5dec('cp',1,'Fund the identity / access fix?','Closes the product’s top security gap, smooths the access experience, and unblocks delivery'+(ec.connected?(' ('+ec.displayValue+')'):'')+'.',
-      {on:'Fund it — safer, smoother, faster',osum:(ec.connected?('Three product wins at once · −'+ec.displayValue):'Three product wins at once'),pros:['Closes the product’s top security gap.','Smooths the customer access experience.','Unblocks delivery velocity.'],cons:['Larger cross-team effort and cost.']}),
+    c5dec('cp',1,'Fund the '+TD.short+' / access fix?','Closes the product’s top security gap, smooths the access experience, and unblocks delivery'+(dm.connected?(' ('+dm.displayValue+')'):'')+'.',
+      {on:'Fund it — safer, smoother, faster',osum:(dm.connected?('Three product wins at once · −'+dm.displayValue):'Three product wins at once'),pros:['Closes the product’s top security gap.','Smooths the customer access experience.','Unblocks delivery velocity.'],cons:['Larger cross-team effort and cost.']}),
     c5dec('cp',2,'Patch the auth-library dependency?','High-severity'+(adv.connected?(' ('+adv.displayValue+' open)'):'')+' — used in the customer platform. Urgent.',
-      {on:'Patch it now',osum:'Closes a known-exploitable dependency',pros:['Removes an actively-exploitable path shipping to customers.','Fast, low-cost fix.'],cons:['Requires a release / regression pass.']},
+      {on:'Patch it now',osum:'Closes a known-exploitable dependency',pros:['Closes an actively-exploitable path shipping to customers.','Fast, low-cost fix.'],cons:['Requires a release / regression pass.']},
       [{on:'Schedule for the next release',osum:'Batch with the next deploy',pros:['Avoids an out-of-band release.'],cons:['Leaves the path open in the interim.']}])
   ];
   host.innerHTML=c5header()+
@@ -4072,7 +4126,7 @@ function c5AskMoney(v){if(v==null)return '';var n=Number(v);if(!isFinite(n)||n<=
 /* The activities the CISO asks of each seat — grounded in live exposure where it
    can be, plus the governance attestations each role owns. */
 function c5AskModel(seat){
-  var asks=[];
+  var asks=[];var TD=c5TopDriver();
   // Risk acceptances — one per exposed crown jewel in this seat's domain.
   var enterprise=(seat==='cro'||seat==='board'||seat==='ceo');
   var exps=c5SeatExposures(seat);
@@ -4096,7 +4150,7 @@ function c5AskModel(seat){
   }
   if(seat==='cfo')
     asks.push({id:'cfo_fund_best',kind:'fund',title:'Fund the highest-return control',
-      why:'Your best dollar closes the identity gap — the most risk removed per dollar, and it trims the insurance tail where you are thin.',
+      why:'Your best dollar closes the '+TD.short+' gap — the most risk reduced per dollar, and it trims the insurance tail where you are thin.',
       ask:'Approve the funding, decline, or defer to the next cycle.',opts:['Approve funding','Decline','Defer']});
   if(seat==='board')
     asks.push({id:'board_attest_materiality',kind:'attest',title:'Attest — materiality process (SEC Item 106)',
@@ -4107,13 +4161,13 @@ function c5AskModel(seat){
       why:'Nothing currently crosses the disclosure threshold; notification readiness depends on forensic evidence staying current.',
       ask:'Confirm the disclosure posture, or flag an obligation to review.',opts:['Confirm','Flag for review']});
   if(seat==='cpo')
-    asks.push({id:'cpo_prioritize_identity',kind:'accept',title:'Prioritize the identity fix in the backlog',
-      why:'The identity & access model is a security gap, a source of user friction and a recurring release blocker — one fix returns all three.',
+    asks.push({id:'cpo_prioritize_identity',kind:'accept',title:'Prioritize the '+TD.short+' fix in the backlog',
+      why:'The '+TD.short+' & access model is a security gap, a source of user friction and a recurring release blocker — one fix returns all three.',
       ask:'Commit it to the top of the product backlog, or defer.',opts:['Prioritize','Defer']});
   if(seat==='audit')
-    asks.push({id:'audit_escalate_identity',kind:'attest',title:'Escalate — identity for follow-up',
-      why:'Identity & access is your overdue review, outstanding test, repeat finding and evidence gap at once.',
-      ask:'Escalate identity for audit-committee follow-up, or note it as tracked.',opts:['Escalate','Note as tracked']});
+    asks.push({id:'audit_escalate_identity',kind:'attest',title:'Escalate — '+TD.short+' for follow-up',
+      why:cap(TD.short)+' & access is your overdue review, outstanding test, repeat finding and evidence gap at once.',
+      ask:'Escalate '+TD.short+' for audit-committee follow-up, or note it as tracked.',opts:['Escalate','Note as tracked']});
   return asks;
 }
 function c5AskStore(){try{return JSON.parse(localStorage.getItem('cyberrx_asks')||'{}')||{};}catch(_){return {};}}
@@ -4312,7 +4366,7 @@ function c5DecProj(){
   function myStatus(l){var raw=mineStore[l.k];return (raw&&typeof raw==='object')?raw.status:(raw||null);}
   var openLevers=levers.slice(0,6).filter(function(l){return !myStatus(l)&&!l.inflight;});
   var myPending=openLevers.length, topOpen=openLevers[0]||null;
-  var expM=c5get('exp_total'),expId=c5get('exp_identity');
+  var expM=c5get('exp_total'),expId=c5get(c5TopDriver().mid);
   var expWait=expM.connected?expM.displayValue:(expId.connected?expId.displayValue:'—');
   var blocking=myPending+pending, wn={0:'No',1:'One',2:'Two',3:'Three',4:'Four',5:'Five',6:'Six'}, wns={0:'no',1:'one',2:'two',3:'three',4:'four',5:'five',6:'six'};
   var answer=(blocking>0)

@@ -100,8 +100,11 @@ describe('Control Value tab — bottom line & button', () => {
   it('flags PAM-style largest remaining gap as the next investment priority', () => {
     expect(cv).toMatch(/has the largest remaining coverage gap \('\+topGap\.p\+'%\) and should be evaluated as the next investment priority/);
   });
-  it('button says Close remaining identity gaps', () => {
-    expect(cv).toContain("txt:'Close remaining identity gaps'");
+  it('the remaining-priority driver + button are data-ranked (c5TopDriver), not literal identity', () => {
+    expect(cv).toContain('var TDcv=c5TopDriver()');
+    expect(cv).toContain("The remaining priority is to reduce your largest exposure driver — '+TDcv.phrase");
+    expect(cv).toContain("txt:'Close the '+c5esc(TDcv.short)+' gap'");
+    expect(cv).not.toContain("txt:'Close remaining identity gaps'");
   });
   it('footer keeps source traceability language', () => {
     expect(cv).toContain('Click any control for source traceability and calculation basis');

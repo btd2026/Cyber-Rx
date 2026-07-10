@@ -21,18 +21,22 @@ const ask = ciso.slice(ciso.indexOf('function c5AskModel(seat)'), ciso.indexOf('
 describe('CEO Decisions — page purpose & wording', () => {
   it('locates the tab', () => {
     expect(ceo).toContain('what needs my sign-off');
-    expect(ceo).toContain('The strategic cyber decision waiting on you: approve identity remediation now, defer it, or formally accept the residual exposure.');
+    // driver is data-ranked (c5TopDriver → TD.short), not a hard-coded "identity"
+    expect(ceo).toContain('var TD=c5TopDriver()');
+    expect(ceo).toContain("The strategic cyber decision waiting on you: approve '+TD.short+' remediation now, defer it, or formally accept the residual exposure.");
+    expect(ceo).not.toContain('approve identity remediation now, defer it');
   });
-  it('replaces "Back the identity fix"/"Back it" with "Approve customer-platform identity remediation"', () => {
-    expect(ceo).toContain('Approve customer-platform identity remediation');
+  it('titles the decision from the computed driver, not a hard-coded identity string', () => {
+    expect(ceo).toContain("Approve customer-platform '+TD.short+' remediation");
+    expect(ceo).not.toContain("'Approve customer-platform identity remediation'");
     expect(ceo).not.toContain('Back it');
     expect(ceo).not.toContain('Back the identity fix');
   });
-  it('does not use "-$382M risk"-style wording; labels modeled exposure instead', () => {
+  it('does not use "-$382M risk"-style wording; labels modeled exposure by the computed driver', () => {
     expect(ceo).not.toMatch(/[-−]'\+ec\.displayValue\+' risk/);
     expect(ceo).not.toMatch(/removes the largest single exposure/i);
     expect(ceo).toContain('Modeled exposure');
-    expect(ceo).toMatch(/modeled exposure tied to customer-platform identity risk/);
+    expect(ceo).toContain("modeled exposure tied to customer-platform '+TD.short+' risk");
   });
   it('shows the modeled-exposure basis and evidence confidence', () => {
     expect(ceo).toContain('Estimated business exposure tied to customer-platform services dependent on affected identity controls.');
