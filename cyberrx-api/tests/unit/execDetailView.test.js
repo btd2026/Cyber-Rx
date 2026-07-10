@@ -56,9 +56,12 @@ describe('detail drawer — standardized sections', () => {
   it('shows Evidence confidence as a header chip with the level', () => {
     expect(H).toMatch(/Evidence confidence<\/div><div[^>]*>(High|Medium|Low|Not Enough Evidence|Demo)/);
   });
-  it('shows the finding under "What this means", data-driven', () => {
+  it('shows a consequence ("if X, then Y") under "What this means", by domain', () => {
     expect(H).toContain('What this means');
-    expect(H).toContain('Nerion found 7 AI/ML systems · 1 posture gap');
+    // ais_ metric → AI/supply-chain consequence, not a bare restatement of the number
+    expect(H).toMatch(/If one of these AI systems or components is abused or compromised/);
+    // the number itself still shows in the Result hero + key evidence
+    expect(H).toContain('7 AI/ML systems · 1 posture gap');
   });
   it('keeps "what this does not prove" (collapsed in calculation basis)', () => {
     expect(H).toContain('What this does not prove');
@@ -135,9 +138,9 @@ describe('detail drawer — data-driven, not hard-coded', () => {
   it('the finding and action change when the metric changes (top gap changes)', () => {
     const a = render(Object.assign({}, AIML, { displayValue: '3 vendors · 1 SPOF', action: 'Validate vendor recovery evidence.', name: 'Vendor recovery' }));
     const b = render(Object.assign({}, AIML, { displayValue: '5 systems · 2 gaps', action: 'Close identity recovery gap.', name: 'Identity recovery' }));
-    expect(a).toContain('Nerion found 3 vendors · 1 SPOF');
+    expect(a).toContain('3 vendors · 1 SPOF'); // the reading (Result hero) is data-driven
     expect(a).toContain('Validate vendor recovery evidence.');
-    expect(b).toContain('Nerion found 5 systems · 2 gaps');
+    expect(b).toContain('5 systems · 2 gaps');
     expect(b).toContain('Close identity recovery gap.');
     expect(a).not.toEqual(b);
   });
