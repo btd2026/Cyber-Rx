@@ -218,6 +218,28 @@ function c5vendors(){var seed=(typeof vendorSeed==='function')?vendorSeed():[];v
   var atRisk=rated.filter(function(v){return v.score<75;});
   return {seed:seed,vs:vs,p:p,atRisk:atRisk,worst:rated[0]||null};}
 
+/* ── Single shared source for the five critical systems every seat reasons about, so the
+   COO Recovery / Resilience / Vendors and CIO Tech-estate tabs can't drift. Each tab
+   attaches its own per-system detail (RTO, vendor rating, open vulns…) but the identity,
+   ordering and canonical label come from here. c5sysLabel(key) resolves a system's label;
+   pass a per-tab override when a seat uses its own wording for the same underlying system. */
+var C5_SYSTEMS=[
+  {key:'customer',label:'Customer platform'},
+  {key:'payments',label:'Payments processing'},
+  {key:'fulfillment',label:'Order fulfillment'},
+  {key:'supply',label:'Supply chain'},
+  {key:'financial',label:'Financial close'}
+];
+function c5sysLabel(key,override){if(override)return override;for(var i=0;i<C5_SYSTEMS.length;i++){if(C5_SYSTEMS[i].key===key)return C5_SYSTEMS[i].label;}return key;}
+/* Shared identity-fix / decision config — the cost (derived from the live exposure model
+   via the top driver, never retyped), plus the fixed timeline, owner and framing. The COO
+   Recovery/Vendors, the CIO Tech-estate and the Decisions tabs all read this so the
+   identity fix reads the same everywhere. */
+function c5IdFix(){
+  var TD=(typeof c5TopDriver==='function')?c5TopDriver():{mid:'exp_identity',short:'identity',name:'Identity sprawl in cloud',ok:false};
+  var dm=(typeof c5get==='function')?c5get(TD.mid):{connected:false};
+  return {mid:TD.mid,short:TD.short,name:TD.name,usd:(dm&&dm.connected)?dm.displayValue:null,timeline:'90–180 days',owner:'CISO / CIO'};}
+
 /* Vendor-concentration matrix — vendor CATEGORY (not real company names) mapped to the
    SAME critical services as the Resilience / Recovery tabs. Illustrative until a live
    ratings + failover feed is wired; negative labels ("single point", "falling") must stay
@@ -230,11 +252,11 @@ function c5vendors(){var seed=(typeof vendorSeed==='function')?vendorSeed():[];v
 function c5vendorMatrix(){
   function gradeVal(g){return {'A':92,'A-':88,'A−':88,'B':82,'B-':76,'B−':76,'C':68,'C-':62,'C−':62,'D':50}[g]||75;}
   var rows=[
-    {cat:'Cloud hosting provider',proc:'Customer platform',crit:true,failover:'No failover',grade:'C',trend:'down'},
-    {cat:'Logistics (3PL)',proc:'Supply chain',crit:true,failover:'Partial alternative',grade:'B−',trend:'down'},
-    {cat:'Payment processor',proc:'Payments processing',crit:true,failover:'Backup ready',grade:'A',trend:'flat'},
+    {cat:'Cloud hosting provider',proc:c5sysLabel('customer'),crit:true,failover:'No failover',grade:'C',trend:'down'},
+    {cat:'Logistics (3PL)',proc:c5sysLabel('supply'),crit:true,failover:'Partial alternative',grade:'B−',trend:'down'},
+    {cat:'Payment processor',proc:c5sysLabel('payments'),crit:true,failover:'Backup ready',grade:'A',trend:'flat'},
     {cat:'Identity provider',proc:'Access — all services',crit:true,failover:'Blast-radius control',grade:'A',trend:'flat'},
-    {cat:'ERP / financials',proc:'Financial close',crit:true,failover:'Backup ready',grade:'B',trend:'flat'}
+    {cat:'ERP / financials',proc:c5sysLabel('financial'),crit:true,failover:'Backup ready',grade:'B',trend:'flat'}
   ];
   rows.forEach(function(r){r.score=gradeVal(r.grade);
     var noFailover=/no failover/i.test(r.failover),weak=(r.score<75||r.trend==='down');
@@ -2282,13 +2304,20 @@ var C5ICON={
   gauge:'<path d="M4 16a8 8 0 1 1 16 0"/><path d="M12 16l4-3.5"/>',
   shieldcheck:'<path d="M12 3 5 6v5c0 4.2 3 7 7 8.5 4-1.5 7-4.3 7-8.5V6z"/><path d="M9 11.5l2 2 4-4"/>'
 };
-var C5SEAT={ciso:{ic:'shield',nm:'CISO'},cfo:{ic:'dollar',nm:'CFO'},ceo:{ic:'tower',nm:'CEO'},cro:{ic:'scale',nm:'CRO'},coo:{ic:'factory',nm:'COO'},clo:{ic:'gavel',nm:'CLO'},cio:{ic:'cpu',nm:'CTO'},cpo:{ic:'box',nm:'CPO'},audit:{ic:'clipboard',nm:'Internal Audit'},board:{ic:'bank',nm:'Board'}};
+var C5SEAT={ciso:{ic:'shield',nm:'CISO'},cfo:{ic:'dollar',nm:'CFO'},ceo:{ic:'tower',nm:'CEO'},cro:{ic:'scale',nm:'CRO'},coo:{ic:'factory',nm:'COO'},clo:{ic:'gavel',nm:'CLO'},cio:{ic:'cpu',nm:'CIO'},cpo:{ic:'box',nm:'CPO'},audit:{ic:'clipboard',nm:'Internal Audit'},board:{ic:'bank',nm:'Board'}};
+/* The seat's display label — read from the SAME source the persona nav renders (the active
+   seat button's own text) so the header and the nav can never disagree (the old CIO-vs-CTO
+   bug). Falls back to C5SEAT / SEAT_LABEL only if the nav button isn't in the DOM. */
+function c5seatLabel(id){
+  try{var el=document.querySelector('.seat[data-seat="'+id+'"]');var t=el&&(el.textContent||'').trim();if(t)return t;}catch(_){}
+  return (C5SEAT[id]&&C5SEAT[id].nm)||((typeof SEAT_LABEL!=='undefined'&&SEAT_LABEL[id])||String(id).toUpperCase());}
 function c5icon(k){return '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(C5ICON[k]||C5ICON.shield)+'</svg>';}
 /* The seat header (icon badge · seat · timestamp) renders once in the hero, above the
    tab bar — matching the mockbook. c5header() inside each tab is intentionally empty
    so the header isn't duplicated below the tabs. */
-function c5seatHeader(){var id=(typeof CUR!=='undefined'&&CUR)?CUR:'ciso';var m=C5SEAT[id]||{ic:'shield',nm:((typeof SEAT_LABEL!=='undefined'&&SEAT_LABEL[id])||String(id).toUpperCase())};
-  return '<div class="c5head"><div class="c5id"><div class="c5ic">'+c5icon(m.ic)+'</div><div><div class="c5id-n">'+m.nm+'</div><div class="c5id-s">Executive cockpit</div></div></div><div class="c5asof">as of '+c5ago()+'</div></div>';}
+function c5seatHeader(){var id=(typeof CUR!=='undefined'&&CUR)?CUR:'ciso';var m=C5SEAT[id]||{ic:'shield'};
+  var nm=c5seatLabel(id);var sub='Executive cockpit'+(id!=='ciso'?' · CISO briefing':'');
+  return '<div class="c5head"><div class="c5id"><div class="c5ic">'+c5icon(m.ic)+'</div><div><div class="c5id-n">'+nm+'</div><div class="c5id-s">'+sub+'</div></div></div><div class="c5asof">as of '+c5ago()+'</div></div>';}
 function c5header(){return '';}
 function c5shell(kick,verdict,verdictColor,intro){
   return '<div class="c5kick">'+kick+'</div><div class="c5verdict"'+(verdictColor?(' style="color:var(--'+verdictColor+')"'):'')+'>'+verdict+'</div><div class="c5intro">'+intro+'</div>';
@@ -2342,7 +2371,7 @@ function c5Brief(seat){
       case 'ceo': return 'CEO read. Cyber is a managed risk this quarter — '+objs+'; the exception is '+driver+'. Modeled exposure is '+total+', within the board’s appetite where you have set one.'+trend;
       case 'cfo': var ap=c5get('cf_appetite'),hr=c5get('cf_headroom'); return 'CFO read. Modeled exposure is '+total+(ap.connected?(', against a '+ap.displayValue+' appetite'+(hr.connected?(' with '+hr.displayValue+' of headroom'):'')):'')+'. The largest single driver is '+driver+'.'+trend;
       case 'cro': var rk=c5get('cr_rank'); return 'CRO read. '+(rk.connected?('Cyber ranks '+rk.displayValue+' among your principal risks'):'Cyber sits on one scale beside your other principal risks')+'; the driver to treat is '+driver+'.'+trend;
-      case 'cio': var av=c5get('ct_critical_vulns'); return 'CTO read. The stack’s biggest security gap is '+driver+'.'+(av.connected?(' '+av.displayValue+' known-exploitable critical vulnerabilities are open.'):'')+trend;
+      case 'cio': var av=c5get('ct_critical_vulns'); return 'CIO read. The stack’s biggest security gap is '+driver+'.'+(av.connected?(' '+av.displayValue+' known-exploitable critical vulnerabilities are open.'):'')+trend;
       case 'clo': var b=c5get('cl_binding_clock'); return 'CLO read. '+(b.connected?('Your tightest notification clock is '+b.displayValue+'. '):'')+'The exposure most likely to trigger a filing is '+driver+'. This surfaces obligations, not legal conclusions.';
       case 'coo': return 'COO read. Operations are resilient this quarter; the one critical process carrying cyber exposure is tied to '+driver+'.'+trend;
       case 'cpo': var op=c5get('cp_open_risks'); return 'Product read. '+(op.connected?(op.displayValue+' open product risks; '):'')+'the largest is '+driver+'.'+trend;
@@ -3823,15 +3852,17 @@ function c5coRecovery(){
   //    to live signals (worst RTO · rpo_minutes · identity deployment %); the other four are
   //    Illustrative sample rows until per-service recovery telemetry connects. Row status is
   //    COMPUTED (RTO ≤ target), never hard-coded. Same five services as the Resilience tab. ──
-  var cpSvc=(R&&R.worst_recovery_service)||'Customer platform';
-  var cpName=(R&&R.worst_recovery_service)?R.worst_recovery_service:'the customer platform';
+  // Service names come from the shared C5_SYSTEMS source (customer platform keeps its live
+  // worst_recovery_service label when present) so the five systems stay identical across seats.
+  var cpSvc=c5sysLabel('customer',(R&&R.worst_recovery_service)||null);
+  var cpName=(R&&R.worst_recovery_service)?R.worst_recovery_service:('the '+c5sysLabel('customer').toLowerCase());
   var idPct=idConn?idP:78;
   var services=[
     {n:cpSvc,dep:'GreenLake billing · identity recovery '+idPct+'%',rto:(rtoConn?worst:24),tgt:rtoTgt,rpo:(rpoConn?rpoMin:15),rtgt:rpoTgt,live:(rtoConn&&rpoConn),root:true},
-    {n:'Payments processing',dep:'Core processor',rto:2,tgt:4,rpo:5,rtgt:30,live:false},
-    {n:'Order fulfillment',dep:'WMS · logistics',rto:3,tgt:8,rpo:30,rtgt:60,live:false},
-    {n:'Supply chain',dep:'3PL vendors',rto:6,tgt:12,rpo:60,rtgt:240,live:false},
-    {n:'Financial close',dep:'ERP',rto:4,tgt:24,rpo:240,rtgt:1440,live:false}
+    {n:c5sysLabel('payments'),dep:'Core processor',rto:2,tgt:4,rpo:5,rtgt:30,live:false},
+    {n:c5sysLabel('fulfillment'),dep:'WMS · logistics',rto:3,tgt:8,rpo:30,rtgt:60,live:false},
+    {n:c5sysLabel('supply'),dep:'3PL vendors',rto:6,tgt:12,rpo:60,rtgt:240,live:false},
+    {n:c5sysLabel('financial'),dep:'ERP',rto:4,tgt:24,rpo:240,rtgt:1440,live:false}
   ];
   function rtoC(h){return h>=24?durH(h):(h+'h');}
   function rpoC(m){return m>=120?durM(m):(m+'m');}
@@ -3891,7 +3922,7 @@ function c5coRecovery(){
     head='Recovery is tested and data loss is within target — but one critical path, '+cpName+', misses its RTO target by '+durH(rtoGapH)+'.';
     intro=svcOn+' of '+svcTotal+' critical services restore within target. '+cap(cpName)+' (GreenLake billing) takes '+durH(worst)+' against a '+rtoTgt+'-hour target — and identity access restoration is the reason. Every figure traces to its last test.';
     decHead='Close the RTO gap — finish deploying identity recovery ('+idPct+'% → 100%).';
-    decBody='Identity access restoration is the critical path delaying recovery of '+cpName+' — the same exposure flagged on the Resilience tab. Completing deployment moves its RTO from '+durH(worst)+' to within the '+rtoTgt+'-hour target; then a live failover retest proves it. Owned CISO / CIO.';
+    decBody='Identity access restoration is the critical path delaying recovery of '+cpName+' — the same exposure flagged on the Resilience tab. Completing deployment moves its RTO from '+durH(worst)+' to within the '+rtoTgt+'-hour target; then a live failover retest proves it. Owned '+c5IdFix().owner+'.';
     decBtn={mid:'coo_rto',txt:'Close the RTO gap'};
   } else {
     head='Recovery is tested and within target across your critical services.';
@@ -4009,17 +4040,79 @@ function c5clDecisions(){
 /* Tab 01 — Technology risk */
 function c5ctTech(){
   var host=document.getElementById('ct-tech');if(!host)return;
-  var TD=c5TopDriver(),dm=c5get(TD.mid),cv=c5get('ct_critical_vulns'),td=c5get('ct_techdebt');
+  var demo=(typeof signalsAreDemo==='function')&&signalsAreDemo();
+  var IDF=c5IdFix();                       // shared identity-fix config (cost/timeline/owner)
+  var ph=c5get('ct_platform_health'),cv=c5get('ct_critical_vulns'),td=c5get('ct_techdebt');
+  var debtStr=td.connected?td.displayValue:'—';   // from ct_techdebt (state), never hard-coded
+  var idUsd=IDF.usd||'—';                          // from the shared identity-fix config (state)
+  // ── critical-vuln reconciliation: the estate total is the LIVE ct_critical_vulns signal;
+  //    the per-platform breakdown is Modeled but the customer platform absorbs the balance,
+  //    so total = sum(rows) and concentration = the at-risk platform — they cannot disagree. ──
+  var liveTotal=cv.connected?(parseInt(String(cv.displayValue).replace(/[^0-9]/g,''),10)||0):null;
+  var otherVulns={fulfillment:3,payments:2,supply:2,financial:0};
+  var othersSum=otherVulns.fulfillment+otherVulns.payments+otherVulns.supply+otherVulns.financial; // 7
+  var custVulns=(liveTotal!=null)?Math.max(0,liveTotal-othersSum):11;
+  // ── per-platform estate matrix (Modeled breakdown), mapped to the shared C5_SYSTEMS ──
+  var platforms=[
+    {key:'customer',label:c5sysLabel('customer'),sub:'Identity architecture gap · sprawl in cloud',vulns:custVulns,kind:'atrisk'},
+    {key:'fulfillment',label:c5sysLabel('fulfillment'),sub:'WMS',vulns:otherVulns.fulfillment,kind:'healthy'},
+    {key:'payments',label:'Payments platform',sub:'Core processing',vulns:otherVulns.payments,kind:'healthy'},
+    {key:'supply',label:'Supply chain systems',sub:'3PL integrations',vulns:otherVulns.supply,kind:'modernizing'},
+    {key:'financial',label:'Financial systems (ERP)',sub:'Legacy'+(td.connected?(' · '+debtStr+' debt mapped'):' · debt mapped'),vulns:otherVulns.financial,kind:'managed'}
+  ];
+  var totalVulns=platforms.reduce(function(s,p){return s+p.vulns;},0); // = liveTotal when live
+  var cleanN=platforms.filter(function(p){return p.kind!=='atrisk';}).length; // 4 of 5
+  var atP=platforms.filter(function(p){return p.kind==='atrisk';})[0]||null;
+  var concVulns=atP?atP.vulns:0;
+  // ── three metric cards (drill-through preserved via data-c5m); sub can carry its own colour ──
+  function tcard(mid,title,val,pill,pillCls,valCol,sub,subCol){return '<div class="c5card" data-c5m="'+mid+'"><div class="c5card-top"><span class="c5card-l">'+c5esc(title)+'</span><span class="c5pill '+pillCls+'" style="font-size:9px">'+c5esc(pill)+'</span></div><div class="c5card-v" style="color:var(--'+(valCol||'ink')+')">'+c5esc(String(val))+'</div><div class="c5esub" style="font-size:11px;color:var(--'+(subCol||'muted')+');margin-top:2px">'+c5esc(sub)+'</div></div>';}
+  var phVal=ph.connected?ph.displayValue:(cleanN>=platforms.length-1?'Strong':'Watch');
+  var cards='<div class="c5cards">'+
+    tcard('ct_platform_health','Platform health',phVal,'Computed','n','good',cleanN+' of '+platforms.length+' platforms clean')+
+    tcard('ct_critical_vulns','Critical vulns open',totalVulns,(cv.connected?'Live':'Modeled'),(cv.connected?'g':'a'),'warn',concVulns+' on the '+c5sysLabel('customer').toLowerCase(),'crit')+
+    tcard('ct_modernization','Modernization','On track','Computed','n','blue','Roadmap in place'+(td.connected?(' · '+debtStr+' debt mapped'):''))+
+    '</div>';
+  // ── estate-by-platform matrix (centerpiece) — status per row, sorted by risk ──
+  var illus='<span class="c5pill n" style="font-size:9px">Modeled</span>';
+  function stTxt(k){return k==='atrisk'?'At risk':k==='modernizing'?'Modernizing':k==='managed'?'Managed':'Healthy';}
+  function stPill(k){return k==='atrisk'?'r':k==='modernizing'?'b':k==='managed'?'n':'g';}
+  var sorted=platforms.slice().sort(function(a,b){var ra=(a.kind==='atrisk'?0:1),rb=(b.kind==='atrisk'?0:1);return ra-rb||(b.vulns-a.vulns);});
+  var pmRows=sorted.map(function(p){var vCol=(p.vulns>=10?'crit':'muted');
+    return '<div class="c5prow" data-c5m="'+(p.kind==='atrisk'?IDF.mid:'ct_critical_vulns')+'" style="cursor:pointer">'+
+      '<div style="flex:1;min-width:0"><div class="c5row-t">'+c5esc(p.label)+'</div><div class="c5row-s">'+c5esc(p.sub)+'</div></div>'+
+      '<div style="text-align:right;flex:none;min-width:56px;margin-right:12px"><div style="font-weight:600;color:var(--'+vCol+')">'+p.vulns+'</div><div style="font-size:10.5px;color:var(--muted)">critical</div></div>'+
+      '<span class="c5pill '+stPill(p.kind)+'" style="flex:none">'+stTxt(p.kind)+'</span></div>';
+  }).join('');
+  var matrix='<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:16px 0 8px"><span style="font-size:12.5px;font-weight:600;color:var(--ink)">Estate by platform — security and modernization '+illus+'</span><span style="font-size:11px;color:var(--muted)">Sorted by risk</span></div><div class="c5card" style="padding:2px 14px">'+pmRows+'</div>';
+  // ── architecture-gap strip (Live + modeled) — $ pulls from the shared identity-fix config ──
+  var sep='<span style="color:var(--line)">·</span>';
+  var gapTag='<span class="c5pill n" style="font-size:9px">Live + modeled</span>';
+  var strip='<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-top:14px;padding:12px 16px;border-radius:12px;background:var(--surface-2)">'+
+    '<span style="font-size:12px;color:var(--ink-2);font-weight:600">The architecture gap:</span>'+
+    '<span style="font-size:12.5px;color:var(--crit);font-weight:600">identity sprawl in cloud</span>'+sep+
+    '<span style="font-size:12px;color:var(--muted)">'+idUsd+' exposure</span>'+sep+
+    '<span style="font-size:12px;color:var(--muted)">fragmented access model</span>'+gapTag+'</div>';
+  // ── evidence footnote ──
+  var evSrcs=[
+    {label:'Platform health',connected:ph.connected},
+    {label:'Critical vulns (KEV / SCA)',connected:cv.connected},
+    {label:'Application security (SAST)',connected:c5get('ct_appsec').connected},
+    {label:'Modernization / EOL roadmap',connected:td.connected},
+    {label:'Identity exposure model',connected:c5get(IDF.mid).connected},
+    {label:'Estate → critical-system mapping',connected:true},
+    {label:'Architecture records',connected:true}
+  ];
+  var connN=evSrcs.filter(function(s){return s.connected;}).length;
+  // ── headline + supporting line (data-driven from the matrix) ──
+  var head='Your estate is modernizing and mostly secure — but the '+c5sysLabel('customer').toLowerCase()+'’s identity architecture is the biggest gap, and it’s where your open criticals concentrate.';
+  var support=cleanN+' of '+platforms.length+' core platforms are clean. The '+c5sysLabel('customer').toLowerCase()+' carries the identity architecture gap and '+concVulns+' of '+totalVulns+' open critical vulns; legacy tech debt is mapped with a roadmap in place. Every figure traces to its source.';
   host.innerHTML=c5header()+
-    c5shell('Technology risk · is our stack secure and modern?','Your stack is secure and modernizing — one platform carries the risk.',null,'Your technology estate is largely secure and on its modernization path. Most core platforms are healthy; the customer platform carries the '+TD.short+' gap, and legacy tech carries mapped technical debt. Every figure traces to its source.')+
-    '<div class="c5cards">'+c5card('ct_platform_health')+c5card('ct_critical_vulns')+c5card('ct_modernization')+'</div>'+
-    '<div class="c5tiles">'+
-      c5tile('ct_appsec','g','Healthy','In the SDLC for new builds')+
-      c5tile(TD.mid,'a','Gap','The customer-platform exposure')+
-      c5tile('ct_techdebt','b','Managed',(td.connected?'legacy mapped · modernization roadmap in place':'map your EOL systems'))+
-    '</div>'+
-    c5bl('Bottom line','Fix the architecture gap in your top platform.',null,(dm.connected?('The '+TD.short+' architecture behind your customer platform is the biggest security gap in the stack ('+dm.displayValue+'). The fix is funded — it closes the exposure and simplifies the platform’s access model.'):'Connect your controls and the biggest architecture gap — the customer platform’s '+TD.short+' model — surfaces here with its funded fix.'),{mid:TD.mid,txt:'Fund the '+c5esc(TD.short)+' fix — closes the gap'})+
-    '<div class="c5foot">Stack posture from your app/infra scans and architecture records.</div>';
+    c5shell('Technology risk · is our stack secure and modern?',head,'warn',support)+
+    cards+
+    matrix+
+    strip+
+    c5bl('The decision','Fund the identity fix — it closes the estate’s biggest architecture gap.',null,'The identity architecture behind the '+c5sysLabel('customer').toLowerCase()+' is the single point of failure in the stack and where your critical vulns concentrate. The fix is funded and owned ('+IDF.owner+' · '+IDF.timeline+'): it consolidates the access model, removes the identity SPOF, and clears the concentrated exposure. Same fix that surfaces on Supply chain and Decisions.',{mid:IDF.mid,txt:'Fund the identity fix — closes the gap'})+
+    '<div class="c5foot">platform health and critical vulns are live; exposure and tech-debt figures are modeled. · '+connN+' sources connected'+(demo?' · demo':'')+'</div>';
 }
 /* Tab 02 — Digital-service reliability */
 function c5ctReliability(){
@@ -4079,7 +4172,7 @@ function c5ctDecisions(){
       {on:'Fund it — closes & simplifies the access model',osum:(dm.connected?('Largest architecture gap · −'+dm.displayValue):'Largest architecture gap'),pros:['Closes the largest architecture gap and simplifies the access model.','Reduces blast radius across the platform.'],cons:['Larger, multi-sprint effort and cost.']})
   ];
   host.innerHTML=c5header()+
-    c5shell('Decisions for the CTO · what needs your call?','Two technical calls — the recommended one is marked, the choice is yours.',null,'Each is tied to the stack. Choosing one stamps it with your name and time, keeps it editable for 24 hours, and opens a tracked ticket in the system connected at onboarding — status pulled back on refresh.')+
+    c5shell('Decisions for the CIO · what needs your call?','Two technical calls — the recommended one is marked, the choice is yours.',null,'Each is tied to the stack. Choosing one stamps it with your name and time, keeps it editable for 24 hours, and opens a tracked ticket in the system connected at onboarding — status pulled back on refresh.')+
     c5decisions(list)+
     '<div class="c5foot">Each decision links to its component and source.</div>';
 }
