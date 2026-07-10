@@ -270,6 +270,12 @@ function c5IdFixResolves(seat){var M={
   board:[{tab:'Oversight',note:'the funded treatment for the top risk'},{tab:'Regulatory & disclosure',note:'lowers material-incident likelihood'},{tab:'Assurance',note:'the control the next audit will test'}],
   ciso:[{tab:'Cyber exposure',note:'closes the largest single exposure'},{tab:'Control value',note:'the highest risk-removed per dollar'},{tab:'Threats',note:'shuts the likeliest attack path'}]
 };return M[seat]||[];}
+/* Reusable convergence strip for every seat's Decisions tab — "one fix (identity) resolves N
+   of this seat's risks", one column per analytical tab in the seat's language. Reuses the
+   card/token chrome; empty string when the seat has no mapping. */
+function c5convergeStrip(seat){var r=(typeof c5IdFixResolves==='function')?c5IdFixResolves(seat):[];if(!r.length)return '';var IDF=c5IdFix();
+  var cols=r.map(function(x,i){return '<div style="flex:1 1 150px;min-width:130px;padding:2px 12px'+(i?';border-left:1px solid var(--line)':'')+'"><div style="font-size:11px;font-weight:700;color:var(--blue)">'+c5esc(x.tab)+'</div><div style="font-size:11.5px;color:var(--ink-2);margin-top:2px">'+c5esc(x.note)+'</div></div>';}).join('');
+  return '<div class="c5card" style="margin-bottom:14px;padding:14px 16px"><div style="font-size:12.5px;font-weight:600;color:var(--ink);margin-bottom:8px">One fix — '+IDF.short+' — resolves '+r.length+' of this seat’s risks'+(IDF.usd?(' ('+IDF.usd+' · '+IDF.owner+' · '+IDF.timeline+')'):'')+':</div><div style="display:flex;flex-wrap:wrap;align-items:stretch;margin:0 -12px">'+cols+'</div></div>';}
 /* Shared principal-risk register — the single source the CRO (rank/appetite/trend), Board and
    CLO read, so inherent/residual/appetite/direction/confidence/owner/cadence never drift.
    Cyber inherent = residual + the expected-loss controls buy down (control effectiveness);
@@ -3739,16 +3745,41 @@ function c5crScale(){
 /* Tab 02 — Risk appetite & acceptance */
 function c5crAppetite(){
   var host=document.getElementById('cr-appetite');if(!host)return;
-  var C=c5Categories(),TD=c5TopDriver(),dm=c5get(TD.mid);
-  var rows=C.drivers.map(function(d){var over=(C.limit>0&&d.usd>C.limit);var rp=Math.max(4,Math.min(98,d.usd/C.max*100));var lp=C.limit>0?Math.max(2,Math.min(98,C.limit/C.max*100)):null;
-    return '<div class="c5prow" data-c5m="'+d.id+'"><div class="c5prow-n">'+d.name.replace(/ — .*/,'')+(over?'<span class="c5tag rev">Over limit</span>':'')+'</div><div class="c5track">'+(lp!=null?('<span class="c5track-tick" style="left:'+lp+'%"></span>'):'')+'<span class="c5track-dot" style="left:'+rp+'%;background:var(--'+(over?'warn':'good')+')"></span></div><div class="c5prow-v">'+usd(d.usd)+'</div><div class="c5prow-d" style="color:var(--muted)">'+(C.limit>0?('/ '+usd(C.limit)):'—')+'</div></div>';
+  var demo=(typeof signalsAreDemo==='function')&&signalsAreDemo();
+  var C=c5Categories(),reg=c5RiskRegister(),IDF=c5IdFix();
+  var cyberRow=reg.rows.filter(function(r){return r.cyber;})[0]||reg.rows[0]||{inherent:0,residual:0};
+  var overN=C.drivers.filter(function(d){return C.limit>0&&d.usd>C.limit;}).length;
+  var withinOverall=(reg.appetite>0&&reg.cyberResidual<=reg.appetite);
+  // ── headline DERIVED — never "within appetite" while a category card reads over ──
+  var head=(reg.appetite<=0)?'Connect the board’s appetite to judge whether cyber is within tolerance.'
+    :(withinOverall?('Within appetite overall'+(overN>0?(' — but '+overN+' categor'+(overN===1?'y is':'ies are')+' over its share.'):' with headroom.')):('Cyber residual is over the board’s appetite'+(overN>0?(' — '+overN+' categor'+(overN===1?'y drives':'ies drive')+' it.'):'.')));
+  var support='Cyber residual ('+usd(reg.cyberResidual)+') sits against the board’s appetite ('+(reg.appetite>0?usd(reg.appetite):'not connected')+'). By category, the largest driver is over its even-allocation share. Appetite is self-reported; category limits are an even allocation until your framework’s limits connect. Each category traces to its residual model.';
+  // ── inherent → residual strip (control effectiveness, from the shared register) ──
+  var sep='<span style="color:var(--line)">·</span>';
+  var strip='<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-top:14px;padding:12px 16px;border-radius:12px;background:var(--surface-2)">'+
+    '<span style="font-size:12px;color:var(--ink-2);font-weight:600">Inherent → residual:</span>'+
+    '<span style="font-size:12.5px;color:var(--ink);font-weight:600">'+usd(cyberRow.inherent)+' inherent</span>'+sep+
+    '<span style="font-size:12px;color:var(--good)">−'+usd(reg.controlsRemoved)+' controls remove</span>'+sep+
+    '<span style="font-size:12.5px;color:var(--'+(withinOverall?'good':'warn')+');font-weight:600">'+usd(reg.cyberResidual)+' residual</span>'+sep+
+    '<span style="font-size:12px;color:var(--muted)">vs '+(reg.appetite>0?usd(reg.appetite):'—')+' appetite</span>'+
+    '<span class="c5pill n" style="font-size:9px">Modeled · appetite self-reported</span></div>';
+  // ── category breach matrix — residual vs limit, over-by magnitude, per-row status ──
+  var rows=C.drivers.slice().sort(function(a,b){return b.usd-a.usd;}).map(function(d){var over=(C.limit>0&&d.usd>C.limit);var mag=over?(d.usd-C.limit):0;
+    return '<div class="c5prow" data-c5m="'+d.id+'" style="cursor:pointer">'+
+      '<div style="flex:1;min-width:0"><div class="c5row-t">'+c5esc(d.name.replace(/ — .*/,''))+'</div><div class="c5row-s">residual '+usd(d.usd)+' vs '+(C.limit>0?usd(C.limit):'—')+' limit'+(over?(' · over by '+usd(mag)):'')+'</div></div>'+
+      '<div style="text-align:right;flex:none;min-width:64px;margin-right:12px;font-weight:600;color:var(--'+(over?'warn':'good')+')">'+usd(d.usd)+'</div>'+
+      '<span class="c5pill '+(over?'a':'g')+'" style="flex:none">'+(over?'Over limit':'Within')+'</span></div>';
   }).join('');
+  var matrix='<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:16px 0 8px"><span style="font-size:12.5px;font-weight:600;color:var(--ink)">Cyber residual vs appetite — by category</span><span style="font-size:11px;color:var(--muted)">Even-allocation limits until your framework connects</span></div><div class="c5card" style="padding:2px 14px">'+rows+'</div>';
+  var evSrcs=[{label:'Cyber residual model',connected:reg.cyberResidual>0},{label:'Board appetite (self-reported)',connected:reg.appetite>0},{label:'Control-effectiveness ledger',connected:reg.controlsRemoved>0},{label:'Category limits (framework)',connected:false}];
+  var connN=evSrcs.filter(function(s){return s.connected;}).length;
   host.innerHTML=c5header()+
-    c5shell('Risk appetite & acceptance · are we within tolerance?','Within appetite overall — but one category is over its limit.',null,'Cyber residual sits against the board’s appetite with headroom overall. By category, the largest driver is over its share of that appetite. Each category traces to its appetite basis and residual model.')+
+    c5shell('Risk appetite & acceptance · are we within tolerance?',head,(overN>0||!withinOverall?'warn':null),support)+
     '<div class="c5cards">'+c5card('exp_total')+c5card('cf_appetite')+c5card('cf_headroom')+'</div>'+
-    '<div class="c5rank" style="padding:4px 15px"><div class="c5rank-h" style="border:0;background:transparent;padding:11px 0">By category · residual vs. limit <span style="text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)">(| = category limit · even allocation of appetite until your framework’s limits connect)</span></div>'+rows+'</div>'+
-    c5bl('Bottom line','One category is over its limit.',null,(dm.connected?(cap(TD.short)+' residual ('+dm.displayValue+') exceeds its category share of appetite. Treating it brings the category back within tolerance and restores category-level headroom.'):'Connect your controls and the over-limit category — '+TD.short+' — surfaces here with its funded treatment.'),{mid:TD.mid,txt:'Bring '+c5esc(TD.short)+' within appetite'})+
-    '<div class="c5foot">Overall appetite from your risk framework; category limits are an even allocation (labeled) until your framework’s category limits connect; residuals from the cyber model.</div>';
+    strip+
+    matrix+
+    c5bl('The decision','Bring the over-limit category back within appetite.',null,(IDF.usd?('The '+IDF.short+' category is over its share of appetite by the largest margin. Treating it ('+IDF.usd+') brings it back within tolerance and restores category headroom — the same fix across the cockpit ('+IDF.owner+' · '+IDF.timeline+'). Then re-baseline appetite on the post-treatment residual.'):'Connect your controls and the over-limit category — '+IDF.short+' — surfaces here with its funded treatment.'),{mid:IDF.mid,txt:'Bring '+c5esc(IDF.short)+' within appetite'})+
+    '<div class="c5foot">Overall appetite from your risk framework (self-reported); category limits are an even allocation until your framework connects; residuals from the cyber model. · '+connN+' sources connected'+(demo?' · demo':'')+'</div>';
 }
 /* Tab 03 — Control assurance */
 function c5crAssurance(){
@@ -3767,39 +3798,64 @@ function c5crAssurance(){
 /* Tab 04 — Trend & ownership */
 function c5crTrend(){
   var host=document.getElementById('cr-trend');if(!host)return;
-  var tr=trajInfo();var vals=(tr.vals||[]).slice(-6);var maxV=Math.max.apply(null,vals.concat([1]));
+  var demo=(typeof signalsAreDemo==='function')&&signalsAreDemo();
+  var tr=trajInfo(),T=c5T(),IDF=c5IdFix();
+  var vals=(tr.vals||[]).slice(-6);var maxV=Math.max.apply(null,vals.concat([1]));
   var bars='<div class="c5bars" style="height:40px">'+(vals.length?vals.map(function(v){var h=Math.round(6+(maxV>0?v/maxV:0)*32);return '<i style="height:'+h+'px"></i>';}).join(''):[1,2,3,4,5,6].map(function(){return '<i class="n" style="height:8px"></i>';}).join(''))+'</div>';
+  // ── direction + VELOCITY (rate of change), not a single "Baseline" word ──
+  var dirStr='Baseline',velStr='builds quarter over quarter — no history invented';
+  if(vals.length>=2){var delta=vals[vals.length-1]-vals[0];var per=Math.round(delta/(vals.length-1));var pc=vals[0]?Math.round(delta/vals[0]*100):0;
+    dirStr=(delta<=0?'Falling':'Rising');velStr=(delta<=0?'−':'+')+usd(Math.abs(per))+'/qtr ('+(pc<=0?'':'+')+pc+'% over '+vals.length+' qtrs)';}
+  // ── leading indicators (KRIs) — what moves residual next ──
+  function kriRow(label,v,ok){var col=(ok===true)?'good':(ok==='w')?'warn':(ok===false)?'crit':'muted';
+    return '<div class="c5prow" style="cursor:default"><div style="flex:1;min-width:0"><div class="c5row-t">'+c5esc(label)+'</div></div><div style="text-align:right;flex:none;min-width:56px;margin-right:12px;font-weight:600;color:var(--'+col+')">'+c5esc(v)+'</div><span class="c5pill '+(col==='good'?'g':col==='crit'?'r':col==='warn'?'a':'n')+'" style="flex:none">'+(ok===true?'On track':(ok==='w')?'Watch':(ok===false)?'Off track':'—')+'</span></div>';}
+  var idP=(typeof c5avgDeploy==='function')?c5avgDeploy(['mfa','pam']):null;
+  var patch=(typeof sig==='function')?sig('patch_pct'):null,edr=(typeof sig==='function')?sig('edr_pct'):null,mfa=(typeof sig==='function')?sig('mfa_pct'):null;
+  var kriRows=[
+    kriRow('Identity controls deployed (KRI)',idP!=null?(idP+'%'):'—',idP!=null?(idP>=90?true:'w'):null),
+    kriRow('Patch coverage (KRI)',patch!=null?(patch+'%'):'—',patch!=null?(patch>=90?true:'w'):null),
+    kriRow('MFA adoption (KRI)',mfa!=null?(mfa+'%'):'—',mfa!=null?(mfa>=95?true:'w'):null),
+    kriRow('Endpoint (EDR) coverage (KRI)',edr!=null?(edr+'%'):'—',edr!=null?(edr>=95?true:'w'):null)
+  ].join('');
+  // ── ownership register — owner · action · review cadence ──
   var O=c5Owners();
-  var rows=O.rows.map(function(r){var pill=r.c;var pt=r.status;
-    return '<div class="c5prow" data-c5m="cr_owned"><span class="c5sq '+(r.c==='a'?'a':r.c==='b'?'b':r.c==='n'?'n':'g')+'" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">'+r.risk+'</div><div class="c5row-s">Owner: '+r.owner+' · '+r.act+'</div></div><span class="c5pill '+pill+'">'+pt+'</span></div>';
-  }).join('');
-  var T=c5T(),TD=c5TopDriver();
+  var ownerRows=O.rows.map(function(r){return '<div class="c5prow" data-c5m="cr_owned" style="cursor:pointer"><span class="c5sq '+(r.c==='a'?'a':r.c==='b'?'b':r.c==='n'?'n':'g')+'" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">'+c5esc(r.risk)+'</div><div class="c5row-s">Owner: '+c5esc(r.owner)+' · '+c5esc(r.act)+' · reviewed quarterly</div></div><span class="c5pill '+r.c+'">'+c5esc(r.status)+'</span></div>';}).join('');
+  var head=(T.improving?'Cyber residual is falling — with clear owners and one action to sponsor.':T.worsening?'Cyber residual is rising — every risk is owned; the '+IDF.short+' action is the biggest lever.':'Direction builds as quarters record — owners are clear and the '+IDF.short+' action is the biggest lever.');
+  var support='Direction and velocity of cyber residual, the leading indicators (KRIs) that move it next, and who owns each top risk. '+(T.has?('Residual is '+dirStr.toLowerCase()+' at '+velStr+'.'):'History builds quarter over quarter — nothing invented.')+' One action — '+IDF.short+' — needs your governance push.';
+  var evSrcs=[{label:'Residual-risk series',connected:T.has},{label:'Leading indicators (identity/patch/MFA/EDR)',connected:(idP!=null||patch!=null||mfa!=null||edr!=null)},{label:'Risk register (owners)',connected:true}];
+  var connN=evSrcs.filter(function(s){return s.connected;}).length;
   host.innerHTML=c5header()+
-    c5shell('Trend & ownership · are we improving, and who owns what?',(T.improving?'The direction is good — with clear owners.':T.worsening?'The direction is worsening — but every risk has an owner.':'Clear owners on every top risk — the trend builds as quarters record.'),null,'Direction and accountability. '+(T.has?'Cyber residual’s quarter-over-quarter trend is below':'Your residual trend builds quarter over quarter — no history is invented')+', and every top risk has a named owner and an action; one — '+TD.short+' — needs your governance push.')+
+    c5shell('Trend & ownership · are we improving, and who owns what?',head,(T.worsening?'warn':null),support)+
     '<div class="c5cards">'+c5card('direction')+c5card('cr_consec')+c5card('cr_owned')+'</div>'+
-    '<div class="c5rank" style="padding:12px 15px"><div class="c5rank-h" style="border:0;background:transparent;padding:0 0 8px">'+(T.has?('Residual risk, last '+((tr.vals||[]).length)+' quarters'):'Residual risk — builds as you record quarters')+'</div>'+bars+'</div>'+
-    '<div class="c5rank" style="padding:4px 15px;margin-top:14px"><div class="c5rank-h" style="border:0;background:transparent;padding:11px 0">Top risks · owner and action</div>'+rows+'</div>'+
-    c5bl('Bottom line',(T.improving?'The trend is good — keep the one action moving.':'Keep the one action moving.'),null,'Every top risk is owned and moving. The '+TD.short+' action is funded but needs your governance push to land this quarter — it’s the biggest single reduction available.',{mid:TD.mid,txt:'Sponsor the '+c5esc(TD.short)+' action'})+
-    '<div class="c5foot">Trend from the residual-risk series; owners from your risk register.</div>';
+    '<div class="c5rank" style="padding:12px 15px"><div class="c5rank-h" style="border:0;background:transparent;padding:0 0 8px">'+(T.has?('Residual risk, last '+vals.length+' quarters · '+dirStr+' '+velStr):'Residual risk — builds as you record quarters')+'</div>'+bars+'</div>'+
+    '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:16px 0 8px"><span style="font-size:12.5px;font-weight:600;color:var(--ink)">Leading indicators (KRIs) — what moves residual next</span><span style="font-size:11px;color:var(--muted)">Live from connected tools</span></div><div class="c5card" style="padding:2px 14px">'+kriRows+'</div>'+
+    '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:16px 0 8px"><span style="font-size:12.5px;font-weight:600;color:var(--ink)">Top risks — owner, action and review cadence</span><span style="font-size:11px;color:var(--muted)">From your risk register</span></div><div class="c5card" style="padding:2px 14px">'+ownerRows+'</div>'+
+    c5bl('The decision','Sponsor the one action that bends the trend.',null,'Every top risk is owned and moving. The '+IDF.short+' action is funded but needs your governance push to land this quarter — it is the biggest single residual reduction available ('+IDF.owner+' · '+IDF.timeline+').',{mid:IDF.mid,txt:'Sponsor the '+c5esc(IDF.short)+' action'})+
+    '<div class="c5foot">Trend + velocity from the residual-risk series; KRIs from connected tools; owners from your risk register. · '+connN+' sources connected'+(demo?' · demo':'')+'</div>';
 }
 /* Tab 05 — Decisions for the CRO */
 function c5crDecisions(){
   var host=document.getElementById('cr-decisions');if(!host)return;
   var TD=c5TopDriver(),dm=c5get(TD.mid),ev=c5get('exp_vendor'),em=c5get('exp_email');var V=c5vendors();var tvName=V.worst?V.worst.name:'your top vendor';
+  var IDF=c5IdFix();
   var list=[
-    c5dec('cr',1,'Treat the '+TD.short+' gap?','The only principal-risk driver over its appetite share'+(dm.connected?(' — treating it reduces '+dm.displayValue):'')+'.',
-      {on:'Treat it — fund the '+TD.short+' fix',osum:(dm.connected?('Biggest single reduction available · −'+dm.displayValue):'The biggest single reduction available'),pros:['Brings the '+TD.short+' category back within its appetite share.','Largest single residual-risk reduction available.'],cons:['Requires funding and a governance push this cycle.']}),
-    c5dec('cr',2,'Third-party concentration — '+tvName,'Within limit but the rating is one to watch.',
+    // Decision 1 — the convergent identity treatment (recommended), with its HONEST downside.
+    c5dec('cr',1,'Treat the '+IDF.short+' gap?','The only principal-risk driver over its appetite share'+(dm.connected?(' — treating it reduces '+dm.displayValue):'')+'. It is the one fix that moves cyber on every CRO tab (rank, appetite, trend).',
+      {on:'Treat it — fund the '+IDF.short+' fix',osum:(dm.connected?('Biggest single reduction available · −'+dm.displayValue):'The biggest single reduction available'),pros:['Brings the '+IDF.short+' category back within its appetite share.','Largest single residual-risk reduction available.','Moves cyber down the enterprise rank and bends the trend.'],cons:['Requires funding and a governance push this cycle.','Interim exposure persists across the '+IDF.timeline+' rollout — the gap is not closed on day one.']}),
+    // Decision 2 — the CRO's domain call: re-baseline appetite on the post-treatment residual.
+    c5dec('cr',2,'Re-baseline appetite on the post-treatment residual?','Once '+IDF.short+' is treated, cyber residual drops — refresh the appetite/tolerance so limits reflect the new posture, or formally accept the interim residual with a recorded rationale.',
+      {on:'Re-baseline — set limits to the post-treatment residual',osum:'appetite reflects the new posture',pros:['Category limits track the treated residual, not the old baseline.','Gives the committee a defensible, current tolerance line.'],cons:['Needs your framework’s category limits connected to be precise.','Re-run after the treatment lands, not before.']},
+      [{on:'Formally accept the interim residual',osum:'recorded risk-acceptance',pros:['Documents the board’s tolerance for the rollout window.'],cons:['Interim exposure is owned explicitly until the fix lands.']}]),
+    // Decision 3 — the within-limit third-party concentration to monitor.
+    c5dec('cr',3,'Third-party concentration — '+tvName,'Within limit but the rating is one to watch.',
       {on:'Monitor — keep the vendor under watch',osum:'Within limit · rating to watch',pros:['No spend; appropriate for a within-limit risk.'],cons:['A rating slide could push it over — reassess on refresh.']},
-      [{on:'Treat now — add a resilience option',osum:'Backup provider or contractual SLA',pros:['Reduces single-point-of-failure exposure.'],cons:['Cost and vendor-onboarding effort for a within-limit risk.']}]),
-    c5dec('cr',3,'Accept the residual phishing risk?','Modeled and within tolerance — reasonable to accept with a recorded rationale.',
-      {on:'Accept — record the rationale',osum:'Within tolerance · monitored',pros:['Within appetite on current modeling.'],cons:['Requires a recorded risk-acceptance.','Revisit if the phishing signal rises.']},
-      [{on:'Treat — fund awareness / email security',osum:'Extra spend · marginal reduction',pros:['Lowers an already-small residual.'],cons:['Low return per dollar vs. the '+TD.short+' gap.']}])
+      [{on:'Treat now — add a resilience option',osum:'Backup provider or contractual SLA',pros:['Reduces single-point-of-failure exposure.'],cons:['Cost and vendor-onboarding effort for a within-limit risk.']}])
   ];
   host.innerHTML=c5header()+
-    c5shell('Decisions for the CRO · what needs your call?','Each risk decision below gives you the options — the recommended call is marked, the choice is yours.',null,'Each carries its residual, appetite and recommendation. Choosing one stamps it with your name and time, keeps it editable for 24 hours, and opens a tracked project in the ticketing system connected at onboarding — whose status is pulled back on refresh.')+
+    c5shell('Decisions for the CRO · what needs your call?','One fix converges across your risk view — then two calls that are yours to make.',null,'Each carries its residual, appetite and recommendation. Choosing one stamps it with your name and time, keeps it editable for 24 hours, and opens a tracked project in the ticketing system connected at onboarding — whose status is pulled back on refresh.')+
+    c5convergeStrip('cro')+
     c5decisions(list)+
-    '<div class="c5foot">Each decision carries its residual, appetite, and source.</div>';
+    '<div class="c5foot">Each decision carries its residual, appetite, and source · no AI/LLM at run-time.</div>';
 }
 
 /* ================= COO seat — same engine, operations & continuity lens ================= */
