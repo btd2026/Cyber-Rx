@@ -1881,13 +1881,20 @@ function c5phCard(label,mid){
    id per seat so ids stay globally unique (all seats render into hidden panels).
    `rec` is the recommended option; `alts` are the alternatives (defaults added). */
 function c5decDefaultAlts(){return [
-  {on:'Defer to the next planning cycle',osum:'No spend now · exposure persists',pros:['No capital committed this cycle.'],cons:['The exposure stays open until addressed.','The cost to fix rarely falls by waiting.']},
-  {on:'Accept the risk — record a rationale',osum:'No cost · exposure retained',pros:['No spend or project.'],cons:['The exposure is retained on the balance sheet.','A formal risk-acceptance should be recorded — and, if material, noted to the board.']}
+  {on:'Defer to the next planning cycle',osum:'No spend now · exposure persists',pros:['No capital committed this cycle.'],cons:['Exposure remains open until addressed.','Remediation cost may increase if delayed.','Risk stays visible in executive reporting.'],consequence:'Records the deferral and keeps the exposure open until the next planning cycle.',req:true},
+  {on:'Accept residual risk with rationale',osum:'No cost · residual exposure retained',pros:['No immediate spend or project launch.','The decision is formally documented.'],cons:['Residual exposure remains.','May require board, legal, or risk review if material.','Requires a review date and rationale.'],consequence:'Creates a formal risk-acceptance record with rationale, owner and review date.',req:true,reqRisk:true}
 ];}
-function c5dec(pfx,n,q,sit,rec,alts){
-  var opts=[{on:rec.on,osum:rec.osum||'',rec:true,tag:'A',pros:rec.pros||[],cons:rec.cons||[]}];
-  (alts||c5decDefaultAlts()).forEach(function(a,i){opts.push({on:a.on,osum:a.osum||'',rec:false,tag:String.fromCharCode(66+i),pros:a.pros||[],cons:a.cons||[]});});
-  return {n:pfx+'-'+n,q:q,sit:sit,opts:opts};
+/* Shared decision object used by every seat. `rec` is the recommended option; `alts`
+   the alternatives; `meta` carries the executive summary the renderer shows above the
+   options (recommendation, modeled exposure + basis, evidence confidence, due, who
+   requested it, source status). Each option may carry a `consequence` (what happens on
+   choosing it), `req` (requires a rationale) / `reqRisk` (requires a review date), and a
+   `btn` label. Backward-compatible: options/meta fields are optional. */
+function c5dec(pfx,n,q,sit,rec,alts,meta){
+  function opt(o,recFlag,tag){return {on:o.on,osum:o.osum||'',rec:recFlag,tag:tag,pros:o.pros||[],cons:o.cons||[],consequence:o.consequence||'',req:!!o.req,reqRisk:!!o.reqRisk,btn:o.btn||''};}
+  var opts=[opt(rec,true,'A')];
+  (alts||c5decDefaultAlts()).forEach(function(a,i){opts.push(opt(a,false,String.fromCharCode(66+i)));});
+  return {n:pfx+'-'+n,q:q,sit:sit,opts:opts,meta:meta||null};
 }
 /* Render interactive decisions and wire them (choose · record · ticket · status). */
 function c5decisions(list){
@@ -2915,21 +2922,50 @@ function c5TrustEvidence(TI){
     '<div style="margin-top:6px">'+rows.map(function(r){return row(r[0],r[1]);}).join('')+'</div>'+
     '<div class="c5tile-s" style="margin-top:6px;color:var(--muted)">Where the trust answer is proven — and where evidence is still incomplete.</div></div>';
 }
-/* Tab 05 — Decisions for the CEO */
+/* Tab 05 — Decisions for the CEO. One strategic choice, business language only: approve
+   identity remediation now, defer it, or formally accept the residual exposure. Built on
+   the shared decision object so it stays consistent with the CISO/CFO/CRO/CLO seats. */
 function c5ceDecisions(){
   var host=document.getElementById('ce-decisions');if(!host)return;
   var ec=c5get('exp_identity');
+  var demo=(typeof signalsAreDemo==='function')&&signalsAreDemo();
+  var exp=ec.connected?ec.displayValue:'—';
+  var evLevel=demo?'Demo':(ec.connected?'Medium':'Not Enough Evidence');
+  var meta={
+    recommendation:'Approve remediation now',
+    modeledExposure:(ec.connected?(demo?(exp+' (modeled demo)'):exp):'—'),
+    exposureLabel:'Modeled exposure',
+    exposureBasis:'Estimated business exposure tied to customer-platform services dependent on affected identity controls.',
+    evidenceConfidence:evLevel,
+    dueDate:'This planning cycle',
+    requestedBy:'CISO',
+    sourceStatus:demo?'Modeled demo':'Modeled'
+  };
+  var recSum='Reduces '+(ec.connected?exp:'the')+' modeled exposure tied to customer-platform identity risk and supports the customer trust objective.';
   var list=[
-    c5dec('ce',1,'Back the identity fix?','It protects the customer platform — your #1 growth objective — and the trust it runs on'+(ec.connected?(' ('+ec.displayValue+' of exposure)'):'')+'.',
-      {on:'Back it — sponsor the funded fix',osum:(ec.connected?('Protects your top objective · −'+ec.displayValue+' risk'):'Protects your top objective'),pros:['Protects your #1 growth objective and customer trust.','Removes the largest single exposure at a fraction of its cost.'],cons:['Requires executive sponsorship and capital this cycle.']}),
-    c5dec('ce',2,'Sponsor the security-culture push?','Reinforces the talent & workforce objective — worthwhile but not urgent.',
-      {on:'Sponsor it now',osum:'Reinforces the workforce objective',pros:['Strengthens the human layer over time.'],cons:['Lower, slower return than the identity fix.']},
-      [{on:'Defer to the next cycle',osum:'Revisit next planning cycle',pros:['No spend now.'],cons:['Culture gains compound slowly; delay costs time.']}])
+    c5dec('ce',1,'Approve customer-platform identity remediation',
+      'Recommended: approve remediation now. This reduces '+(ec.connected?exp:'')+' modeled exposure tied to customer-platform identity risk and supports the customer trust objective.',
+      {on:'Approve remediation now',osum:'Fund and prioritize the identity remediation project',
+        pros:['Reduces modeled exposure tied to customer-platform identity risk.','Supports the customer trust objective.','Opens a tracked remediation project.'],
+        cons:['Requires executive sponsorship and capital this cycle.'],
+        consequence:'Opens a tracked remediation project and begins modeled-exposure-reduction tracking.',
+        btn:'Choose &amp; record'},
+      [
+        {on:'Defer to next planning cycle',osum:'No spend this cycle; exposure remains open',
+          pros:['No capital committed this cycle.'],
+          cons:['Exposure remains until addressed.','Remediation cost may increase if delayed.','Risk remains visible in executive reporting.'],
+          consequence:'Records the decision as deferred; exposure remains open until the next planning cycle.',req:true},
+        {on:'Accept residual risk with rationale',osum:'Create a formal risk-acceptance record',
+          pros:['No immediate spend or project launch.','The decision is formally documented.'],
+          cons:['Residual exposure remains.','May require board, legal, or risk review if material.','Requires a review date and rationale.'],
+          consequence:'Creates a risk-acceptance record with rationale, owner and review date.',req:true,reqRisk:true}
+      ],
+      meta)
   ];
   host.innerHTML=c5header()+
-    c5shell('Decisions for the CEO · what needs your call?','The strategic cyber calls that need you — the recommended call is marked, the choice is yours.',null,'No technical detail — just the business choice. Choosing one stamps it with your name and time, keeps it editable for 24 hours, and opens a tracked project in the ticketing system you connected at onboarding.')+
+    c5shell('Decisions for the CEO · what needs my sign-off?','The strategic cyber decision waiting on you: approve identity remediation now, defer it, or formally accept the residual exposure.',null,'No technical detail — just the business choice. Choosing an option records your decision, timestamp and rationale where required, keeps it editable for 24 hours, and triggers the appropriate workflow.')+
     c5decisions(list)+
-    '<div class="c5foot">Each decision links to its underlying model and source. Every figure traces to its basis.</div>';
+    '<div class="c5foot">Choosing an option records your decision, timestamp, rationale where required, and triggers the appropriate workflow. Every figure traces to its basis'+(demo?' — values are modeled demo exposure.':'.')+'</div>';
 }
 
 /* ================= CRO seat — same engine, enterprise-risk lens ================= */
@@ -3974,7 +4010,7 @@ function c5AskModel(seat){
     exps.forEach(function(t){
       var usd=Number(t.exposure_usd)||null,name=t.asset||'a crown jewel';
       asks.push({id:seat+'_accept_'+String(name).replace(/[^a-z0-9]+/gi,'_').toLowerCase().slice(0,40),kind:'accept',
-        title:'Risk acceptance — '+name,
+        title:'Residual risk decision — '+name+' exposure',
         why:(enterprise?('One of your most exposed crown jewels is '+name):('The exposed crown jewel in your area is '+name))+(usd?(' ('+c5AskMoney(usd)+' modeled exposure)'):'')+'. Remediation is scoped but not yet funded.',
         ask:'Approve accepting the residual risk until the fix is funded next cycle, or decline and fund it now.',
         opts:['Approve acceptance','Decline — fund now','Defer']});
@@ -3983,7 +4019,7 @@ function c5AskModel(seat){
     // No live exposure yet — one clearly-labelled sample so the pattern shows pre-connect.
     var sn=C5_SEAT_SAMPLE[seat]||'your top crown jewel';
     asks.push({id:seat+'_accept_sample',kind:'accept',sample:true,
-      title:'Risk acceptance — '+sn,
+      title:'Residual risk decision — '+sn+' exposure',
       why:'This populates from your live crown-jewel exposures once your Crown-Jewel Register and GRC are connected — '+(enterprise?'your most exposed assets appear here.':'the exposed assets in your area appear here.'),
       ask:'Approve accepting the residual risk until the fix is funded next cycle, or decline and fund it now.',
       opts:['Approve acceptance','Decline — fund now','Defer']});
