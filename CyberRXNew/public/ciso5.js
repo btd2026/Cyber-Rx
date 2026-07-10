@@ -5393,7 +5393,7 @@ function c5fwPeerSampleHTML(fwName){
   var order=['Govern','Identify','Protect','Detect','Respond','Recover'],snf=snap.functions||{};
   order.forEach(function(fn){if(S.functions[fn]&&typeof peerBar==='function')bars+=peerBar(fn,snf[fn],S.functions[fn]);});
   bars+='</div>';
-  var legend='<div class="peer-legend" style="margin-top:6px"><span><i style="background:var(--blue-soft);border:1px solid rgba(37,99,235,.35)"></i>cohort band (p25–p75)</span><span><i style="background:var(--blue);width:2px"></i>cohort median</span><span><i style="background:var(--good)"></i>My Organization ≥ median</span><span><i style="background:var(--crit)"></i>below 25th</span></div>';
+  var legend='<div class="peer-legend" style="margin-top:6px"><span><i style="background:var(--blue-soft);border:1px solid rgba(37,99,235,.35)"></i>cohort band (p25–p75)</span><span><i style="background:var(--blue);width:2px"></i>cohort median</span><span><i style="background:var(--good);border-radius:50%;border:1.5px solid var(--card,#fff);box-shadow:0 1px 2px rgba(0,0,0,.3)"></i><b style="color:var(--ink-2)">the ● dot = My Organization</b></span><span style="color:var(--muted)">its colour: green ≥ median · amber ≥ 25th · red below 25th</span></div>';
   return banner+hero+bars+legend;
 }
 /* Open the full community benchmark (preview → verify → compare) in the drill
@@ -5441,7 +5441,7 @@ function c5fwPeerRender(){
       var fns=C5FW_PEER.functions||{},snap=(window.FW_SNAPSHOT&&window.FW_SNAPSHOT.functions)||{},order=['Govern','Identify','Protect','Detect','Respond','Recover'];
       order.forEach(function(fn){if(fns[fn]&&typeof peerBar==='function')bars+=peerBar(fn,snap[fn],fns[fn]);});
       bars+='</div>';
-      var legend='<div class="peer-legend" style="margin-top:6px"><span><i style="background:var(--blue-soft);border:1px solid rgba(37,99,235,.35)"></i>cohort band (p25–p75)</span><span><i style="background:var(--blue);width:2px"></i>cohort median</span><span><i style="background:var(--good)"></i>My Organization ≥ median</span><span><i style="background:var(--crit)"></i>below 25th</span></div>';
+      var legend='<div class="peer-legend" style="margin-top:6px"><span><i style="background:var(--blue-soft);border:1px solid rgba(37,99,235,.35)"></i>cohort band (p25–p75)</span><span><i style="background:var(--blue);width:2px"></i>cohort median</span><span><i style="background:var(--good);border-radius:50%;border:1.5px solid var(--card,#fff);box-shadow:0 1px 2px rgba(0,0,0,.3)"></i><b style="color:var(--ink-2)">the ● dot = My Organization</b></span><span style="color:var(--muted)">its colour: green ≥ median · amber ≥ 25th · red below 25th</span></div>';
       cmp=hero+bars+legend;
     }
     body='<div class="cn" style="margin-top:6px">Comparing <b>My Organization</b>’s '+fwName+' maturity against the DTNKShield community. Pick a cohort:</div>'+cats+
