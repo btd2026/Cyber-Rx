@@ -404,20 +404,43 @@ function c5get(id){
       var rowsC=caps2.map(function(c){var exp=Number(c.exposure_usd)||0;var tw=TW[String(c.grc_status||c.tier||'').toLowerCase()]||1;
         return {name:c.name,exposure:exp,gaps:(c.control_gaps!=null?Number(c.control_gaps):null),open_risk:(c.open_risk!=null?Number(c.open_risk):null),grc:c.grc_status,tw:tw,risks:(c.risks||[])};}).sort(function(a,b){return b.exposure-a.exposure;});
       var topc=rowsC[0]||null;
+      // Keep modeled EXPOSURE, open control GAPS and open RISK scenarios as separate
+      // measures per capability, and name each one's main driver.
+      function capDriver(c){var g=Number(c.gaps)||0,rk=Number(c.open_risk)||0;
+        if(g>0&&rk>0)return 'Open control gaps + open risks';
+        if(g>0)return 'Open control gaps';
+        if(rk>0)return 'Open risk scenarios';
+        if(c.exposure>0)return 'Business criticality / modeled value';
+        return 'Mapped — no connected finding';}
+      var ranking=rowsC.slice(0,8).map(function(c){
+        return {itemName:c.name+(c.grc?(' · GRC '+c.grc):''),
+          modeledExposure:(c.exposure>0?usd(c.exposure):'mapped'),
+          openControlGaps:(c.gaps!=null?c.gaps:null),
+          openRiskScenarios:(c.open_risk!=null?c.open_risk:(c.risks?c.risks.length:null)),
+          mainDriver:capDriver(c),
+          risks:(c.risks||[]).map(function(r){return {name:r.title,severity:r.severity,exposure:(r.exposure>0?usd(r.exposure):''),service:r.service||c.name,owner:r.owner,status:r.status,action:r.action};})};
+      });
+      // Most-actionable capability = the one with the largest connected open-gap+risk set.
+      var actAlt=null;rowsC.forEach(function(c){var n=(Number(c.gaps)||0)+(Number(c.open_risk)||0);if(n>0&&(!actAlt||n>actAlt._n)){actAlt=c;actAlt._n=n;}});
+      var topActionable=!!(topc&&((Number(topc.gaps)||0)>0||(Number(topc.open_risk)||0)>0));
+      var altDiffers=!!(actAlt&&topc&&actAlt.name!==topc.name);
+      var found=topc?('Nerion found '+topc.name+' carries the highest modeled exposure'+(topc.exposure>0?(' at '+usd(topc.exposure)):'')+'. It currently has '+(topc.gaps!=null?topc.gaps:'no connected')+' open control gap'+(Number(topc.gaps)===1?'':'s')+' and '+(topc.open_risk!=null?topc.open_risk:'no connected')+' open risk scenario'+(Number(topc.open_risk)===1?'':'s')+'.'+(altDiffers?(' '+actAlt.name+' carries the largest actionable open set ('+actAlt._n+' open item'+(actAlt._n===1?'':'s')+').'):'')):'';
+      var action=topc
+        ?(topActionable
+          ?('Prioritise '+topc.name+': remediate its '+(Number(topc.gaps)||0)+' open control gap'+(Number(topc.gaps)===1?'':'s')+' and treat its '+(Number(topc.open_risk)||0)+' open risk scenario'+(Number(topc.open_risk)===1?'':'s')+', then work down the exposure-ranked list.')
+          :('Validate '+topc.name+'’s exposure basis — confirm whether it is driven by business criticality, inherited dependencies, or missing risk/GRC data, since no connected open control gaps or open risk scenarios are present.'+(altDiffers?(' For actionable work now, '+actAlt.name+' carries the largest connected open set.'):'')))
+        :'Connect a Business Capability Map + GRC so exposure ranks by real control-gaps and open risk per business area, then act on the top one.';
       return c5obj({id:id,name:'Business capability most exposed',connected:conn,
         displayValue:conn?(topc?(topc.name+(topc.exposure>0?(' · '+usd(topc.exposure)):'')):(caps2.length+' capabilities mapped')):'—',
         label:'computed',color:conn?((topc&&topc.exposure>0)?'warn':'good'):'muted',
         formula:'exposure = (open control-gaps + open risk) × capability-tier weight; ranked exposure-desc',
-        method:'Your business capabilities, ranked by the cyber exposure each carries. For every capability, protection is the mean maturity of the controls guarding it, open control-gaps are the controls that fall short, and exposure is the at-risk value it carries — weighted by how critical the capability is to the business. The one at the top is where to act first.',
-        inputs:rowsC.slice(0,6).map(function(c){
-          // Name the ACTUAL open risks under this business area, so "N open risks" is
-          // legible — each with its severity and $ exposure, worst first.
-          var rl=(c.risks&&c.risks.length)?('<div style="margin-top:5px;display:flex;flex-direction:column;gap:2px">'+c.risks.slice(0,5).map(function(r){var sv=String(r.severity||'').toLowerCase(),sc=/crit/.test(sv)?'crit':/high/.test(sv)?'warn':'muted';return '<span style="font-size:11px;color:var(--ink-2);line-height:1.35">↳ '+c5esc(r.title)+(r.severity?(' <b style="color:var(--'+sc+')">'+c5esc(r.severity)+'</b>'):'')+((r.exposure>0)?(' <span style="color:var(--muted)">· '+usd(r.exposure)+'</span>'):'')+'</span>';}).join('')+(c.risks.length>5?('<span style="font-size:11px;color:var(--muted)">↳ + '+(c.risks.length-5)+' more</span>'):'')+'</div>'):'';
-          return {name:'<b>'+c5esc(c.name)+'</b>'+(c.grc?(' · GRC '+c.grc):'')+rl,value:(c.exposure>0?usd(c.exposure):'mapped')+'  ·  '+(c.gaps!=null?c.gaps:'—')+' gaps · '+(c.open_risk!=null?c.open_risk:'—')+' open risks',color:(c.exposure>0?'warn':'good'),source:(caps2[0]&&caps2[0].derived)?'Business functions + control posture':'Capability Map + GRC (or Excel)'};}),
+        method:'Nerion joins your business capability map to your connected control posture and open risk data. For each capability it holds three separate measures — the modeled exposure (business value at risk, weighted by how critical the capability is), the open control gaps, and the open risk scenarios — and ranks by modeled exposure. A capability can top the list on business value alone even with no open gaps or risks.',
+        rankItemLabel:'Business capability',ranking:ranking,found:found,
+        notProve:'This ranks modeled exposure from your capability map and connected control/risk data. It does not prove a realised loss, an active incident, or that a top-ranked item with zero connected gaps is genuinely low-risk when its risk or dependency data is incomplete.',
         sources:(caps2[0]&&caps2[0].derived)
-          ?[{tool:'Business functions (value chain)',connector:'capmap',field:'function · at-risk exposure',lastRefresh:c5ago()},{tool:'Live control posture',connector:'grc',field:'control maturity → coverage · gaps'}]
-          :[{tool:'Business Capability Map',connector:'capmap',field:'capability · tier · exposure',lastRefresh:c5ago()},{tool:'GRC (Archer / ServiceNow GRC / LeanIX) — or Excel/CSV upload',connector:'grc',field:'control_coverage (Adequate/Watch/Gap) · control_gaps · open_risk'}],
-        action:topc?('Your most exposed business area is '+topc.name+(topc.exposure>0?(' at '+usd(topc.exposure)):'')+'. Close its open control-gaps'+(topc.gaps!=null?(' ('+topc.gaps+')'):'')+' and drive down its open risks'+(topc.open_risk!=null?(' ('+topc.open_risk+')'):'')+' — each named in the rows above — then work down the exposure-ranked list.'):'Connect a Business Capability Map + GRC so exposure ranks by real control-gaps and open risk per business area, then act on the top one.',note:topc?('Your most exposed business area is '+topc.name+'.'):'Which business areas carry the most cyber exposure — derived from your business functions and live control posture. Upload a Business Capability Map + GRC data to override.',
+          ?[{tool:'Business functions (value chain)',connector:'capmap',field:'function · at-risk exposure',lastRefresh:c5ago(),role:'Capability inventory & criticality'},{tool:'Live control posture',connector:'grc',field:'control maturity → coverage · gaps',role:'Open control-gap count'},{tool:'Risk register',status:'Not connected',role:'Open risk-scenario count',missing:'per-capability open risks'}]
+          :[{tool:'Business Capability Map',connector:'capmap',field:'capability · tier · exposure',lastRefresh:c5ago(),role:'Capability inventory & criticality'},{tool:'GRC (Archer / ServiceNow GRC / LeanIX) — or Excel/CSV upload',connector:'grc',field:'control_coverage · control_gaps · open_risk',role:'Open control-gap & open-risk counts'}],
+        action:action,note:topc?('Your most exposed business area is '+topc.name+'.'):'Which business areas carry the most cyber exposure — derived from your business functions and live control posture. Upload a Business Capability Map + GRC data to override.',
         connectTool:'derived from your business functions — or upload a Business Capability Map + GRC to override'});}
     case 'er_scenarios':{var stz=(typeof LIVE!=='undefined'&&LIVE&&LIVE.stress)||{};var conn=!!(stz&&stz.scenario);
       // Spec: PULL Threat Intel → MAP to MITRE ATT&CK techniques matching your stack →
@@ -1720,11 +1743,57 @@ function c5evConfObj(m){
   if(/computed/.test(L))return {level:'Medium',why:'computed from the connected sources; some inputs remain modeled or partial.'};
   return {level:'Medium',why:'derived from the connected sources.'};
 }
-/* "What Nerion found" — the evidence-backed finding, dynamic from the metric. */
+/* "What Nerion found" — the evidence-backed finding, dynamic from the metric. A ranked
+   metric can supply a richer m.found (names the top item, the driver and the most-
+   actionable alternative); otherwise a plain finding is generated. */
 function c5foundText(m){
   if(!m)return '';
   if(!m.connected)return 'No reading yet — '+(m.connectTool?('connect '+m.connectTool):'the source is not connected')+' and Nerion will populate this from your data.';
+  if(m.found)return m.found;
   return 'Nerion found '+m.displayValue+' for '+String(m.name||'this measure').toLowerCase()+'.';
+}
+/* "Why ranked here" — why the top item sits where it does. Uses an authored m.whyRanked,
+   else derives it from the top ranking row so a high-exposure / 0-gap / 0-risk item is
+   never left looking contradictory. Returns '' when the metric isn't a ranking. */
+function c5whyRanked(m){
+  if(m&&m.whyRanked)return m.whyRanked;
+  var r=m&&m.ranking&&m.ranking[0];if(!r)return '';
+  var g=(r.openControlGaps!=null)?Number(r.openControlGaps):null,rk=(r.openRiskScenarios!=null)?Number(r.openRiskScenarios):null;
+  var hasGaps=g>0,hasRisks=rk>0,hasExp=!!(r.modeledExposure&&String(r.modeledExposure)!=='—');
+  if(hasRisks&&!hasGaps)return 'Ranked first because it carries the largest connected open-risk set.';
+  if(hasGaps&&!hasRisks)return 'Ranked first because it has the most open control gaps affecting critical services.';
+  if(hasGaps&&hasRisks)return 'Ranked first on its combined open control gaps and open risk scenarios.';
+  if(hasExp)return 'Ranked first because it carries the highest modeled business-value exposure, even though no connected open control gaps or open risk scenarios are present — the ranking is driven by business criticality, not by an open finding. '+((g===0&&rk===0)?'Confirm whether risk or dependency data is simply not connected for this item.':'');
+  return 'Ranked from its combined modeled exposure, open control gaps and open risk scenarios.';
+}
+/* One collapsed open-risk, shown only when a ranking row is expanded (never dumped into
+   the primary row). Name · severity · modeled exposure · service · owner · status · action. */
+function c5riskCard(r){
+  var sv=String(r.severity||'').toLowerCase(),sc=/crit/.test(sv)?'crit':/high/.test(sv)?'warn':'muted';
+  var meta=[r.service?c5esc(r.service):'',r.owner?('owner '+c5esc(r.owner)):'',r.status?c5esc(r.status):''].filter(Boolean).join(' · ');
+  return '<div style="border-left:2px solid var(--warn);padding:2px 0 2px 9px;font-size:11.5px;line-height:1.45"><b>'+c5esc(r.name||r.title||'Risk')+'</b>'+(r.severity?(' <b style="color:var(--'+sc+')">'+c5esc(r.severity)+'</b>'):'')+((r.exposure!=null&&r.exposure!=='')?(' <span style="color:var(--muted)">· '+c5esc(String(r.exposure))+'</span>'):'')+(meta?('<div style="color:var(--muted)">'+meta+'</div>'):'')+(r.action?('<div style="color:var(--ink-2)">→ '+c5esc(r.action)+'</div>'):'')+'</div>';
+}
+/* The ranking / comparison table — modeled exposure, open gaps and open risks kept as
+   SEPARATE columns (never merged), plus the main driver. Long risk lists collapse behind
+   "N open risks · view details" (native <details>) instead of dumping into the row. */
+function c5rankTable(m){
+  var rows=m&&m.ranking;if(!rows||!rows.length)return '';
+  var head='<tr><th>'+c5esc(m.rankItemLabel||'Item')+'</th><th>Modeled exposure</th><th>Open gaps</th><th>Open risks</th><th>Main driver</th></tr>';
+  var body=rows.map(function(r,i){
+    var risks=r.risks||[];
+    var rN=(r.openRiskScenarios!=null)?r.openRiskScenarios:(risks.length||0);
+    var main='<tr'+(i===0?' style="background:color-mix(in srgb,var(--warn) 6%,transparent)"':'')+'>'+
+      '<td><b>'+c5esc(r.itemName)+'</b></td>'+
+      '<td class="v">'+c5esc(String(r.modeledExposure!=null?r.modeledExposure:'—'))+'</td>'+
+      '<td class="src">'+(r.openControlGaps!=null?c5esc(String(r.openControlGaps)):'—')+'</td>'+
+      '<td class="src">'+c5esc(String(rN))+'</td>'+
+      '<td class="src">'+c5esc(String(r.mainDriver||'—'))+'</td>'+
+    '</tr>';
+    var expand=(risks.length)?('<tr><td colspan="5" style="padding-top:0;border-top:0"><details><summary style="cursor:pointer;color:var(--blue);font-size:11px;font-weight:600;list-style:none">'+risks.length+' open risk'+(risks.length>1?'s':'')+' · view details</summary><div style="margin:7px 0 2px;display:flex;flex-direction:column;gap:6px">'+risks.map(c5riskCard).join('')+'</div></details></td></tr>'):'';
+    return main+expand;
+  }).join('');
+  return '<div style="font-size:11px;color:var(--muted);margin:10px 0 4px">Ranked by modeled exposure — exposure, open control gaps and open risk scenarios are distinct measures.</div>'+
+    '<div style="overflow-x:auto"><table class="itbl"><thead>'+head+'</thead><tbody>'+body+'</tbody></table></div>';
 }
 /* Plain-English calculation basis — never a raw formula. */
 function c5basisText(m){
@@ -1756,6 +1825,9 @@ function c5InspectObj(m){
   if(m.visual)h+=m.visual;
   // 2) WHY IT MATTERS — durable, business-relevant definition (not today's result).
   var why=c5why(m);if(why)h+='<div class="ev-sec">Why it matters</div><div class="conf">'+why+'</div>';
+  // 2b) WHY RANKED HERE — for ranked metrics, why the top item sits first (explains the
+  //     high-exposure / 0-gap / 0-risk case instead of leaving it contradictory).
+  var wr=c5whyRanked(m);if(m.connected&&wr)h+='<div class="ev-sec">Why ranked here</div><div class="conf" style="border-left:3px solid var(--'+(m.color==='crit'?'crit':m.color==='warn'?'warn':'blue')+')">'+wr+'</div>';
   // 3) EVIDENCE CONFIDENCE — always, with a short reason.
   h+='<div class="ev-sec">Evidence confidence</div><div class="conf"><b>'+c5esc(ev.level)+'</b>'+(ev.why?(' — '+ev.why):'')+'</div>';
   // 4) WHAT NERION FOUND — the evidence-backed finding, dynamic.
@@ -1763,7 +1835,9 @@ function c5InspectObj(m){
   // Supporting evidence for the finding: the reasoning table or the numbers behind it
   // (compact). Raw formulas are NOT shown here — see the calculation basis below.
   if(m.connected){
-    if(m.table&&m.table.cols&&m.table.rows&&m.table.rows.length){
+    if(m.ranking&&m.ranking.length){
+      h+=c5rankTable(m);
+    } else if(m.table&&m.table.cols&&m.table.rows&&m.table.rows.length){
       var tcell=function(cell,cls){var t=(cell&&cell.text!=null)?cell.text:(cell==null?'':cell);var sty=(cell&&(cell.color||cell.bold))?(' style="'+(cell.color?('color:var(--'+cell.color+')'):'')+(cell.bold?';font-weight:600':'')+'"'):'';return '<td class="'+cls+'"'+sty+'>'+t+'</td>';};
       h+='<div style="overflow-x:auto;margin-top:8px"><table class="itbl"><thead><tr>'+m.table.cols.map(function(c){return '<th>'+c+'</th>';}).join('')+'</tr></thead><tbody>'+
         m.table.rows.map(function(r){return '<tr>'+r.map(function(cell,ci){return tcell(cell,ci===0?'':'src');}).join('')+'</tr>';}).join('')+'</tbody></table></div>';
