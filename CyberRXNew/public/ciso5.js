@@ -279,6 +279,11 @@ function c5DomainScore(prefixes){
 }
 function c5peer(){return (typeof PEER_DATA!=='undefined')?PEER_DATA:null;}
 function c5peerOptin(){return (typeof peerOptin==='function')?peerOptin():false;}
+/* The live peer cohort is active only once it reaches the minimum client count for
+   k-anonymity (default 5). Until then the peer benchmark is shown as a labelled SAMPLE —
+   a preview of exactly what the live comparison will look like. */
+function c5peerMin(){return (typeof PEER_MIN!=='undefined')?PEER_MIN:5;}
+function c5peerLive(){try{var pd=c5peer(),opt=c5peerOptin();return !!(opt&&pd&&pd.sufficient&&(pd.overall||pd.overall_values));}catch(_){return false;}}
 /* Published industry-baseline CMMI medians (0–5), by domain and overall. A documented
    enterprise reference — always shown so the benchmark works without opt-in — and
    labeled 'modeled'. When you opt in and a live cohort reaches k-anonymity, the live
@@ -681,23 +686,23 @@ function c5get(id){
         sources:[{tool:'Nerion engine',connector:'nerion',field:'framework_cmmi',lastRefresh:c5ago()}],
         note:'Your evidenced framework maturity — not self-attested.',connectTool:'your control tools + policies'});}
     case 'peer_median':{var pd=c5peer();var opt=c5peerOptin();var live=!!(opt&&pd&&pd.sufficient&&pd.overall);var val=live?Number(pd.overall.p50):C5_REF_OVERALL;
-      return c5obj({id:id,name:'Peer median',connected:true,displayValue:Number(val).toFixed(1),label:live?'computed':'modeled',color:'ink',
-        formula:live?'peer median = 50th percentile of your anonymized same-size, same-industry cohort (k-anonymity gated)':'peer median = published industry-baseline CMMI; superseded by your live cohort when you opt in',
-        inputs:live?[{name:'Cohort size',value:(pd&&pd.n)||0,source:'DTNKSHIELD cohort'},{name:'Minimum cohort',value:(pd&&pd.minCohort)||(typeof PEER_MIN!=='undefined'?PEER_MIN:5),source:'k-anonymity gate'}]:[{name:'Industry baseline (overall CMMI)',value:C5_REF_OVERALL.toFixed(1),source:'published enterprise benchmark'}],
-        sources:[live?{tool:'DTNKSHIELD peer cohort',connector:'peer',field:'benchmark.p50',lastRefresh:c5ago()}:{tool:'Published industry benchmark',connector:'reference',field:'csf_cmmi_median',lastRefresh:c5ago()}],
-        note:live?'Your live opted-in cohort — anonymized and suppressed below a minimum cohort size.':'A published industry baseline. Opt in to compare against a live cohort of your actual same-size peers.',connectTool:'the live peer cohort (opt in)'});}
+      return c5obj({id:id,name:'Peer median',connected:true,displayValue:Number(val).toFixed(1)+(live?'':' (sample)'),label:live?'computed':'sample',color:'ink',
+        formula:live?'peer median = 50th percentile of your anonymized same-size, same-industry cohort (k-anonymity gated)':'peer median = representative sample (published industry baseline); replaced by your live cohort median once the cohort reaches '+c5peerMin()+' clients',
+        inputs:live?[{name:'Cohort size',value:(pd&&pd.n)||0,source:'DTNKSHIELD cohort'},{name:'Minimum cohort',value:(pd&&pd.minCohort)||c5peerMin(),source:'k-anonymity gate'}]:[{name:'Sample median (overall CMMI)',value:C5_REF_OVERALL.toFixed(1),source:'representative sample'},{name:'Live cohort unlocks at',value:c5peerMin()+' clients',source:'k-anonymity gate'}],
+        sources:[live?{tool:'DTNKSHIELD peer cohort',connector:'peer',field:'benchmark.p50',lastRefresh:c5ago()}:{tool:'Sample peer benchmark',connector:'reference',field:'csf_cmmi_median',lastRefresh:c5ago()}],
+        note:live?'Your live opted-in cohort — anonymized and suppressed below a minimum cohort size.':'Sample peer benchmark — a representative preview. Your live cohort median unlocks once '+c5peerMin()+' clients have joined the anonymized, k-anonymity-gated cohort.',connectTool:'the live peer cohort (opt in)'});}
     case 'peer_position':{var ov2=c5Overall();var pd2=c5peer();var opt2=c5peerOptin();var live2=!!(opt2&&pd2&&pd2.sufficient&&pd2.overall_values&&ov2!=null);
       var pctile=live2?((typeof peerPercentileOf==='function')?peerPercentileOf(ov2,pd2.overall_values):null):(ov2!=null?c5refPercentile(ov2):null);
       var zsc=(!live2&&ov2!=null)?((ov2-C5_REF_OVERALL)/C5_REF_SD):null;
       var pinputs=live2
         ?[{name:'Your CMMI',value:ov2!=null?Number(ov2).toFixed(1):'—',source:'peer_maturity'},{name:'Live cohort size',value:(pd2&&pd2.n)||0,source:'peer cohort'},{name:'= Position',value:pctile!=null?(pctile+'th percentile in cohort'):'—',source:'rank ÷ cohort size'}]
         :[{name:'Your CMMI',value:ov2!=null?Number(ov2).toFixed(1):'—',source:'peer_maturity'},{name:'Baseline median (μ)',value:C5_REF_OVERALL.toFixed(2),source:'published enterprise benchmark'},{name:'Baseline spread (σ)',value:'±'+C5_REF_SD,source:'published enterprise benchmark'},{name:'z-score',value:zsc!=null?(zsc.toFixed(2)+'  ( ('+Number(ov2).toFixed(1)+' − '+C5_REF_OVERALL.toFixed(2)+') ÷ '+C5_REF_SD+' )'):'—',source:'computed'},{name:'= Percentile',value:pctile!=null?(pctile+'th (standard-normal CDF of z)'):'—',source:'normal distribution'}];
-      return c5obj({id:id,name:'Your position',connected:pctile!=null,displayValue:(pctile!=null)?(pctile>=50?('Top '+(100-pctile)+'%'):('Bottom '+pctile+'%')):'—',label:live2?'computed':'modeled',color:(pctile!=null)?(pctile>=50?'good':'warn'):'muted',
-        formula:live2?'position = your percentile rank within your live cohort by overall CMMI':'position = the standard-normal percentile of your CMMI vs the published baseline (μ='+C5_REF_OVERALL.toFixed(2)+', σ='+C5_REF_SD+')',
-        method:live2?'Your rank within the opted-in cohort of same-size peers.':'z = (your CMMI − baseline median) ÷ baseline spread; the percentile is the standard-normal CDF of that z. "Top X%" = 100 − percentile. Follow the rows below to reconstruct it exactly.',
+      return c5obj({id:id,name:'Your position',connected:pctile!=null,displayValue:((pctile!=null)?(pctile>=50?('Top '+(100-pctile)+'%'):('Bottom '+pctile+'%')):'—')+(live2||pctile==null?'':' (sample)'),label:live2?'computed':'sample',color:(pctile!=null)?(pctile>=50?'good':'warn'):'muted',
+        formula:live2?'position = your percentile rank within your live cohort by overall CMMI':'position = the standard-normal percentile of your CMMI vs the sample benchmark (μ='+C5_REF_OVERALL.toFixed(2)+', σ='+C5_REF_SD+')',
+        method:live2?'Your rank within the opted-in cohort of same-size peers.':'A representative sample of your position. z = (your CMMI − sample median) ÷ sample spread; the percentile is the standard-normal CDF of that z. Your live position among your actual same-size peers unlocks once the cohort reaches '+c5peerMin()+' clients.',
         inputs:pinputs,
-        sources:[live2?{tool:'DTNKSHIELD peer cohort',connector:'peer',field:'overall_values',lastRefresh:c5ago()}:{tool:'Published industry benchmark',connector:'reference',field:'csf_cmmi_distribution',lastRefresh:c5ago()}],
-        note:'Where you stand against peers your size — top-third is the target.'+(live2?'':' Shown against the published baseline; opt in for your live cohort.'),connectTool:'the live peer cohort (opt in)'});}
+        sources:[live2?{tool:'DTNKSHIELD peer cohort',connector:'peer',field:'overall_values',lastRefresh:c5ago()}:{tool:'Sample peer benchmark',connector:'reference',field:'csf_cmmi_distribution',lastRefresh:c5ago()}],
+        note:'Where you stand against peers your size — top-third is the target.'+(live2?'':' Sample preview — your live position unlocks at '+c5peerMin()+' clients.'),connectTool:'the live peer cohort (opt in)'});}
     /* ---- CFO metrics (same engine, financial lens; shared objects reused where they exist) ---- */
     case 'cf_appetite':{var ap=(typeof LIVE!=='undefined'&&LIVE&&LIVE.economics&&LIVE.economics.appetite)||{};var v=Number(ap.appetite)||0;var conn=v>0;
       var apdemo=(typeof signalsAreDemo==='function')&&signalsAreDemo();
@@ -2820,15 +2825,21 @@ function c5Peers(){
   }).join('');
   var mat=c5get('peer_maturity'),med=c5get('peer_median'),pos=c5get('peer_position');
   var TD=c5TopDriver(); // data-ranked top driver, not hard-coded identity
+  var live=c5peerLive(),pmin=c5peerMin();
   var kanon='<div class="c5kanon">'+c5icon('lock')+'<div>Anonymous and opt-in. Cohorts use k-anonymity and are suppressed below a minimum size — nothing identifying leaves your environment. This is the only part of Nerion that reaches the internet.</div></div>';
+  // Until the live cohort reaches the minimum client count, the benchmark is a labelled
+  // SAMPLE — a preview of exactly what the live comparison will show.
+  var sampleBanner=live?'':'<div class="c5kanon" style="border-color:color-mix(in srgb,var(--warn) 40%,var(--line));background:color-mix(in srgb,var(--warn) 8%,var(--surface))"><span style="font-size:16px;line-height:1">📊</span><div><b>Sample peer benchmark — a preview of what you’ll get.</b> The live comparison against your anonymized, same-size, same-industry peers unlocks once <b>'+pmin+' clients</b> have joined the cohort (k-anonymity-gated). Until then, the medians and position below are a representative sample so you can see exactly how it will look.</div></div>';
+  var sampleTag=live?'':' <span class="c5pill a" style="font-size:10px;vertical-align:middle">Sample</span>';
   host.innerHTML=c5header()+
-    c5shell('Peer benchmark · how do we compare?','Ahead of your peers overall — with one domain you trail.',null,'Benchmarked against same-size, same-industry peers, your maturity sits in the top third. Your weakest domain versus peers is the one behind '+TD.phrase+' — the same gap driving your exposure. Each domain carries its full comparison.')+
-    '<div class="c5statgrid">'+c5mc('peer_maturity','Your maturity',(mat.connected?mat.displayValue:'—'),null)+c5mc('peer_median','Peer median',(med.connected?med.displayValue:'—'),'ink-2')+c5mc('peer_position','Your position',(pos.connected?pos.displayValue:'—'),pos.connected?'good':null)+'</div>'+
-    '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px"><span class="c5seclab" style="margin:0">By domain · your score vs. peer median</span><span style="font-size:11.5px;color:var(--muted)">▏ peer median</span></div>'+
+    c5shell('Peer benchmark · how do we compare?',(live?'Ahead of your peers overall — with one domain you trail.':'Sample benchmark — a preview of how you’ll compare to your same-size peers.'),null,(live?('Benchmarked against same-size, same-industry peers, your maturity sits in the top third. Your weakest domain versus peers is the one behind '+TD.phrase+' — the same gap driving your exposure. Each domain carries its full comparison.'):('This previews the peer benchmark you’ll get once your cohort is live. The medians and position shown are a representative sample; your live comparison against your actual same-size, same-industry peers unlocks at '+pmin+' clients. Each domain carries its full comparison.')))+
+    sampleBanner+
+    '<div class="c5statgrid">'+c5mc('peer_maturity','Your maturity',(mat.connected?mat.displayValue:'—'),null)+c5mc('peer_median','Peer median'+sampleTag,(med.connected?med.displayValue:'—'),'ink-2')+c5mc('peer_position','Your position'+sampleTag,(pos.connected?pos.displayValue:'—'),pos.connected?'good':null)+'</div>'+
+    '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px"><span class="c5seclab" style="margin:0">By domain · your score vs. peer median'+sampleTag+'</span><span style="font-size:11.5px;color:var(--muted)">▏ peer median</span></div>'+
     '<div>'+rows+'</div>'+
     kanon+
     c5bl('Bottom line','Close the one domain where peers beat you.',null,'Your largest exposure driver — '+TD.phrase+' — is also where you trail peers most. Closing it moves you toward top-quartile in that domain and reduces your single largest exposure.',{mid:TD.mid,txt:'Close the '+c5esc(TD.short)+' gap'})+
-    '<div class="c5foot">Benchmark is opt-in and anonymized against same-size industry peers. Figures shown are illustrative.</div>';
+    '<div class="c5foot">'+(live?'Benchmark is anonymized against same-size industry peers.':'Sample figures — the live peer benchmark unlocks once '+pmin+' clients have joined (anonymized, k-anonymity-gated). This previews exactly what you’ll see.')+'</div>';
 }
 
 /* ================= CFO seat — same engine, financial lens ================= */
@@ -4971,9 +4982,9 @@ function c5FrameworksClassic(host){
     ' onmouseover="this.style.borderColor=\'var(--blue)\'" onmouseout="this.style.borderColor=\'var(--line)\'">'+
     '<div style="display:flex;align-items:center;gap:11px;min-width:0">'+
       '<span style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:9px;flex:none;background:var(--surface);color:var(--blue)">'+c5icon('scale')+'</span>'+
-      '<div style="min-width:0"><div style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--blue)">'+(pOpt?'Peer benchmark · view comparison':'Opt-in for peer benchmark')+'</div>'+
-      '<div style="font-size:12px;color:var(--ink-2);margin-top:1px">See how your '+((typeof FW_NAMES!=='undefined'&&FW_NAMES[sel])||'framework')+' maturity compares to the DTNKShield community — anonymously.</div></div>'+
-    '</div><span class="peer-badge">DTNKShield ›</span></div>';
+      '<div style="min-width:0"><div style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--blue)">'+(c5peerLive()?'Peer benchmark · view comparison':'Peer benchmark · sample preview')+'</div>'+
+      '<div style="font-size:12px;color:var(--ink-2);margin-top:1px">'+(c5peerLive()?('See how your '+((typeof FW_NAMES!=='undefined'&&FW_NAMES[sel])||'framework')+' maturity compares to the DTNKShield community — anonymously.'):('Preview how your '+((typeof FW_NAMES!=='undefined'&&FW_NAMES[sel])||'framework')+' maturity will compare — the live cohort unlocks at '+c5peerMin()+' clients (anonymous, k-anonymity-gated).'))+'</div></div>'+
+    '</div><span class="peer-badge">'+(c5peerLive()?'DTNKShield ›':'Sample ›')+'</span></div>';
   host.innerHTML=c5header()+
     c5shell('Program health · how is the security program performing?','Your security program, scored against the framework you follow.',null,'Each function is scored from your live control evidence and kept current. Open a function to see the controls behind its score.')+
     cadCtrl+
