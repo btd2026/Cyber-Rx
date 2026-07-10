@@ -59,7 +59,7 @@ describe('detail drawer — standardized sections', () => {
   it('shows a consequence ("if X, then Y") under "What this means", by domain', () => {
     expect(H).toContain('What this means');
     // ais_ metric → AI/supply-chain consequence, not a bare restatement of the number
-    expect(H).toMatch(/If one of these AI systems or components is abused or compromised/);
+    expect(H).toMatch(/If one of these AI systems or outside components were abused or compromised/);
     // the number itself still shows in the Result hero + key evidence
     expect(H).toContain('7 AI/ML systems · 1 posture gap');
   });
