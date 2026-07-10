@@ -3,11 +3,12 @@
  * ciso5.js — c5InspectObj + helpers). The whole browser file is loaded in a vm sandbox;
  * c5InspectObj renders into a stubbed openDrill so we can assert the produced HTML.
  *
- * Locks the standardized structure and evidence-transparency rules:
- *  Result · Why it matters · Evidence confidence · What Nerion found · What Nerion does
- *  not prove · Open gaps · Recommended action (+owner/due/expected) · Sources & freshness
- *  · plain-English calculation basis. Raw formulas are hidden from normal users and only
- *  shown in admin/debug mode. All text is data-driven.
+ * Locks the COMPACT default structure and evidence-transparency rules:
+ *  Default view = Result + evidence confidence · Why ranked / What found / What not proved ·
+ *  Key evidence · Recommended action. Deeper evidence (ranking table, open risks/gaps,
+ *  Sources & freshness, calculation basis) is collapsed into <details class="c5acc">
+ *  accordions. Raw formulas are hidden from normal users and shown only in admin/debug
+ *  mode. All text is data-driven.
  */
 
 const fs = require('fs');
@@ -53,9 +54,8 @@ describe('detail drawer — standardized sections', () => {
     expect(H).toContain('Self-reported');
   });
   it('shows Why it matters', () => { expect(H).toContain('Why it matters'); });
-  it('shows Evidence confidence with a level + reason', () => {
-    expect(H).toContain('Evidence confidence');
-    expect(H).toMatch(/Evidence confidence<\/div><div class="conf"><b>(High|Medium|Low|Not Enough Evidence|Demo)<\/b>/);
+  it('shows Evidence confidence with a level + reason (compact strip)', () => {
+    expect(H).toMatch(/Evidence confidence:<\/b> (High|Medium|Low|Not Enough Evidence|Demo)/);
   });
   it('shows What Nerion found, data-driven', () => {
     expect(H).toContain('What Nerion found');
@@ -72,29 +72,31 @@ describe('detail drawer — standardized sections', () => {
     expect(H).toContain('Due: 30 days');
     expect(H).toContain('Expected result: Closes 1 AI governance posture gap.');
   });
-  it('shows Sources & freshness with status, last-refresh, role, missing', () => {
-    expect(H).toContain('Sources &amp; freshness');
+  it('collapses Sources & freshness into an accordion (status/last-refresh/role/missing preserved)', () => {
+    expect(H).toContain('View sources and freshness');
     expect(H).toContain('as of 7/9/2026 8:44 PM');
     expect(H).toContain('role: Posture validation');
     expect(H).toContain('missing: Live posture telemetry');
     expect(H).toContain('Not connected');
+    // sources are not in the default view — they sit inside a <details>
+    expect(H.indexOf('as of 7/9/2026 8:44 PM')).toBeGreaterThan(H.indexOf('<details'));
   });
-  it('shows a plain-English calculation basis', () => {
-    expect(H).toContain('How Nerion calculated this');
+  it('collapses the plain-English calculation basis into an accordion', () => {
+    expect(H).toContain('View calculation basis');
   });
 });
 
 describe('detail drawer — Open gaps section', () => {
   it('renders gaps with title / meaning / how-to-close / owner / due when supplied', () => {
     const H = render(Object.assign({}, AIML, { gaps: [{ title: 'AI Acceptable Use Policy not in force', meaning: 'No approved policy governs AI use.', close: 'Approve and publish the AI Acceptable Use Policy.', owner: 'AI Governance', due: '30 days' }] }));
-    expect(H).toContain('Open gaps / exceptions');
+    expect(H).toContain('View open risks and gaps'); // collapsed accordion
     expect(H).toContain('AI Acceptable Use Policy not in force');
     expect(H).toContain('How to close: Approve and publish the AI Acceptable Use Policy.');
     expect(H).toContain('Owner: AI Governance');
   });
-  it('hides the Open gaps section when there are no gaps', () => {
+  it('hides the open-risks/gaps accordion when there are no gaps', () => {
     const H = render(AIML);
-    expect(H).not.toContain('Open gaps / exceptions');
+    expect(H).not.toContain('View open risks and gaps');
   });
 });
 
@@ -121,11 +123,11 @@ describe('detail drawer — missing evidence & labelling', () => {
   });
   it('demo data is labelled Demo', () => {
     const H = render(AIML, { demo: true });
-    expect(H).toMatch(/Evidence confidence<\/div><div class="conf"><b>Demo<\/b>/);
+    expect(H).toMatch(/Evidence confidence:<\/b> Demo/);
   });
   it('self-reported evidence cannot read High confidence', () => {
     const H = render(AIML);
-    expect(H).not.toMatch(/Evidence confidence<\/div><div class="conf"><b>High<\/b>/);
+    expect(H).not.toMatch(/Evidence confidence:<\/b> High/);
   });
 });
 
