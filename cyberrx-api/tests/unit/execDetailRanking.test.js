@@ -99,10 +99,19 @@ describe('Business Capability metric — driver-aware, contradiction-safe (integ
     expect(m.ranking[0].openControlGaps).toBe(0);
     expect(m.ranking[0].openRiskScenarios).toBe(0);
     expect(m.ranking[0].mainDriver).toBe('Business criticality / modeled value');
-    // dynamic "what found" names the top AND the most-actionable alternative
-    expect(m.found).toMatch(/Financial Services carries the highest modeled exposure at \$3\.4B/);
-    expect(m.found).toMatch(/0 open control gaps and 0 open risk scenarios/);
-    expect(m.found).toMatch(/Hybrid Cloud carries the largest actionable open set/);
+    // executive risk narrative — consequences, not a finding restatement (dynamic)
+    const impactPlain = m.impact.replace(/<[^>]+>/g, '');
+    expect(impactPlain).toMatch(/largest business consequence of any capability/);
+    expect(impactPlain).toContain('$3.4B');
+    expect(impactPlain).toContain('Financial Services');
+    // "what this means" = if X happens, Y is the consequence
+    expect(m.found.replace(/<[^>]+>/g, '')).toMatch(/If Financial Services is disrupted or breached, up to \$3\.4B of business value is in the blast radius/);
+    expect(m.found).toMatch(/real gaps could be hiding here/); // the 0-gaps caveat
+    // who/what affected names the downstream + the most-actionable alternative
+    expect(m.affected).toMatch(/business services Financial Services delivers/);
+    expect(m.affected).toContain('Hybrid Cloud');
+    // why-now is risk-framed
+    expect(m.whyNow).toMatch(/loss potential in its most critical area/);
     // driver-aware action: validate basis (not "close 0 gaps")
     expect(m.action).toMatch(/Validate Financial Services.+exposure basis/);
     expect(m.action).not.toMatch(/remediate its 0 open control gaps/);
