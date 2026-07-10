@@ -5373,21 +5373,24 @@ function c5ViewDoc(fname){
     var panel='<div style="font-size:12px;color:var(--ink-2);margin-bottom:12px;line-height:1.5"><b style="color:var(--good)">'+met.length+'</b> requirement'+(met.length===1?'':'s')+' evidenced · <b style="color:var(--warn)">'+gaps.length+'</b> gap'+(gaps.length===1?'':'s')+' — the auditor call-outs Nerion recorded for this document.</div>'+
       (met.length?('<div style="font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--good);margin:4px 0 8px">✓ Evidenced requirements</div>'+met.map(metItem).join('')):'')+
       (gaps.length?('<div style="font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--warn);margin:14px 0 8px">⚠ Gaps — expected, not found</div>'+gaps.map(gapItem).join('')):'')+
-      ((!met.length&&!gaps.length)?'<div style="font-size:12.5px;color:var(--muted)">No stored review annotations for this document yet — run the document review to generate them.</div>':'');
+      ((!met.length&&!gaps.length)?('<div style="font-size:12.5px;color:var(--ink-2);line-height:1.6">The document text is on file, but Nerion hasn’t recorded attribute-level review notes for it yet, so there are no highlights to show. This happens when a policy was uploaded but not run through the analyst-grade review (or was matched by keyword only, without evidence quotes).</div>'+((typeof window!=='undefined'&&typeof window.reanalyzeStoredDocs==='function')?('<button type="button" id="c5annReanalyze" style="margin-top:12px;border:1px solid var(--line);background:var(--surface);color:var(--blue);font-weight:600;font-size:12.5px;padding:8px 14px;border-radius:8px;cursor:pointer">↻ Run document review to generate annotations</button>'):'<div style="margin-top:10px;font-size:11.5px;color:var(--muted)">Re-upload and analyse this policy in onboarding to generate its annotations.</div>')):'');
     wrap.innerHTML='<div style="width:min(1160px,96vw);max-height:92vh;display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 24px 60px rgba(20,33,72,.45);overflow:hidden">'+
       '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line);background:var(--surface-2)">'+
         '<div style="min-width:0;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><b style="font-family:var(--serif);font-size:15px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📄 '+c5esc(fname)+'</b><span style="font-size:10px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--blue);background:color-mix(in srgb,var(--blue) 12%,var(--surface));border:1px solid color-mix(in srgb,var(--blue) 30%,transparent);border-radius:20px;padding:2px 9px">✦ Auditor-annotated</span></div>'+
         '<button type="button" id="c5docViewerClose" style="flex:none;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 13px;font-weight:600;font-size:12.5px;cursor:pointer">Close</button>'+
       '</div>'+
-      '<div style="display:flex;min-height:0;flex:1;flex-wrap:wrap">'+
-        '<div style="flex:1.7;min-width:300px;overflow:auto;padding:16px 20px;border-right:1px solid var(--line)">'+docCol+'</div>'+
-        '<div style="flex:1;min-width:280px;max-width:440px;overflow:auto;padding:14px 16px;background:var(--surface-2)">'+panel+'</div>'+
+      '<div style="display:flex;flex:1 1 auto;min-height:0">'+
+        '<div style="flex:1.7 1 0;min-width:0;min-height:0;overflow-y:auto;padding:16px 20px;border-right:1px solid var(--line)">'+docCol+'</div>'+
+        '<div style="flex:1 1 0;min-width:260px;max-width:440px;min-height:0;overflow-y:auto;padding:14px 16px;background:var(--surface-2)">'+panel+'</div>'+
       '</div>'+
     '</div>';
     document.body.appendChild(wrap);
     function close(){if(wrap.parentNode)wrap.parentNode.removeChild(wrap);}
     wrap.addEventListener('click',function(e){if(e.target===wrap)close();});
     var cb=document.getElementById('c5docViewerClose');if(cb)cb.onclick=close;
+    // Empty-state: let the user generate the annotations by re-running the review, then reopen.
+    var _rz=document.getElementById('c5annReanalyze');
+    if(_rz)_rz.onclick=function(){_rz.disabled=true;_rz.textContent='↻ Reviewing…';try{window.reanalyzeStoredDocs(function(){try{c5ViewDoc(fname);}catch(_){}});}catch(_){_rz.disabled=false;}};
     // Click a highlight → reveal its margin note; click a margin note → jump to the highlight.
     function flash(el){if(!el)return;try{el.scrollIntoView({behavior:'smooth',block:'center'});}catch(_){el.scrollIntoView();}var o=el.style.boxShadow;el.style.transition='box-shadow .25s';el.style.boxShadow='0 0 0 2px var(--good)';setTimeout(function(){el.style.boxShadow=o;},1400);}
     wrap.querySelectorAll('mark.c5ann').forEach(function(mk){mk.onclick=function(){flash(document.getElementById('c5annp-'+mk.getAttribute('data-annidx')));};});
