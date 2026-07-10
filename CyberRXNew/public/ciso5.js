@@ -2811,23 +2811,51 @@ function c5covBar(){
   if(!(lim>0&&tail>0))return '<div class="c5note">◐ Connect your policy record and risk model to see cover vs the modeled tail.</div>';
   var covp=Math.min(100,Math.round(lim/tail*100)),gp=Math.max(0,100-covp);
   return '<div style="margin-top:14px"><div style="display:flex;height:34px;border-radius:8px;overflow:hidden;border:1px solid var(--line)">'+
-    '<div data-c5m="cf_ins_limit" style="width:'+covp+'%;background:rgba(46,139,107,.85);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;cursor:pointer">Insured '+usd(lim)+'</div>'+
-    (gp>0?('<div data-c5m="cf_ins_gap" style="width:'+gp+'%;background:rgba(201,162,39,.9);color:#3a2c00;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;cursor:pointer">Gap '+usd(tail-lim)+'</div>'):'')+
-    '</div><div class="c5foot">Full bar = '+usd(tail)+' modeled tail loss</div></div>';
+    '<div data-c5m="cf_ins_limit" style="width:'+covp+'%;background:rgba(46,139,107,.85);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;cursor:pointer">Transferred to insurer — '+usd(lim)+'</div>'+
+    (gp>0?('<div data-c5m="cf_ins_gap" style="width:'+gp+'%;background:rgba(201,162,39,.9);color:#3a2c00;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;cursor:pointer">Retained by company — '+usd(tail-lim)+'</div>'):'')+
+    '</div><div class="c5foot">Full bar = '+usd(tail)+' modeled 1-in-20 cyber loss.</div></div>';
 }
 function c5cfInsurance(){
   var host=document.getElementById('cf-insurance');if(!host)return;
-  var gap=c5get('cf_ins_gap'),ec=c5get('exp_identity');var hasGap=gap.connected&&gap.color==='warn'; // a real uninsured shortfall (tail > limit)
+  var demo=(typeof signalsAreDemo==='function')&&signalsAreDemo();
+  var tailM=c5get('cf_tail'),limM=c5get('cf_ins_limit'),gap=c5get('cf_ins_gap'),ec=c5get('exp_identity');
+  var hasGap=gap.connected&&gap.color==='warn';
+  var tailV=tailM.connected?tailM.displayValue:'—',limV=limM.connected?limM.displayValue:'—',gapV=gap.connected?gap.displayValue:'—';
+  // Premium — hide the implausible $B-vs-$M slip; show Not connected until a credible value exists.
+  var pins=(typeof LIVE!=='undefined'&&LIVE&&LIVE.economics&&LIVE.economics.insurance)||{};
+  var pv=Number(pins.premium)||0,plim=Number(pins.limit)||0,ptail=(typeof LIVE!=='undefined'&&LIVE&&LIVE.economics&&Number(LIVE.economics.tail))||0;
+  var pImpl=pv>0&&((plim>0&&pv>=plim)||(plim<=0&&ptail>0&&pv>ptail));
+  var premUsable=pv>0&&!pImpl;
+  function cfCard(t,v,badge,badgeCls,sub,col,mid){return '<div class="c5card"'+(mid?(' data-c5m="'+mid+'"'):'')+' style="min-width:200px"><div class="c5card-top"><span class="c5card-l">'+t+'</span><span class="c5pill '+(badgeCls||'n')+'" style="font-size:9px">'+badge+'</span></div><div class="c5card-v" style="color:var(--'+(col||'ink')+')">'+c5esc(String(v))+'</div><div class="c5esub" style="font-size:11px;color:var(--muted);margin-top:2px">'+c5esc(sub)+'</div></div>';}
+  // Evidence confidence — policy terms not connected ⇒ never High; self-reported limit + demo cap it too.
+  var evSrcs=[
+    {label:'Tail-loss model',connected:tailM.connected,critical:true,computed:true},
+    {label:'Insurance policy record',connected:limM.connected,critical:false,partial:true},
+    {label:'Policy limit',connected:limM.connected,critical:false,partial:true},
+    {label:'Annual premium',connected:premUsable,critical:false},
+    {label:'Exclusions / sublimits / retention',connected:false,critical:true,partial:true},
+    {label:'Business-interruption cover',connected:false,critical:false,partial:true},
+    {label:'Largest tail driver',connected:ec.connected,critical:false,computed:true}
+  ];
+  var evConf=(typeof TrustLogic!=='undefined')?TrustLogic.evidenceConfidence(evSrcs):{level:'—'};
+  var evLevel=demo?'Demo':evConf.level;
+  var evPanel=c5EvLine(evLevel,'tail loss is modeled, insurance limit is self-reported, and policy terms require review.',evSrcs,demo);
   host.innerHTML=c5header()+
-    c5shell('Insurance & risk transfer · are we covered efficiently?',(hasGap?'Covered for the everyday — watch the tail.':'The modeled tail is fully insured.'),null,'Your policy covers a limit against the modeled tail; any shortfall is retained on the balance sheet. You can transfer more (raise the limit) or reduce the tail. Every figure traces to the model and your policy record.')+
-    '<div class="c5cards">'+c5card('cf_tail')+c5card('cf_ins_limit')+c5card('cf_ins_gap')+'</div>'+
-    c5covBar()+
-    '<div class="c5tiles" style="margin-top:16px">'+
-      c5tile('cf_premium','g','Renewal leverage','Annual policy cost · renewal is a lever')+
-      c5tile('exp_identity','a','Tail driver','Largest single contributor to the tail')+
+    c5shell('Insurance & risk transfer · are we insured efficiently?',(hasGap?('Insurance covers most modeled tail loss, but '+gapV+' remains retained.'):(gap.connected?'The modeled tail is transferred — the efficient move is reducing the tail.':'Connect your policy record and risk model to size cover against the tail.')),null,'Your policy transfers '+limV+' of the modeled 1-in-20 cyber loss scenario. The remaining '+gapV+' stays on the balance sheet unless you reduce the tail or buy additional coverage.')+
+    '<div class="c5cards">'+
+      cfCard('Modeled 1-in-20 cyber loss',tailV,'Modeled','a','Modeled cyber loss scenario at 5% annual probability.','warn','cf_tail')+
+      cfCard('Transferred to insurer',limV,(demo?'Demo':'Self-reported'),(demo?'n':'n'),'Cyber insurance limit available for the modeled scenario.','ink','cf_ins_limit')+
+      cfCard('Retained exposure',gapV,'Computed','a','Modeled tail loss retained by the company after insurance.','warn','cf_ins_gap')+
     '</div>'+
-    c5bl('Bottom line',(hasGap?'Close the gap two ways — buy up, or reduce the tail.':'Fully covered — the efficient move is reducing the tail.'),null,(hasGap?('Raise the limit by '+gap.displayValue+', or reduce the tail by closing the identity gap — its largest driver. Reducing the tail is typically cheaper than the extra premium.'):(gap.connected?'Your limit already covers the modeled tail, so there is no uninsured shortfall. The efficient move is reducing the tail — closing the identity gap, its largest driver — which can lower the cover and premium you need at renewal.':'Connect your policy record and risk model to size cover against the tail.')),{mid:'exp_identity',txt:'Reduce the tail — fund identity'},{mid:'cf_ins_gap',txt:'Model buying up cover'})+
-    '<div class="c5foot">Cover vs. modeled tail; premium and limits from your policy record.</div>';
+    c5covBar()+
+    '<div class="c5cards" style="margin-top:14px">'+
+      cfCard('Annual premium',(premUsable?(usd(pv)+' / yr'):'Not connected'),(premUsable?(demo?'Demo':'Self-reported'):'Premium data needed'),(premUsable?'n':'n'),(premUsable?'Annual cyber policy cost · renewal is a lever.':'Connect policy premium and renewal data.'),(premUsable?'ink':'muted'),premUsable?'cf_premium':null)+
+      cfCard('Coverage terms review','Needs review','Policy terms not connected','a','Exclusions, sublimits, retention, waiting periods, ransomware, business interruption, dependent-BI and vendor/supply-chain coverage need review.','warn')+
+      cfCard('Largest tail driver',(ec.connected?(ec.displayValue+' modeled exposure'):'—'),'Tail driver','a','Customer-platform identity risk is the largest contributor to the modeled tail.','warn','exp_identity')+
+    '</div>'+
+    evPanel+
+    c5bl('Bottom line',(hasGap?('Modeled 1-in-20 cyber loss is '+tailV+'; insurance transfers '+limV+', leaving '+gapV+' retained.'):'The modeled tail is transferred — reduce the tail to improve efficiency.'),null,'The fastest way to improve efficiency is to reduce the largest tail driver — customer-platform identity risk — before buying more coverage. Fund identity remediation to reduce the tail, or model additional coverage if retained exposure remains outside appetite.',{mid:'exp_identity',txt:'Fund identity remediation'},{mid:'cf_ins_gap',txt:'Model additional coverage'})+
+    '<div class="c5foot">Cover vs. modeled tail; limits and premium are self-reported from your policy record'+(demo?' — values shown are demo.':'.')+'</div>';
 }
 /* Tab 04 — Cost optimization */
 function c5cfCost(){
