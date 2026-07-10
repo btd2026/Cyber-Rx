@@ -3556,6 +3556,66 @@ function c5ceHealth(){
     '<div class="c5foot">Figures are governance-grade and traceable to source.</div>';
 }
 /* Tab 02 — Strategic risk */
+/* CEO 01 — Value at risk. Cyber value against enterprise value/strategy: the strategic
+   objectives exposed and the crown-jewel revenue engine behind most of it. Board-ready. */
+function c5ceValue(){
+  var host=document.getElementById('ce-value');if(!host)return;
+  var demo=(typeof signalsAreDemo==='function')&&signalsAreDemo();
+  var O=c5Objectives(),M=c5expModel(),IDF=c5IdFix();var expT=c5get('exp_total');
+  var atN=O.atRisk||0,total=O.total||0,safeN=(O.protected!=null?O.protected:(total-atN));
+  var rev=(typeof LIVE!=='undefined'&&LIVE&&LIVE.economics&&Number(LIVE.economics.revenue))||0;
+  var pctRev=(rev>0&&M.total>0)?((M.total/rev*100).toFixed(2)+'% of revenue'):null;
+  var head=(atN>0)?('Cyber puts '+(expT.connected?expT.displayValue:'modeled value')+' of enterprise value at risk — concentrated in '+atN+' strategic objective'+(atN===1?'':'s')+', led by the customer platform.'):'Cyber is protecting enterprise value this quarter — no strategic objective carries a material exposure.';
+  var support='Your cyber value at risk on one scale, the strategic objectives it touches, and the crown-jewel revenue engine behind most of it. '+(pctRev?('That is about '+pctRev+'. '):'')+'Each figure traces to your own data.';
+  // objectives matrix — per-objective drill (data-c5obj wired globally)
+  var rows=O.objs.map(function(o,i){var pill=o.status==='at risk'?'a':o.status==='watch'?'b':'g';var pt=o.status==='at risk'?'At risk':o.status==='watch'?'Watch':'Safe';
+    return '<div class="c5prow" data-c5obj="'+i+'" style="cursor:pointer"><span class="c5sq '+(o.c==='warn'?'a':o.c==='blue'?'b':'g')+'" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">'+c5esc(o.name)+'</div><div class="c5row-s">'+c5esc(o.sub)+'</div></div><span class="c5pill '+pill+'" style="flex:none">'+pt+'</span></div>';
+  }).join('');
+  var matrix='<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:16px 0 8px"><span style="font-size:12.5px;font-weight:600;color:var(--ink)">Strategic objectives — cyber value at risk</span><span style="font-size:11px;color:var(--muted)">'+safeN+' of '+total+' clear</span></div><div class="c5card" style="padding:2px 14px">'+rows+'</div>';
+  var sep='<span style="color:var(--line)">·</span>';
+  var strip='<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-top:14px;padding:12px 16px;border-radius:12px;background:var(--surface-2)">'+
+    '<span style="font-size:12px;color:var(--ink-2);font-weight:600">The one lever:</span>'+
+    '<span style="font-size:12.5px;color:var(--crit);font-weight:600">the '+IDF.short+' gap</span>'+sep+
+    '<span style="font-size:12px;color:var(--muted)">drives most of the value at risk</span>'+sep+
+    '<span style="font-size:12px;color:var(--muted)">'+(IDF.usd?(IDF.usd+' treatable'):'funded fix')+'</span><span class="c5pill n" style="font-size:9px">Modeled</span></div>';
+  var evSrcs=[{label:'Exposure model (value at risk)',connected:expT.connected},{label:'Strategy intake (objectives)',connected:O.fromInput},{label:'Revenue / financials',connected:rev>0},{label:'Identity exposure model',connected:c5get(IDF.mid).connected}];
+  var connN=evSrcs.filter(function(s){return s.connected;}).length;
+  host.innerHTML=c5header()+
+    c5shell('Cyber value at risk · what could it cost the business?',head,(atN>0?'warn':null),support)+
+    '<div class="c5cards">'+c5card('exp_total')+c5card('ceo_objectives')+c5card('cf_appetite')+'</div>'+
+    matrix+
+    strip+
+    c5bl('The decision','Protect enterprise value — fund the one fix behind most of it.',null,(IDF.usd?('The '+IDF.short+' gap drives most of the value at risk and the exposed objectives converge on it. Funding the fix ('+IDF.usd+' · '+IDF.owner+' · '+IDF.timeline+') protects the customer platform, the growth-critical objective, and customer trust — one signature.'):'Connect your controls and the one exposure driving most of the value at risk — the customer-platform identity gap — surfaces here with its funded fix.'),{mid:IDF.mid,txt:'Approve the identity fix — protects value'})+
+    '<div class="c5foot">Value at risk from your exposure model; objectives from your strategy intake; every figure traces to source. · '+connN+' sources connected'+(demo?' · demo':'')+'</div>';
+}
+/* CEO 02 — Crown jewels. The critical revenue engines, their exposure and dependency on the
+   identity gap; concentration = actionability (fixing the top one moves the most value). */
+function c5ceCrown(){
+  var host=document.getElementById('ce-crown');if(!host)return;
+  var demo=(typeof signalsAreDemo==='function')&&signalsAreDemo();
+  var Scr=(typeof c5Services==='function')?c5Services():{list:[],total:0,atRisk:0};var IDF=c5IdFix();
+  var total=Scr.total||0,atR=Scr.atRisk||0;var top=(Scr.list&&Scr.list[0])||null;
+  var head=(atR>0)?('Your crown-jewel revenue engines are protected — except the customer platform, whose exposure traces to the '+IDF.short+' gap.'):(total>0?'Every crown-jewel revenue engine is protected this quarter.':'Map your crown jewels in onboarding to see the revenue engines and their exposure.');
+  var support='The systems that run the revenue — each crown jewel, its status, and its dependency on the shared '+IDF.short+' controls. Concentration is the good news: fixing the one at-risk engine moves the most value. Each traces to its register.';
+  var rows=(Scr.list||[]).map(function(x){var risk=(x.status==='At risk');var mid=risk?IDF.mid:'er_crown';
+    return '<div class="c5prow" data-c5m="'+mid+'" style="cursor:pointer"><div style="flex:1;min-width:0"><div class="c5row-t">'+c5esc(x.name)+(x.tier?(' <span class="c5tag">'+c5esc(x.tier)+'</span>'):'')+'</div><div class="c5row-s">'+c5esc(x.sub||(risk?('depends on the '+IDF.short+' controls'):'protected'))+'</div></div><span class="c5pill '+(risk?'a':'g')+'" style="flex:none">'+c5esc(x.status||'Secure')+'</span></div>';
+  }).join('')||'<div class="c5prow"><div style="flex:1"><div class="c5row-s">Map your crown-jewel register to list the revenue engines here.</div></div></div>';
+  var matrix='<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:16px 0 8px"><span style="font-size:12.5px;font-weight:600;color:var(--ink)">Crown-jewel revenue engines — exposure and dependency</span><span style="font-size:11px;color:var(--muted)">'+atR+' of '+total+' at greatest risk</span></div><div class="c5card" style="padding:2px 14px">'+rows+'</div>';
+  var sep='<span style="color:var(--line)">·</span>';
+  var strip='<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-top:14px;padding:12px 16px;border-radius:12px;background:var(--surface-2)">'+
+    '<span style="font-size:12px;color:var(--ink-2);font-weight:600">Concentration:</span>'+
+    '<span style="font-size:12.5px;color:var(--crit);font-weight:600">'+atR+' of '+total+' engines carry the material path</span>'+sep+
+    '<span style="font-size:12px;color:var(--muted)">both trace to the '+IDF.short+' gap</span><span class="c5pill n" style="font-size:9px">Computed</span></div>';
+  var evSrcs=[{label:'Crown-jewel register',connected:total>0},{label:'Per-asset exposure',connected:total>0},{label:'Identity dependency model',connected:c5get(IDF.mid).connected}];
+  var connN=evSrcs.filter(function(s){return s.connected;}).length;
+  host.innerHTML=c5header()+
+    c5shell('Crown jewels · which revenue engines are exposed?',head,(atR>0?'warn':null),support)+
+    '<div class="c5cards">'+c5card('er_crown')+c5card('ceo_objectives')+c5card(IDF.mid)+'</div>'+
+    matrix+
+    strip+
+    c5bl('The decision','Fix the one engine that carries the concentrated exposure.',null,(IDF.usd?('The concentration is actionable: the '+atR+' at-risk revenue engine'+(atR===1?'':'s')+' depend'+(atR===1?'s':'')+' on the '+IDF.short+' controls. Funding the fix ('+IDF.usd+' · '+IDF.owner+') de-risks the top revenue engine in one move.'):'Connect your controls and the crown jewel carrying the concentrated exposure surfaces here with its funded fix.'),{mid:IDF.mid,txt:'Approve the identity fix — de-risks the top engine'})+
+    '<div class="c5foot">Crown jewels from your register; exposure from the risk model; identity dependency from the control model. · '+connN+' sources connected'+(demo?' · demo':'')+'</div>';
+}
 function c5ceStrategic(){
   var host=document.getElementById('ce-strategic');if(!host)return;
   var O=c5Objectives();
@@ -3634,8 +3694,14 @@ function c5ceTrust(){
   var ans=(typeof TrustLogic!=='undefined')?TrustLogic.trustAnswer(TI):'';
   var blHead=(typeof TrustLogic!=='undefined')?TrustLogic.bottomLineHead(TI):'Customer trust';
   var demo=(typeof signalsAreDemo==='function')&&signalsAreDemo();
+  var disc=c5get('ceo_disclosures');var reportable=disc.connected?disc.displayValue:'—';var sep='<span style="color:var(--line)">·</span>';
+  var strip='<div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-top:14px;padding:12px 16px;border-radius:12px;background:var(--surface-2)">'+
+    '<span style="font-size:12px;color:var(--ink-2);font-weight:600">Disclosure readiness:</span>'+
+    '<span style="font-size:12.5px;color:var(--'+(reportable==='0'?'good':'warn')+');font-weight:600">'+(disc.connected?(reportable+' reportable events'):'connect SIEM + materiality')+'</span>'+sep+
+    '<span style="font-size:12px;color:var(--muted)">SEC material-incident 8-K clock: 4 business days</span>'+sep+
+    '<span style="font-size:12px;color:var(--muted)">peer posture: on par</span><span class="c5pill n" style="font-size:9px">Live + illustrative</span></div>';
   host.innerHTML=c5header()+
-    c5shell('Brand & customer trust · are we protecting trust?',ans,null,'The one question: are customers protected, and can we prove it? Below — whether customers were affected, whether anyone had to be notified, the trust posture, the one exposure under watch, and how complete the evidence is. Every figure traces to its source.')+
+    c5shell('Trust & disclosure · are we protecting trust, and ready to disclose?',ans,null,'The one question: are customers protected, can we prove it, and could we disclose on the clock? Below — whether customers were affected, whether anyone had to be notified, trust posture, the exposure under watch, SEC disclosure readiness, and how complete the evidence is. Every figure traces to its source.')+
     (demo?'<div class="c5foot" style="color:var(--warn);margin:2px 0 6px">Demo data — some signals are sample values until your tools are connected.</div>':'')+
     '<div class="c5cards">'+c5card('ceo_cust_incidents')+c5card('ceo_disclosures')+c5card('ceo_trust_signal')+'</div>'+
     '<div class="c5tiles">'+
@@ -3643,8 +3709,9 @@ function c5ceTrust(){
       c5TrustRiskTile(ec)+
       c5TrustEvidence(TI)+
     '</div>'+
-    c5bl('Bottom line',blHead,null,'The risk is not an active breach; it is an unresolved '+TD.short+' exposure in the customer platform — the one thing that could put customer data or platform uptime, and the trust that depends on them, at risk. CEO action: approve or accelerate the customer-platform '+TD.short+' remediation plan. The fix is funded.',{mid:TD.mid,txt:'Approve '+c5esc(TD.short)+' remediation'})+
-    '<div class="c5foot">Incident, breach/privacy and identity-exposure figures trace to source; availability is not yet connected — see Evidence confidence.</div>';
+    strip+
+    c5bl('The decision',blHead,null,'The risk is not an active breach; it is an unresolved '+TD.short+' exposure in the customer platform — the one thing that could put customer data, platform uptime and the trust that depends on them at risk, and trigger a disclosable event. CEO action: approve or accelerate the customer-platform '+TD.short+' remediation plan. The fix is funded.',{mid:TD.mid,txt:'Approve '+c5esc(TD.short)+' remediation'})+
+    '<div class="c5foot">Incident, breach/privacy and identity-exposure figures trace to source; disclosure clock from the jurisdiction ruleset; peer posture illustrative. · see Evidence confidence.</div>';
 }
 /* "Top trust risk" tile — the identity exposure in plain business language, with the
    dollar figure always carrying a label that explains what it means. */
@@ -3713,12 +3780,17 @@ function c5ceDecisions(){
           cons:['Residual exposure remains.','May require board, legal, or risk review if material.','Requires a review date and rationale.'],
           consequence:'Creates a risk-acceptance record with rationale, owner and review date.',req:true,reqRisk:true}
       ],
-      meta)
+      meta),
+    // Decision 2 — the CEO's domain call: approve the board / disclosure narrative for cyber.
+    c5dec('ce',2,'Approve the board & disclosure narrative for cyber posture?','How cyber is characterized to the board (and, if an event turns material, in an SEC filing) is the CEO’s call — approve the plain-language posture, or ask for a change before it’s recorded.',
+      {on:'Approve the narrative — cyber is a managed, funded risk',osum:'board-ready, disclosure-aligned',pros:['Gives the board a defensible, consistent posture statement.','Aligns to the SEC material-incident (8-K, 4-business-day) framing so nothing is improvised under pressure.','Names the one funded action (the identity fix) as the risk owner’s plan.'],cons:['Commits you to the characterization on the record.','Should be re-approved if the posture materially changes.']},
+      [{on:'Request a change before recording',osum:'send back for revision',pros:['Lets you adjust tone or scope first.'],cons:['Delays a board-ready statement.']}])
   ];
   host.innerHTML=c5header()+
-    c5shell('Decisions for the CEO · what needs my sign-off?','The strategic cyber decision waiting on you: approve '+TD.short+' remediation now, defer it, or formally accept the residual exposure.',null,'No technical detail — just the business choice. Choosing an option records your decision, timestamp and rationale where required, keeps it editable for 24 hours, and triggers the appropriate workflow.')+
+    c5shell('Decisions for the CEO · what needs my sign-off?','One fix converges across the business — approve it, and approve how cyber is told to the board.',null,'No technical detail — just the business choice. Choosing an option records your decision, timestamp and rationale where required, keeps it editable for 24 hours, and triggers the appropriate workflow.')+
+    c5convergeStrip('ceo')+
     c5decisions(list)+
-    '<div class="c5foot">Choosing an option records your decision, timestamp, rationale where required, and triggers the appropriate workflow. Every figure traces to its basis'+(demo?' — values are modeled demo exposure.':'.')+'</div>';
+    '<div class="c5foot">Choosing an option records your decision, timestamp, rationale where required, and triggers the appropriate workflow · no AI/LLM at run-time'+(demo?' — values are modeled demo exposure.':'.')+'</div>';
 }
 
 /* ================= CRO seat — same engine, enterprise-risk lens ================= */
