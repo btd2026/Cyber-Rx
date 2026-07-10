@@ -115,4 +115,52 @@ describe('3 · reviewed documents can be opened and read', () => {
     expect(Object.prototype.hasOwnProperty.call(m, 'x.pdf')).toBe(false);
     delete global.localStorage;
   });
+  it('the viewer decodes a raw PDF stream into readable prose (c5PdfText)', () => {
+    expect(ciso).toContain('function c5PdfText(raw)');
+    expect(ciso).toContain('var txt=c5PdfText(c5DocTextMap()[fname]);'); // decode before display
+    const a = ciso.indexOf('function c5PdfText(');
+    const code = ciso.slice(a, ciso.indexOf('\nfunction c5ViewDoc'));
+    // eslint-disable-next-line no-eval
+    const c5PdfText = eval('(' + code.replace('function c5PdfText', 'function') + ')');
+    const pdf = '%PDF-1.4 1 0 obj << /Type /Font >> endobj stream '
+      + 'BT /F2 17 Tf 54 730 Td (Access Control Policy) Tj ET '
+      + 'BT /F1 10 Tf 54 674 Td (This policy applies to Hewlett Packard Enterprise \\(HPE\\).) Tj ET endstream';
+    const out = c5PdfText(pdf);
+    expect(out).toContain('Access Control Policy');
+    expect(out).toContain('This policy applies to Hewlett Packard Enterprise (HPE).');
+    expect(out).not.toContain('endobj');
+    expect(out).not.toContain(' Tj '); // no raw operators
+    expect(c5PdfText('plain readable text')).toBe('plain readable text'); // passthrough
+  });
+});
+
+describe('4 · Upload Final — the human-reviewed deck, with attribution', () => {
+  const cStart = ciso.indexOf('function c5FrameworksClassic(');
+  const classic = ciso.slice(cStart, ciso.indexOf('\nfunction ', cStart + 10));
+  it('the middle export button is "Upload Final" with a hidden file input', () => {
+    expect(classic).toContain('id="c5fwUploadFinalBtn"');
+    expect(classic).toContain('↥ Upload Final');
+    expect(classic).toContain('id="c5fwFinalFile"');
+    expect(classic).toContain('c5fwFinalMetaHtml()'); // attribution rendered under the buttons
+  });
+  it('stores who uploaded (CISO) and when, and records the file when small enough', () => {
+    expect(ciso).toContain('function c5fwStoreFinal(file)');
+    expect(ciso).toContain("by=(typeof c5CisoName==='function'&&c5CisoName())||'the CISO'");
+    expect(ciso).toContain('at:Date.now()');
+    expect(ciso).toContain('file.size<=3*1024*1024'); // keep the file only when it fits localStorage
+    expect(ciso).toContain("localStorage.setItem('cyberrx_fw_final'");
+  });
+  it('the attribution line shows uploader + timestamp + download/replace/remove', () => {
+    const a = ciso.indexOf('function c5fwFinalMetaHtml(');
+    const fn = ciso.slice(a, ciso.indexOf('\nfunction ', a + 10));
+    expect(fn).toContain('uploaded by <b');
+    expect(fn).toContain('fmtWhen');
+    expect(fn).toContain('id="c5fwFinalReplace"');
+    expect(fn).toContain('id="c5fwFinalRemove"');
+  });
+  it('the button + replace/remove are wired', () => {
+    expect(classic).toContain("getElementById('c5fwUploadFinalBtn')");
+    expect(classic).toContain('c5fwStoreFinal(f)');
+    expect(classic).toContain('c5fwFinalRemove()');
+  });
 });
