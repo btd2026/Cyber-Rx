@@ -1,0 +1,88 @@
+/**
+ * Guards for two Program-Health fixes (CyberRXNew/public/ciso5.js):
+ *  1. The "How N controls are evidenced" bar now includes the mapped (crosswalk)
+ *     category, so the segments sum to the total instead of leaving it looking empty.
+ *  2. Native frameworks (CIS / SOC 2 / HIPAA / ISO) no longer show a flat 0 when the
+ *     native engine has no results: a control the engine hasn't concluded falls back to
+ *     a clearly-labelled crosswalk READINESS score derived from the evidenced CSF
+ *     controls it maps to. Native results always take precedence.
+ */
+
+const fs = require('fs');
+const path = require('path');
+
+const src = fs.readFileSync(path.resolve(__dirname, '../../../CyberRXNew/public/ciso5.js'), 'utf8');
+function grab(n) { const a = src.indexOf('function ' + n + '('); return src.slice(a, src.indexOf('\nfunction ', a + 10)); }
+
+describe('evidence bar includes the mapped (crosswalk) category', () => {
+  it('the bar renders a mapped segment and legend entry when mapped>0', () => {
+    expect(src).toContain("(_sc.mapped?('<div style=\"width:'+_w(_sc.mapped)");
+    expect(src).toContain("(_sc.mapped?('<span><b style=\"color:var(--ink)\">'+_sc.mapped+'</b> mapped (crosswalk)</span>')");
+  });
+  it('c5fwSrcCounts still tallies mapped separately', () => {
+    expect(src).toContain("else if(v==='mapped')m++;");
+  });
+});
+
+describe('native frameworks fall back to crosswalk readiness (behavioral)', () => {
+  function load() {
+    global.c5fwMean = (arr) => (arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0);
+    global.controlCmmi = (id) => ({
+      'PR.AA-01': { score: 3.0, src: 'system' },
+      'PR.AA-02': { score: 4.0, src: 'document' },
+      'PR.AA-99': { score: 0, src: 'none' },
+    }[id] || { score: 0, src: 'none' });
+    // eslint-disable-next-line no-eval
+    return eval(grab('caNativeScore') + '\n' + grab('caCrosswalkScore') + '\n;({nat:caNativeScore,cw:caCrosswalkScore})');
+  }
+  const H = load();
+
+  // mirror the per-control decision in c5fwTree's native branch
+  function decide(nat, related) {
+    let sc = H.nat(nat); let status; let srcv; let tested; let readiness = false;
+    if (sc != null) { status = nat.assessment_status; srcv = 'native'; tested = true; }
+    else { const cw = H.cw(related); if (cw != null) { sc = cw; srcv = 'mapped'; status = 'Readiness (crosswalk)'; tested = true; readiness = true; } else { srcv = 'native-pending'; status = nat ? nat.assessment_status : 'Not Tested'; tested = false; } }
+    return { sc, src: srcv, status, tested, readiness };
+  }
+
+  it('crosswalk readiness = mean CMMI of the EVIDENCED mapped CSF controls', () => {
+    expect(H.cw(['PR.AA-01', 'PR.AA-02'])).toBe(3.5);
+  });
+  it('is null when none of the mapped CSF controls are evidenced', () => {
+    expect(H.cw(['PR.AA-99'])).toBeNull();
+  });
+  it('a control with no native result but evidenced map is counted as readiness (not 0)', () => {
+    const d = decide(null, ['PR.AA-01', 'PR.AA-02']);
+    expect(d.tested).toBe(true);
+    expect(d.src).toBe('mapped');
+    expect(d.readiness).toBe(true);
+    expect(d.sc).toBe(3.5);
+    expect(d.status).toBe('Readiness (crosswalk)');
+  });
+  it('still Not Tested when neither native nor mapped evidence exists', () => {
+    const d = decide(null, ['PR.AA-99']);
+    expect(d.tested).toBe(false);
+    expect(d.status).toBe('Not Tested');
+  });
+  it('native results always take precedence over the crosswalk fallback', () => {
+    const d = decide({ assessment_status: 'Effective' }, ['PR.AA-01']);
+    expect(d.src).toBe('native');
+    expect(d.sc).toBe(5);
+    expect(d.readiness).toBe(false);
+  });
+});
+
+describe('the fallback is labelled honestly (not presented as a native audit)', () => {
+  it('c5fwTree tags fallback controls src=mapped + readiness=true, native still wins', () => {
+    const a = src.indexOf('function c5fwTree(');
+    const fn = src.slice(a, src.indexOf('\nfunction ', a + 10));
+    expect(fn).toContain("if(sc!=null){ // the native engine concluded this control directly");
+    expect(fn).toContain("cw=caCrosswalkScore(it[2],cov)");
+    expect(fn).toContain("src='mapped';status='Readiness (crosswalk)';tested=true;readiness=true;");
+  });
+  it('the footnote explains the crosswalk-readiness fallback and that it is not a native audit', () => {
+    expect(src).toContain('fall back to a <b>crosswalk readiness</b> indicator');
+    expect(src).toContain('not</b> an independent native audit opinion');
+    expect(src).toContain('Native results always take precedence');
+  });
+});

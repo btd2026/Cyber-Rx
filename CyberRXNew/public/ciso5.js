@@ -4148,6 +4148,15 @@ function caNativeScore(nat){
   if(s==='Ineffective')return 0;
   return null;
 }
+/* Readiness fallback for a native-framework control the native engine hasn't concluded
+   yet: the mean CMMI of the EVIDENCED NIST CSF 2.0 controls it crosswalks to (from your
+   connected tools + reviewed documents). A readiness indicator — clearly labelled as
+   such, never an independent native audit opinion. null when none of the mapped CSF
+   controls are evidenced. */
+function caCrosswalkScore(ids,cov){
+  var s=[];(ids||[]).forEach(function(id){var cc=controlCmmi(id,cov);if(cc&&cc.src&&cc.src!=='none')s.push(cc.score);});
+  return s.length?c5fwMean(s):null;
+}
 function caStatusPill(status){
   var m={'Effective':['good','Effective'],'Partially Effective':['warn','Partial'],'Ineffective':['crit','Ineffective'],
     'Not Enough Evidence':['muted','Not enough evidence'],'Not Tested':['muted','Not tested'],
@@ -4246,12 +4255,16 @@ function c5fwTree(sel,cov){
       var ctls=items.map(function(it){
         catalogTotal++;
         var nat=caFw?caFw[it[0]]:null;
-        var sc=caNativeScore(nat);
-        var status=nat?nat.assessment_status:'Not Tested';
-        var src=nat?'native':'native-pending';
-        var tested=(sc!=null);
+        var sc=caNativeScore(nat),status,src,tested,readiness=false;
+        if(sc!=null){ // the native engine concluded this control directly — always wins
+          status=nat.assessment_status;src='native';tested=true;
+        } else { // fall back to a crosswalk READINESS score from the mapped CSF evidence
+          var cw=caCrosswalkScore(it[2],cov);
+          if(cw!=null){sc=cw;src='mapped';status='Readiness (crosswalk)';tested=true;readiness=true;}
+          else {src='native-pending';status=nat?nat.assessment_status:'Not Tested';tested=false;}
+        }
         if(tested){all.push(sc);evidenced++;}
-        return {type:'ctl',id:it[0],name:it[1],score:(sc==null?0:sc),tested:tested,status:status,src:src,related:(it[2]||[]),native:nat||null};
+        return {type:'ctl',id:it[0],name:it[1],score:(sc==null?0:sc),tested:tested,status:status,src:src,related:(it[2]||[]),native:nat||null,readiness:readiness};
       });
       var ts=ctls.filter(function(c){return c.tested;}).map(function(c){return c.score;});
       groups.push({type:'grp',id:gid,name:gname,score:c5fwMean(ts),children:ctls,rollup:ctls.map(function(c){return {id:c.id,score:c.score};})});
@@ -5012,11 +5025,13 @@ function c5FrameworksClassic(host){
       '<div style="display:flex;height:10px;border-radius:6px;overflow:hidden;background:var(--line)">'+
         '<div style="width:'+_w(_sc.sys)+';background:var(--good)"></div>'+
         '<div style="width:'+_w(_sc.doc)+';background:var(--blue)"></div>'+
+        (_sc.mapped?('<div style="width:'+_w(_sc.mapped)+';background:color-mix(in srgb,var(--blue) 42%,var(--surface))"></div>'):'')+
         '<div style="width:'+_w(_sc.none)+';background:color-mix(in srgb,var(--warn) 65%,var(--line))"></div>'+
       '</div>'+
       '<div style="display:flex;gap:18px;margin-top:9px;font-size:12px;color:var(--ink-2);flex-wrap:wrap">'+
         '<span><b style="color:var(--ink)">'+_sc.sys+'</b> live telemetry</span>'+
         '<span><b style="color:var(--ink)">'+_sc.doc+'</b> policy</span>'+
+        (_sc.mapped?('<span><b style="color:var(--ink)">'+_sc.mapped+'</b> mapped (crosswalk)</span>'):'')+
         '<span><b style="color:var(--ink)">'+_sc.none+'</b> not evidenced</span>'+
       '</div>'+
     '</div>'+
@@ -5044,7 +5059,7 @@ function c5FrameworksClassic(host){
     evBox+
     xnote+
     '<div class="c5fw-wrap"><div class="c5fw-right">'+tree+'</div><div class="c5fw-left" id="c5fw-detail">'+c5fwFinding(sel,selNode)+'</div></div>'+
-    '<div class="c5foot">CMMI 0 None · 1 Initial · 2 Managed · 3 Defined · 4 Quant. Managed · 5 Optimizing. Meets target ≥ '+C5FW_TARGET.toFixed(1)+' (green) · Observation ≥ '+C5FW_FLOOR+' (amber) · Deficiency &lt; '+C5FW_FLOOR+' (red).'+((sel==='cis'||sel==='soc2'||sel==='hipaa'||sel==='iso')?' '+((typeof FW_NAMES!=='undefined'&&FW_NAMES[sel])||'This framework')+' is assessed <b>framework-natively</b> — each control is concluded from its OWN machine-verifiable API evidence, never derived from the CSF assessment. Controls without that evidence are shown as “Not tested / Not enough evidence”, not scored. The CSF ids per control are related mappings for navigation only.':'')+(sel==='r53'?' NIST SP 800-53 Rev 5 is assessed by crosswalk from your CSF 2.0 assessment (a readiness indicator, per-family): the ~20 controls Nerion scores directly show 📄/🔌; the rest inherit their family’s governing-policy maturity.':'')+'</div>';
+    '<div class="c5foot">CMMI 0 None · 1 Initial · 2 Managed · 3 Defined · 4 Quant. Managed · 5 Optimizing. Meets target ≥ '+C5FW_TARGET.toFixed(1)+' (green) · Observation ≥ '+C5FW_FLOOR+' (amber) · Deficiency &lt; '+C5FW_FLOOR+' (red).'+((sel==='cis'||sel==='soc2'||sel==='hipaa'||sel==='iso')?' '+((typeof FW_NAMES!=='undefined'&&FW_NAMES[sel])||'This framework')+' is assessed <b>framework-natively</b> where the native engine has concluded a control — each such control comes from its OWN machine-verifiable evidence, never derived from the CSF assessment. Controls the native engine hasn’t concluded yet fall back to a <b>crosswalk readiness</b> indicator from your NIST CSF 2.0 evidence (your connected tools + reviewed documents) — a readiness estimate, <b>not</b> an independent native audit opinion; only controls with neither show “Not tested”. Native results always take precedence.':'')+(sel==='r53'?' NIST SP 800-53 Rev 5 is assessed by crosswalk from your CSF 2.0 assessment (a readiness indicator, per-family): the ~20 controls Nerion scores directly show 📄/🔌; the rest inherit their family’s governing-policy maturity.':'')+'</div>';
   // record cadence snapshot
   if(typeof fwRecord==='function'){try{fwRecord(T.overall);}catch(_){}}
   var _pb=document.getElementById('c5fwPeerBox');if(_pb)_pb.onclick=function(){c5fwPeerOpen();};
