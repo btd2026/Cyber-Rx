@@ -216,7 +216,23 @@ describe('6 · Open document viewer scrolls, and the empty state is actionable',
     expect(fn).toContain('id="c5annReanalyze"');
     expect(fn).toContain('Run document review to generate annotations');
   });
-  it('the generate button re-runs the review and reopens the viewer', () => {
-    expect(fn).toContain('window.reanalyzeStoredDocs(function(){try{c5ViewDoc(fname);}catch(_){}})');
+  it('the generate button re-runs the review, then reopens with annotations or explains the no-op', () => {
+    expect(fn).toContain('window.reanalyzeStoredDocs(function(nScores,nDocs){');
+    expect(fn).toContain('var a2=c5DocAnnotations(fname);');
+    expect(fn).toContain('c5ViewDoc(fname);return;'); // reopen when annotations appeared
+  });
+});
+
+describe('7 · "Run document review" gives real feedback (no silent no-op)', () => {
+  const a = ciso.indexOf('function c5ViewDoc(');
+  const fn = ciso.slice(a, ciso.indexOf('\nfunction ', a + 400));
+  it('after re-running, it checks whether annotations appeared', () => {
+    expect(fn).toContain('var a2=c5DocAnnotations(fname);');
+    expect(fn).toContain('if((a2.met&&a2.met.length)||(a2.gaps&&a2.gaps.length)){c5ViewDoc(fname);return;}');
+  });
+  it('if the engine produced no evidence, it says so plainly (not the same empty panel)', () => {
+    expect(fn).toContain('no attribute-level evidence');
+    expect(fn).toContain('analyst-grade (LLM) document review');
+    expect(fn).toContain("nDocs?(' ('+nDocs+' document'");
   });
 });

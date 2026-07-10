@@ -486,7 +486,16 @@ function c5get(id){
         return {name:nm,value:(v.score!=null?(v.score+'/100'):'—')+(v.service_criticality?(' · '+v.service_criticality+' service'):''),color:(v.color||capColor(v.score)),source:(svc?('open findings in '+svc):'security rating')};
       });
       if(sbom.length)rowsV.push({name:'Software components',value:sbomVuln+' critical vuln'+(sbomVuln===1?'':'s')+' across '+sbom.length+' component'+(sbom.length===1?'':'s'),color:(sbomVuln>0?'warn':'good'),source:'SBOM'});
+      // Executive risk narrative — what could go wrong, its consequence, what's affected,
+      // and the risk of not acting. Dynamic from the actual vendor data (worst rating,
+      // count at risk, SBOM vulns) — nothing hard-coded.
+      var _wN=worsttp?c5esc(worsttp.name):'',_wS=worsttp?worsttp.score:null;
+      var tpImpact=conn?('If one of your suppliers is breached or goes down, an attacker inherits a path into the services it supports — exposure you own but do <b>not</b> directly control.'+(worsttp?(' Your weakest link right now is <b>'+_wN+'</b> at '+_wS+'/100.'):'')+(sbomVuln>0?(' You also run <b>'+sbomVuln+'</b> software component'+(sbomVuln===1?'':'s')+' carrying critical vulnerabilities.'):'')):'';
+      var tpMeans=conn?((ntp>0?('<b>'+ntp+'</b> supplier'+(ntp>1?'s':'')+' sit below your risk bar'):'Suppliers are within your risk bar')+'. A compromise there could disrupt the business service it supports, or be used to reach your data — third-party risk you cannot patch yourself.'):'';
+      var tpAffected=conn?('The business services your flagged suppliers support'+(worsttp?(', starting with <b>'+_wN+'</b>'+(ntp>1?(' and '+(ntp-1)+' other'+(ntp-1>1?'s':'')):'')):'')+(sbomVuln>0?('; plus the software carrying '+sbomVuln+' critical vulnerabilit'+(sbomVuln===1?'y':'ies')):'')+'.'):'';
+      var tpWhyNow=conn?('Third-party compromise is a top breach vector — left unremediated, a single supplier incident becomes <b>your</b> incident and your residual risk keeps rising.'+(worsttp?(' Press <b>'+_wN+'</b> for a remediation plan and evidence before its renewal.'):'')):'';
       return c5obj({id:id,name:'Vendors requiring action',connected:conn,
+        impact:tpImpact,found:tpMeans,affected:tpAffected,whyNow:tpWhyNow,
         displayValue:conn?((ntp>0?(ntp+' vendor'+(ntp>1?'s':'')+' flagged'):'Vendors adequate')+(sbomVuln>0?(' · '+sbomVuln+' SBOM vuln'+(sbomVuln===1?'':'s')):'')):'—',
         label:(Vtp.p&&Vtp.p.any_live)?'live':'modeled',color:conn?((ntp>0||sbomVuln>0)?'warn':'good'):'muted',
         formula:'exposure = vendor rating / TPRM finding / SBOM vulnerable-component, each weighted by the criticality of the service it supports; ranked exposure-desc',
@@ -1866,9 +1875,10 @@ function c5ownerOf(m){if(m&&m.owner)return m.owner;var id=String((m&&m.id)||'');
    durable "why it matters"). */
 function c5impactText(m){if(m&&m.impact)return m.impact;if(!m||!m.connected)return 'Cannot be quantified until the source is connected — no confident conclusion yet.';return c5why(m)||('Bears on '+String((m&&m.name)||'this measure').toLowerCase()+'.');}
 /* Who / what is affected — m.affected override, else the top-ranked item, else the reading. */
-function c5affected(m){if(m&&m.affected)return m.affected;if(!m||!m.connected)return 'Not established yet — the source is not connected.';var r=m.ranking&&m.ranking[0];if(r&&r.itemName)return c5esc(r.itemName)+' (highest-ranked) and the items below it.';return 'The '+String((m&&m.name)||'measure').toLowerCase()+' shown above.';}
-/* Why it matters now — m.whyNow override, else the ranking rationale, else a severity read. */
-function c5whyNow(m){if(m&&m.whyNow)return m.whyNow;var wr=c5whyRanked(m);if(wr)return wr;if(!m||!m.connected)return 'It can’t be acted on until the evidence is connected.';return m.color==='crit'?'It is above the escalation line and needs a decision now.':m.color==='warn'?'It is elevated and should be addressed this cycle before it worsens.':m.color==='blue'?'It is within tolerance but worth monitoring on the current cadence.':'It is within target — no action pressure right now.';}
+function c5affected(m){if(m&&m.affected)return m.affected;if(!m||!m.connected)return 'Not established yet — the source is not connected.';var r=m.ranking&&m.ranking[0];if(r&&r.itemName)return c5esc(r.itemName)+' (highest-ranked) and the items below it — plus the business services they support.';return 'The systems and services behind '+String((m&&m.name)||'this measure').toLowerCase()+' (see key evidence).';}
+/* Why it matters now — m.whyNow override, else the ranking rationale, else a risk read
+   ("if we don't act, residual risk rises"). */
+function c5whyNow(m){if(m&&m.whyNow)return m.whyNow;var wr=c5whyRanked(m);if(wr)return wr;if(!m||!m.connected)return 'It can’t be acted on until the evidence is connected.';return m.color==='crit'?'Left unaddressed it is an open, escalating exposure — residual risk stays elevated until it is remediated, and a decision is needed now.':m.color==='warn'?'If it is not addressed this cycle the exposure persists and residual risk keeps rising toward the critical range.':m.color==='blue'?'It is within tolerance for now, but drift would raise residual risk — worth monitoring on the current cadence.':'It is within target — no material risk pressure right now.';}
 /* Decision rows — [label, text, color]. Always resolves to something explicit, including
    "No executive decision needed now". A threshold (m.decisionThreshold) is shown clearly. */
 function c5decisionRows(m){var rows=[];
@@ -5480,9 +5490,25 @@ function c5ViewDoc(fname){
     function close(){if(wrap.parentNode)wrap.parentNode.removeChild(wrap);}
     wrap.addEventListener('click',function(e){if(e.target===wrap)close();});
     var cb=document.getElementById('c5docViewerClose');if(cb)cb.onclick=close;
-    // Empty-state: let the user generate the annotations by re-running the review, then reopen.
+    // Empty-state: re-run the review, then either reopen with the new annotations or — if
+    // the engine returned no attribute-level evidence — say so plainly (instead of silently
+    // reopening to the same empty panel, which reads as "nothing happened").
     var _rz=document.getElementById('c5annReanalyze');
-    if(_rz)_rz.onclick=function(){_rz.disabled=true;_rz.textContent='↻ Reviewing…';try{window.reanalyzeStoredDocs(function(){try{c5ViewDoc(fname);}catch(_){}});}catch(_){_rz.disabled=false;}};
+    if(_rz)_rz.onclick=function(){
+      var host=_rz.parentNode;_rz.disabled=true;_rz.textContent='↻ Reviewing…';
+      function fail(msg){if(host)host.innerHTML='<div style="font-size:12.5px;color:var(--ink-2);line-height:1.6">'+msg+'</div>';}
+      if(typeof window.reanalyzeStoredDocs!=='function'){fail('The document-review engine isn’t available here. Re-upload and analyse this policy in onboarding to generate its annotations.');return;}
+      try{
+        window.reanalyzeStoredDocs(function(nScores,nDocs){
+          try{
+            var a2=c5DocAnnotations(fname);
+            if((a2.met&&a2.met.length)||(a2.gaps&&a2.gaps.length)){c5ViewDoc(fname);return;} // annotations appeared → reopen with them
+            fail('The review ran'+(nDocs?(' ('+nDocs+' document'+(nDocs===1?'':'s')+' re-scored)'):'')+' but produced <b>no attribute-level evidence</b> for this policy — so there are no highlights or gaps to show. '+
+              'The annotations come from Nerion’s <b>analyst-grade (LLM) document review</b>, which returns a quoted passage per requirement; a keyword-only match can’t produce quotes. Once that review engine is connected, re-run this and the highlights will appear here.');
+          }catch(_){fail('Couldn’t complete the review. Try again, or re-upload the policy in onboarding.');}
+        });
+      }catch(_){fail('Couldn’t start the review. Try again, or re-upload the policy in onboarding.');}
+    };
     // Click a highlight → reveal its margin note; click a margin note → jump to the highlight.
     function flash(el){if(!el)return;try{el.scrollIntoView({behavior:'smooth',block:'center'});}catch(_){el.scrollIntoView();}var o=el.style.boxShadow;el.style.transition='box-shadow .25s';el.style.boxShadow='0 0 0 2px var(--good)';setTimeout(function(){el.style.boxShadow=o;},1400);}
     wrap.querySelectorAll('mark.c5ann').forEach(function(mk){mk.onclick=function(){flash(document.getElementById('c5annp-'+mk.getAttribute('data-annidx')));};});
