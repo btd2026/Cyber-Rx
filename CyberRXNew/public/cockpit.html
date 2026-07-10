@@ -1606,8 +1606,28 @@ function resilienceDecision(q,intro){
     {tag:'B · Critical systems only',on:'Option B · Critical only',osum:'top systems',pros:['Protects the top revenue-critical systems','Half the capital of full modernization'],cons:['Lower-tier recovery stays slow','Removes only part of the tail']},
     {tag:'C · Defer',on:'Option C · Defer',osum:'$0 this year',pros:['Zero capital this year'],cons:['Worst-case recovery stays slow','Tail stays above appetite','Weakens the insurance-renewal position']}]};
 }
+/* CIO decisions — the two calls this seat actually owns: (1) the shared identity fix
+   (biggest architecture gap; secures the customer-data AI; the cross-cockpit SPOF), and
+   (2) standing up the AI governance framework (this seat's own call — not the COO's
+   recovery/failover decision). Cost/timeline/owner come from the shared c5IdFix config. */
+function identityFixDecision(){
+  var idf=(typeof c5IdFix==='function')?c5IdFix():{usd:null,timeline:'90–180 days',owner:'CISO / CIO',short:'identity'};
+  var usd=idf.usd;
+  return {n:1,q:'Fund the identity fix?',sit:'The customer platform’s identity and access model is the biggest architecture gap in the stack — it carries the concentrated critical vulns, gates the customer-data AI, and is the single point of failure across the cockpit. '+(usd?('Closing it clears about <b>'+usd+'</b> of modeled exposure. '):'')+liveTag()+' Owned '+idf.owner+' · '+idf.timeline+'. How do we proceed?',opts:[
+    {rec:true,tag:'A · Fund the identity fix now',on:'Option A · Fund now',osum:(usd?('clears '+usd):'closes the gap'),pros:['Consolidates the access model and removes the identity single point of failure','Secures the customer-data AI’s access to data in one move','Clears the concentrated critical-vuln exposure'],cons:['Requires capital this cycle — scoped with your team','A '+idf.timeline+' program']},
+    {tag:'B · Phase it — customer platform first',on:'Option B · Phase',osum:'highest-risk system first',pros:['Protects the customer platform (and its AI) first','Roughly half the capital up front'],cons:['The rest of the estate keeps the fragmented access model','Full blast-radius control arrives later']},
+    {tag:'C · Defer / accept & monitor',on:'Option C · Defer',osum:'$0 this year',pros:['No capital this year'],cons:['The identity gap stays the top architecture risk','Customer-data AI keeps relying on the gap','Requires a documented risk-acceptance']}]};
+}
+function aiGovernanceDecision(){
+  var g=(typeof LIVE!=='undefined'&&LIVE&&LIVE.aiRisk&&LIVE.aiRisk.governance)||{};
+  var frameworkInPlace=/nist|iso|rmf/i.test(g.framework||'');
+  return {n:2,q:'Stand up the AI governance framework?',sit:'AI is inventoried and guardrailed in practice, but a formal governance framework '+(frameworkInPlace?'is in place':'is not in place yet')+' — so “under governance” is asserted, not provable, and the high-risk customer-facing use carries EU AI Act obligations. How do we make governance provable?',opts:[
+    {rec:true,tag:'A · Adopt a framework + EU AI Act mapping',on:'Option A · Formalize',osum:'provable governance',pros:['Adopts a recognized framework (NIST AI RMF / ISO 42001) with an acceptable-use policy','Maps each system to its EU AI Act risk class and verifies the inventory (incl. shadow AI)','Applies heightened controls to the high-risk use — documented oversight, logging, conformity evidence'],cons:['Policy + mapping effort this quarter','Ongoing conformity upkeep as AI use grows']},
+    {tag:'B · Guardrails only, formalize later',on:'Option B · Guardrails only',osum:'no framework yet',pros:['No governance-program cost today','Operational guardrails already reduce day-to-day risk'],cons:['“Under governance” stays unprovable','EU AI Act obligations on the high-risk use go unmet','Shadow AI stays unverified']},
+    {tag:'C · Restrict high-risk AI until governed',on:'Option C · Restrict',osum:'pause the high-risk use',pros:['Removes the unmanaged high-risk exposure immediately'],cons:['Cuts a customer-facing capability','Doesn’t build the durable governance the rest of the estate needs']}]};
+}
 function renderCioDecision(){var host=document.getElementById('cioDecision');if(!host)return;
-  host.innerHTML=decisions([resilienceDecision('How much recovery resilience do we fund?','The systems that carry the business and their recovery times drive most of the worst-case tail.')]);wireChoose();}
+  host.innerHTML=decisions([identityFixDecision(),aiGovernanceDecision()]);wireChoose();}
 function renderCooDecision(){var host=document.getElementById('cooDecision');if(!host)return;
   host.innerHTML=decisions([resilienceDecision('How do we keep operations running through a disruption?','Continuity turns on how fast critical services recover and whether a single vendor is a point of failure.')]);wireChoose();}
 /* CLO — how to run disclosure & notification, framed on the live materiality
