@@ -22,9 +22,10 @@ var SEATS = {
   sub:'Every figure opens to its basis, inputs and source, and the shared numbers reconcile exactly across seats.',
   brief:'In plain terms, cyber is protecting growth this quarter, not slowing it. Six of your seven strategic objectives are clear; only the customer platform carries a real exposure — an identity gap — and its fix is already scoped and funded. Modeled loss sits inside the board’s appetite, customer trust is intact, and one decision is worth your signature now. Every figure is your own data, and it reconciles with what your CISO and CFO see.',
   body:function(){return (
-   sec('01','Which of our objectives are exposed?','','<div id="ce-strategic"></div>')
-   +sec('02','Are we protecting customer trust?','','<div id="ce-trust"></div>')
-   +sec('03','What needs my sign-off?','','<div id="ceo-asks"></div><div id="ce-decisions"></div>')
+   sec('01','What is our cyber value at risk?','','<div id="ce-value"></div>')
+   +sec('02','Which crown jewels are exposed?','','<div id="ce-crown"></div>')
+   +sec('03','Are we protecting trust — and ready to disclose?','','<div id="ce-trust"></div>')
+   +sec('04','What needs my sign-off?','','<div id="ceo-asks"></div><div id="ce-decisions"></div>')
   );}
  },
 
