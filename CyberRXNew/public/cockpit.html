@@ -777,7 +777,17 @@ function bars(a){return '<div class="card">'+a.map(function(r){return '<div clas
 function lists(a){return '<div class="card">'+a.map(function(r){return '<div class="list-row"><div class="lic '+r.c+'">'+r.ic+'</div><div class="ltxt'+(r.ev?' claim" data-ev="'+r.ev:'')+'"><b>'+r.t+'</b>'+(r.ev?' <span class="fx">ƒ</span>':'')+'<span class="s">'+r.s+'</span></div></div>';}).join('')+'</div>';}
 function kvcard(title,rows){return '<div class="card"><div class="ck">'+title+'</div>'+rows.map(function(r){return '<div style="display:flex;justify-content:space-between;gap:12px;font-size:13px;padding:9px 0;border-bottom:1px solid var(--line)"><span style="color:var(--muted)">'+r.k+'</span><span style="font-weight:600;text-align:right'+(r.cls?';color:var(--'+r.cls+')':'')+'"'+(r.ev?' class="claim" data-ev="'+r.ev+'"':'')+'>'+r.v+(r.ev?' <span class="fx">ƒ</span>':'')+'</span></div>';}).join('')+'</div>';}
 function jtable(rows){return '<div class="card"><table class="tbl"><thead><tr><th>Jurisdiction</th><th>Obligation</th><th>Clock</th><th>Max penalty</th></tr></thead><tbody>'+rows.map(function(r){return '<tr><td'+(r.ev?' class="claim" data-ev="'+r.ev+'"':'')+'><span class="flag">'+r.flag+'</span>'+r.c+(r.ev?' <span class="fx">ƒ</span>':'')+'</td><td>'+r.o+'</td><td><span class="tag '+r.cc+'">'+r.clock+'</span></td><td style="font-weight:600">'+r.pen+'</td></tr>';}).join('')+'</tbody></table></div>';}
-function decisions(a){return a.map(function(d){return '<div class="decision" data-dec="'+d.n+'"><div class="dh"><span class="dn">Decision '+d.n+' ·</span>'+d.q+'</div><div class="dsit">'+d.sit+'</div><div class="opts">'+d.opts.map(function(o){return '<div class="opt'+(o.rec?' rec':'')+'">'+(o.rec?'<div class="orec">Recommended</div>':'')+'<div class="on">'+o.on+'</div><div class="osum">'+o.osum+'</div><div class="pc"><div class="lbl p">Pros</div><ul>'+o.pros.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul><div class="lbl c">Cons</div><ul>'+o.cons.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul></div><button class="choose'+(o.rec?'':' gh')+'" data-dec="'+d.n+'" data-title="'+d.q.replace(/"/g,'')+'" data-opt="'+o.tag+'" data-osum="'+String(o.osum||'').replace(/"/g,'')+'">Choose &amp; record</button></div>';}).join('')+'</div>'+
+function decisions(a){return a.map(function(d){
+  var m=d.meta||null;
+  var metaStrip=m?('<div class="dsit" style="display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px">'+[
+    (m.recommendation?('<span><b>Recommended:</b> '+m.recommendation+'</span>'):''),
+    (m.modeledExposure?('<span>'+(m.exposureLabel||'Modeled exposure')+': <b>'+m.modeledExposure+'</b></span>'):''),
+    (m.evidenceConfidence?('<span>Evidence confidence: <b>'+m.evidenceConfidence+'</b></span>'):''),
+    (m.dueDate?('<span>Due: '+m.dueDate+'</span>'):''),
+    (m.requestedBy?('<span>Requested by '+m.requestedBy+'</span>'):'')
+  ].filter(Boolean).join('')+'</div>'+(m.exposureBasis?('<div class="dsit" style="font-size:11.5px;color:var(--muted)">'+m.exposureBasis+'</div>'):'')):'';
+  var exp=(m&&m.modeledExposure)||'',ev=(m&&m.evidenceConfidence)||'',src=(m&&m.sourceStatus)||'';
+  return '<div class="decision" data-dec="'+d.n+'"><div class="dh"><span class="dn">Decision '+d.n+' ·</span>'+d.q+'</div><div class="dsit">'+d.sit+'</div>'+metaStrip+'<div class="opts">'+d.opts.map(function(o){return '<div class="opt'+(o.rec?' rec':'')+'">'+(o.rec?'<div class="orec">Recommended</div>':'')+'<div class="on">'+o.on+'</div><div class="osum">'+o.osum+'</div><div class="pc"><div class="lbl p">Pros</div><ul>'+o.pros.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul><div class="lbl c">Cons</div><ul>'+o.cons.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul></div>'+(o.consequence?('<div class="osum" style="margin:0 0 10px;color:var(--ink-2)"><b>If you choose this:</b> '+o.consequence+'</div>'):'')+'<button class="choose'+(o.rec?'':' gh')+'" data-dec="'+d.n+'" data-title="'+d.q.replace(/"/g,'')+'" data-opt="'+o.tag+'" data-osum="'+String(o.osum||'').replace(/"/g,'')+'"'+(o.req?' data-req="1"':'')+(o.reqRisk?' data-reqrisk="1"':'')+' data-exp="'+String(exp).replace(/"/g,'')+'" data-ev="'+String(ev).replace(/"/g,'')+'" data-src="'+String(src).replace(/"/g,'')+'">'+(o.btn||'Choose &amp; record')+'</button></div>';}).join('')+'</div>'+
   '<div class="dnote">◈ <b>How this decision is built:</b> the tradeoff is framed on your exposure model — your risk register × the control-value ledger — with <b>no AI/LLM</b> at run-time. Figures already computed from live data carry a <span class="tag good" style="font-size:9px">live</span> tag; any not yet wired to your data are <span class="pill mod">modeled</span> illustrative examples of the tradeoff, to refine against your live exposure. <b>Choosing one records it in Nerion and, where a ticketing system is connected, automatically opens a project</b> (Jira / ServiceNow) whose status is pulled back on refresh.</div>'+
   '<div class="dstatus" id="dstatus-'+d.n+'"></div></div>';}).join('');}
 function sec(no,q,desc,inner){return '<div class="section"><div class="rubric"><div class="no">'+no+'</div><div><div class="rt">'+q+'</div><div class="rd">'+desc+'</div></div></div>'+inner+'</div>';}
@@ -1020,14 +1030,26 @@ function wireChoose(){
       var existing=loadDec(dec);
       if(existing&&(Date.now()-existing.ts)>=EDIT_WINDOW_MS)return; // committed
       var by=leaderName();
-      // Record locally only. Pushing to ticketing is an explicit action so the
-      // leader can still change the option within the 24h window first.
-      var rec={opt:opt,title:title,by:by,seat:CUR,osum:osum,ts:(existing&&(Date.now()-existing.ts)<EDIT_WINDOW_MS)?existing.ts:Date.now(),
+      // Deferral / risk-acceptance options require a recorded rationale (and a review
+      // date for risk acceptance) before the decision is booked — a cancelled prompt
+      // records nothing. The approve/commit option needs neither.
+      var req=btn.dataset.req==='1', reqRisk=btn.dataset.reqrisk==='1';
+      var rationale=(existing&&existing.rationale)||'', reviewDate=(existing&&existing.reviewDate)||'';
+      if(req&&!rationale){rationale=(typeof window.prompt==='function'?window.prompt('Record a brief rationale for this decision:',''):'')||'';if(!rationale)return;}
+      if(reqRisk&&!reviewDate){reviewDate=(typeof window.prompt==='function'?window.prompt('Set a review date for this risk acceptance (e.g. 2026-Q4):',''):'')||'';if(!reviewDate)return;}
+      var kind=reqRisk?'accept':req?'defer':'commit';
+      // Record locally only, with an audit snapshot (exposure / evidence / source at
+      // decision time). Pushing to ticketing is explicit so the leader can still change
+      // the option within the 24h window first.
+      var rec={opt:opt,title:title,by:by,seat:CUR,osum:osum,kind:kind,rationale:rationale,reviewDate:reviewDate,
+        exposureAtDecision:btn.dataset.exp||'',evidenceAtDecision:btn.dataset.ev||'',sourceAtDecision:btn.dataset.src||'',
+        ts:(existing&&(Date.now()-existing.ts)<EDIT_WINDOW_MS)?existing.ts:Date.now(),
         ticket:existing&&existing.ticket||null,system:existing&&existing.system||null,url:existing&&existing.url||null,status:existing&&existing.status||null,demoTicket:existing&&existing.demoTicket||false};
       saveDec(dec,rec);renderDecStatus(dec);renderInitiatives();
-      // Auto-open the project in the connected ticketing system on selection (no
-      // duplicate if a ticket already exists). Status is pulled back on refresh.
-      if(!rec.ticket&&typeof itsmVendor==='function'&&itsmVendor())pushDecision(dec);
+      // Workflow per option: only the approve/commit option opens a tracked remediation
+      // project. Defer records a deferral; accept creates a risk-acceptance record — no
+      // ticket for either.
+      if(kind==='commit'&&!rec.ticket&&typeof itsmVendor==='function'&&itsmVendor())pushDecision(dec);
     };
   });
 }
