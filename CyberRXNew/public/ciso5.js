@@ -4915,11 +4915,21 @@ function c5FrameworksClassic(host){
   host.querySelectorAll('[data-c5gapup]').forEach(function(b){b.onclick=function(e){e.stopPropagation();c5GapUpload(b.getAttribute('data-c5gapup'));};});
   host.querySelectorAll('[data-c5fwcard]').forEach(function(b){b.style.cursor='pointer';b.onclick=function(){c5fwInspect(b.getAttribute('data-c5fwcard'),T,sel,cad);};});
 }
-/* "upload now" on a missing-document gap → onboarding, deep-linked to the exact
-   uploader for that document type (target is the doc-type key, e.g. d8). */
+/* "upload now" on a missing-document gap → onboarding, focused on the exact uploader
+   for that document type (target is the doc-type key, e.g. d8). The cockpit runs inside
+   the platform shell as the fOS iframe, with onboarding preloaded alongside it (fIntake),
+   so we ask the SHELL to switch views — navigating our own frame would replace the
+   cockpit itself ("the OS becomes onboarding"). Only fall back to a direct navigation
+   when running standalone (no shell parent). */
 function c5GapUpload(target){
-  try{var base=(function(){try{return new URL('onboarding.html',location.href).href;}catch(_){return 'onboarding.html';}})();
-    window.location.href=base+'#upload='+encodeURIComponent(target||'');}catch(_){}
+  try{
+    if(window.parent&&window.parent!==window){
+      window.parent.postMessage({type:'cyberrx-goto-onboarding',tool:'document review',upload:target||''},'*');
+      return;
+    }
+    var base=(function(){try{return new URL('onboarding.html',location.href).href;}catch(_){return 'onboarding.html';}})();
+    window.location.href=base+'#upload='+encodeURIComponent(target||'');
+  }catch(_){}
 }
 /* ============================================================================
    Documents reviewed — the analyst-grade read of every policy uploaded during

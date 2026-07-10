@@ -758,6 +758,9 @@
   // the section that captures it.
   window.addEventListener('message',function(e){
     if(!(e.data&&e.data.type==='cyberrx-onboarding-focus'))return;
+    // A specific document to upload (from the cockpit "upload now" gap link) routes to
+    // the exact uploader + preselects the doc type; otherwise fall back to tool→section.
+    if(e.data.upload){try{obFocusUpload(String(e.data.upload));}catch(_){}return;}
     var t=String(e.data.tool||'').toLowerCase(),id=null;
     if(/capability map|business capabilit|grc/.test(t))id='secBcap';
     else if(/vendor|tprm|securityscorecard|bitsight|third.?party/.test(t))id='secVendor';
@@ -1763,13 +1766,15 @@
      opens the Governance & AI tab, scrolls to the exact uploader for that document type,
      preselects it in the dropdown and highlights it — so a missing-document gap routes
      the user precisely to where it's fixed. */
-  function obHandleUploadDeepLink(){
+  // Focus the exact uploader for a document type and preselect it. `target` is the
+  // doc-type key (d8) or a label; resolves either. Shared by the postMessage focus
+  // (cockpit inside the shell) and the #upload= hash deep-link (standalone).
+  function obFocusUpload(target){
     try{
-      var m=/[#&]upload=([^&]+)/.exec(String(location.hash||''));if(!m)return;
-      var target=decodeURIComponent(m[1]),types=(typeof OB_DOC_TYPES!=='undefined')?OB_DOC_TYPES:[];
-      // Resolve to a doc type: accept a key (d8) directly, else match on label.
+      if(!target)return;
+      var types=(typeof OB_DOC_TYPES!=='undefined')?OB_DOC_TYPES:[];
       var t=types.filter(function(d){return d.k===target;})[0];
-      if(!t){var tl=target.toLowerCase();t=types.filter(function(d){var l=d.l.toLowerCase();return l===tl||l.indexOf(tl)>=0||tl.indexOf(l)>=0;})[0];}
+      if(!t){var tl=String(target).toLowerCase();t=types.filter(function(d){var l=d.l.toLowerCase();return l===tl||l.indexOf(tl)>=0||tl.indexOf(l)>=0;})[0];}
       var isAi=t?/^AI /.test(t.l):false,selId=isAi?'aiGovDocType':'obDocType';
       try{if(typeof obShow==='function')obShow('gov');}catch(_){}
       setTimeout(function(){
@@ -1779,8 +1784,14 @@
         if(sec){try{sec.scrollIntoView({behavior:'smooth',block:'center'});}catch(_){sec.scrollIntoView();}
           sec.classList.remove('ob-uploadflash');void sec.offsetWidth;sec.classList.add('ob-uploadflash');
           setTimeout(function(){sec.classList.remove('ob-uploadflash');},2700);}
-        try{history.replaceState(null,'',location.pathname+location.search);}catch(_){} // don't re-trigger on reload
       },240);
+    }catch(_){}
+  }
+  function obHandleUploadDeepLink(){
+    try{
+      var m=/[#&]upload=([^&]+)/.exec(String(location.hash||''));if(!m)return;
+      obFocusUpload(decodeURIComponent(m[1]));
+      try{history.replaceState(null,'',location.pathname+location.search);}catch(_){} // don't re-trigger on reload
     }catch(_){}
   }
   try{obHandleUploadDeepLink();}catch(_){}
