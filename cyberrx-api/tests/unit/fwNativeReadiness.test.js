@@ -39,24 +39,25 @@ describe('native frameworks fall back to crosswalk readiness (behavioral)', () =
 
   // mirror the per-control decision in c5fwTree's native branch
   function decide(nat, related) {
-    let sc = H.nat(nat); let status; let srcv; let tested; let readiness = false;
+    let sc = H.nat(nat); let status; let srcv; let tested; let readiness = false; let mapped = null;
     if (sc != null) { status = nat.assessment_status; srcv = 'native'; tested = true; }
-    else { const cw = H.cw(related); if (cw != null) { sc = cw; srcv = 'mapped'; status = 'Readiness (crosswalk)'; tested = true; readiness = true; } else { srcv = 'native-pending'; status = nat ? nat.assessment_status : 'Not Tested'; tested = false; } }
-    return { sc, src: srcv, status, tested, readiness };
+    else { const cw = H.cw(related); if (cw && cw.score != null) { sc = cw.score; srcv = 'mapped'; status = 'Readiness (crosswalk)'; tested = true; readiness = true; mapped = cw.ids; } else { srcv = 'native-pending'; status = nat ? nat.assessment_status : 'Not Tested'; tested = false; } }
+    return { sc, src: srcv, status, tested, readiness, mapped };
   }
 
-  it('crosswalk readiness = mean CMMI of the EVIDENCED mapped CSF controls', () => {
-    expect(H.cw(['PR.AA-01', 'PR.AA-02'])).toBe(3.5);
+  it('crosswalk readiness = mean CMMI of the EVIDENCED mapped CSF controls, and returns which ids drove it', () => {
+    expect(H.cw(['PR.AA-01', 'PR.AA-02'])).toEqual({ score: 3.5, ids: ['PR.AA-01', 'PR.AA-02'] });
   });
   it('is null when none of the mapped CSF controls are evidenced', () => {
     expect(H.cw(['PR.AA-99'])).toBeNull();
   });
-  it('a control with no native result but evidenced map is counted as readiness (not 0)', () => {
+  it('a control with no native result but evidenced map is counted as readiness (not 0), and records the mapped ids', () => {
     const d = decide(null, ['PR.AA-01', 'PR.AA-02']);
     expect(d.tested).toBe(true);
     expect(d.src).toBe('mapped');
     expect(d.readiness).toBe(true);
     expect(d.sc).toBe(3.5);
+    expect(d.mapped).toEqual(['PR.AA-01', 'PR.AA-02']); // so the finding can NAME them (not "0 subcategories")
     expect(d.status).toBe('Readiness (crosswalk)');
   });
   it('still Not Tested when neither native nor mapped evidence exists', () => {
@@ -84,5 +85,19 @@ describe('the fallback is labelled honestly (not presented as a native audit)', 
     expect(src).toContain('fall back to a <b>crosswalk readiness</b> indicator');
     expect(src).toContain('not</b> an independent native audit opinion');
     expect(src).toContain('Native results always take precedence');
+  });
+});
+
+describe('the crosswalk finding names the mapped CSF controls and shows they are evidenced', () => {
+  it('the native node records the CSF ids that drove the score (not an empty mapped[])', () => {
+    const a = src.indexOf('function c5fwTree(');
+    const fn = src.slice(a, src.indexOf('\nfunction ', a + 10));
+    expect(fn).toContain('mappedIds=cw.ids;'); // capture the evidenced CSF ids
+    expect(fn).toContain('mapped:mappedIds,'); // put them on the node so the finding can name them
+  });
+  it('the finding lists each mapped CSF control with its own evidence source + score', () => {
+    expect(src).toContain('it inherits the maturity of the <b>');
+    expect(src).toContain('Each of those is scored from <b>your evidence</b>');
+    expect(src).toContain("cc.src==='document'?'📄 document review':cc.src==='system'?'🔌 connected tool'");
   });
 });
