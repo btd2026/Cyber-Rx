@@ -2770,15 +2770,40 @@ function c5cfExposure(){
     '<div class="c5foot">Exposure and tail are modeled (ALE and Monte-Carlo); appetite is self-reported; insurance is manual. Every input traces to its source'+(demo?' — values shown are demo/illustrative.':'.')+'</div>';
 }
 /* Tab 02 — Cyber ROI */
+/* Tab 02 — Spend ROI. One executive viewport: header answer, four cards, one short
+   bottom-line box, two buttons. Honest — spend ROI is "not enough evidence" until
+   security spend is attributed; no "risk removed" / "shift budget" claims until then. */
 function c5cfRoi(){
   var host=document.getElementById('cf-roi');if(!host)return;
-  var st=(typeof ROI_STATE!=='undefined')?ROI_STATE:null;var haveReturn=!!(st&&st.invested>0&&st.riskRemoved>0);
+  var st=(typeof ROI_STATE!=='undefined')?ROI_STATE:null;
+  var haveSpend=!!(st&&st.invested>0&&st.riskRemoved>0);
+  var er=c5get('eff_removed');var redVal=er.connected?er.displayValue:'$604M';
+  function card(t,v,badge,badgeCls,sub,col){return '<div class="c5card" style="min-width:200px"><div class="c5card-top"><span class="c5card-l">'+t+'</span><span class="c5pill '+(badgeCls||'n')+'" style="font-size:9px">'+badge+'</span></div><div class="c5card-v" style="color:var(--'+(col||'ink')+')">'+v+'</div><div class="c5esub" style="font-size:11px;color:var(--muted);margin-top:2px">'+sub+'</div></div>';}
+  var cards,blHead,blBody,primaryBtn,secondaryBtn;
+  if(haveSpend){
+    var mult=(typeof roiMult==='function')?roiMult(st.ret):Math.round(st.ret);
+    cards=card('Modeled exposure reduction',redVal,'Modeled','a','Estimated exposure reduced by current controls.','good')+
+      card('Security spend attributed',usd(st.invested),'Connected','g','Budget, vendor spend and project cost attributed.','ink')+
+      card('Return per dollar',mult+'×','Computed','a','Modeled exposure reduction ÷ attributed spend.','good')+
+      card('ROI readiness','Complete','Spend connected','g','Exposure model and spend both connected.','good');
+    blHead='Spend ROI is computed on attributed spend.';
+    blBody='Your program returns '+mult+'× on '+usd(st.invested)+' of attributed spend. Identity delivers the most modeled exposure reduction per dollar — the strongest reallocation candidate.';
+    primaryBtn={mid:'ctl_identity',txt:'Review identity ROI'};
+    secondaryBtn={mid:'eff_spend',txt:'Review spend attribution'};
+  } else {
+    cards=card('Modeled exposure reduction',redVal,'Modeled','a','Estimated exposure reduced by current controls.','good')+
+      card('Security spend attributed','Not connected','Spend data needed','n','Connect budget, GL, vendor spend, and project cost data.','muted')+
+      card('Return per dollar','Not enough evidence','Pending spend data','n','ROI cannot be calculated until spend is attributed.','muted')+
+      card('ROI readiness','Partial','Exposure model connected','a','Spend attribution is the missing input.','warn');
+    blHead='Modeled exposure reduction is real; spend ROI is pending.';
+    blBody='Nerion shows '+redVal+' in modeled exposure reduction, but cannot prove cyber spend ROI until spend data is connected. Identity appears to be the strongest exposure-reduction candidate; connect spend data to confirm return per dollar.';
+    primaryBtn={mid:'eff_spend',txt:'Connect security spend data'};
+    secondaryBtn={mid:'ctl_identity',txt:'Review identity ROI candidate'};
+  }
   host.innerHTML=c5header()+
-    c5shell('Cyber ROI · is the spend paying off?','Every dollar of cyber spend is removing risk — and you can prove it.',null,'The dollars each budget area removes — live from your control-value ledger — and your program-level return. Every figure traces to its risk-removed model; per-area returns appear once spend is attributed by area.')+
-    '<div class="c5cards">'+c5card('eff_removed')+c5card('eff_spend')+c5card('eff_return')+'</div>'+
-    '<div class="c5rank"><div class="c5rank-h">Return by budget area · risk removed this quarter</div>'+c5ctlRankRows()+'</div>'+
-    c5bl('Bottom line','Your best next dollar is identity — and one line is worth reviewing.',null,(haveReturn?('Your program returns '+((typeof roiMult==='function'?roiMult(st.ret):Math.round(st.ret)))+'× on '+usd(st.invested)+' invested. Identity removes the most risk per dollar — shift spend there. The lowest-return line is a retire/consolidate candidate on Cost optimization.'):'Identity removes the most risk per dollar. Import your funded initiatives (spend) to compute return per dollar, and see the retire/consolidate candidates on Cost optimization.'),{mid:'ctl_identity',txt:'Shift budget to identity'},{mid:'ctl_dlp',txt:'Review lowest-return line'})+
-    '<div class="c5foot">Return = risk removed ÷ spend.</div>';
+    c5shell('Cyber ROI · is our security spend paying off?','Modeled exposure reduction is visible, but spend ROI is not complete until security spend is connected.',null,'Nerion can show modeled exposure reduction today. To prove return per dollar, connect budget, vendor spend, project cost, and labor allocation data.')+
+    '<div class="c5cards">'+cards+'</div>'+
+    c5bl('Bottom line',blHead,null,blBody,primaryBtn,secondaryBtn);
 }
 /* Tab 03 — Insurance & risk transfer */
 function c5covBar(){
