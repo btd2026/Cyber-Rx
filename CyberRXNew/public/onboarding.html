@@ -43,6 +43,9 @@
   .obtab .obn{font-size:10px;font-weight:700;opacity:.6}
   .obtab.done .obn{color:var(--good,#0ca30c);opacity:1}
   .sec{margin-top:26px;background:var(--surface);border:1px solid var(--line);border-radius:15px;padding:22px 24px}
+  /* Highlight the uploader a cockpit "upload now" gap link routed the user to. */
+  @keyframes obUploadFlash{0%{box-shadow:0 0 0 0 rgba(12,163,12,0)}12%{box-shadow:0 0 0 3px rgba(12,163,12,.6)}100%{box-shadow:0 0 0 3px rgba(12,163,12,0)}}
+  .ob-uploadflash{animation:obUploadFlash 2.6s ease-out}
   .sh{display:flex;align-items:flex-start;gap:14px;margin-bottom:18px}
   .sn{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--blue);background:var(--blue-soft);border:1px solid rgba(57,135,229,.35);border-radius:9px;padding:6px 10px;line-height:1}
   .st{font-size:16px;font-weight:700}.sd{font-size:12.5px;color:var(--muted);margin-top:3px}
@@ -1755,6 +1758,33 @@
   try{setInterval(obSaveState,6000);}catch(_){}          // backstop for file-upload/connect array changes
   try{window.addEventListener('beforeunload',obSaveState);}catch(_){}
   try{obRestoreState();}catch(_){}                        // bring the user's work back on load
+
+  /* Deep-link from the cockpit "upload now" gap link: onboarding.html#upload=<docKey|label>
+     opens the Governance & AI tab, scrolls to the exact uploader for that document type,
+     preselects it in the dropdown and highlights it — so a missing-document gap routes
+     the user precisely to where it's fixed. */
+  function obHandleUploadDeepLink(){
+    try{
+      var m=/[#&]upload=([^&]+)/.exec(String(location.hash||''));if(!m)return;
+      var target=decodeURIComponent(m[1]),types=(typeof OB_DOC_TYPES!=='undefined')?OB_DOC_TYPES:[];
+      // Resolve to a doc type: accept a key (d8) directly, else match on label.
+      var t=types.filter(function(d){return d.k===target;})[0];
+      if(!t){var tl=target.toLowerCase();t=types.filter(function(d){var l=d.l.toLowerCase();return l===tl||l.indexOf(tl)>=0||tl.indexOf(l)>=0;})[0];}
+      var isAi=t?/^AI /.test(t.l):false,selId=isAi?'aiGovDocType':'obDocType';
+      try{if(typeof obShow==='function')obShow('gov');}catch(_){}
+      setTimeout(function(){
+        var sel=document.getElementById(selId);
+        if(sel&&t){sel.value=t.k;try{sel.dispatchEvent(new Event('change'));}catch(_){}}
+        var sec=(sel&&sel.closest)?sel.closest('.sec'):null;if(!sec)sec=document.getElementById('secDocReview');
+        if(sec){try{sec.scrollIntoView({behavior:'smooth',block:'center'});}catch(_){sec.scrollIntoView();}
+          sec.classList.remove('ob-uploadflash');void sec.offsetWidth;sec.classList.add('ob-uploadflash');
+          setTimeout(function(){sec.classList.remove('ob-uploadflash');},2700);}
+        try{history.replaceState(null,'',location.pathname+location.search);}catch(_){} // don't re-trigger on reload
+      },240);
+    }catch(_){}
+  }
+  try{obHandleUploadDeepLink();}catch(_){}
+  window.addEventListener('hashchange',obHandleUploadDeepLink);
 </script>
 </body>
 </html>
