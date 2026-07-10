@@ -106,6 +106,11 @@ describe('opening the peer box shows a framework-specific example benchmark', ()
   it('renders the sample immediately in the not-yet-live branch', () => {
     expect(SRC).toContain('body=c5fwPeerSampleHTML(fwName)+');
   });
+  it('also shows the sample when OPTED IN but the cohort is not live yet (consistent view)', () => {
+    // otherwise an opted-in user (e.g. 1/5 joined) sees only a bare "Building your cohort"
+    // status, while an incognito/not-opted-in user sees the sample — the reported mismatch.
+    expect(SRC).toContain("joined</div></div>'+c5fwPeerSampleHTML(fwName)");
+  });
   it('the sample is labelled SAMPLE, names the framework, and shows the client unlock', () => {
     const s = SRC.indexOf('function c5fwPeerSampleHTML(');
     const fn = SRC.slice(s, SRC.indexOf('\nfunction ', s + 10));
