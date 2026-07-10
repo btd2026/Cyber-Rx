@@ -738,7 +738,7 @@
 </div></div>
 <div class="seats"><div class="wrap seats-in">
   <span class="seatlbl">Speaking to</span>
-  <button class="seat on" data-seat="ciso" title="Chief Information Security Officer">CISO</button><button class="seat" data-seat="ceo" title="Chief Executive Officer">CEO</button><button class="seat" data-seat="cfo" title="Chief Financial Officer">CFO</button><button class="seat" data-seat="coo" title="Chief Operating Officer">COO</button><button class="seat" data-seat="cio" title="Chief Technology Officer">CTO</button><button class="seat" data-seat="cpo" title="Chief Product Officer">CPO</button><button class="seat" data-seat="cro" title="Chief Risk Officer">CRO</button><button class="seat" data-seat="clo" title="Chief Legal Officer (General Counsel)">CLO</button><button class="seat" data-seat="audit" title="Chief Audit Executive · Internal Audit">Internal Audit</button><button class="seat" data-seat="board" title="Board of Directors">Board</button>
+  <button class="seat on" data-seat="ciso" title="Chief Information Security Officer">CISO</button><button class="seat" data-seat="ceo" title="Chief Executive Officer">CEO</button><button class="seat" data-seat="cfo" title="Chief Financial Officer">CFO</button><button class="seat" data-seat="coo" title="Chief Operating Officer">COO</button><button class="seat" data-seat="cio" title="Chief Information Officer">CIO</button><button class="seat" data-seat="cro" title="Chief Risk Officer">CRO</button><button class="seat" data-seat="clo" title="Chief Legal Officer (General Counsel)">CLO</button><button class="seat" data-seat="board" title="Board of Directors">Board</button>
 </div></div>
 <div id="dataModeBar"><div class="wrap" id="dataModeInner" style="padding:8px 0;font-size:12px;font-weight:600"></div></div>
 <div class="wrap" id="app"></div>
@@ -792,7 +792,7 @@ function decisions(a){return a.map(function(d){
   '<div class="dstatus" id="dstatus-'+d.n+'"></div></div>';}).join('');}
 function sec(no,q,desc,inner){return '<div class="section"><div class="rubric"><div class="no">'+no+'</div><div><div class="rt">'+q+'</div><div class="rd">'+desc+'</div></div></div>'+inner+'</div>';}
 
-var SEAT_LABEL={board:'Board of Directors',ceo:'CEO',cfo:'CFO',coo:'COO',clo:'Chief Legal Officer',cro:'Chief Risk Officer',cio:'CTO',ciso:'CISO',cpo:'Chief Product Officer',audit:'Internal Audit'};
+var SEAT_LABEL={board:'Board of Directors',ceo:'CEO',cfo:'CFO',coo:'COO',clo:'Chief Legal Officer',cro:'Chief Risk Officer',cio:'CIO',ciso:'CISO'};
 var CUR='ceo';
 function render(seat){
   CUR=seat;var s=SEATS[seat];

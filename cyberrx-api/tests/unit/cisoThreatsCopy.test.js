@@ -39,11 +39,12 @@ describe('Threats — no overclaiming', () => {
 });
 
 describe('Threats — posture strip & attack paths', () => {
-  it('renders the four-item posture summary strip incl. highest exposure path', () => {
-    expect(region).toContain('c5ThreatsStrip(ts,ta,E.level,demo)');
-    expect(region).toContain('Confirmed active intrusion');
-    expect(region).toContain('Highest exposure path');
-    expect(region).toContain('Identity → Privilege → Customer platform');
+  it('no longer renders the four-item posture summary strip in the tab', () => {
+    // the strip (Confirmed active intrusion / Sector actors / Highest exposure path /
+    // Evidence confidence) was removed from the Threats tab to declutter the page
+    expect(region).not.toContain('c5ThreatsStrip(ts,ta,E.level,demo)');
+    expect(region).not.toContain('Highest exposure path');
+    expect(region).not.toContain('Identity → Privilege → Customer platform');
   });
   it('renders a Top attack paths section with business-relevant paths', () => {
     expect(region).toContain('Top attack paths requiring attention');

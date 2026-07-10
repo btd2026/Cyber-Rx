@@ -69,7 +69,7 @@ var SEATS = {
  },
 
  cio:{
-  eyebrow:'CTO · Executive cockpit',
+  eyebrow:'CIO · Executive cockpit',
   verdict:'The <span class="em">technology estate</span> — stack risk, reliability, AI and the software supply chain, every figure traceable to its scanner, registry or record.',
   sub:'Every figure opens to its basis, inputs and source, and the shared identity, platform and vendor numbers reconcile across seats.',
   brief:'Your technology estate is largely secure and on its modernization path. The one architectural gap that matters is the customer platform’s identity and access model — it is your biggest reliability risk, your AI-data-access dependency, and the drag on your software supply chain, all at once. There is also a high-severity auth-library advisory on the critical path worth patching now. Two decisions: fund the identity fix, patch the library.',
@@ -108,32 +108,6 @@ var SEATS = {
    +sec('06','Threats','','<div id="c5-threats"></div>')
    +sec('07','AI &amp; supply chain','','<div id="c5-aisupply"></div>')
    +sec('08','Decisions &amp; projections','','<div id="c5-decproj"></div>')
-  );}
- },
-
- cpo:{
-  eyebrow:'CPO · Executive cockpit · Product',
-  verdict:'Cyber through the <span class="em">product</span> lens — where the identity fix is a <span class="em">product opportunity</span>, not just a risk.',
-  sub:'Every figure opens to its basis and source, and the shared identity, auth-library and platform numbers reconcile across seats.',
-  brief:'On the product, it ships secure by design and customers trust it. The one real exposure is the customer-platform identity and access model — and it is three problems in one: a security gap, a source of user friction, and a recurring release blocker. Fix it once and you get all three back: safer, smoother, faster. It leads your backlog and it is funded — one decision lands it.',
-  body:function(){return (
-   sec('01','Does our product ship secure by design?','','<div id="cp-security"></div>')
-   +sec('02','Is security slowing our releases?','','<div id="cp-velocity"></div>')
-   +sec('03','What’s top of the security backlog?','','<div id="cp-backlog"></div>')
-   +sec('04','What needs my decision?','','<div id="cpo-asks"></div><div id="cp-decisions"></div>')
-  );}
- },
-
- audit:{
-  eyebrow:'Internal Audit · Executive cockpit',
-  verdict:'Independent <span class="em">assurance</span> — coverage, testing, findings and evidence readiness. Internal Audit assures; it does not fund or fix.',
-  sub:'Every figure opens to its source system and evidence, and the shared cyber numbers reconcile exactly across seats.',
-  brief:'Your cyber audit universe is well covered, with one area out of step: identity and access — simultaneously your overdue review, your outstanding test, a repeat finding, and an evidence gap. Internal Audit doesn’t fund or fix; it schedules, tests, escalates and assures. The action is to escalate identity for follow-up and give the board the assurance that the rest of the universe is sound.',
-  body:function(){return (
-   sec('01','Is our cyber audit universe covered?','','<div id="ia-coverage"></div>')
-   +sec('02','What findings are open?','','<div id="ia-findings"></div>')
-   +sec('03','What needs escalation?','','<div id="ia-attention"></div>')
-   +sec('04','What should Internal Audit action?','','<div id="audit-asks"></div>')
   );}
  }
 };

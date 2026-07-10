@@ -1609,49 +1609,140 @@ var C5_WHY={
 function c5whyPre(id){if(!id)return '';if(id.indexOf('tac_')===0)return 'tac_';if(id.indexOf('exp_')===0&&id!=='exp_total'&&id!=='exp_conc')return 'exp_';if(id.indexOf('ctl_')===0)return 'ctl_';if(id.indexOf('dom_')===0)return 'dom_';return id;}
 function c5why(m){if(m&&m.why)return m.why;var id=m&&m.id;if(id){var w=C5_WHY[id]||C5_WHY[c5whyPre(id)];if(w)return w;}return (m&&m.note)||'';}
 function c5whyIcon(color){return color==='good'?'check':(color==='crit'||color==='warn')?'alert':color==='blue'?'gauge':'plug';}
+/* ── Standardized executive detail-view helpers. Every drill answers, in order:
+   Result · Why it matters · Evidence confidence · What Nerion found · What Nerion does
+   not prove · Open gaps · Recommended action (+owner/due/expected) · Sources & freshness
+   · Calculation basis in plain English. Raw formulas are kept out of the normal view and
+   only shown in an admin/debug mode. All text is derived from the metric object — nothing
+   client-specific is hard-coded. ── */
+function c5debugOn(){try{if(typeof window!=='undefined'&&window.CYBERRX_DEBUG===true)return true;if(typeof localStorage!=='undefined'&&localStorage.getItem('cyberrx_debug')==='1')return true;if(typeof location!=='undefined'&&/[?&]debug=1/.test(location.search||''))return true;}catch(_){}return false;}
+/* Source label for the Result section — one of the allowed labels, never a bare value. */
+function c5srcLabelText(m){
+  if(!m||!m.connected)return 'Not Connected';
+  var L=String(m.label||'').toLowerCase();
+  var map={live:'Live',computed:'Computed',modeled:'Modeled','self-reported':'Self-reported',manual:'Manual',demo:'Demo',mock:'Mock',illustrative:'Modeled'};
+  return map[L]||(m.label?cap(m.label):'Computed');
+}
+/* Status word from the metric colour — the spec's status model, no "Healthy"/"Safe". */
+function c5statusText(m){
+  var demo=(typeof signalsAreDemo==='function'&&signalsAreDemo())||/demo|mock/.test(String(m&&m.label).toLowerCase());
+  if(!m||!m.connected)return 'Not Enough Evidence';
+  if(m.statusText)return m.statusText;
+  if(demo)return 'Demo';
+  return m.color==='crit'?'Escalation needed':m.color==='warn'?'Action needed':m.color==='blue'?'Monitor':m.color==='good'?'Within target':'Monitor';
+}
+/* "What Nerion does not prove" — audit-defensibility. Keyed by metric type, with an
+   honest fallback by source label. Never overclaims. */
+var C5_NOTPROVE={
+  ais_:'This does not prove model-security operating effectiveness until live AI-SPM telemetry, guardrail testing and usage monitoring are connected.',
+  er_:'This ranks exposure from the connected inputs; it does not prove an attacker cannot reach the asset by an unmodeled path.',
+  coo_:'This does not prove recovery readiness unless the last recovery test covered the affected service and its dependency path.',
+  ctl_:'This shows modeled risk reduction; it does not prove control operating effectiveness without evidence for the review period.',
+  tac_:'This reflects control coverage against the tactic; it does not prove detection or response would succeed in a live intrusion.',
+  exp_:'This is a modeled estimate of exposure; it does not prove an actual loss will or will not occur.',
+  cf_:'This is a modeled financial figure; it does not prove a realized gain or loss.',
+  dom_:'This benchmarks maturity from published medians; it does not prove a live peer percentile until an opt-in cohort reaches k-anonymity.'
+};
+function c5notProve(m){
+  if(m&&m.notProve)return m.notProve;
+  var id=m&&m.id;if(id){var v=C5_NOTPROVE[c5whyPre(id)]||C5_NOTPROVE[id];if(v)return v;}
+  if(!m||!m.connected)return 'Nothing here is proven until the source is connected — Nerion shows the honest not-connected state instead of a placeholder.';
+  var L=String(m.label||'').toLowerCase();
+  if(/self-reported|manual/.test(L))return 'This reads from self-reported evidence; it does not prove operating effectiveness until that evidence is independently validated for the review period.';
+  if(/modeled|illustrative/.test(L))return 'This is a modeled estimate from the connected inputs; it does not prove an actual outcome or a guaranteed result.';
+  return 'This reflects the connected telemetry at this point in time; it does not prove effectiveness beyond what those sources measure.';
+}
+/* Evidence confidence + reason. Missing source ⇒ Not Enough Evidence; self-reported/
+   modeled cap below High; demo ⇒ Demo. A metric may override with m.evidenceConfidence. */
+function c5evConfObj(m){
+  if(m&&m.evidenceConfidence)return {level:m.evidenceConfidence,why:m.evidenceConfidenceWhy||''};
+  var demo=(typeof signalsAreDemo==='function'&&signalsAreDemo())||/demo|mock/.test(String(m&&m.label).toLowerCase());
+  if(!m||!m.connected)return {level:'Not Enough Evidence',why:'the source for this measure is not connected yet.'};
+  if(demo)return {level:'Demo',why:'based on demo telemetry — connect your sources for a live reading.'};
+  var L=String(m.label||'').toLowerCase();
+  if(/self-reported|manual/.test(L))return {level:'Medium',why:'this reads from self-reported or manual evidence; independent validation would raise confidence.'};
+  if(/modeled|illustrative/.test(L))return {level:'Medium',why:'this is modeled from connected inputs; confidence rises as more direct telemetry connects.'};
+  if(/live/.test(L))return {level:'High',why:'computed from connected, live telemetry.'};
+  if(/computed/.test(L))return {level:'Medium',why:'computed from the connected sources; some inputs remain modeled or partial.'};
+  return {level:'Medium',why:'derived from the connected sources.'};
+}
+/* "What Nerion found" — the evidence-backed finding, dynamic from the metric. */
+function c5foundText(m){
+  if(!m)return '';
+  if(!m.connected)return 'No reading yet — '+(m.connectTool?('connect '+m.connectTool):'the source is not connected')+' and Nerion will populate this from your data.';
+  return 'Nerion found '+m.displayValue+' for '+String(m.name||'this measure').toLowerCase()+'.';
+}
+/* Plain-English calculation basis — never a raw formula. */
+function c5basisText(m){
+  if(m&&m.basis)return m.basis;
+  if(m&&m.method)return m.method;
+  var ins=(m&&m.inputs&&m.inputs.length)?(' from '+m.inputs.map(function(i){return i.name;}).slice(0,4).join(', ')):'';
+  var srcs=(m&&m.sources&&m.sources.length)?(' Sources: '+m.sources.map(function(s){return s.tool;}).slice(0,3).join(', ')+'.'):'';
+  return 'Computed by Nerion'+(ins||' from the connected sources and inputs')+'.'+srcs;
+}
+/* One source row with status, freshness and evidence role. */
+function c5srcRow(m,s){
+  var status=s.status||(s.connected===false?'Not connected':(s.connected===true?'Connected':(m&&m.connected?'Connected':'Not connected')));
+  var fresh=s.lastRefresh?(' · as of '+c5esc(s.lastRefresh)):'';
+  var role=s.role||s.field||'';var missing=s.missing?(' · missing: '+c5esc(s.missing)):'';
+  return '<div class="src-row"><span class="sd"></span><b>'+c5esc(s.tool)+'</b> — '+c5esc(status)+fresh+(role?(' · role: '+c5esc(role)):'')+missing+'</div>';
+}
 function c5InspectObj(m){
   if(!m)return;
-  var chip='<span class="c5chip c5-'+String(m.label).replace(/[^a-z]/g,'')+'">'+m.label+'</span>';
+  var chip='<span class="c5chip c5-'+String(m.label).replace(/[^a-z]/g,'')+'">'+c5srcLabelText(m)+'</span>';
   var col=m.connected?(m.color==='ink'?'ink-2':(m.color||'ink')):'muted';
+  var ev=c5evConfObj(m);var statusTxt=c5statusText(m);
   var h='<div class="ev-claim">'+m.name+' '+chip+'</div>';
-  // 1) What it measures & why it matters — ALWAYS, right after the title (durable
-  //    definition, not today's result).
-  h+='<div class="ev-sec" style="margin-top:12px">What it measures &amp; why it matters</div><div class="conf">'+c5why(m)+'</div>';
-  // 2) The result — a status-coloured hero with a glyph; no redundant heading.
-  h+='<div style="display:flex;align-items:center;gap:14px;margin:14px 0 2px;padding:14px 16px;border-radius:12px;border:1px solid var(--line);border-left:3px solid var(--'+col+');background:var(--surface-2)">'+
+  // 1) RESULT — status-coloured hero with the value, a status pill and the source label.
+  h+='<div style="display:flex;align-items:center;gap:14px;margin:12px 0 2px;padding:14px 16px;border-radius:12px;border:1px solid var(--line);border-left:3px solid var(--'+col+');background:var(--surface-2)">'+
     '<div style="width:42px;height:42px;border-radius:11px;flex:none;display:flex;align-items:center;justify-content:center;background:var(--surface);background:color-mix(in srgb,var(--'+col+') 16%,var(--surface));color:var(--'+col+')">'+c5icon(c5whyIcon(m.connected?m.color:'muted'))+'</div>'+
-    '<div style="min-width:0"><div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">Result</div><div style="font-size:24px;font-weight:700;line-height:1.1;color:var(--'+col+')">'+(m.connected?m.displayValue:'Not connected')+'</div></div>'+
+    '<div style="min-width:0;flex:1"><div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">Result</div><div style="font-size:24px;font-weight:700;line-height:1.1;color:var(--'+col+')">'+(m.connected?m.displayValue:'Not connected')+'</div></div>'+
+    '<div style="text-align:right;flex:none"><span class="c5pill '+(m.color==='crit'?'r':m.color==='warn'?'a':m.color==='good'?'g':m.color==='blue'?'b':'n')+'">'+c5esc(statusTxt)+'</span><div style="font-size:10px;color:var(--muted);margin-top:5px;text-transform:uppercase;letter-spacing:.05em">'+c5srcLabelText(m)+'</div></div>'+
   '</div>';
-  // Optional visual (e.g. trend bars) rendered right under the result.
   if(m.visual)h+=m.visual;
-  // Recommended action — what the CISO should do about this. Rendered prominently
-  // under the result so the drill always answers "so what?".
-  if(m.action)h+='<div class="ev-sec">Recommended action</div><div class="conf" style="border-left:3px solid var(--blue)">'+m.action+'</div>';
-  if(!m.connected){
-    var src=m.connectTool?('<b>'+c5esc(m.connectTool)+'</b>'):'its data source';
-    h+='<div class="ev-sec">What would populate it</div><div class="drill-p">This reads live once you connect '+src+'. Until then Nerion shows the honest not-connected state — never a placeholder number.</div>';
-    if(m.formula)h+='<div class="formula" style="margin-top:8px">'+m.formula+'</div>';
-    if(m.sources&&m.sources.length)h+='<div class="ev-sec">Where it will come from</div>'+m.sources.map(function(s){return '<div class="src-row"><span class="sd"></span><b>'+s.tool+'</b></div>';}).join('');
-    if(m.connectTool)h+='<div style="margin-top:12px"><button class="c5btn" onclick="c5Connect(\''+String(m.connectTool).replace(/'/g,'')+'\')">Connect '+m.connectTool+'</button></div>';
-  } else {
-    // 3) How it's computed · 4) the numbers behind it · 5) sources.
-    h+='<div class="ev-sec">How it’s computed</div><div class="formula">'+(m.formula||'—')+'</div>';
-    if(m.method)h+='<div class="drill-p" style="color:var(--muted)">'+m.method+'</div>';
-    // A metric may supply a richer multi-column table (m.table) showing the full
-    // reasoning chain, where "Item / Value / Source" can't show HOW a verdict was
-    // reached. A cell is a string or {text,color,bold}.
+  // 2) WHY IT MATTERS — durable, business-relevant definition (not today's result).
+  var why=c5why(m);if(why)h+='<div class="ev-sec">Why it matters</div><div class="conf">'+why+'</div>';
+  // 3) EVIDENCE CONFIDENCE — always, with a short reason.
+  h+='<div class="ev-sec">Evidence confidence</div><div class="conf"><b>'+c5esc(ev.level)+'</b>'+(ev.why?(' — '+ev.why):'')+'</div>';
+  // 4) WHAT NERION FOUND — the evidence-backed finding, dynamic.
+  h+='<div class="ev-sec">What Nerion found</div><div class="conf">'+c5foundText(m)+'</div>';
+  // Supporting evidence for the finding: the reasoning table or the numbers behind it
+  // (compact). Raw formulas are NOT shown here — see the calculation basis below.
+  if(m.connected){
     if(m.table&&m.table.cols&&m.table.rows&&m.table.rows.length){
       var tcell=function(cell,cls){var t=(cell&&cell.text!=null)?cell.text:(cell==null?'':cell);var sty=(cell&&(cell.color||cell.bold))?(' style="'+(cell.color?('color:var(--'+cell.color+')'):'')+(cell.bold?';font-weight:600':'')+'"'):'';return '<td class="'+cls+'"'+sty+'>'+t+'</td>';};
-      h+='<div class="ev-sec">'+(m.table.title||'How each row is judged')+'</div><div style="overflow-x:auto"><table class="itbl"><thead><tr>'+m.table.cols.map(function(c){return '<th>'+c+'</th>';}).join('')+'</tr></thead><tbody>'+
-        m.table.rows.map(function(r){return '<tr>'+r.map(function(cell,ci){return tcell(cell,ci===0?'':'src');}).join('')+'</tr>';}).join('')+
-      '</tbody></table></div>';
-    } else if(m.inputs&&m.inputs.length)h+='<div class="ev-sec">The numbers behind it</div><table class="itbl"><thead><tr><th>Item</th><th>Value</th><th>Source</th></tr></thead><tbody>'+m.inputs.map(function(i){
-      var dot=i.color?('<span class="c5sq '+c5sqClass(i.color)+'" style="display:inline-block;width:9px;height:9px;margin-right:7px;vertical-align:middle"></span>'):'';
-      return '<tr><td>'+dot+i.name+'</td><td class="v">'+i.value+'</td><td class="src">'+i.source+'</td></tr>';
-    }).join('')+'</tbody></table>';
-    if(m.sources&&m.sources.length){h+='<div class="ev-sec">Sources</div>'+m.sources.map(function(s){return '<div class="src-row"><span class="sd"></span><b>'+s.tool+'</b>'+(s.lastRefresh?('<span style="color:var(--muted)"> · as of '+s.lastRefresh+'</span>'):'')+'</div>';}).join('');}
-    h+='<div class="c5foot">as of '+c5ago()+' · label: '+m.label+'</div>';
+      h+='<div style="overflow-x:auto;margin-top:8px"><table class="itbl"><thead><tr>'+m.table.cols.map(function(c){return '<th>'+c+'</th>';}).join('')+'</tr></thead><tbody>'+
+        m.table.rows.map(function(r){return '<tr>'+r.map(function(cell,ci){return tcell(cell,ci===0?'':'src');}).join('')+'</tr>';}).join('')+'</tbody></table></div>';
+    } else if(m.inputs&&m.inputs.length){
+      h+='<table class="itbl" style="margin-top:8px"><thead><tr><th>Item</th><th>Value</th><th>Source</th></tr></thead><tbody>'+m.inputs.map(function(i){
+        var dot=i.color?('<span class="c5sq '+c5sqClass(i.color)+'" style="display:inline-block;width:9px;height:9px;margin-right:7px;vertical-align:middle"></span>'):'';
+        return '<tr><td>'+dot+i.name+'</td><td class="v">'+i.value+'</td><td class="src">'+i.source+'</td></tr>';}).join('')+'</tbody></table>';
+    }
   }
+  // 5) WHAT NERION DOES NOT PROVE — prevents overclaiming; audit-defensible.
+  h+='<div class="ev-sec">What Nerion does not prove</div><div class="conf">'+c5notProve(m)+'</div>';
+  // 6) OPEN GAPS / EXCEPTIONS — only when the metric supplies them.
+  if(m.gaps&&m.gaps.length){
+    h+='<div class="ev-sec">Open gaps / exceptions</div>'+m.gaps.map(function(g){
+      return '<div class="conf" style="border-left:3px solid var(--warn);margin-bottom:8px"><b>'+c5esc(g.title||'Gap')+'</b>'+(g.meaning?('<div style="margin-top:3px">'+c5esc(g.meaning)+'</div>'):'')+(g.close?('<div style="margin-top:4px;color:var(--ink-2)">How to close: '+c5esc(g.close)+'</div>'):'')+((g.owner||g.due)?('<div style="margin-top:4px;font-size:11px;color:var(--muted)">'+[g.owner?('Owner: '+c5esc(g.owner)):'',g.due?('Due: '+c5esc(g.due)):''].filter(Boolean).join(' · ')+'</div>'):'')+'</div>';
+    }).join('');
+  }
+  // 7) RECOMMENDED ACTION (+ owner / due / expected result).
+  if(m.connected&&m.action){
+    var meta=[m.owner?('Owner: '+c5esc(m.owner)):'',m.due?('Due: '+c5esc(m.due)):'',m.expected?('Expected result: '+c5esc(m.expected)):''].filter(Boolean).join(' · ');
+    h+='<div class="ev-sec">Recommended action</div><div class="conf" style="border-left:3px solid var(--blue)">'+m.action+(meta?('<div style="margin-top:6px;font-size:11px;color:var(--muted)">'+meta+'</div>'):'')+'</div>';
+  } else if(!m.connected){
+    var src=m.connectTool?('<b>'+c5esc(m.connectTool)+'</b>'):'its data source';
+    h+='<div class="ev-sec">Recommended action</div><div class="conf" style="border-left:3px solid var(--blue)">Not enough evidence to conclude — connect '+src+' to validate this result. Until then Nerion shows the honest not-connected state, never a placeholder number.</div>';
+  }
+  // 8) SOURCES & FRESHNESS — status, freshness, evidence role, missing fields.
+  if(m.sources&&m.sources.length)h+='<div class="ev-sec">Sources &amp; freshness</div>'+m.sources.map(function(s){return c5srcRow(m,s);}).join('');
+  // 9) CALCULATION BASIS — plain English only; the raw formula is gated to debug.
+  h+='<div class="ev-sec">How Nerion calculated this</div><div class="drill-p">'+c5basisText(m)+'</div>';
+  if(c5debugOn()&&m.formula)h+='<div class="ev-sec">Formula (admin/debug)</div><div class="formula">'+m.formula+'</div>';
+  // Connect CTA when not connected.
+  if(!m.connected&&m.connectTool)h+='<div style="margin-top:12px"><button class="c5btn" onclick="c5Connect(\''+String(m.connectTool).replace(/'/g,'')+'\')">Connect '+m.connectTool+'</button></div>';
+  h+='<div class="c5foot">as of '+c5ago()+' · '+c5srcLabelText(m)+'</div>';
   if(typeof openDrill==='function')openDrill(m.name,h);
 }
 /* Take the user back to onboarding to connect the named tool. In the shell the
@@ -2650,16 +2741,9 @@ function c5ThreatsEvidence(demo){
 function c5ThreatsEvidencePanel(E){
   return c5EvLine(E.level,'EDR, SIEM, identity and cloud telemetry mapped to ATT&CK; identity operating-effectiveness evidence is partial.',E.sources,E.demo);
 }
-function c5ThreatsStrip(ts,ta,level,demo){
-  function item(lbl,val,sub,col){return '<div class="c5opc" style="cursor:default;--ac:var(--'+(col||'ink')+')"><div class="c5opc-h"><span class="c5opc-t">'+lbl+'</span></div><div class="c5opc-v" style="font-size:15px;color:var(--'+(col==='muted'?'ink':(col||'ink'))+')">'+c5esc(val)+'</div><div class="c5opc-s">'+c5esc(sub)+'</div></div>';}
-  var intrusion=ts.connected?(/campaign/.test(String(ts.displayValue))?'Active intrusion':'None confirmed'):'Not Enough Evidence';
-  return '<div class="c5statgrid" style="margin-top:14px">'+
-    item('Confirmed active intrusion',intrusion,'Connected telemetry'+(demo?' · Demo':''),/Active/.test(intrusion)?'crit':'good')+
-    item('Sector actors tracked',(ta!=null?String(ta):'—'),'Threat-intel feed'+(demo?' · demo telemetry':''),'ink')+
-    item('Highest exposure path','Identity → Privilege → Customer platform','Status: Watch',(typeof warn==='undefined'?'warn':'warn'))+
-    item('Evidence confidence',level,(demo?'Based on demo telemetry':'Connected telemetry; identity operating evidence partial'),level==='High'?'good':(level==='Demo'?'muted':'warn'))+
-    '</div>';
-}
+/* The four-item posture summary strip was removed from the Threats tab (it duplicated
+   the evidence panel and hard-coded a top exposure path); the tab now leads with the
+   answer line and the top attack paths. */
 function c5Threats(){
   var host=document.getElementById('c5-threats');if(!host)return;
   var demo=(typeof signalsAreDemo==='function')&&signalsAreDemo();
@@ -2687,7 +2771,6 @@ function c5Threats(){
   var TD=c5TopDriver(); // data-ranked top driver, not hard-coded identity
   host.innerHTML=c5header()+
     c5shell('Threats · are we ready for the behaviors most likely to hit us?','No confirmed active intrusion, but the attack path through '+TD.phrase+' remains the highest threat exposure.',null,'Nerion maps connected telemetry to MITRE ATT&CK tactics and business-relevant attack paths. The strongest signal today is not an active intrusion; it is the path through '+TD.phrase+' that could enable access to customer-platform services.')+
-    c5ThreatsStrip(ts,ta,E.level,demo)+
     '<div class="c5seclab" style="margin-top:16px">Top attack paths requiring attention</div><div class="c5aigrid">'+pathCards+'</div>'+
     c5ThreatsEvidencePanel(E)+
     '<div class="c5seclab" style="margin-top:16px">MITRE ATT&CK coverage · evidence-aware</div>'+
