@@ -59,7 +59,7 @@ var SEATS = {
   eyebrow:'CRO · Executive cockpit',
   verdict:'Cyber inside the <span class="em">enterprise risk</span> portfolio — one scale against your other principal risks, every figure traceable to source.',
   sub:'Every figure opens to its basis, inputs and source, and the shared cyber numbers reconcile exactly across seats.',
-  brief:'On one enterprise scale, cyber sits mid-pack among your principal risks — and its direction, not its size, is what to watch. You’re within appetite overall, but the identity category is over its share, and identity and third-party are where control assurance thins. Every top risk has a named owner; identity is the one that needs your governance push. Three calls: one risk to treat, one to monitor, one to accept.',
+  brief:'On one enterprise scale, cyber sits alongside your other principal risks — and its direction, not just its size, is what to watch. You’re within appetite overall, but the identity category is over its share, and identity and third-party are where control assurance thins. Every top risk has a named owner; identity is the one that needs your governance push. Three calls: one risk to treat, one to monitor, one to accept.',
   body:function(){return (
    sec('01','How does cyber compare to our other principal risks?','','<div id="cr-scale"></div>')
    +sec('02','Are we within risk appetite?','','<div id="cr-appetite"></div>')
