@@ -119,7 +119,7 @@ describe('3 · reviewed documents can be opened and read', () => {
     expect(ciso).toContain('function c5PdfText(raw)');
     expect(ciso).toContain('var txt=c5PdfText(c5DocTextMap()[fname]);'); // decode before display
     const a = ciso.indexOf('function c5PdfText(');
-    const code = ciso.slice(a, ciso.indexOf('\nfunction c5ViewDoc'));
+    const code = ciso.slice(a, ciso.indexOf('\nfunction ', a + 10));
     // eslint-disable-next-line no-eval
     const c5PdfText = eval('(' + code.replace('function c5PdfText', 'function') + ')');
     const pdf = '%PDF-1.4 1 0 obj << /Type /Font >> endobj stream '
@@ -162,5 +162,42 @@ describe('4 · Upload Final — the human-reviewed deck, with attribution', () =
     expect(classic).toContain("getElementById('c5fwUploadFinalBtn')");
     expect(classic).toContain('c5fwStoreFinal(f)');
     expect(classic).toContain('c5fwFinalRemove()');
+  });
+});
+
+describe('5 · Open document renders the auditor annotations (highlights + margin notes)', () => {
+  it('collects annotations from the stored review and highlights the evidence in the text', () => {
+    expect(ciso).toContain('function c5DocAnnotations(fname)');
+    expect(ciso).toContain('function c5AnnotateText(text,met)');
+    expect(ciso).toContain('mark class="c5ann"'); // green highlight mark
+    expect(ciso).toContain('✦ Auditor-annotated'); // header badge
+    expect(ciso).toContain('Evidenced requirements'); // margin panel
+    expect(ciso).toContain('Gaps — expected, not found');
+  });
+  it('collector groups by quote (merging controls) and gathers gaps; highlighter is whitespace-tolerant', () => {
+    function grab(n) { const a = ciso.indexOf('function ' + n + '('); return ciso.slice(a, ciso.indexOf('\nfunction ', a + 10)); }
+    global.c5esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    global.docScores = () => ({
+      'GV.RR-02': { doc: 'd1.pdf', attrs: [
+        { label: 'Communication plan', found: true, evidence: 'All access changes are communicated to stakeholders within 24 hours.' },
+        { label: 'Exception process', found: false, reasoning: 'No exception process is described.' }] },
+      'GV.RR-03': { doc: 'd1.pdf', attrs: [
+        { label: 'Stakeholder identification', found: true, evidence: 'All access   changes are communicated to stakeholders within 24 hours.' }] }, // whitespace variant
+      'PR.AA-01': { doc: 'OTHER.pdf', attrs: [{ label: 'x', found: true, evidence: 'unrelated' }] },
+    });
+    // strict-mode eval won't leak declarations — return them via a trailing expression
+    // eslint-disable-next-line no-eval
+    const api = eval(grab('c5DocScoresSafe') + '\n' + grab('c5DocAnnotations') + '\n' + grab('c5AnnotateText') + '\n;({ann:c5DocAnnotations,mark:c5AnnotateText})');
+    const ann = api.ann('d1.pdf');
+    expect(ann.met).toHaveLength(1); // the two identical passages merge
+    expect(ann.met[0].items.map((i) => i.control).sort()).toEqual(['GV.RR-02', 'GV.RR-03']);
+    expect(ann.gaps.map((g) => g.label)).toEqual(['Exception process']);
+    const out = api.mark('Scope. All access changes are communicated to stakeholders within 24 hours. Done.', ann.met);
+    expect(out.located).toBe(1);
+    expect(out.html).toMatch(/<mark class="c5ann" data-annidx="0"/);
+    expect(out.html).toMatch(/<sup[^>]*>1<\/sup>/);
+    expect(out.html).toContain('Scope.');
+    expect(out.html).toContain('Done.');
+    delete global.c5esc; delete global.docScores;
   });
 });
