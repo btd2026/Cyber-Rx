@@ -43,7 +43,7 @@ const RANKED = {
   sources: [{ tool: 'Business Capability Map', status: 'Connected', role: 'inventory' }, { tool: 'Risk register', status: 'Not connected', role: 'open risks', missing: 'per-capability risks' }],
 };
 
-describe('compact default view shows only the five answers + key evidence + action', () => {
+describe('compact default view shows only the five answers + action (evidence lives in the accordion)', () => {
   const H = renderDrawer(RANKED);
   it('shows the executive header + summary (severity/owner/evidence · what this means · why now)', () => {
     expect(H).toContain('Evidence confidence');
@@ -52,11 +52,12 @@ describe('compact default view shows only the five answers + key evidence + acti
     expect(H).toContain('Why it matters now');
     expect(H).toContain('What this does not prove'); // collapsed in calc basis
   });
-  it('shows a compact key-evidence summary and the recommended action', () => {
-    expect(H).toContain('Key evidence');
+  it('no longer shows an inline "Key evidence" block — it moved into the View evidence accordion', () => {
+    // The old inline "Key evidence" section header is gone from the default view.
+    expect(H).not.toContain('>Key evidence<');
+    // The evidence itself is still present, but inside the collapsed accordion (after the first <details>).
     expect(H).toMatch(/Modeled exposure[\s\S]*\$3\.4B/);
-    expect(H).toContain('Open control gaps');
-    expect(H).toContain('Open risk scenarios');
+    expect(H.indexOf('Modeled exposure')).toBeGreaterThan(H.indexOf('<details')); // evidence sits inside an accordion
     expect(H).toContain('Recommended action');
   });
   it('explains high exposure with 0 gaps / 0 risks (contradiction-safe)', () => {
@@ -129,9 +130,17 @@ describe('drawer wiring intact (source scan)', () => {
     expect(fn).toContain("c5acc('View sources'");
     expect(fn).toContain("c5acc('View calculation basis'");
   });
-  it('renders the compact key-evidence summary (not a default table)', () => {
-    expect(fn).toContain('c5keyEvHtml(m)');
+  it('key-evidence is the fallback body of the View evidence accordion (never inline)', () => {
+    // No inline "Key evidence" section header any more.
+    expect(fn).not.toContain("'<div class=\"ev-sec\">Key evidence</div>'");
+    // c5keyEvHtml is used as the accordion fallback when there is no table.
+    expect(fn).toContain('if(!_tbl){_tbl=c5keyEvHtml(m);}');
     expect(src).toContain('function c5keyEvidence(m)');
+  });
+  it('an evidence item that carries a gap is clickable to open exactly what the gap is', () => {
+    expect(fn).toContain('i.drill?'); // rows with a drill target render a clickable link
+    expect(fn).toContain('data-c5area="'); // routes to the per-area gap detail (c5areaInspect)
+    expect(fn).toContain('see the gap →'); // visible affordance when the value mentions a gap
   });
   it('still opens via openDrill (drill-down preserved)', () => {
     expect(fn).toContain('openDrill(m.name,h)');
