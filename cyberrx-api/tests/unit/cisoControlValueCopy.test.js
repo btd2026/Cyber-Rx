@@ -63,9 +63,9 @@ describe('Control Value tab — per-row evidence, gap and next action', () => {
   it('each row shows an evidence status badge', () => {
     expect(w3).toMatch(/ctrlEvidenceStatus\(cov,demoCV\)/);
   });
-  it('each row shows remaining gap and next action', () => {
-    expect(w3).toMatch(/Remaining gap: /);
-    expect(w3).toMatch(/Next: /);
+  it('each row shows remaining gap and next action (compact)', () => {
+    expect(w3).toMatch(/· Gap '\+c5esc\(gapShort\)/);
+    expect(w3).toMatch(/· Next<\/span> '\+c5esc\(next\)/);
   });
   it('marks rows Demo when signals are demo (mock marking)', () => {
     const fn = src.slice(src.indexOf('function ctrlEvidenceStatus'), src.indexOf('function ctrlEvidenceStatus') + 200);
@@ -73,7 +73,7 @@ describe('Control Value tab — per-row evidence, gap and next action', () => {
   });
   it('preserves drill-down / source traceability', () => {
     expect(w3).toMatch(/data-c5cv="/);
-    expect(w3).toMatch(/Click for source/);
+    expect(w3).toMatch(/click for source/i); // in the row title tooltip
   });
 });
 

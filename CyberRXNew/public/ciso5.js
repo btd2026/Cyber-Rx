@@ -1997,12 +1997,7 @@ function c5ExposureEvidence(){
 }
 function c5ExposureEvidencePanel(){
   var E=c5ExposureEvidence();
-  var SL=(typeof TrustLogic!=='undefined')?TrustLogic.sourceStatus:function(o){return o&&o.connected?{label:'Connected',cls:'g'}:{label:'Not Connected',cls:'n'};};
-  var lvlCls={'High':'g','Medium':'a','Low':'a','Not Enough Evidence':'n'}[E.conf.level]||'n';
-  var chips=E.sources.map(function(s){var st=SL({connected:s.connected,computed:s.computed,partial:s.partial});return '<span class="c5pill '+st.cls+'" style="display:inline-block;margin:2px 5px 2px 0">'+s.label+': '+st.label+'</span>';}).join('');
-  return '<div style="margin-top:14px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)">'+
-    '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:12px;font-weight:600;color:var(--ink-2)">Evidence confidence</span><span class="c5pill '+lvlCls+'">'+E.conf.level+'</span>'+(E.demo?'<span class="c5pill n">Demo data — values illustrative</span>':'')+'</div>'+
-    '<div style="margin-top:7px;line-height:2">'+chips+'</div></div>';
+  return c5EvLine(E.conf.level,'CMDB, capability map and exposure model computed; identity, vulnerability and vendor telemetry connect live.',E.sources,E.demo);
 }
 
 /* Reusable graphical status-ring tile grid (the AI & supply-chain look): a
@@ -2095,13 +2090,7 @@ function c5AisEvidence(byId,demo){
   return {sources:sources,level:demo?'Demo':conf.level,demo:demo};
 }
 function c5AisEvidencePanel(E){
-  var SL=(typeof TrustLogic!=='undefined')?TrustLogic.sourceStatus:function(o){return o&&o.connected?{label:'Connected',cls:'g'}:{label:'Not Connected',cls:'n'};};
-  var lvlCls={'High':'g','Medium':'a','Low':'a','Demo':'n','Not Enough Evidence':'n'}[E.level]||'n';
-  var chips=E.sources.map(function(s){var st=SL({connected:s.connected,partial:s.partial});if(E.demo&&s.connected)st={label:'Demo',cls:'a'};return '<span class="c5pill '+st.cls+'" style="display:inline-block;margin:2px 5px 2px 0">'+s.label+': '+st.label+'</span>';}).join('');
-  return '<div style="margin-top:14px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)">'+
-    '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:12px;font-weight:600;color:var(--ink-2)">Evidence confidence</span><span class="c5pill '+lvlCls+'">'+E.level+'</span></div>'+
-    '<div style="margin-top:7px;line-height:2">'+chips+'</div>'+
-    '<div style="margin-top:7px;font-size:11.5px;color:var(--muted)">'+(E.demo?'Values based on demo telemetry.':'CI/CD and code scanning connect live; AI posture is partly self-reported until AI inventory and usage telemetry connect.')+'</div></div>';
+  return c5EvLine(E.level,'CI/CD and code scanning connect live; AI posture is partly self-reported until AI inventory and usage telemetry connect.',E.sources,E.demo);
 }
 function c5AiSupply(){
   var host=document.getElementById('c5-aisupply');if(!host)return;
@@ -2246,7 +2235,7 @@ function c5Exposure(){
             :'Protection is uneven across business areas — prioritize the ones below, worst first.'))
     :'Where the business is protected, where it isn’t, and where to act first.';
   // Plain, assistant-style intro — what these areas are, and what "protected" means.
-  var intro='These are the business areas that keep the company running. Each one depends on your security controls — the stronger those controls, the safer the area. Click any area for the detail.';
+  var intro='Business areas ranked by protection; modeled exposure = business value tied to unresolved control gaps. Click any area for the detail.';
   var tone=(haveAreas&&weak.length&&well.length<weak.length)?'warn':null;
   // Summary as premium icon cards — clickable to a detail inspector, with a hover tooltip.
   var scard=function(ic,lbl,val,sub,col,pc,tip){col=col||'muted';return '<div class="c5opc" data-c5pc="'+pc+'" style="--ac:var(--'+col+')" title="'+c5esc(tip||'')+'"><span class="c5opc-go">details ›</span><div class="c5opc-h"><span class="c5opc-ic">'+c5icon(ic)+'</span><span class="c5opc-t">'+lbl+'</span></div><div class="c5opc-v" style="color:var(--'+(col==='muted'?'ink':col)+')">'+val+'</div><div class="c5opc-s">'+sub+'</div></div>';};
@@ -2277,8 +2266,9 @@ function c5Exposure(){
       else if((a.gaps||0)>0) why=a.gaps+' open control gap'+(a.gaps>1?'s':'')+' to close.';
       else why='Below the protection threshold ('+TARGET+').';
     }
-    var whyHtml=why?('<div class="c5esub" style="margin-top:3px;color:var(--ink-2)">'+why+'</div>'):'';
-    return '<div class="c5erow" data-c5area="'+c5esc(a.name)+'" title="'+c5esc(a.name+' — click for open risks, gaps, critical dependencies and the exposure basis.')+'"><div style="flex:1;min-width:0"><div class="c5exp">'+a.name+' <span class="c5pill '+pill+'" style="margin-left:4px">'+status+'</span>'+evc+'</div><div class="c5esub">'+sub+'</div>'+whyHtml+'<div class="c5esub" style="color:var(--muted);font-size:11px;margin-top:2px">Click for open risks &amp; exposure basis ›</div></div>'+
+    // Two lines only: name + status + evidence + score · then one muted line (exposure ·
+    // driver · why-it-still-needs-work). Full open-risks/gaps are one click away.
+    return '<div class="c5erow" data-c5area="'+c5esc(a.name)+'" title="'+c5esc(a.name+' — click for open risks, gaps, dependencies and the exposure basis.')+'"><div style="flex:1;min-width:0"><div class="c5exp">'+a.name+' <span class="c5pill '+pill+'" style="margin-left:4px">'+status+'</span>'+evc+'</div><div class="c5esub" style="color:var(--ink-2)">'+sub+(why?(' <span style="color:var(--muted)">· '+why+'</span>'):'')+'</div></div>'+
       '<div class="c5etrack"><div style="width:'+a.score+'%;height:100%;background:linear-gradient(90deg,color-mix(in srgb,var(--'+cls+') 62%,transparent),var(--'+cls+'))"></div></div>'+
       '<div class="c5emult" style="color:var(--'+cls+')">'+a.score+'</div></div>';
   };
@@ -2294,17 +2284,16 @@ function c5Exposure(){
       var evCls=(ev==='Telemetry Validated')?'g':(ev==='Mock / Demo'||ev==='Not Enough Evidence')?'n':'a';
       var covCls=(cov==null)?'n':(cov>=90?'b':cov>=70?'a':'r');
       var gapPct=(cov!=null)?(100-cov):null;
-      var gapTxt=(gapPct!=null&&gapPct>0)?(gapPct+'% of '+(CTRL_POP[c.k]||'in-scope assets')+' remain uncovered')
-        :(cov===100?'Full coverage — operating evidence still needed':'');
+      var gapShort=(gapPct!=null&&gapPct>0)?(gapPct+'% '+(CTRL_POP[c.k]||'assets')+' uncovered'):(cov===100?'operating evidence needed':'');
       var next=CTRL_NEXT[c.k]||ctrlNextGeneric(cov);
       var desc=CTRL_DESC[c.k]||('Reduces '+c.name.toLowerCase()+' exposure');
-      return '<div class="c5erow" data-c5cv="'+c.k+'" title="'+c5esc(nm(c)+' — click for source systems, coverage denominator, evidence status, exposure-reduction basis and remaining gap.')+'">'+
+      // Two lines only, dense: name + coverage + evidence + $ · then one muted line
+      // (what it reduces · remaining gap · next). Full basis is one click away.
+      return '<div class="c5erow" data-c5cv="'+c.k+'" title="'+c5esc(nm(c)+' — click for source, coverage denominator, evidence status and remaining gap.')+'">'+
         '<span class="c5rank'+(idx===0?' top':'')+'">'+(idx+1)+'</span>'+
         '<div style="flex:1;min-width:0">'+
-          '<div class="c5exp">'+nm(c)+' <span class="c5pill '+covCls+'" style="margin-left:4px">'+(cov!=null?(cov+'% coverage'):'coverage n/a')+'</span> <span class="c5pill '+evCls+'" style="margin-left:4px;font-size:10px">'+ev+'</span></div>'+
-          '<div class="c5esub">'+c5esc(desc)+'</div>'+
-          '<div class="c5esub" style="color:var(--ink-2);margin-top:2px">'+(gapTxt?('Remaining gap: '+c5esc(gapTxt)+' · '):'')+'Next: '+c5esc(next)+'</div>'+
-          '<div class="c5esub" style="color:var(--muted);font-size:11px;margin-top:2px">Click for source &amp; calculation basis ›</div>'+
+          '<div class="c5exp">'+nm(c)+' <span class="c5pill '+covCls+'" style="margin-left:4px">'+(cov!=null?(cov+'%'):'n/a')+'</span> <span class="c5pill '+evCls+'" style="margin-left:4px;font-size:10px">'+ev+'</span></div>'+
+          '<div class="c5esub" style="color:var(--ink-2)">'+c5esc(desc)+(gapShort?(' <span style="color:var(--muted)">· Gap '+c5esc(gapShort)+'</span>'):'')+' <span style="color:var(--muted)">· Next</span> '+c5esc(next)+'</div>'+
         '</div>'+
         '<div class="c5etrack"><div style="width:'+pct+'%;height:100%;background:linear-gradient(90deg,color-mix(in srgb,var(--good) 62%,transparent),var(--good))"></div></div>'+
         '<div class="c5emult" style="color:var(--good)">'+usd(o.usd)+'</div></div>';
@@ -2369,7 +2358,7 @@ function c5Exposure(){
     c5shell('Control value · which controls reduce the most business exposure?',
       cvVerdict,
       null,
-      'Each control’s business value is computed from its coverage, the exposure of the assets it covers, and the criticality of the business services behind them. Modeled exposure reduction estimates the business exposure reduced by covered controls across protected assets and business services'+(demoCV?' — demo values until your exposure model and denominators connect':'')+'. The highest-value control is the one delivering the most reduction today; the largest remaining gap is where added coverage would reduce the most residual exposure.');
+      'Modeled exposure reduction estimates the business exposure reduced by covered controls across protected assets and business services'+(demoCV?' (demo values).':' — coverage × asset exposure × business-service criticality.'));
   if(haveCtrls){
     bodyB+=c5ControlValueEvidencePanel(ctrlConn,rr,demoCV)+
       '<div class="c5seclab">Controls delivering the most business value · '+ctrlConn.length+' control'+(ctrlConn.length>1?'s':'')+' · '+usd(rr.total)+' modeled exposure reduction</div><div>'+w3+'</div>';
@@ -2415,15 +2404,18 @@ function c5ProtectionEvidence(areas){
   var conf=(typeof TrustLogic!=='undefined')?TrustLogic.evidenceConfidence(sources):{level:'—'};
   return {sources:sources,conf:conf,demo:demo};
 }
+/* Compact one-line evidence-confidence strip — level pill + short rationale + a
+   connected/partial/missing source count. Replaces the tall chip cloud so the page
+   stays dense and scannable. Full per-source detail lives in the drill-down. */
+function c5EvLine(level,rationale,sources,demo){
+  var lvlCls={High:'g',Medium:'a',Low:'a',Demo:'n','Not Enough Evidence':'n'}[level]||'n';
+  var cnt='';
+  if(sources&&sources.length){var cc=0,pp=0;sources.forEach(function(s){if(s.connected)cc++;else if(s.partial)pp++;});var nn=sources.length-cc-pp;cnt=' · '+cc+' connected'+(pp?(' · '+pp+' partial'):'')+(nn?(' · '+nn+' not connected'):'');}
+  return '<div style="margin-top:12px;font-size:12px;color:var(--ink-2)"><b>Evidence confidence</b> <span class="c5pill '+lvlCls+'">'+level+'</span> <span style="color:var(--muted)">'+(demo?'· Demo ':'')+'— '+c5esc(rationale)+cnt+'</span></div>';
+}
 function c5ProtectionEvidencePanel(areas){
   var E=c5ProtectionEvidence(areas);
-  var SL=(typeof TrustLogic!=='undefined')?TrustLogic.sourceStatus:function(o){return o&&o.connected?{label:'Connected',cls:'g'}:{label:'Not Connected',cls:'n'};};
-  var lvlCls={'High':'g','Medium':'a','Low':'a','Not Enough Evidence':'n'}[E.conf.level]||'n';
-  var chips=E.sources.map(function(s){var st=SL({connected:s.connected,computed:s.computed,partial:s.partial});return '<span class="c5pill '+st.cls+'" style="display:inline-block;margin:2px 5px 2px 0">'+s.label+': '+st.label+'</span>';}).join('');
-  return '<div style="margin-top:14px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)">'+
-    '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:12px;font-weight:600;color:var(--ink-2)">Evidence confidence</span><span class="c5pill '+lvlCls+'">'+E.conf.level+'</span>'+(E.demo?'<span class="c5pill n">Demo data — some exposure values are modeled</span>':'')+'</div>'+
-    '<div style="margin-top:7px;line-height:2">'+chips+'</div>'+
-    '<div style="margin-top:7px;font-size:11.5px;color:var(--muted)">Modeled exposure = estimated business value associated with services dependent on unresolved control gaps.</div></div>';
+  return c5EvLine(E.conf.level,'coverage & control posture computed; modeled exposure = estimated business value associated with services dependent on unresolved control gaps.',E.sources,E.demo);
 }
 /* Evidence confidence for the Control-value tab. Operating-effectiveness evidence is
    never asserted from coverage alone, so this can never read "High" on coverage; a
@@ -2446,13 +2438,7 @@ function c5ControlValueEvidence(ctrlConn,rr,demo){
 }
 function c5ControlValueEvidencePanel(ctrlConn,rr,demo){
   var E=c5ControlValueEvidence(ctrlConn,rr,demo);
-  var SL=(typeof TrustLogic!=='undefined')?TrustLogic.sourceStatus:function(o){return o&&o.connected?{label:'Connected',cls:'g'}:{label:'Not Connected',cls:'n'};};
-  var lvlCls={'High':'g','Medium':'a','Low':'a','Not Enough Evidence':'n'}[E.conf.level]||'n';
-  var chips=E.sources.map(function(s){var st=SL({connected:s.connected,computed:s.computed,partial:s.partial});return '<span class="c5pill '+st.cls+'" style="display:inline-block;margin:2px 5px 2px 0">'+s.label+': '+st.label+'</span>';}).join('');
-  return '<div style="margin-top:14px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)">'+
-    '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:12px;font-weight:600;color:var(--ink-2)">Evidence confidence</span><span class="c5pill '+lvlCls+'">'+E.conf.level+'</span>'+(E.demo?'<span class="c5pill n">Demo — replace with live exposure model as sources connect</span>':'')+'</div>'+
-    '<div style="margin-top:7px;line-height:2">'+chips+'</div>'+
-    '<div style="margin-top:7px;font-size:11.5px;color:var(--muted)">Computed from control coverage, asset exposure and business-service criticality. Coverage is not the same as operating effectiveness.</div></div>';
+  return c5EvLine(E.conf.level,'computed from control coverage, asset exposure and business-service criticality; coverage is not operating effectiveness.',E.sources,E.demo);
 }
 
 /* ---------- Tab 03 — Control effectiveness ---------- */
@@ -2522,13 +2508,7 @@ function c5OpsEvidence(ms,demo){
 }
 function c5OpsEvidencePanel(ms,demo){
   var E=c5OpsEvidence(ms,demo);
-  var SL=(typeof TrustLogic!=='undefined')?TrustLogic.sourceStatus:function(o){return o&&o.connected?{label:'Connected',cls:'g'}:{label:'Not Connected',cls:'n'};};
-  var lvlCls={'High':'g','Medium':'a','Low':'a','Not Enough Evidence':'n'}[E.conf.level]||'n';
-  var chips=E.sources.map(function(s){var st=SL({connected:s.connected,computed:s.computed,partial:s.partial});return '<span class="c5pill '+st.cls+'" style="display:inline-block;margin:2px 5px 2px 0">'+s.label+': '+st.label+'</span>';}).join('');
-  return '<div style="margin-top:14px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)">'+
-    '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:12px;font-weight:600;color:var(--ink-2)">Evidence confidence</span><span class="c5pill '+lvlCls+'">'+E.conf.level+'</span>'+(E.demo?'<span class="c5pill n">Demo — replace with live feeds as sources connect</span>':'')+'</div>'+
-    '<div style="margin-top:7px;line-height:2">'+chips+'</div>'+
-    '<div style="margin-top:7px;font-size:11.5px;color:var(--muted)">Computed from SIEM/SOAR incidents, vendor-risk alerts, threat-intel and business-service mappings.</div></div>';
+  return c5EvLine(E.conf.level,'computed from SIEM/SOAR incidents, vendor-risk alerts, threat-intel and business-service mappings.',E.sources,E.demo);
 }
 /* Tab 03 — Cyber Operations. The live SOC picture for the seat: active incidents,
    services under threat, third-party alerts, and emerging risks. Each box is a
@@ -2641,13 +2621,7 @@ function c5ThreatsEvidence(demo){
   return {sources:sources,level:level,demo:demo};
 }
 function c5ThreatsEvidencePanel(E){
-  var SL=(typeof TrustLogic!=='undefined')?TrustLogic.sourceStatus:function(o){return o&&o.connected?{label:'Connected',cls:'g'}:{label:'Not Connected',cls:'n'};};
-  var lvlCls={'High':'g','Medium':'a','Low':'a','Demo':'n','Not Enough Evidence':'n'}[E.level]||'n';
-  var chips=E.sources.map(function(s){var st=SL({connected:s.connected,partial:s.partial});if(E.demo&&s.connected)st={label:'Demo Telemetry',cls:'a'};return '<span class="c5pill '+st.cls+'" style="display:inline-block;margin:2px 5px 2px 0">'+s.label+': '+st.label+'</span>';}).join('');
-  return '<div style="margin-top:14px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)">'+
-    '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:12px;font-weight:600;color:var(--ink-2)">Evidence confidence</span><span class="c5pill '+lvlCls+'">'+E.level+'</span></div>'+
-    '<div style="margin-top:7px;line-height:2">'+chips+'</div>'+
-    '<div style="margin-top:7px;font-size:11.5px;color:var(--muted)">'+(E.demo?'Values based on demo telemetry.':'EDR, SIEM, identity and cloud telemetry mapped to ATT&CK; identity operating-effectiveness evidence is partial.')+'</div></div>';
+  return c5EvLine(E.level,'EDR, SIEM, identity and cloud telemetry mapped to ATT&CK; identity operating-effectiveness evidence is partial.',E.sources,E.demo);
 }
 function c5ThreatsStrip(ts,ta,level,demo){
   function item(lbl,val,sub,col){return '<div class="c5opc" style="cursor:default;--ac:var(--'+(col||'ink')+')"><div class="c5opc-h"><span class="c5opc-t">'+lbl+'</span></div><div class="c5opc-v" style="font-size:15px;color:var(--'+(col==='muted'?'ink':(col||'ink'))+')">'+c5esc(val)+'</div><div class="c5opc-s">'+c5esc(sub)+'</div></div>';}
@@ -2769,7 +2743,7 @@ function c5cfExposure(){
   var evLevel=demo?'Demo':(ap.connected&&evConf.level==='High'?'Medium':evConf.level); // self-reported appetite caps below High
   var SL=(typeof TrustLogic!=='undefined')?TrustLogic.sourceStatus:function(o){return o&&o.connected?{label:'Connected',cls:'g'}:{label:'Not Connected',cls:'n'};};
   var evChips=evSrcs.map(function(s){var st=SL({connected:s.connected,computed:s.computed,partial:s.partial});if(demo&&s.connected)st={label:'Demo',cls:'a'};return '<span class="c5pill '+st.cls+'" style="display:inline-block;margin:2px 5px 2px 0">'+s.label+': '+st.label+'</span>';}).join('');
-  var evPanel='<div style="margin-top:14px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:12px;font-weight:600;color:var(--ink-2)">Evidence confidence</span><span class="c5pill '+({High:'g',Medium:'a',Low:'a',Demo:'n','Not Enough Evidence':'n'}[evLevel]||'n')+'">'+evLevel+'</span></div><div style="margin-top:7px;line-height:2">'+evChips+'</div><div style="margin-top:6px;font-size:11.5px;color:var(--muted)">Exposure and tail loss are modeled; the appetite is self-reported; insurance data is manual; identity exposure is computed from connected telemetry.</div></div>';
+  var evPanel=c5EvLine(evLevel,'exposure and tail loss are modeled; appetite is self-reported; insurance is manual; identity exposure is computed from connected telemetry.',evSrcs,demo);
   // ── funding decision block (no ROI/per-$1 without cost data) ──
   var funding='<div class="c5statgrid" style="margin-top:14px">'+
     cfCard('Funding required','Cost estimate needed','Connect the remediation cost to compute exposure reduction per $1','Not connected','muted')+
@@ -4301,7 +4275,7 @@ function c5DecProj(){
   ];
   var evConf=(typeof TrustLogic!=='undefined')?TrustLogic.evidenceConfidence(evSrcs):{level:'—'};
   var evLevel=demo?'Demo':evConf.level;
-  var evPanel='<div style="margin-top:14px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:12px;font-weight:600;color:var(--ink-2)">Evidence confidence</span><span class="c5pill '+({High:'g',Medium:'a',Low:'a',Demo:'n','Not Enough Evidence':'n'}[evLevel]||'n')+'">'+evLevel+'</span></div><div style="margin-top:6px;font-size:11.5px;color:var(--muted)">Decision impacts are modeled from control value, exposure and business-service data; some partner attestations are pending.'+(demo?' Values are demo telemetry.':'')+'</div></div>';
+  var evPanel=c5EvLine(evLevel,'decision impacts modeled from control value, exposure and business-service data; some partner attestations pending.',evSrcs,demo);
   function dpCard(t,v,sub,prov,col){return '<div class="c5opc" style="cursor:default;--ac:var(--'+(col||'ink')+')"><div class="c5opc-h"><span class="c5opc-t">'+t+'</span></div><div class="c5opc-v" style="font-size:22px;color:var(--'+(col==='muted'?'ink':(col||'ink'))+')">'+c5esc(String(v))+'</div><div class="c5opc-s">'+c5esc(sub)+'</div><div style="font-size:10px;color:var(--muted);margin-top:2px">'+c5esc(prov)+'</div></div>';}
   var summary='<div class="c5statgrid" style="margin-top:14px">'+
     dpCard('My decision needed',myPending,'Awaiting your call','Computed',myPending>0?'warn':'good')+
