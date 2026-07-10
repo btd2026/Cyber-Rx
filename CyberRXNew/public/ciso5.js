@@ -3654,16 +3654,44 @@ function c5ceDecisions(){
 /* Tab 01 — Cyber on one scale */
 function c5crScale(){
   var host=document.getElementById('cr-scale');if(!host)return;
-  var P=c5Principal(),TD=c5TopDriver(),dm=c5get(TD.mid);
-  var rows=P.rows.map(function(r){var pf=Math.max(6,Math.round(r.v/P.max*100));var barCls=r.cyber?'a':'';
-    return '<div class="c5row" data-c5m="'+(r.cyber?'exp_total':'cr_rank')+'"><div class="c5row-main"><div class="c5row-t">'+r.l+(r.cyber?'<span class="c5tag">You are here</span>':'')+'</div><div class="c5retbar" style="width:100%;max-width:340px"><i class="'+barCls+'" style="width:'+pf+'%"></i></div></div><div class="c5row-v">'+usd(r.v)+'</div><span class="c5tr '+r.tc+'">'+r.tr+'</span></div>';
+  var demo=(typeof signalsAreDemo==='function')&&signalsAreDemo();
+  var P=c5Principal(),IDF=c5IdFix();
+  var rank=P.cyberRank,total=P.rows.length;
+  var totalRes=P.rows.reduce(function(s,r){return s+r.v;},0);
+  // ── verdict DERIVED from cyber's rank, so it can never contradict the "N of M" card
+  //    (the old hard-coded "mid-pack" fought a card that ranked cyber #1). ──
+  var verdict=(rank==null||total<=1)?'Cyber’s residual is modeled — connect your ERM register to rank it against your other principal risks.'
+    :(rank===1)?'Cyber is your #1 principal risk by modeled residual — its direction, not just its size, is what to watch.'
+    :(rank<=Math.ceil(total/3))?'Cyber is among your top principal risks — watch its direction.'
+    :(rank<=Math.ceil(total*2/3))?'Cyber sits mid-pack among your principal risks — watch its direction.'
+    :'Cyber sits in the lower half of your principal risks — watch its direction.';
+  var support='On one enterprise scale, cyber'+(P.cyberV>0?(' ('+usd(P.cyberV)+' residual)'):'')+' sits against market, credit, operational and compliance risk. Its direction — not just its size — is what the risk committee tracks; a single '+IDF.short+' gap drives most of it. Each risk traces to its basis.';
+  // ── principal-risks matrix (centerpiece) — cyber highlighted, sorted by residual. Replaces
+  //    the old bar list (whose stray track element was the orphan artifact on the tab). ──
+  var mRows=P.rows.map(function(r){var share=totalRes>0?Math.round(r.v/totalRes*100):0;
+    var pillCls=r.cyber?'b':(r.tc==='up'?'a':r.tc==='dn'?'g':'n');
+    var pillTxt=r.cyber?('You are here · #'+rank):r.tr;
+    return '<div class="c5prow" data-c5m="'+(r.cyber?'exp_total':'cr_rank')+'" style="cursor:pointer">'+
+      '<div style="flex:1;min-width:0"><div class="c5row-t">'+c5esc(r.l)+(r.cyber?' <span class="c5tag">Cyber</span>':'')+'</div><div class="c5row-s">'+share+'% of enterprise residual · '+c5esc(String(r.tr).toLowerCase())+'</div></div>'+
+      '<div style="text-align:right;flex:none;min-width:64px;margin-right:12px;font-weight:600;color:var(--'+(r.cyber?'warn':'ink')+')">'+usd(r.v)+'</div>'+
+      '<span class="c5pill '+pillCls+'" style="flex:none">'+c5esc(pillTxt)+'</span></div>';
   }).join('');
+  var liveTag='<span class="c5pill n" style="font-size:9px">Live + modeled</span>';
+  var matrix='<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:16px 0 8px"><span style="font-size:12.5px;font-weight:600;color:var(--ink)">Principal risks — residual on one enterprise scale '+liveTag+'</span><span style="font-size:11px;color:var(--muted)">Sorted by residual</span></div><div class="c5card" style="padding:2px 14px">'+mRows+'</div>';
+  // ── evidence footnote ──
+  var evSrcs=[
+    {label:'Cyber residual model (ALE)',connected:P.cyberV>0},
+    {label:'ERM register · principal risks',connected:total>1},
+    {label:'Cyber trend (quarter over quarter)',connected:c5get('cr_trend').connected},
+    {label:'Identity exposure model',connected:c5get(IDF.mid).connected}
+  ];
+  var connN=evSrcs.filter(function(s){return s.connected;}).length;
   host.innerHTML=c5header()+
-    c5shell('Cyber on one scale · how does it compare to our other risks?','Cyber sits mid-pack among your principal risks — watch its direction.',null,'On one enterprise scale, cyber sits against market, credit, operational and compliance risk. Its direction — not just its size — is what the risk committee tracks; a single '+TD.short+' gap drives most of it. Each risk traces to its basis.')+
+    c5shell('Cyber on one scale · how does it compare to our other risks?',verdict,(rank===1?'warn':null),support)+
     '<div class="c5cards">'+c5card('cr_rank')+c5card('exp_total')+c5card('cr_trend')+'</div>'+
-    '<div class="c5rank"><div class="c5rank-h">Principal risks · residual on one scale</div>'+rows+'</div>'+
-    c5bl('Bottom line','The one lever that moves cyber down the scale.',null,(dm.connected?('A single '+TD.short+' gap drives most of cyber’s residual. Treating it reduces '+dm.displayValue+' — moving cyber down the enterprise scale.'):'Connect your controls and the single '+TD.short+' gap driving most of cyber’s residual surfaces here, with its funded treatment.'),{mid:TD.mid,txt:dm.connected?('Treat the '+c5esc(TD.short)+' risk — reduces '+dm.displayValue):('Treat the '+c5esc(TD.short)+' risk')})+
-    '<div class="c5foot">Risks are normalized to one residual-loss scale; cyber traces to its model, the rest to your ERM inputs.</div>';
+    matrix+
+    c5bl('The decision','The one lever that moves cyber down the scale.',null,(IDF.usd?('A single '+IDF.short+' gap drives most of cyber’s residual. Treating it reduces '+IDF.usd+' — moving cyber down the enterprise scale. Same fix across the cockpit ('+IDF.owner+' · '+IDF.timeline+').'):'Connect your controls and the single '+IDF.short+' gap driving most of cyber’s residual surfaces here, with its funded treatment.'),{mid:IDF.mid,txt:IDF.usd?('Treat the '+c5esc(IDF.short)+' risk — reduces '+IDF.usd):('Treat the '+c5esc(IDF.short)+' risk')})+
+    '<div class="c5foot">Risks are normalized to one residual-loss scale; cyber traces to its model, the rest to your ERM inputs. · '+connN+' sources connected'+(demo?' · demo':'')+'</div>';
 }
 /* Tab 02 — Risk appetite & acceptance */
 function c5crAppetite(){
