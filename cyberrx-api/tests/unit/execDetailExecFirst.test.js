@@ -24,7 +24,7 @@ function render(m, opts) {
   const np = src.slice(src.indexOf('var C5_NOTPROVE='), src.indexOf('function c5notProve('));
   const bundle = ['c5srcLabelText', 'c5statusText', 'c5notProve', 'c5evConfObj', 'c5foundText', 'c5whyRanked',
     'c5riskCard', 'c5rankTable', 'c5basisText', 'c5srcRow', 'c5acc', 'c5keyEvidence', 'c5keyEvHtml',
-    'c5severity', 'c5sevColor', 'c5ownerOf', 'c5impactText', 'c5affected', 'c5whyNow', 'c5decisionRows', 'c5InspectObj']
+    'c5severity', 'c5sevColor', 'c5ownerSeat', 'c5ownerOf', 'c5etaOf', 'c5impactText', 'c5affected', 'c5whyNow', 'c5decisionRows', 'c5InspectObj']
     .map(grab).join('\n');
   // eslint-disable-next-line no-eval
   eval(np + '\n' + bundle + '\n;c5InspectObj(' + JSON.stringify(m) + ');');
@@ -143,5 +143,45 @@ describe('authored risk narrative (vendors) is accurate and data-driven', () => 
     const fn = src.slice(w, src.indexOf('\nfunction ', w + 10));
     expect(fn).toMatch(/residual risk stays elevated/);
     expect(fn).toMatch(/residual risk keeps rising toward the critical range/);
+  });
+});
+
+describe('Owner and ETA/Due come from real sources, honestly', () => {
+  function bundle() {
+    global.c5esc = (s) => String(s == null ? '' : s);
+    global.SEAT_NAMES = { ciso: 'Jane Doe', cfo: '' };
+    global.c5SeatNameOf = (seat) => global.SEAT_NAMES[seat] || '';
+    // eslint-disable-next-line no-eval
+    const api = eval(grab('c5ownerSeat') + '\n' + grab('c5ownerOf') + '\n' + grab('c5etaOf')
+      + '\n;({seat:c5ownerSeat,owner:c5ownerOf,eta:c5etaOf})');
+    return api;
+  }
+  it('owner = the named leader of the accountable seat (from onboarding), else the role', () => {
+    const A = bundle();
+    expect(A.owner({ id: 'er_thirdparty' })).toBe('Jane Doe · CISO'); // ciso seat has a name
+    expect(A.owner({ id: 'cf_roi' })).toBe('CFO'); // cfo has no name → role
+    expect(A.owner({ id: 'x', owner: 'Named Owner' })).toBe('Named Owner'); // explicit override
+    delete global.c5esc; delete global.SEAT_NAMES; delete global.c5SeatNameOf;
+  });
+  it('owner falls back to the seat currently being viewed, not a fabricated name', () => {
+    global.c5esc = (s) => String(s == null ? '' : s); global.c5SeatNameOf = () => ''; global.CUR = 'coo';
+    // eslint-disable-next-line no-eval
+    const A = eval(grab('c5ownerSeat') + '\n' + grab('c5ownerOf') + '\n;({owner:c5ownerOf})');
+    expect(A.owner({ id: 'weird_metric' })).toBe('COO'); // CUR seat
+    delete global.c5esc; delete global.c5SeatNameOf; delete global.CUR;
+  });
+  it('ETA/due comes from a real date (explicit or a gap due), else null → "Not scheduled"', () => {
+    global.c5esc = (s) => String(s == null ? '' : s);
+    // eslint-disable-next-line no-eval
+    const eta = eval(grab('c5etaOf') + '\n;c5etaOf');
+    expect(eta({ due: '30 days' })).toBe('30 days');
+    expect(eta({ gaps: [{}, { due: 'Q3' }] })).toBe('Q3');
+    expect(eta({})).toBeNull(); // no fabricated deadline
+    delete global.c5esc;
+  });
+  it('the header renders "Not scheduled" (not a bare —) when there is no due date', () => {
+    const H = render(CRIT); // no m.due, no gaps
+    expect(H).toContain('Not scheduled');
+    expect(H).toContain('The remediation / decision due date'); // source explained in the chip tooltip
   });
 });
