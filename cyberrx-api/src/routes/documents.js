@@ -801,6 +801,9 @@ function analyzeDeep(text, docType) {
         tag: attr.tag,
         key: attr.key,
         label: attr.label,
+        // Carry the matching pattern so the reader can locate WHERE in the document
+        // a keyword match landed (highlight its passage), not just report that it matched.
+        pat: attr.pat,
         found,
       });
       if (found) ctrlMatched++;

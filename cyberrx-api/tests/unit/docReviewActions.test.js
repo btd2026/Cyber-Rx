@@ -168,8 +168,9 @@ describe('4 · Upload Final — the human-reviewed deck, with attribution', () =
 describe('5 · Open document renders the auditor annotations (highlights + margin notes)', () => {
   it('collects annotations from the stored review and highlights the evidence in the text', () => {
     expect(ciso).toContain('function c5DocAnnotations(fname)');
-    expect(ciso).toContain('function c5AnnotateText(text,met)');
+    expect(ciso).toContain('function c5AnnotateText(text,met,matched)');
     expect(ciso).toContain('mark class="c5ann"'); // green highlight mark
+    expect(ciso).toContain('c5ann c5annkw'); // blue keyword-match highlight (locate where a keyword hit)
     expect(ciso).toContain('✦ Nauditor-annotated'); // header badge (Nerion Auditor branding)
     expect(ciso).toContain('Evidenced — quoted in the text'); // margin panel (quoted matches)
     expect(ciso).toContain('Matched — keyword review'); // keyword matches that drove the score
@@ -199,6 +200,29 @@ describe('5 · Open document renders the auditor annotations (highlights + margi
     expect(out.html).toMatch(/<sup[^>]*>1<\/sup>/);
     expect(out.html).toContain('Scope.');
     expect(out.html).toContain('Done.');
+    delete global.c5esc; delete global.docScores;
+  });
+
+  it('keyword-matched requirements are LOCATED in the text (blue highlight) — via the pattern or the label', () => {
+    function grab(n) { const a = ciso.indexOf('function ' + n + '('); return ciso.slice(a, ciso.indexOf('\nfunction ', a + 10)); }
+    global.c5esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    // A doc reviewed by KEYWORD: attrs are found but carry no evidence quote — one keeps
+    // the matcher pattern (pat), one only its label (fallback path).
+    global.docScores = () => ({
+      'GV.SC-01': { doc: 'd3.pdf', attrs: [
+        { label: 'Vendor tiering', found: true, pat: 'tier|critical|classification' },
+        { label: 'Ongoing monitoring', found: true }] }, // no pat → derive from label words
+    });
+    // eslint-disable-next-line no-eval
+    const api = eval(grab('c5DocScoresSafe') + '\n' + grab('c5DocAnnotations') + '\n' + grab('c5AnnotateText') + '\n;({ann:c5DocAnnotations,mark:c5AnnotateText})');
+    const ann = api.ann('d3.pdf');
+    expect(ann.matched).toHaveLength(2);
+    expect(ann.matched[0].pat).toBe('tier|critical|classification'); // the matcher travels with it
+    const text = 'Third-party program overview. Every supplier is assigned a risk tier during onboarding. The TPRM team performs ongoing monitoring of critical vendors.';
+    const out = api.mark(text, [], ann.matched);
+    expect(out.kwLocated).toBe(2); // both were pinpointed in the document
+    expect(out.html).toContain('c5ann c5annkw'); // blue keyword highlight
+    expect(out.kwHits.filter((x) => x != null)).toHaveLength(2); // each got an annotation number → panel can jump to it
     delete global.c5esc; delete global.docScores;
   });
 });
