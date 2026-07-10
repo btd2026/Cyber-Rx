@@ -23,7 +23,8 @@ function renderDrawer(m, opts) {
   let captured = null; global.openDrill = (t, html) => { captured = html; };
   const np = src.slice(src.indexOf('var C5_NOTPROVE='), src.indexOf('function c5notProve('));
   const code = ['c5srcLabelText', 'c5statusText', 'c5notProve', 'c5evConfObj', 'c5foundText', 'c5whyRanked',
-    'c5riskCard', 'c5rankTable', 'c5basisText', 'c5srcRow', 'c5acc', 'c5keyEvidence', 'c5keyEvHtml', 'c5InspectObj']
+    'c5riskCard', 'c5rankTable', 'c5basisText', 'c5srcRow', 'c5acc', 'c5keyEvidence', 'c5keyEvHtml',
+    'c5severity', 'c5sevColor', 'c5ownerOf', 'c5impactText', 'c5affected', 'c5whyNow', 'c5decisionRows', 'c5InspectObj']
     .map(grab).join('\n');
   // eslint-disable-next-line no-eval
   eval(np + '\n' + code + '\n;c5InspectObj(' + JSON.stringify(m) + ');');
@@ -44,11 +45,12 @@ const RANKED = {
 
 describe('compact default view shows only the five answers + key evidence + action', () => {
   const H = renderDrawer(RANKED);
-  it('shows evidence confidence, why ranked, what found, what not proved', () => {
-    expect(H).toContain('Evidence confidence:');
-    expect(H).toContain('Why ranked here');
-    expect(H).toContain('What Nerion found');
-    expect(H).toContain('What Nerion does not prove');
+  it('shows the executive header + summary (severity/owner/evidence · what this means · why now)', () => {
+    expect(H).toContain('Evidence confidence');
+    expect(H).toContain('Severity');
+    expect(H).toContain('What this means');
+    expect(H).toContain('Why it matters now');
+    expect(H).toContain('What this does not prove'); // collapsed in calc basis
   });
   it('shows a compact key-evidence summary and the recommended action', () => {
     expect(H).toContain('Key evidence');
@@ -72,8 +74,8 @@ describe('deeper evidence is collapsed by default (accordions)', () => {
   });
   it('ranking, sources and calculation basis are each in a collapsed accordion', () => {
     expect(H).toContain('class="c5acc"');
-    expect(H).toContain('View ranking details');
-    expect(H).toContain('View sources and freshness');
+    expect(H).toContain('View full ranking');
+    expect(H).toContain('View sources');
     expect(H).toContain('View calculation basis');
   });
   it('the open-risks/gaps accordion appears when the metric supplies gaps', () => {
@@ -87,9 +89,9 @@ describe('deeper evidence is collapsed by default (accordions)', () => {
     expect(H).not.toMatch(/<details class="c5acc" open/);
     expect(H).not.toMatch(/<details class="c5acc"[^>]*\bopen\b/);
   });
-  it('the ranking table lands inside the "View ranking details" accordion', () => {
-    const acc = H.indexOf('View ranking details');
-    const nextAcc = H.indexOf('View sources and freshness'); // next present accordion (no m.gaps here)
+  it('the ranking table lands inside the "View full ranking" accordion', () => {
+    const acc = H.indexOf('View full ranking');
+    const nextAcc = H.indexOf('View sources'); // next present accordion (no m.gaps here)
     expect(firstTable).toBeGreaterThan(acc);
     expect(firstTable).toBeLessThan(nextAcc); // table sits inside the ranking accordion, before the next one
   });
@@ -122,9 +124,9 @@ describe('drawer wiring intact (source scan)', () => {
   const a = src.indexOf('function c5InspectObj(');
   const fn = src.slice(a, src.indexOf('\nfunction ', a + 10));
   it('uses c5acc accordions for ranking, sources and calculation basis', () => {
-    expect(fn).toContain("c5acc(m.ranking&&m.ranking.length?'View ranking details':'View supporting evidence'");
+    expect(fn).toContain("c5acc(m.ranking&&m.ranking.length?'View full ranking':'View evidence'");
     expect(fn).toContain("c5acc('View open risks and gaps'");
-    expect(fn).toContain("c5acc('View sources and freshness'");
+    expect(fn).toContain("c5acc('View sources'");
     expect(fn).toContain("c5acc('View calculation basis'");
   });
   it('renders the compact key-evidence summary (not a default table)', () => {

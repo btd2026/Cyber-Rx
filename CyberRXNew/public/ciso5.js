@@ -1851,6 +1851,34 @@ function c5keyEvHtml(m){
     return '<div style="font-size:12px;color:var(--muted)">'+c5esc(e.k)+'</div><div style="font-size:12.5px;color:var(--'+(e.color||'ink')+');font-weight:600">'+c5esc(e.v)+'</div>';
   }).join('')+'</div>';
 }
+/* ── Executive-first framing: the facts a leader asks for the moment a number alarms
+   them — severity, owner, ETA, business impact, and the decision (if any). All derived
+   from the metric with sensible fallbacks; every field is overridable per metric and
+   nothing client-specific is hard-coded. ── */
+function c5severity(m){if(m&&m.severity)return m.severity;if(!m||!m.connected)return 'Not enough evidence';return m.color==='crit'?'High':m.color==='warn'?'Medium':m.color==='blue'?'Monitor':m.color==='good'?'Low':'Monitor';}
+function c5sevColor(m){if(!m||!m.connected)return 'muted';return m.color==='crit'?'crit':m.color==='warn'?'warn':m.color==='blue'?'blue':m.color==='good'?'good':'ink';}
+/* Accountable owner — a ROLE (never a client name), inferred from the metric domain,
+   overridable via m.owner. */
+function c5ownerOf(m){if(m&&m.owner)return m.owner;var id=String((m&&m.id)||'');
+  var map=[[/^cf_|roi|insur|premium|_fin/,'CFO'],[/^coo_|recover|_ops|process|continu/,'COO'],[/^ceo_|growth|trust|objective/,'CEO'],[/^cro_|appetite/,'CRO'],[/^clo_|legal|regulat|material|disclos/,'CLO'],[/^bd_|board/,'Board'],[/^er_|^ctl_|^tac_|^ais_|^cp_|^ia_|^dom_|^exp_|prot|peer|fw|control/,'CISO']];
+  for(var i=0;i<map.length;i++)if(map[i][0].test(id))return map[i][1];return 'Accountable owner';}
+/* Business impact — the consequence in business terms (m.impact override, else the
+   durable "why it matters"). */
+function c5impactText(m){if(m&&m.impact)return m.impact;if(!m||!m.connected)return 'Cannot be quantified until the source is connected — no confident conclusion yet.';return c5why(m)||('Bears on '+String((m&&m.name)||'this measure').toLowerCase()+'.');}
+/* Who / what is affected — m.affected override, else the top-ranked item, else the reading. */
+function c5affected(m){if(m&&m.affected)return m.affected;if(!m||!m.connected)return 'Not established yet — the source is not connected.';var r=m.ranking&&m.ranking[0];if(r&&r.itemName)return c5esc(r.itemName)+' (highest-ranked) and the items below it.';return 'The '+String((m&&m.name)||'measure').toLowerCase()+' shown above.';}
+/* Why it matters now — m.whyNow override, else the ranking rationale, else a severity read. */
+function c5whyNow(m){if(m&&m.whyNow)return m.whyNow;var wr=c5whyRanked(m);if(wr)return wr;if(!m||!m.connected)return 'It can’t be acted on until the evidence is connected.';return m.color==='crit'?'It is above the escalation line and needs a decision now.':m.color==='warn'?'It is elevated and should be addressed this cycle before it worsens.':m.color==='blue'?'It is within tolerance but worth monitoring on the current cadence.':'It is within target — no action pressure right now.';}
+/* Decision rows — [label, text, color]. Always resolves to something explicit, including
+   "No executive decision needed now". A threshold (m.decisionThreshold) is shown clearly. */
+function c5decisionRows(m){var rows=[];
+  if(m&&m.decision)rows.push(['Decision needed now',m.decision,'crit']);
+  else if(m&&m.connected&&m.color==='crit')rows.push(['Decision needed now','This is above the escalation line — approve the recommended action below (funding / remediation / disclosure as applicable).','crit']);
+  if(m&&m.decisionThreshold)rows.push(['Decision needed if this worsens',m.decisionThreshold,'warn']);
+  else if(m&&m.decisionIfWorse)rows.push(['Decision needed if this worsens',m.decisionIfWorse,'warn']);
+  else if(m&&m.connected&&m.color==='warn')rows.push(['Decision needed if this worsens','If it crosses into the critical range, escalate for a funding / remediation decision.','warn']);
+  if(!rows.length)rows.push(['No executive decision needed now',(m&&m.connected)?'Monitor on the current cadence; Nerion surfaces a decision here if the status changes.':'Connect the source to establish whether a decision is required.','blue']);
+  return rows;}
 function c5InspectObj(m){
   if(!m)return;
   var chip='<span class="c5chip c5-'+String(m.label).replace(/[^a-z]/g,'')+'">'+c5srcLabelText(m)+'</span>';
@@ -1865,28 +1893,35 @@ function c5InspectObj(m){
   '</div>';
   if(m.visual)h+=m.visual;
   var why=c5why(m);
-  var wr=c5whyRanked(m);
-  // ── DEFAULT VIEW: the five answers, compact. Everything deeper is collapsed below. ──
-  // Evidence confidence — a one-line strip right under the result.
-  h+='<div style="margin:9px 2px 2px;font-size:12px;color:var(--ink-2)"><b>Evidence confidence:</b> '+c5esc(ev.level)+(ev.why?(' <span style="color:var(--muted)">— '+ev.why+'</span>'):'')+'</div>';
-  // Executive explanation — why ranked · what found · what not prove (1–2 lines each).
   var _xcol=(m.color==='crit'?'crit':m.color==='warn'?'warn':'blue');
   function _xr(label,txt,c){return txt?('<div style="margin-bottom:11px"><div style="font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--'+(c||'muted')+')">'+label+'</div><div style="font-size:12.5px;color:var(--ink-2);line-height:1.5;margin-top:2px">'+txt+'</div></div>'):'';}
-  var explain=[(m.connected&&wr)?_xr('Why ranked here',wr,_xcol):'',_xr('What Nerion found',c5foundText(m),'good'),_xr('What Nerion does not prove',c5notProve(m),'muted')].join('');
-  if(explain)h+='<div style="margin-top:11px;padding:13px 16px 2px;border:1px solid var(--line);border-radius:12px;background:var(--surface)">'+explain+'</div>';
-  // Key evidence — 3–5 compact points (not a table).
+  function _chip(label,val,c){return '<div style="border:1px solid var(--line);border-radius:9px;padding:6px 11px;background:var(--surface-2)"><div style="font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)">'+label+'</div><div style="font-size:12.5px;font-weight:600;color:var(--'+(c||'ink')+');margin-top:1px">'+c5esc(val)+'</div></div>';}
+  // ── HEADER FACTS — what a leader asks first: severity · owner · ETA · evidence confidence.
+  h+='<div style="display:flex;flex-wrap:wrap;gap:8px;margin:11px 0 2px">'+
+    _chip('Severity',c5severity(m),c5sevColor(m))+
+    _chip('Owner',c5ownerOf(m))+
+    _chip('ETA / due',(m.due||(m.connected?'—':'n/a')))+
+    _chip('Evidence confidence',ev.level,((ev.level==='Not Enough Evidence'||ev.level==='Demo')?'muted':'ink'))+
+  '</div>';
+  // BUSINESS IMPACT — the consequence, one line.
+  h+='<div style="margin-top:9px;font-size:12.5px;color:var(--ink-2);line-height:1.5"><b style="color:var(--ink)">Business impact:</b> '+c5impactText(m)+'</div>';
+  // EXECUTIVE SUMMARY — what this means · who/what is affected · why it matters now.
+  var _summ=[_xr('What this means',c5foundText(m),'good'),_xr('Who / what is affected',c5affected(m),'muted'),_xr('Why it matters now',c5whyNow(m),_xcol)].join('');
+  if(_summ)h+='<div style="margin-top:11px;padding:13px 16px 2px;border:1px solid var(--line);border-radius:12px;background:var(--surface)">'+_summ+'</div>';
+  // DECISION — needed now / if it worsens / none (always explicit).
+  h+='<div class="ev-sec">Decision</div>'+c5decisionRows(m).map(function(d){return '<div class="conf" style="border-left:3px solid var(--'+d[2]+');margin-bottom:8px"><b>'+d[0]+':</b> '+d[1]+'</div>';}).join('');
+  // KEY EVIDENCE — 3–5 compact points (not a table).
   if(m.connected){var _ke=c5keyEvHtml(m);if(_ke)h+='<div class="ev-sec">Key evidence</div>'+_ke;}
-  // Recommended action — the single next step, visible by default.
+  // RECOMMENDED ACTION — the single next step, with owner / expected result.
   if(m.connected&&m.action){
-    var meta=[m.owner?('Owner: '+c5esc(m.owner)):'',m.due?('Due: '+c5esc(m.due)):'',m.expected?('Expected result: '+c5esc(m.expected)):''].filter(Boolean).join(' · ');
+    var meta=['Owner: '+c5esc(m.owner||c5ownerOf(m)),m.due?('Due: '+c5esc(m.due)):'',m.expected?('Expected result: '+c5esc(m.expected)):''].filter(Boolean).join(' · ');
     h+='<div class="ev-sec">Recommended action</div><div class="conf" style="border-left:3px solid var(--blue)">'+m.action+(meta?('<div style="margin-top:6px;font-size:11px;color:var(--muted)">'+meta+'</div>'):'')+'</div>';
   } else if(!m.connected){
     var src=m.connectTool?('<b>'+c5esc(m.connectTool)+'</b>'):'its data source';
     h+='<div class="ev-sec">Recommended action</div><div class="conf" style="border-left:3px solid var(--blue)">Not enough evidence to conclude — connect '+src+' to validate this result. Until then Nerion shows the honest not-connected state, never a placeholder number.</div>';
   }
-  // ── COLLAPSED: deeper evidence, closed by default (traceability preserved). ──
+  // ── COLLAPSED: technical evidence, sources, formulas, full rankings — closed by default. ──
   if(m.connected){
-    // Ranking table / comparison / supporting inputs.
     var _tbl='';
     if(m.ranking&&m.ranking.length){_tbl=c5rankTable(m);}
     else if(m.table&&m.table.cols&&m.table.rows&&m.table.rows.length){
@@ -1898,18 +1933,17 @@ function c5InspectObj(m){
         var dot=i.color?('<span class="c5sq '+c5sqClass(i.color)+'" style="display:inline-block;width:9px;height:9px;margin-right:7px;vertical-align:middle"></span>'):'';
         return '<tr><td>'+dot+i.name+'</td><td class="v">'+i.value+'</td><td class="src">'+i.source+'</td></tr>';}).join('')+'</tbody></table>';
     }
-    h+=c5acc(m.ranking&&m.ranking.length?'View ranking details':'View supporting evidence',_tbl);
-    // Open gaps / exceptions.
+    h+=c5acc(m.ranking&&m.ranking.length?'View full ranking':'View evidence',_tbl);
     var _gaps=(m.gaps&&m.gaps.length)?m.gaps.map(function(g){
       return '<div class="conf" style="border-left:3px solid var(--warn);margin-bottom:8px"><b>'+c5esc(g.title||'Gap')+'</b>'+(g.meaning?('<div style="margin-top:3px">'+c5esc(g.meaning)+'</div>'):'')+(g.close?('<div style="margin-top:4px;color:var(--ink-2)">How to close: '+c5esc(g.close)+'</div>'):'')+((g.owner||g.due)?('<div style="margin-top:4px;font-size:11px;color:var(--muted)">'+[g.owner?('Owner: '+c5esc(g.owner)):'',g.due?('Due: '+c5esc(g.due)):''].filter(Boolean).join(' · ')+'</div>'):'')+'</div>';
     }).join(''):'';
     h+=c5acc('View open risks and gaps',_gaps);
   }
-  // Sources & freshness.
+  // Sources.
   var _src=(m.sources&&m.sources.length)?m.sources.map(function(s){return c5srcRow(m,s);}).join(''):'';
-  h+=c5acc('View sources and freshness',_src);
-  // Calculation basis (plain English) + why it matters + debug formula (admin only).
-  var _basis='<div class="drill-p">'+c5basisText(m)+'</div>'+(why?('<div style="margin-top:9px;font-size:12px;color:var(--ink-2)"><b>Why it matters:</b> '+why+'</div>'):'')+((c5debugOn()&&m.formula)?('<div class="ev-sec">Formula (admin/debug)</div><div class="formula">'+m.formula+'</div>'):'');
+  h+=c5acc('View sources',_src);
+  // Calculation basis (plain English) + why it matters + what it does not prove + debug formula.
+  var _basis='<div class="drill-p">'+c5basisText(m)+'</div>'+(why?('<div style="margin-top:9px;font-size:12px;color:var(--ink-2)"><b>Why it matters:</b> '+why+'</div>'):'')+'<div style="margin-top:9px;font-size:12px;color:var(--muted)"><b>What this does not prove:</b> '+c5notProve(m)+'</div>'+((c5debugOn()&&m.formula)?('<div class="ev-sec">Formula (admin/debug)</div><div class="formula">'+m.formula+'</div>'):'');
   h+=c5acc('View calculation basis',_basis);
   // Connect CTA when not connected.
   if(!m.connected&&m.connectTool)h+='<div style="margin-top:12px"><button class="c5btn" onclick="c5Connect(\''+String(m.connectTool).replace(/'/g,'')+'\')">Connect '+m.connectTool+'</button></div>';

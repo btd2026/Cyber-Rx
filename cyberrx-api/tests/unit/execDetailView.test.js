@@ -53,17 +53,17 @@ describe('detail drawer — standardized sections', () => {
     expect(H).toContain('7 AI/ML systems · 1 posture gap');
     expect(H).toContain('Self-reported');
   });
-  it('shows Why it matters', () => { expect(H).toContain('Why it matters'); });
-  it('shows Evidence confidence with a level + reason (compact strip)', () => {
-    expect(H).toMatch(/Evidence confidence:<\/b> (High|Medium|Low|Not Enough Evidence|Demo)/);
+  it('shows Evidence confidence as a header chip with the level', () => {
+    expect(H).toMatch(/Evidence confidence<\/div><div[^>]*>(High|Medium|Low|Not Enough Evidence|Demo)/);
   });
-  it('shows What Nerion found, data-driven', () => {
-    expect(H).toContain('What Nerion found');
+  it('shows the finding under "What this means", data-driven', () => {
+    expect(H).toContain('What this means');
     expect(H).toContain('Nerion found 7 AI/ML systems · 1 posture gap');
   });
-  it('shows What Nerion does not prove', () => {
-    expect(H).toContain('What Nerion does not prove');
+  it('keeps "what this does not prove" (collapsed in calculation basis)', () => {
+    expect(H).toContain('What this does not prove');
     expect(H).toContain('AI-SPM'); // the ais_ not-prove statement
+    expect(H.indexOf('AI-SPM')).toBeGreaterThan(H.indexOf('<details')); // inside an accordion
   });
   it('shows Recommended action with owner / due / expected result', () => {
     expect(H).toContain('Recommended action');
@@ -72,8 +72,8 @@ describe('detail drawer — standardized sections', () => {
     expect(H).toContain('Due: 30 days');
     expect(H).toContain('Expected result: Closes 1 AI governance posture gap.');
   });
-  it('collapses Sources & freshness into an accordion (status/last-refresh/role/missing preserved)', () => {
-    expect(H).toContain('View sources and freshness');
+  it('collapses Sources into an accordion (status/last-refresh/role/missing preserved)', () => {
+    expect(H).toContain('View sources');
     expect(H).toContain('as of 7/9/2026 8:44 PM');
     expect(H).toContain('role: Posture validation');
     expect(H).toContain('missing: Live posture telemetry');
@@ -123,11 +123,11 @@ describe('detail drawer — missing evidence & labelling', () => {
   });
   it('demo data is labelled Demo', () => {
     const H = render(AIML, { demo: true });
-    expect(H).toMatch(/Evidence confidence:<\/b> Demo/);
+    expect(H).toMatch(/Evidence confidence<\/div><div[^>]*>Demo/);
   });
   it('self-reported evidence cannot read High confidence', () => {
     const H = render(AIML);
-    expect(H).not.toMatch(/Evidence confidence:<\/b> High/);
+    expect(H).not.toMatch(/Evidence confidence<\/div><div[^>]*>High/);
   });
 });
 
