@@ -44,11 +44,30 @@ describe('1 · missing-document gaps get an "upload now" deep-link', () => {
   });
   it('onboarding resolves the deep-link to the right uploader + tab', () => {
     expect(onb).toContain('function obHandleUploadDeepLink()');
-    expect(onb).toContain('/[#&]upload=([^&]+)/.exec(String(location.hash||\'\'))');
+    expect(onb).toContain('mu=/[#&]upload=([^&]+)/.exec(h)');
     expect(onb).toContain("var isAi=t?/^AI /.test(t.l):false,selId=isAi?'aiGovDocType':'obDocType';");
     expect(onb).toContain("if(typeof obShow==='function')obShow('gov');");
     expect(onb).toContain('.ob-uploadflash{animation:obUploadFlash');
     expect(onb).toContain('window.addEventListener(\'hashchange\',obHandleUploadDeepLink);');
+  });
+});
+
+describe('1b · missing-telemetry gaps get a "connect now" link, routed shell-safely', () => {
+  it('the Close-the-gap box renders a connect-now link for tool gaps', () => {
+    expect(ciso).toContain("data-c5gapconn=\"'+c5esc(g.label)+'\"");
+    expect(ciso).toContain('connect now →</a>');
+  });
+  it('the link is wired and c5GapConnect switches views via the shell (not its own frame)', () => {
+    expect(ciso).toContain("host.querySelectorAll('[data-c5gapconn]')");
+    expect(ciso).toContain('function c5GapConnect(tool)');
+    expect(ciso).toContain("window.parent.postMessage({type:'cyberrx-goto-onboarding',tool:tool||''},'*');");
+    expect(ciso).toContain("window.location.href=base+'#connect='+encodeURIComponent(tool||'')"); // standalone fallback
+  });
+  it('onboarding routes a tool to its connector, defaulting to "Connect your systems"', () => {
+    expect(onb).toContain('function obFocusTool(toolStr)');
+    expect(onb).toContain("else id='secTools';"); // any unrecognized tool lands on the connectors section
+    expect(onb).toContain('try{obFocusTool(e.data.tool);}catch(_){}');
+    expect(onb).toContain('else if(mc)obFocusTool(decodeURIComponent(mc[1]));'); // #connect= hash
   });
 });
 

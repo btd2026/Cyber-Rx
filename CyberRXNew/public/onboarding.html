@@ -756,22 +756,36 @@
     var gd=document.getElementById('aiGovDocAnalyze');if(gd)gd.addEventListener('click',function(){obAnalyzeDocFrom('aiGovDocFile','aiGovDocType','aiGovDocMsg');});})();
   // When the cockpit sends the user here to connect a tool, scroll to and highlight
   // the section that captures it.
+  // Route a tool name to the onboarding section that captures it (connectors, capability
+  // map, vendors, inventory, doc review, AI supply). Any unrecognized tool defaults to
+  // "Connect your systems" (secTools) — where tools are connected — so a cockpit "connect
+  // now" gap always lands somewhere useful. Switches to the section's tab first so the
+  // (tabbed) section is actually visible before scrolling, then highlights it.
+  function obFocusTool(toolStr){
+    try{
+      var t=String(toolStr||'').toLowerCase(),id=null;
+      if(/capability map|business capabilit|grc/.test(t))id='secBcap';
+      else if(/vendor|tprm|securityscorecard|bitsight|third.?party/.test(t))id='secVendor';
+      else if(/threat intel|recorded future|mandiant|mitre|\bsiem\b|soar|\bsoc\b|splunk|sentinel/.test(t))id='secTools';
+      else if(/crown jewel|inventory|\bvm\b|vulnerability|\bedr\b|cmdb/.test(t))id='secProc';
+      else if(/document review|policy|document evidence|reviewed document/.test(t))id='secDocReview';
+      else if(/cbom|crypto|quantum|pqc|ai-spm|aispm|genai|casb|sse|coding|copilot|claude code|ci\/cd|pipeline|slsa|nhi|machine identit|non-human|secrets|artifact|sbom|ai supply|supply.?chain|ai.?ml|ai inventory/.test(t))id='secAiSupply';
+      else id='secTools';
+      try{if(typeof obShow==='function'){var el0=document.getElementById(id),tk=el0?obTabOf(el0):null;if(tk)obShow(tk);}}catch(_){}
+      setTimeout(function(){
+        var el=document.getElementById(id);if(!el)return;
+        try{el.scrollIntoView({behavior:'smooth',block:'center'});}catch(_){el.scrollIntoView();}
+        el.classList.remove('ob-uploadflash');void el.offsetWidth;el.classList.add('ob-uploadflash');
+        setTimeout(function(){el.classList.remove('ob-uploadflash');},2700);
+      },240);
+    }catch(_){}
+  }
   window.addEventListener('message',function(e){
     if(!(e.data&&e.data.type==='cyberrx-onboarding-focus'))return;
     // A specific document to upload (from the cockpit "upload now" gap link) routes to
-    // the exact uploader + preselects the doc type; otherwise fall back to tool→section.
+    // the exact uploader + preselects the doc type; a tool name routes to its connector.
     if(e.data.upload){try{obFocusUpload(String(e.data.upload));}catch(_){}return;}
-    var t=String(e.data.tool||'').toLowerCase(),id=null;
-    if(/capability map|business capabilit|grc/.test(t))id='secBcap';
-    else if(/vendor|tprm|securityscorecard|bitsight|third.?party/.test(t))id='secVendor';
-    else if(/threat intel|recorded future|mandiant|mitre|\bsiem\b|soar|\bsoc\b|splunk|sentinel/.test(t))id='secTools';
-    else if(/crown jewel|inventory|\bvm\b|vulnerability|\bedr\b|cmdb/.test(t))id='secProc';
-    else if(/document review|policy|document evidence|reviewed document/.test(t))id='secDocReview';
-    else if(/cbom|crypto|quantum|pqc|ai-spm|aispm|genai|casb|sse|coding|copilot|claude code|ci\/cd|pipeline|slsa|nhi|machine identit|non-human|secrets|artifact|sbom|ai supply|supply.?chain|ai.?ml|ai inventory/.test(t))id='secAiSupply';
-    var el=id&&document.getElementById(id);if(!el)return;
-    try{el.scrollIntoView({behavior:'smooth',block:'start'});}catch(_){el.scrollIntoView();}
-    el.style.transition='box-shadow .3s';el.style.boxShadow='0 0 0 2px #2563eb';
-    setTimeout(function(){el.style.boxShadow='';},2400);
+    try{obFocusTool(e.data.tool);}catch(_){}
   });
 
   // ---- CSV/TSV parsing ----
@@ -1789,8 +1803,10 @@
   }
   function obHandleUploadDeepLink(){
     try{
-      var m=/[#&]upload=([^&]+)/.exec(String(location.hash||''));if(!m)return;
-      obFocusUpload(decodeURIComponent(m[1]));
+      var h=String(location.hash||''),mu=/[#&]upload=([^&]+)/.exec(h),mc=/[#&]connect=([^&]+)/.exec(h);
+      if(mu)obFocusUpload(decodeURIComponent(mu[1]));
+      else if(mc)obFocusTool(decodeURIComponent(mc[1]));
+      else return;
       try{history.replaceState(null,'',location.pathname+location.search);}catch(_){} // don't re-trigger on reload
     }catch(_){}
   }

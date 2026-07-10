@@ -4870,7 +4870,7 @@ function c5FrameworksClassic(host){
     '</div>'+
     '<div>'+
       '<div style="font-weight:600;font-size:13px;color:var(--ink);margin-bottom:9px">Close the gap</div>'+
-      (_gaps.length?_gaps.map(function(g){return '<div style="font-size:12.5px;color:var(--ink-2);margin-bottom:6px">'+(g.kind==='d'?'↥ Upload':'⚡ Connect')+' <b>'+c5esc(g.label)+'</b>'+(g.n>1?(' ('+g.n+')'):'')+(g.kind==='d'?(' <a class="c5gap-up" data-c5gapup="'+c5esc(g.s||g.label)+'" title="Go to onboarding and upload this document" style="color:var(--blue);font-weight:600;cursor:pointer">upload now →</a>'):'')+'</div>';}).join(''):'<div style="font-size:12.5px;color:var(--good);margin-bottom:6px">All controls evidenced.</div>')+
+      (_gaps.length?_gaps.map(function(g){return '<div style="font-size:12.5px;color:var(--ink-2);margin-bottom:6px">'+(g.kind==='d'?'↥ Upload':'⚡ Connect')+' <b>'+c5esc(g.label)+'</b>'+(g.n>1?(' ('+g.n+')'):'')+(g.kind==='d'?(' <a class="c5gap-up" data-c5gapup="'+c5esc(g.s||g.label)+'" title="Go to onboarding and upload this document" style="color:var(--blue);font-weight:600;cursor:pointer">upload now →</a>'):(' <a class="c5gap-up" data-c5gapconn="'+c5esc(g.label)+'" title="Go to onboarding and connect this tool" style="color:var(--blue);font-weight:600;cursor:pointer">connect now →</a>'))+'</div>';}).join(''):'<div style="font-size:12.5px;color:var(--good);margin-bottom:6px">All controls evidenced.</div>')+
       '<button id="c5reanalyzeBtn" type="button" style="margin-top:4px;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);font-weight:600;font-size:12px;padding:6px 12px;border-radius:8px;cursor:pointer">↻ Re-score documents</button>'+
     '</div>'+
   '</div>');
@@ -4913,6 +4913,7 @@ function c5FrameworksClassic(host){
   host.querySelectorAll('[data-c5fwctl]').forEach(function(b){b.onclick=function(){C5FW_CTRL=b.getAttribute('data-c5fwctl');c5Frameworks();};});
   host.querySelectorAll('[data-c5docjump]').forEach(function(b){b.onclick=function(e){e.stopPropagation();c5OpenDocsReviewAt(b.getAttribute('data-c5docjump'));};});
   host.querySelectorAll('[data-c5gapup]').forEach(function(b){b.onclick=function(e){e.stopPropagation();c5GapUpload(b.getAttribute('data-c5gapup'));};});
+  host.querySelectorAll('[data-c5gapconn]').forEach(function(b){b.onclick=function(e){e.stopPropagation();c5GapConnect(b.getAttribute('data-c5gapconn'));};});
   host.querySelectorAll('[data-c5fwcard]').forEach(function(b){b.style.cursor='pointer';b.onclick=function(){c5fwInspect(b.getAttribute('data-c5fwcard'),T,sel,cad);};});
 }
 /* "upload now" on a missing-document gap → onboarding, focused on the exact uploader
@@ -4929,6 +4930,19 @@ function c5GapUpload(target){
     }
     var base=(function(){try{return new URL('onboarding.html',location.href).href;}catch(_){return 'onboarding.html';}})();
     window.location.href=base+'#upload='+encodeURIComponent(target||'');
+  }catch(_){}
+}
+/* "connect now" on a missing-telemetry gap → onboarding, focused on the connector for
+   that tool. Same shell-safe routing as c5GapUpload (never navigates the cockpit's own
+   frame): ask the shell to switch views, falling back to a #connect= hash when standalone. */
+function c5GapConnect(tool){
+  try{
+    if(window.parent&&window.parent!==window){
+      window.parent.postMessage({type:'cyberrx-goto-onboarding',tool:tool||''},'*');
+      return;
+    }
+    var base=(function(){try{return new URL('onboarding.html',location.href).href;}catch(_){return 'onboarding.html';}})();
+    window.location.href=base+'#connect='+encodeURIComponent(tool||'');
   }catch(_){}
 }
 /* ============================================================================
