@@ -129,13 +129,15 @@ describe('Business Capability metric — driver-aware, contradiction-safe (integ
 describe('drawer wiring — section rendered, table used, formula gated', () => {
   const a = src.indexOf('function c5InspectObj(');
   const fn = src.slice(a, src.indexOf('\nfunction ', a + 400));
-  it('renders the "Why ranked here" section from c5whyRanked', () => {
-    expect(fn).toContain('var wr=c5whyRanked(m)');
-    expect(fn).toContain('Why ranked here');
+  it('surfaces the ranking rationale under "Why it matters now" (via c5whyNow → c5whyRanked)', () => {
+    expect(fn).toContain('Why it matters now');
+    const w = src.indexOf('function c5whyNow(');
+    const wfn = src.slice(w, src.indexOf('\nfunction ', w + 10));
+    expect(wfn).toContain('c5whyRanked(m)');
   });
   it('uses the ranking table when a metric supplies m.ranking (now inside a collapsed accordion)', () => {
     expect(fn).toContain('if(m.ranking&&m.ranking.length){_tbl=c5rankTable(m);}');
-    expect(fn).toContain("c5acc(m.ranking&&m.ranking.length?'View ranking details':'View supporting evidence'");
+    expect(fn).toContain("c5acc(m.ranking&&m.ranking.length?'View full ranking':'View evidence'");
   });
   it('raw formula stays behind debug mode (not in the normal executive view)', () => {
     expect(src).toContain('function c5debugOn()');
