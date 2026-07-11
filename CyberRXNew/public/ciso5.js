@@ -5640,16 +5640,25 @@ function c5fwTree(sel,cov){
       var ctls=items.map(function(it){
         catalogTotal++;
         var nat=caFw?caFw[it[0]]:null;
-        var sc=caNativeScore(nat),status,src,tested,readiness=false,mappedIds=null;
+        var sc=caNativeScore(nat),status,src,tested,readiness=false,mappedIds=null,toolPct=null,ncDoc=null;
         if(sc!=null){ // the native engine concluded this control directly — always wins
           status=nat.assessment_status;src='native';tested=true;
-        } else { // fall back to a crosswalk READINESS score from the mapped CSF evidence
-          var cw=caCrosswalkScore(it[2],cov);
-          if(cw&&cw.score!=null){sc=cw.score;src='mapped';status='Readiness (crosswalk)';tested=true;readiness=true;mappedIds=cw.ids;} // the CSF controls that actually drove the score
-          else {src='native-pending';status=nat?nat.assessment_status:'Not Tested';tested=false;}
+        } else {
+          // Neuron Controls: does a connected capability map DIRECTLY to this external
+          // control ID? If so it is telemetry-scored exactly like a CSF / 800-53 control
+          // (control presence, capped by the capability's maturity) — the same engine,
+          // projected onto CIS / ISO / SOC 2 / PCI. Direct telemetry beats a CSF-average
+          // crosswalk because it names a tool covering THIS control, not a related one.
+          var cc=(typeof controlCmmi==='function')?controlCmmi(it[0],cov):null;
+          if(cc&&cc.src&&cc.src!=='none'){sc=cc.score;src=cc.src;tested=true;toolPct=cc.toolPct;ncDoc=cc.doc;status='Telemetry (Neuron Controls)';readiness=true;}
+          else { // fall back to a crosswalk READINESS score from the mapped CSF evidence
+            var cw=caCrosswalkScore(it[2],cov);
+            if(cw&&cw.score!=null){sc=cw.score;src='mapped';status='Readiness (crosswalk)';tested=true;readiness=true;mappedIds=cw.ids;} // the CSF controls that actually drove the score
+            else {src='native-pending';status=nat?nat.assessment_status:'Not Tested';tested=false;}
+          }
         }
         if(tested){all.push(sc);evidenced++;}
-        return {type:'ctl',id:it[0],name:it[1],score:(sc==null?0:sc),tested:tested,status:status,src:src,mapped:mappedIds,related:(it[2]||[]),native:nat||null,readiness:readiness};
+        return {type:'ctl',id:it[0],name:it[1],score:(sc==null?0:sc),tested:tested,status:status,src:src,mapped:mappedIds,related:(it[2]||[]),native:nat||null,readiness:readiness,toolPct:toolPct,doc:ncDoc};
       });
       var ts=ctls.filter(function(c){return c.tested;}).map(function(c){return c.score;});
       groups.push({type:'grp',id:gid,name:gname,score:c5fwMean(ts),children:ctls,rollup:ctls.map(function(c){return {id:c.id,score:c.score};})});
