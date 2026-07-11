@@ -1759,15 +1759,28 @@ var CSF_RAW={
 var R53_RAW=[['AC','Access Control',25],['AT','Awareness & Training',6],['AU','Audit & Accountability',16],['CA','Assessment, Authorization & Monitoring',9],['CM','Configuration Management',14],['CP','Contingency Planning',13],['IA','Identification & Authentication',12],['IR','Incident Response',10],['MA','Maintenance',7],['MP','Media Protection',8],['PE','Physical & Environmental Protection',23],['PL','Planning',11],['PM','Program Management',32],['PS','Personnel Security',9],['PT','PII Processing & Transparency',8],['RA','Risk Assessment',10],['SA','System & Services Acquisition',23],['SC','System & Communications Protection',51],['SI','System & Information Integrity',23],['SR','Supply Chain Risk Management',12]];
 var FW_SEL='csf';
 /* Control IDs evidenced by connected tools → max deployment %, from CAP_FRAMEWORK. */
-function fwDeployedIds(){var m={};CAPS.forEach(function(c){var fw=CAP_FRAMEWORK[c.k];if(!fw)return;var p=capDeploy(c);if(p==null)return;fw.csf.concat(fw.r53).forEach(function(id){if(m[id]==null||p>m[id])m[id]=p;});});return m;}
+/* Every framework control ID a capability evidences — the ONE crosswalk that makes
+   Neuron Controls the scoring engine. CSF + 800-53 come from CAP_FRAMEWORK (the
+   source of truth); the external frameworks (CIS / ISO 27001 / SOC 2 / PCI) come
+   from NEURON_XWALK (defined in ciso5.js, read here as a global). So a single
+   telemetry pull projects onto all six frameworks — measure once, report everywhere. */
+function capXwalkIds(c){
+  var fw=CAP_FRAMEWORK[c.k]||{};
+  var ids=(fw.csf||[]).concat(fw.r53||[]);
+  var nx=(typeof NEURON_XWALK!=='undefined')?NEURON_XWALK[c.k]:null;
+  if(nx){ids=ids.concat(nx.cis||[],nx.iso||[],nx.soc2||[],nx.pci||[]);}
+  return ids;
+}
+function fwDeployedIds(){var m={};CAPS.forEach(function(c){var p=capDeploy(c);if(p==null)return;capXwalkIds(c).forEach(function(id){if(m[id]==null||p>m[id])m[id]=p;});});return m;}
 /* Which capability (and therefore which connected tool) produced a control's live
    coverage — so the auditor evidence names the exact source (Splunk, CrowdStrike…),
    only from the tools the user selected and connected at onboarding. Returns the
-   winning capability + its real connected vendor, or null if none scores it. */
+   winning capability + its real connected vendor, or null if none scores it. Now spans
+   all six frameworks via capXwalkIds, so the ceiling/source is named for external
+   controls too. */
 function fwControlTool(id){
   var best=null;
-  CAPS.forEach(function(c){var fw=CAP_FRAMEWORK[c.k];if(!fw)return;
-    if(fw.csf.indexOf(id)<0&&fw.r53.indexOf(id)<0)return;
+  CAPS.forEach(function(c){if(capXwalkIds(c).indexOf(id)<0)return;
     var p=capDeploy(c);if(p==null)return;
     if(!best||p>best.p)best={cap:c,p:p,src:capSource(c)};});
   return best;
