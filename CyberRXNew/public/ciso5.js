@@ -5112,7 +5112,6 @@ function c5fwFinding(sel,node){
   var st=c5fwStatus(node.score),col=c5fwCol(node.score);
   var h='<div class="c5fw-detail"><div class="c5fw-dtop"><div><div class="c5kick">Finding &amp; recommendation</div><div style="font-size:15px;font-weight:500;margin-top:4px"><b>'+node.id+'</b> — '+node.name+'</div></div><span class="c5pill '+(st.cls==='good'?'g':st.cls==='warn'?'a':'r')+'">'+st.t+'</span></div>';
   h+='<div style="display:flex;align-items:baseline;gap:8px;margin-top:10px"><div style="font-size:26px;font-weight:500;font-family:var(--serif);color:var(--'+col+')">'+node.score.toFixed(1)+'<span style="font-size:14px;color:var(--muted)"> / 5</span></div><div class="c5intro" style="margin:0">'+c5fwLvl(node.score)+' · target '+C5FW_TARGET.toFixed(1)+'</div></div>';
-  h+=c5fwSource(node);
   if(node.type!=='ctl'&&node.rollup){var parts=node.rollup.slice(0,8).map(function(r){return r.id+' ('+r.score.toFixed(1)+')';}).join(', ');
     h+='<div class="ev-sec">Score roll-up</div><div class="formula">'+node.id+' ('+node.score.toFixed(1)+') = mean of '+parts+(node.rollup.length>8?', …':'')+'</div>';
     h+='<div class="drow-need" style="margin-top:6px;font-size:12px;color:var(--muted)">A group score is the mean of its children — computed, not entered. Every child traces to its own evidence.</div>';
@@ -5127,6 +5126,9 @@ function c5fwFinding(sel,node){
   h+='<div class="ev-sec">Recommendation</div><div class="drill-p">'+F.recommendation+(F.targetUplift?(' — target uplift '+F.targetUplift+'.'):'')+'</div>';
   if(F.mappings&&F.mappings.length){h+='<div class="ev-sec">Cross-framework</div><div class="drill-p">'+F.mappings.map(function(id){return '<span class="c5fw-chip">'+id+'</span>';}).join('')+'</div>';}
   h+=c5DesignSection(node.id);
+  // Evidence source is the provenance footer — moved to the bottom so the finding reads
+  // condition → criteria → conclusion → recommendation first, then how it was evidenced.
+  h+=c5fwSource(node);
   h+='</div>';
   return h;
 }
@@ -5163,7 +5165,7 @@ function c5fwSource(node){
       return '<div><span style="font-size:10.5px;font-weight:700;color:var(--'+cc+')">'+(ok?'✓ ':'✗ ')+c5esc(a.label)+'</span>'+detail+'</div>';
     }).join('')+'</div>'):'';
     h+='<div class="c5fw-src"><span class="c5fw-srcic">📄</span><div style="flex:1;min-width:0"><b>'+c5esc(fn)+'</b>'+att+
-      '<div class="c5fw-srcsub">Document review <button type="button" class="c5fw-jump" data-c5docjump="'+c5esc(node.id)+'" title="Open the source document, scrolled to this control">→ open the document reference</button></div>'+
+      '<div class="c5fw-srcsub">Document review <button type="button" class="c5fw-jump" data-c5docopen="'+c5esc(fn)+'" title="Open and read the uploaded document">→ open the uploaded document</button></div>'+
       annos+
     '</div></div>';
   } else if(node.src==='mapped'){
@@ -5834,10 +5836,31 @@ function c5FrameworksClassic(host){
   var cad=c5fwCadence();var now=new Date();var nextD=new Date(now.getTime()+((CADENCE_MS&&CADENCE_MS[cad])||30*864e5));
   var fmt=function(d){try{return d.toLocaleDateString();}catch(_){return '';}};
   var st=c5fwStatus(T.overall);
+  // Trend card — this framework's overall CMMI last refresh vs current, with a 2-bar mini
+  // chart: green + ▲ when current is higher, red + ▼ when lower, equal muted bars when
+  // unchanged. Reads the recorded history (cyberrx_fw_history); with no prior refresh, last
+  // equals current (no change).
+  var trendCard=(function(){
+    var cur=T.overall;var h=(typeof fwHistory==='function')?fwHistory():[];
+    var prev=cur;
+    if(h.length>=1){prev=Number(h[h.length-1].v);if(h.length>=2&&Math.abs(prev-cur)<0.05)prev=Number(h[h.length-2].v);}
+    if(!(prev>=0))prev=cur;
+    var delta=cur-prev,dir=delta>0.049?'up':(delta<-0.049?'down':'flat');
+    var col=dir==='up'?'good':(dir==='down'?'crit':'muted');
+    var arrow=dir==='up'?'▲':(dir==='down'?'▼':'▬');
+    var deltaStr=dir==='flat'?'no change':(dir==='up'?'+':'')+delta.toFixed(1);
+    var mx=5,b1=Math.max(4,Math.round(prev/mx*26)),b2=Math.max(4,Math.round(cur/mx*26));
+    var chart='<span style="display:inline-flex;align-items:flex-end;gap:4px;height:26px" title="last refresh '+prev.toFixed(1)+' → current '+cur.toFixed(1)+'">'
+      +'<i style="width:11px;height:'+b1+'px;background:var(--line);border-radius:2px;display:inline-block"></i>'
+      +'<i style="width:11px;height:'+b2+'px;background:var(--'+col+');border-radius:2px;display:inline-block"></i></span>';
+    return '<div class="c5card" data-c5fwcard="trend"><div class="c5card-top"><span class="c5card-l">Trend · vs last refresh</span><span class="c5chip c5-computed">computed</span></div>'
+      +'<div class="c5card-v" style="display:flex;align-items:center;gap:10px">'+chart+'<span style="color:var(--'+col+');font-size:18px">'+arrow+' '+deltaStr+'</span></div>'
+      +'<div class="cn">Overall CMMI '+prev.toFixed(1)+' → <b>'+cur.toFixed(1)+'</b> · vs last refresh</div></div>';
+  })();
   var cards='<div class="c5cards">'+
     '<div class="c5card" data-c5fwcard="overall"><div class="c5card-top"><span class="c5card-l">Overall maturity</span><span class="c5chip c5-computed">computed</span></div><div class="c5card-v" style="color:var(--'+c5fwCol(T.overall)+')">'+T.overall.toFixed(1)+' / 5</div><div class="cn">'+c5fwLvl(T.overall)+' · target '+C5FW_TARGET.toFixed(1)+'</div></div>'+
     '<div class="c5card" data-c5fwcard="coverage"><div class="c5card-top"><span class="c5card-l">Coverage</span><span class="c5chip c5-computed">computed</span></div><div class="c5card-v" style="color:var(--'+(T.coverage>=75?'good':T.coverage>=50?'warn':'crit')+')">'+T.coverage+'%</div><div class="cn">'+T.evidenced+' of '+T.total+' controls evidenced</div></div>'+
-    '<div class="c5card" data-c5fwcard="trend"><div class="c5card-top"><span class="c5card-l">Trend · vs last refresh</span><span class="c5chip c5-computed">computed</span></div><div class="c5card-v">'+(function(){var h=(typeof fwHistory==='function')?fwHistory():[];if(h.length>=2){var d=h[h.length-1].v-h[0].v;return (d>=0?'+':'')+d.toFixed(1);}return 'Baseline';})()+'</div><div class="cn">CMMI across '+cad+' refreshes</div></div>'+
+    trendCard+
     '<div class="c5card" data-c5fwcard="failing"><div class="c5card-top"><span class="c5card-l">Controls failing</span><span class="c5chip c5-computed">computed</span></div><div class="c5card-v" style="color:var(--'+(T.failing>0?'crit':'good')+')">'+T.failing+'</div><div class="cn">deficiencies (below CMMI '+C5FW_FLOOR+')</div></div>'+
     '</div>';
   var pills='<div class="c5fw-pills">'+[['csf','NIST CSF 2.0'],['r53','NIST 800-53'],['soc2','SOC 2'],['hipaa','HIPAA'],['cis','CIS v8'],['iso','ISO 27001']].map(function(o){return '<button class="c5fw-pill'+(sel===o[0]?' on':'')+'" data-c5fwsel="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div>';
@@ -5941,6 +5964,7 @@ function c5FrameworksClassic(host){
   host.querySelectorAll('[data-c5fwexp]').forEach(function(b){b.onclick=function(){var id=b.getAttribute('data-c5fwexp');C5FW_EXP[id]=!C5FW_EXP[id];c5Frameworks();};});
   host.querySelectorAll('[data-c5fwctl]').forEach(function(b){b.onclick=function(){C5FW_CTRL=b.getAttribute('data-c5fwctl');c5Frameworks();};});
   host.querySelectorAll('[data-c5docjump]').forEach(function(b){b.onclick=function(e){e.stopPropagation();c5OpenDocsReviewAt(b.getAttribute('data-c5docjump'));};});
+  host.querySelectorAll('[data-c5docopen]').forEach(function(b){b.onclick=function(e){e.stopPropagation();c5ViewDoc(b.getAttribute('data-c5docopen'));};});
   host.querySelectorAll('[data-c5gapup]').forEach(function(b){b.onclick=function(e){e.stopPropagation();c5GapUpload(b.getAttribute('data-c5gapup'));};});
   host.querySelectorAll('[data-c5gapconn]').forEach(function(b){b.onclick=function(e){e.stopPropagation();c5GapConnect(b.getAttribute('data-c5gapconn'));};});
   host.querySelectorAll('[data-c5fwcard]').forEach(function(b){b.style.cursor='pointer';b.onclick=function(){c5fwInspect(b.getAttribute('data-c5fwcard'),T,sel,cad);};});
