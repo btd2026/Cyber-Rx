@@ -1,6 +1,7 @@
 'use strict';
 
 const BaseService = require('../../BaseService');
+const RevenueCriticality = require('../../../services/RevenueCriticalityService');
 
 /**
  * Business Process Service
@@ -46,6 +47,90 @@ class BusinessProcessService extends BaseService {
       return this.enrichProcesses(filtered);
     } catch (error) {
       this.handleError(error, 'fetching business processes');
+    }
+  }
+
+  /**
+   * Phase B — assisted revenue confirmation.
+   * Rank the org's processes by ADVISORY revenue-criticality (a suggestion only), persist each
+   * score, and return them for the human confirm step. Never sets criticality_confirmed.
+   * @param {string} orgId
+   * @returns {Promise<{candidates:Array, confirmedCount:number, unconfirmedCount:number}>}
+   */
+  async getRevenueCandidates(orgId) {
+    this.logInfo('Ranking revenue-criticality candidates', { orgId });
+    try {
+      const processes = await this.businessProcessModel.findByOrganization(orgId, {});
+      // Map to the scorer's input shape (it reads name/function/level/financial signals).
+      const forScore = processes.map((p) => ({
+        ...p,
+        function: p.function || p.level,
+        financial_impact: p.confirmedFinancialImpact != null ? p.confirmedFinancialImpact : p.financialImpact,
+      }));
+      const ranked = RevenueCriticality.rankProcesses(forScore);
+
+      // Persist the advisory scores (best-effort; a scoring failure must not block the read).
+      await Promise.all(
+        ranked.map((p) =>
+          this.businessProcessModel
+            .saveRevenueScore(p.id, { score: p.revenue_criticality_score, basis: p.revenue_criticality_basis })
+            .catch((e) => this.logInfo('saveRevenueScore skipped', { id: p.id, err: e.message }))
+        )
+      );
+
+      const candidates = ranked.map((p) => ({
+        id: p.id,
+        name: p.name,
+        owner: p.owner,
+        criticality: p.criticality,
+        revenue_criticality_score: p.revenue_criticality_score,
+        revenue_criticality_basis: p.revenue_criticality_basis,
+        suggested: p.suggested,
+        confidence: p.confidence,
+        criticality_confirmed: !!p.criticalityConfirmed,
+        brings_money: p.bringsMoney,
+        confirmed_financial_impact: p.confirmedFinancialImpact,
+      }));
+      return {
+        candidates,
+        confirmedCount: candidates.filter((c) => c.criticality_confirmed).length,
+        unconfirmedCount: candidates.filter((c) => !c.criticality_confirmed).length,
+      };
+    } catch (error) {
+      this.handleError(error, 'ranking revenue candidates');
+    }
+  }
+
+  /**
+   * Phase B — record the human confirmation for one process (the crown-jewel derivation gate).
+   * @param {string} id
+   * @param {string} orgId
+   * @param {{brings_money:boolean, financial_impact?:number, by?:string}} body
+   */
+  async confirmRevenue(id, orgId, body = {}) {
+    this.logInfo('Confirming revenue criticality', { id, orgId, brings_money: body.brings_money });
+    try {
+      const existing = await this.businessProcessModel.findById(id);
+      if (!existing) { const e = new Error('Business process not found'); e.statusCode = 404; throw e; }
+      this.verifyOrgAccess(existing, orgId, 'Business process');
+
+      // Capture an override for future tuning when the human disagrees with the suggestion.
+      const suggested = existing.revenueCriticalityScore != null
+        ? existing.revenueCriticalityScore >= RevenueCriticality.SUGGEST_THRESHOLD()
+        : null;
+      const override = (suggested != null && !!body.brings_money !== suggested)
+        ? { suggested, confirmed: !!body.brings_money, score: existing.revenueCriticalityScore }
+        : null;
+
+      const updated = await this.businessProcessModel.confirmRevenue(id, {
+        bringsMoney: !!body.brings_money,
+        financialImpact: body.financial_impact != null ? RevenueCriticality._toNum(body.financial_impact) : null,
+        by: body.by || null,
+        override,
+      });
+      return updated;
+    } catch (error) {
+      this.handleError(error, 'confirming revenue criticality');
     }
   }
 

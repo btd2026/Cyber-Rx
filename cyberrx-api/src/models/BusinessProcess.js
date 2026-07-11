@@ -193,9 +193,54 @@ class BusinessProcess {
       supportedBySystems: row.supported_by_systems || [],
       createsDataObjects: row.creates_data_objects || [],
       governedByControls: row.governed_by_controls || [],
+      // Phase B — assisted, human-confirmed revenue criticality.
+      revenueCriticalityScore: row.revenue_criticality_score != null ? Number(row.revenue_criticality_score) : null,
+      revenueCriticalityBasis: row.revenue_criticality_basis || null,
+      bringsMoney: row.brings_money != null ? row.brings_money : null,
+      criticalityConfirmed: !!row.criticality_confirmed,
+      confirmedFinancialImpact: row.confirmed_financial_impact != null ? Number(row.confirmed_financial_impact) : null,
+      confirmedBy: row.confirmed_by || null,
+      confirmedAt: row.confirmed_at || null,
       createdAt: row.created_at,
       updatedAt: row.updated_at
     };
+  }
+
+  /**
+   * Persist the ADVISORY revenue-criticality score for a process (a suggestion — not a confirmation).
+   * @param {string} id
+   * @param {{score:number, basis:object}} advisory
+   */
+  static async saveRevenueScore(id, { score, basis }) {
+    const result = await query(
+      `UPDATE business_processes
+         SET revenue_criticality_score = $1, revenue_criticality_basis = $2, updated_at = NOW()
+       WHERE id = $3 RETURNING *`,
+      [score, basis != null ? JSON.stringify(basis) : null, id]
+    );
+    return this._transformFromDb(result[0]);
+  }
+
+  /**
+   * Record the human CONFIRMATION for a process (the gate). Sets criticality_confirmed and captures
+   * the annual financial impact + who/when, and any override for future weighting.
+   * @param {string} id
+   * @param {{bringsMoney:boolean, financialImpact?:number, by?:string, override?:object}} conf
+   */
+  static async confirmRevenue(id, { bringsMoney, financialImpact = null, by = null, override = null }) {
+    const result = await query(
+      `UPDATE business_processes
+         SET brings_money = $1,
+             criticality_confirmed = TRUE,
+             confirmed_financial_impact = $2,
+             confirmed_by = $3,
+             confirmed_at = NOW(),
+             criticality_override = $4,
+             updated_at = NOW()
+       WHERE id = $5 RETURNING *`,
+      [!!bringsMoney, financialImpact, by, override != null ? JSON.stringify(override) : null, id]
+    );
+    return this._transformFromDb(result[0]);
   }
 
   /**
