@@ -23,7 +23,10 @@ describe('CEO Decisions — page purpose & wording', () => {
     expect(ceo).toContain('what needs my sign-off');
     // driver is data-ranked (c5TopDriver → TD.short), not a hard-coded "identity"
     expect(ceo).toContain('var TD=c5TopDriver()');
-    expect(ceo).toContain("The strategic cyber decision waiting on you: approve '+TD.short+' remediation now, defer it, or formally accept the residual exposure.");
+    // the decision frames the choice as approve / defer / accept the residual exposure,
+    // titled from the computed driver (not a hard-coded "identity")
+    expect(ceo).toContain("One fix converges across the business — approve it, and approve how cyber is told to the board.");
+    expect(ceo).toContain("modeled exposure tied to customer-platform '+TD.short+' risk");
     expect(ceo).not.toContain('approve identity remediation now, defer it');
   });
   it('titles the decision from the computed driver, not a hard-coded identity string', () => {
