@@ -3246,6 +3246,24 @@ function c5ThreatsEvidencePanel(E){
 /* The four-item posture summary strip was removed from the Threats tab (it duplicated
    the evidence panel and hard-coded a top exposure path); the tab now leads with the
    answer line and the top attack paths. */
+/* CISO two-axis lens: per crown jewel, PREVENT (share of attack techniques with a blocking control)
+   and DETECT (share with telemetry), with the residual band. Reads the same LIVE.crown_jewel_residual
+   the CRO residual ranking uses — one model, the CISO's control-coverage angle. */
+function c5PreventDetect(){
+  var rank=(typeof c5ResidualRank==='function')?c5ResidualRank():[];
+  if(!rank.length)return '';
+  function bar(pct,col){return '<div style="flex:1;min-width:70px"><div style="height:6px;background:var(--surface-2);border-radius:3px;overflow:hidden"><i style="display:block;height:100%;width:'+pct+'%;background:'+col+'"></i></div></div>';}
+  var rows=rank.map(function(x){var bc=x.band==='High'?'crit':x.band==='Medium'?'warn':'good';var pp=Math.round(x.prevention*100),dp=Math.round(x.detection*100);
+    return '<div style="display:flex;align-items:center;gap:12px;padding:9px 0;border-top:1px solid var(--line)">'+
+      '<div style="flex:1.4;min-width:0;font-size:13px;font-weight:600">'+c5esc(x.name)+'</div>'+
+      '<div style="flex:2;display:flex;align-items:center;gap:8px"><span style="font-size:10px;font-weight:700;color:var(--good);width:52px">PREVENT</span>'+bar(pp,'var(--good)')+'<span style="font-size:11px;color:var(--muted);width:34px;text-align:right">'+pp+'%</span></div>'+
+      '<div style="flex:2;display:flex;align-items:center;gap:8px"><span style="font-size:10px;font-weight:700;color:var(--blue);width:46px">DETECT</span>'+bar(dp,'var(--blue)')+'<span style="font-size:11px;color:var(--muted);width:34px;text-align:right">'+dp+'%</span></div>'+
+      '<span style="font-size:10.5px;font-weight:700;color:var(--'+bc+');width:58px;text-align:right">'+x.residual+' '+x.band+'</span>'+
+    '</div>';}).join('');
+  return '<div class="c5seclab" style="margin-top:18px">Prevent / detect coverage by crown jewel</div>'+
+    '<div>'+rows+'</div>'+
+    '<div class="c5foot" style="margin-top:8px">Two axes per crown jewel — <b style="color:var(--good)">prevent</b> (share of attack techniques with a blocking control) and <b style="color:var(--blue)">detect</b> (share with telemetry). The residual on the right is the impact left after both; the highest-residual jewels are where the next control dollar goes first.</div>';
+}
 function c5Threats(){
   var host=document.getElementById('c5-threats');if(!host)return;
   var demo=(typeof signalsAreDemo==='function')&&signalsAreDemo();
@@ -3279,6 +3297,7 @@ function c5Threats(){
     '<div class="c5seclab" style="margin-top:16px">MITRE ATT&CK coverage · evidence-aware</div>'+
     '<div class="c5attgrid">'+cells+'</div>'+
     '<div class="c5foot" style="margin-top:10px">'+tactics.length+' tactics mapped; coverage strength varies by evidence and control type. Identity-dependent tactics remain partial while identity operating evidence is incomplete.</div>'+
+    c5PreventDetect()+
     c5bl('Bottom line','The most material threat path runs through '+TD.phrase+'.',null,'Closing the '+TD.short+' gap improves coverage across Initial Access, Credential Access, Privilege Escalation, Persistence and Lateral Movement. Prioritize '+TD.short+' attack-path remediation.',{mid:TD.mid,txt:'Close '+c5esc(TD.short)+' attack-path gaps'})+
     '<div class="c5foot">Coverage maps MITRE ATT&CK tactics to your detection and prevention controls.'+(demo?' Values are demo telemetry.':'')+'</div>';
 }
