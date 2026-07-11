@@ -924,7 +924,9 @@ function openDrill(title,html){var eb=document.querySelector('#ev .eb');if(eb)eb
   document.getElementById('evb').innerHTML=localizeInd(html);
   document.getElementById('ev').classList.add('open');document.getElementById('scrim').classList.add('open');}
 document.addEventListener('click',function(e){var c=e.target.closest('.claim');if(c&&c.dataset.ev)openEv(c.dataset.ev);});
-document.addEventListener('click',function(e){var w=e.target.closest('[data-openwar]');if(w){e.preventDefault();try{wrOpen();}catch(_){}}});
+document.addEventListener('click',function(e){var w=e.target.closest('[data-openwar]');if(w){e.preventDefault();try{wrOpen();}catch(_){}return;}
+  var s=e.target.closest('[data-simatk]');if(s){e.preventDefault();try{simulateRansomware();}catch(_){}return;}
+  var r=e.target.closest('[data-resetatk]');if(r){e.preventDefault();try{resetRansomware();}catch(_){}return;}});
 document.getElementById('evx').addEventListener('click',closeEv);document.getElementById('scrim').addEventListener('click',closeEv);
 document.addEventListener('keydown',function(e){if(e.key==='Escape')closeEv();});
 
@@ -5433,11 +5435,28 @@ function renderWar(){
 }
 function startWarLive(){clearInterval(wrTimer);wrTick=0;wrTimer=setInterval(function(){wrTick++;var el=document.getElementById('wrElapsed');if(el)el.textContent=elapsedStr();var icc=document.getElementById('icClock');if(icc)icc.textContent=elapsedStr();document.querySelectorAll('[data-sysmetric]').forEach(function(n){n.textContent=(180+Math.floor(Math.random()*70))+' alerts/min';});if(wrTick%3===0){var p=FEED_POOL[Math.floor(Math.random()*FEED_POOL.length)];var ts='14:'+String(2+Math.floor(wrTick/20)).padStart(2,'0')+':'+String((wrTick*7)%60).padStart(2,'0');FEED.push([ts,p[0],p[1],p[2]]);if(FEED.length>16)FEED.shift();var fb=document.getElementById('wrFeed');if(fb){fb.innerHTML=FEED.map(feedLineHTML).join('');fb.scrollTop=fb.scrollHeight;}}},1000);}
 function stopWarLive(){clearInterval(wrTimer);}
+/* Demo-only: synthesize the cockpit-wide "open incident" signal so a simulated attack
+   flips EVERY seat's under-attack read (not just the War Room modal). Never overrides a
+   real SIEM feed — gated to demo / trial mode. */
+function setIncidentSignal(on){
+  if(!((typeof demoActive==='function'&&demoActive())||signalsAreDemo()))return;
+  if(!SIGNALS)SIGNALS={};
+  SIGNALS.open_incidents={key:'open_incidents',value:on?1:0,demo:true};
+  if(on){SIGNALS.mttd_hrs=SIGNALS.mttd_hrs||{key:'mttd_hrs',value:0.25,demo:true};}
+  try{renderSignals();}catch(_){}
+}
 function triggerIncident(){incidentActive=true;wrStart=Date.now();FEED=FEED_SEED.slice();icChecks={};icCalled={};icPlaybook=false;
   var top=currentCjList()[0];incidentAsset=top?top.name:null; // the crown jewel under attack
   var b=document.getElementById('warBtn');if(b){b.classList.add('alarm');b.textContent='⚠ LIVE INCIDENT';}
+  try{setIncidentSignal(true);}catch(_){}
   startAlarm();renderWar();startWarLive();startCjIncident();renderChain();renderCisoWarRoom();renderCisoOps();renderUnderAttack();}
-function containIncident(){incidentActive=false;incidentAsset=null;stopAlarm();stopWarLive();stopCjIncident();var b=document.getElementById('warBtn');if(b){b.classList.remove('alarm');b.textContent='⚠ War Room';}renderChain();renderWar();renderCisoWarRoom();renderCisoOps();renderUnderAttack();}
+function containIncident(){incidentActive=false;incidentAsset=null;stopAlarm();stopWarLive();stopCjIncident();var b=document.getElementById('warBtn');if(b){b.classList.remove('alarm');b.textContent='⚠ War Room';}
+  try{setIncidentSignal(false);}catch(_){}
+  renderChain();renderWar();renderCisoWarRoom();renderCisoOps();renderUnderAttack();}
+/* Demo trigger surfaced in the War Room standby bar (data-simatk) — fires the scripted
+   ransomware scenario and opens the response console. resetRansomware winds it back. */
+function simulateRansomware(){try{if(!incidentActive)triggerIncident();try{wrOpen();}catch(_){}}catch(_){}}
+function resetRansomware(){try{if(incidentActive)containIncident();}catch(_){}}
 function startCjIncident(){clearInterval(cjIncidentTimer);cjIncidentTimer=setInterval(updateCjIncident,1000);updateCjIncident();}
 function stopCjIncident(){clearInterval(cjIncidentTimer);}
 function wrOpen(){ensureAudio();renderWar();document.getElementById('wrModal').classList.add('open');document.getElementById('wrScrim').classList.add('open');}
