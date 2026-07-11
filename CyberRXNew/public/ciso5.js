@@ -6656,19 +6656,63 @@ function c5NeuronControls(host){
 }
 /* Program Health dispatcher — renders the tab strip, then the active panel.
    Lazy-mounts: the island is only built while "Nerion's View" is active. */
+/* INTERNAL — the Nerion Map: the full proprietary crosswalk (capability → every
+   framework control it evidences, its adversarial role, weight and non-adversarial
+   lanes). This is Nerion's IP; it renders only behind the internal gate. */
+function c5NeuronMap(host){
+  if(!host)return;
+  var esc=(typeof c5esc==='function')?c5esc:function(s){return s;};
+  var caps=(typeof CAPS!=='undefined')?CAPS:[];
+  var FW=[{k:'csf',l:'NIST CSF 2.0'},{k:'r53',l:'800-53'},{k:'cis',l:'CIS v8'},{k:'iso',l:'ISO 27001'},{k:'soc2',l:'SOC 2'},{k:'pci',l:'PCI DSS'}];
+  function ids(c,k){var fw=(typeof CAP_FRAMEWORK!=='undefined')?CAP_FRAMEWORK[c.k]:null;var x=NEURON_XWALK[c.k]||{};
+    if(k==='csf')return (fw&&fw.csf)||[];if(k==='r53')return (fw&&fw.r53)||[];return x[k]||[];}
+  var totals={};FW.forEach(function(f){totals[f.k]=0;});
+  var td='padding:7px 10px;vertical-align:top;border-bottom:1px solid var(--line)';
+  var mono='font-family:ui-monospace,SFMono-Regular,Menlo,monospace';
+  var rows=caps.filter(function(c){return NEURON_XWALK[c.k];}).map(function(c){
+    var x=NEURON_XWALK[c.k];var fw=(typeof CAP_FRAMEWORK!=='undefined')?CAP_FRAMEWORK[c.k]:{};
+    var cells=FW.map(function(f){var list=ids(c,f.k);totals[f.k]+=list.length;
+      return '<td style="'+td+';font-size:11px;'+mono+';color:var(--ink-2)">'+(list.length?esc(list.join(', ')):'<span style="color:var(--line)">—</span>')+'</td>';}).join('');
+    var lanes=(x.lanes||[]).map(function(l){return esc(NEURON_LANE_LABEL[l]||l);}).join(', ');
+    return '<tr>'
+      +'<td style="'+td+'"><b style="font-size:12px;color:var(--ink)">'+esc(c.name)+'</b><div style="font-size:10px;color:var(--muted)">'+esc(c.k)+' · '+esc(c.tool||'')+'</div></td>'
+      +'<td style="'+td+';font-size:11px;color:var(--ink-2);white-space:nowrap">'+esc(x.role)+((fw&&fw.weight)?(' · <span style="color:var(--muted)">w'+fw.weight+'</span>'):'')+'</td>'
+      +'<td style="'+td+';font-size:10.5px;color:var(--ink-2);max-width:150px">'+esc(lanes||'—')+'</td>'
+      +cells+'</tr>';
+  }).join('');
+  var thBase='text-align:left;padding:8px 10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);border-bottom:2px solid var(--line);white-space:nowrap';
+  var head='<tr><th style="'+thBase+'">Capability</th><th style="'+thBase+'">Adversarial · wt</th><th style="'+thBase+'">Non-adversarial lanes</th>'
+    +FW.map(function(f){return '<th style="'+thBase+'">'+esc(f.l)+' <span style="color:var(--ink-2)">('+totals[f.k]+')</span></th>';}).join('')+'</tr>';
+  host.innerHTML=
+    '<div style="border:1px solid var(--warn);background:color-mix(in srgb,var(--warn) 8%,transparent);border-radius:12px;padding:12px 16px;margin-bottom:14px">'
+    +'<div style="font-size:13px;font-weight:800;color:var(--warn)">◆ INTERNAL — Nerion IP · not for client distribution</div>'
+    +'<div style="font-size:11.5px;color:var(--ink-2);line-height:1.6;margin-top:4px">The proprietary crosswalk that turns one telemetry pull into six-framework coverage — Nerion’s core mapping. This tab is gated (<code>localStorage.cyberrx_internal=\'1\'</code>) and never shown to a client. <b style="color:var(--warn)">Caveat:</b> gating hides the view, not the data — this map still ships inside <code>ciso5.js</code> and is readable in devtools. To truly protect it, the crosswalk must move server-side behind auth (backend parity).</div></div>'
+    +'<div style="font-size:12.5px;color:var(--ink-2);margin-bottom:10px"><b style="color:var(--ink)">'+rows.length+'</b> Neuron Controls · projecting onto <b style="color:var(--ink)">'+FW.reduce(function(a,f){return a+totals[f.k];},0)+'</b> control mappings across '+FW.length+' frameworks.</div>'
+    +'<div style="overflow-x:auto;border:1px solid var(--line);border-radius:12px"><table style="border-collapse:collapse;width:100%;min-width:1000px"><thead>'+head+'</thead><tbody>'+rows+'</tbody></table></div>'
+    +'<div style="font-size:11px;color:var(--muted);margin-top:10px">CSF + 800-53 come from <code>CAP_FRAMEWORK</code> (with weights); CIS / ISO 27001 / SOC 2 / PCI from <code>NEURON_XWALK</code>. External frameworks are referenced by control ID only — no requirement prose is stored.</div>';
+}
+/* INTERNAL gate. The Nerion mapping (the proprietary capability→control crosswalk) is
+   Nerion IP and must never surface to a client. It renders ONLY when an operator opts in
+   via localStorage cyberrx_internal='1' (or ?internal=1). NOTE: this hides the VIEW, not
+   the data — NEURON_XWALK still ships inside ciso5.js and is readable in devtools. True
+   protection requires moving the crosswalk server-side behind auth (backend parity). */
+function nerionInternal(){try{return (typeof localStorage!=='undefined'&&localStorage.getItem('cyberrx_internal')==='1')||(typeof location!=='undefined'&&/[?&#]internal=1\b/.test(location.href));}catch(_){return false;}}
 function c5Frameworks(){
   var host=document.getElementById('c5-frameworks');if(!host)return;
-  var tab=(C5_PH_TAB==='nerion')?'nerion':(C5_PH_TAB==='neuron')?'neuron':'classic';
+  var internal=nerionInternal();
+  var tab=(C5_PH_TAB==='nerion')?'nerion':(C5_PH_TAB==='neuron')?'neuron':(C5_PH_TAB==='nmap'&&internal)?'nmap':'classic';
   host.innerHTML=c5header()+
     '<div class="subwrap c5phwrap"><div class="subtabs">'+
       '<button class="subtab'+(tab==='classic'?' on':'')+'" data-phtab="classic">Classic View</button>'+
       '<button class="subtab'+(tab==='neuron'?' on':'')+'" data-phtab="neuron">Neuron Controls</button>'+
       '<button class="subtab'+(tab==='nerion'?' on':'')+'" data-phtab="nerion">Nerion’s View</button>'+
+      (internal?('<button class="subtab'+(tab==='nmap'?' on':'')+'" data-phtab="nmap" style="color:var(--warn)">◆ Nerion Map · internal</button>'):'')+
     '</div></div><div id="c5ph-body"></div>';
   host.querySelectorAll('[data-phtab]').forEach(function(b){b.onclick=function(){C5_PH_TAB=b.getAttribute('data-phtab');c5Frameworks();};});
   var body=document.getElementById('c5ph-body');
   if(tab==='nerion'){c5MountCrownTree(body);}
   else if(tab==='neuron'){c5NeuronControls(body);}
+  else if(tab==='nmap'&&internal){c5NeuronMap(body);}
   else{c5FrameworksClassic(body);}
 }
 /* Classic View — the framework-maturity content that Program Health rendered
