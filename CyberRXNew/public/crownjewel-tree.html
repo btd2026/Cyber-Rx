@@ -172,7 +172,7 @@
   </div>
   <div class="scroll"><div class="tree" id="tree"></div></div>
   <div class="scope" id="scope"></div>
-  <footer>Illustrative sample data (an insurance carrier, to match the “Claims Processing” example); the risks (R1, R2, …) are an illustrative stand-in for the risk register you upload at onboarding. Crown jewels are applications and key infrastructure (firewalls, identity) — data is protected as a risk to the application or system that holds it, not as a separate crown jewel. Each node reconciles the same way: <b>value (total) = mitigated by controls + residual at risk</b>, so a level's children always sum back to its value. A control at <b>maturity 3 or higher</b> mitigates its slice (struck through); residual $ at risk sums only the slices guarded by controls below 3 — rolled up jewel → process → function → enterprise. Hover any control for its NIST CSF 2.0 name and description.</footer>
+  <footer>Illustrative sample data (an insurance carrier, to match the “Claims Processing” example); the risks (R1, R2, …) are an illustrative stand-in for the risk register you upload at onboarding. Crown jewels are applications and key infrastructure (firewalls, identity) — data is protected as a risk to the application or system that holds it, not as a separate crown jewel. <b>Dollars are shown at the critical function and at each risk.</b> A function carries a business value, split into <b>mitigated + residual at risk</b>. Processes and crown jewels are the structural path (no dollars). Each <b>risk’s</b> figure is the slice of the function’s value it leaves exposed, set by its controls: a control at <b>maturity 3 or higher</b> mitigates its slice (struck through); residual $ at risk sums only the slices guarded by controls below 3. Hover any control for its NIST CSF 2.0 name and description.</footer>
 </div>
 <div class="tip" id="tip"></div>
 
@@ -309,11 +309,11 @@ function jewelNode(j){
   return `<li class="collapsed"><div class="node jewel haschild"><span class="crown">👑</span><div class="accent"></div>
    <div class="pad"><div class="cjline"><span class="tpill" style="background:${TYPECOL[j.type]}">${j.type==='Infrastructure'?'INFRA':j.type==='Application'?'APP':'DATA'}</span><span class="cjtag">Crown jewel</span></div>
      <div class="ttl">${j.name}</div>
-     ${moneyTriplet({value:j.value,mit:j.mit,live:j.risk,mtype:'jewel',total:j.total})}${mini(j.exposure)}</div>
+     ${mini(j.exposure)}</div>
    <div class="expander">+</div></div><ul>${j.risks.map(riskNode).join("")}</ul></li>`;}
 function procNode(p){return `<li><div class="node proc haschild"><div class="accent" style="background:${expColor(p.exposure)}"></div>
    <div class="pad"><div class="tag">Key process</div><div class="ttl">${p.name}</div>
-     ${moneyTriplet({value:p.value,mit:p.mit,live:p.risk,mtype:'rollup',label:'Key process'})}${mini(p.exposure)}</div>
+     ${mini(p.exposure)}</div>
    <div class="expander">−</div></div><ul>${p.jewels.map(jewelNode).join("")}</ul></li>`;}
 function fnNode(f){return `<li><div class="node fn haschild"><div class="accent" style="background:${expColor(f.exposure)}"></div>
    <div class="pad"><div class="ttl">${f.name}</div><div class="sub">${f.crit} function</div>
@@ -386,7 +386,7 @@ window.addEventListener('message',function(e){var d=(e&&e.data)||{};if(d.type!==
   LIVEMODE=true; // real inventory posted → no longer illustrative
   try{build();
     var ft=document.querySelector('footer');
-    if(ft)ft.innerHTML="Live from your Nerion onboarding — business functions, key processes, and crown-jewel applications & infrastructure come from your inventory, and the risks (R1, R2, …) come from the risk register you uploaded at onboarding; control maturity comes from your assessments and connected tools. Each node reconciles the same way: <b>value (total) = mitigated by controls + residual at risk</b>, so a level's children always sum back to its value. A control at <b>maturity 3 or higher</b> mitigates its slice of the jewel's value (struck through); residual $ at risk sums only the slices behind controls below 3 — rolled up jewel → process → function → enterprise. Hover any control for its NIST CSF 2.0 name and description.";
+    if(ft)ft.innerHTML="Live from your Nerion onboarding — business functions, key processes, and crown-jewel applications & infrastructure come from your inventory, and the risks (R1, R2, …) come from the risk register you uploaded at onboarding; control maturity comes from your assessments and connected tools. <b>Dollars are shown at the critical function and at each risk.</b> A function carries a business value, split into <b>mitigated + residual at risk</b>. Processes and crown jewels are the structural path (no dollars). Each <b>risk's</b> figure is the slice of the function's value it leaves exposed, set by its controls: a control at <b>maturity 3 or higher</b> mitigates its slice (struck through); residual $ at risk sums only the slices behind controls below 3. Hover any control for its NIST CSF 2.0 name and description.";
   }catch(err){try{console.error(err);}catch(_){}}});
 try{parent.postMessage({type:'crowntree-ready'},'*');}catch(_){}
 build();  // render the built-in sample immediately; a host may post real data to override
