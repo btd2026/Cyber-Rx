@@ -1808,7 +1808,13 @@ function controlCmmi(id,cov){
   if(toolS!=null){var tc=fwControlTool(id);ceil=(tc&&tc.cap)?capAutoCeil(tc.cap):null;if(ceil!=null&&toolS>ceil)toolS=ceil;}
   var best=Math.max(docS!=null?docS:-1,toolS!=null?toolS:-1);
   if(best<0)return {score:0,src:'none',toolPct:null,doc:null,ceil:ceil};
-  var src=(docS!=null&&docS>=(toolS!=null?toolS:-1))?'document':'system';
+  // Four evidence classes, by how the control is assessed:
+  //   live telemetry  — a connected tool assesses it fully & automatically (auto capability, ceil 5)
+  //   hybrid          — a connected tool pulls telemetry, but a human validates it (semi/manual, ceil<5)
+  //   document        — no tool can automate it; evidenced only by an analyzed policy
+  //   (none handled above)
+  var hasTool=toolS!=null;
+  var src=hasTool?((ceil!=null&&ceil<5)?'hybrid':'system'):'document';
   return {score:best,src:src,toolPct:toolPct,doc:ds,ceil:ceil};
 }
 function cmmiBadge(s){return '<span class="cmmi-badge cmmi'+s+'">'+s+'</span>';}
