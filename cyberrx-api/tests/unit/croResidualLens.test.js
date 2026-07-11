@@ -13,7 +13,7 @@ const cock = fs.readFileSync(path.resolve(__dirname, '../../../CyberRXNew/public
 describe('CRO residual-ranking lens (Phase D)', () => {
   it('has a browser residual formula that mirrors the backend (impact × unmitigated-prevention × detection-gap, floored)', () => {
     expect(ciso).toContain('function c5Residual(');
-    expect(ciso).toContain('imp*unmit*detGap');
+    expect(ciso).toContain('imp*noCtrl*detGap');
     expect(ciso).toContain('function c5ResidualRank(');
     expect(ciso).toContain('LIVE.crown_jewel_residual');
   });
@@ -26,7 +26,7 @@ describe('CRO residual-ranking lens (Phase D)', () => {
   });
   it('the demo model supplies per-crown-jewel prevent/detect coverage', () => {
     expect(cock).toContain('crown_jewel_residual:');
-    expect(cock).toContain('prevention:');
+    expect(cock).toContain('control_presence:'); // honest axis name (Phase E)
     expect(cock).toContain('detection:');
   });
 });

@@ -21,8 +21,9 @@ describe('CFO seat — revenue-confirmation lens (Phase D)', () => {
     expect(cfo).toContain("id:'cf_rev'");
     expect(cfo).toContain('Revenue-confirmed jewels');
     expect(cfo).toContain('provisional');
-    // crown jewels derive only from confirmed revenue processes
-    expect(cfo).toContain('derived <b>only</b> from the revenue processes you’ve confirmed');
+    // revenue is the primary/confirmed path; high-impact-if-lost also qualifies (guardrail 3)
+    expect(cfo).toContain('Revenue is the primary path');
+    expect(cfo).toContain('high-impact-if-lost');
   });
   it('the demo model supplies revenue_confirmation + a provisional crown jewel', () => {
     expect(cock).toContain('revenue_confirmation:');

@@ -21,6 +21,10 @@ module.exports = {
     };
   },
   get crownJewelThreshold() { return num('CRIT_CJ_THRESHOLD', 0.70); }, // score (0..1) at/above => crown jewel
+  // Guardrail 3 — broadened definition: an asset also qualifies via HIGH-IMPACT-IF-LOST even without
+  // a confirmed revenue process. Data sensitivity at/above this bar (PHI/PCI/regulated) qualifies;
+  // explicit human designations (safety_critical, legal_hold, brand_critical) qualify on their own.
+  get impactDataBar() { return num('CRIT_IMPACT_DATA_BAR', 0.70); },
   get tier1() { return num('CRIT_TIER1', 0.85); },
   get tier2() { return num('CRIT_TIER2', 0.70); },
   get tier3() { return num('CRIT_TIER3', 0.50); },

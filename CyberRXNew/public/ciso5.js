@@ -3246,23 +3246,39 @@ function c5ThreatsEvidencePanel(E){
 /* The four-item posture summary strip was removed from the Threats tab (it duplicated
    the evidence panel and hard-coded a top exposure path); the tab now leads with the
    answer line and the top attack paths. */
-/* CISO two-axis lens: per crown jewel, PREVENT (share of attack techniques with a blocking control)
-   and DETECT (share with telemetry), with the residual band. Reads the same LIVE.crown_jewel_residual
-   the CRO residual ranking uses — one model, the CISO's control-coverage angle. */
+/* Non-adversarial risk lane (Phase E guardrail 2) — loss WITHOUT an attacker. ATT&CK is the
+   adversarial lane; this parallel lane covers outage/DR, data corruption, insider, third-party/
+   supply-chain and privacy/regulatory. A crown jewel can carry both; nothing is forced through ATT&CK.
+   Mirrors the backend config/riskLanes.js taxonomy. */
+var C5_NONADV={outage_dr:{l:'Outage / DR',o:'COO / CIO'},data_corruption:{l:'Data corruption',o:'CIO / CISO'},insider:{l:'Insider',o:'CISO / CHRO'},third_party_supply_chain:{l:'Third-party / supply-chain',o:'CISO / Procurement'},privacy_regulatory:{l:'Privacy / regulatory',o:'CLO'}};
+function c5NonAdversarialLane(){
+  var L=(typeof LIVE!=='undefined'&&LIVE&&Array.isArray(LIVE.crown_jewel_residual))?LIVE.crown_jewel_residual:[];
+  var withNA=L.filter(function(j){return Array.isArray(j.non_adversarial)&&j.non_adversarial.length;});
+  if(!withNA.length)return '';
+  var rows=withNA.map(function(j){var chips=j.non_adversarial.map(function(id){var c=C5_NONADV[id];return c?('<span style="font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--surface-2);color:var(--ink-2)">'+c5esc(c.l)+'</span>'):'';}).join(' ');
+    return '<div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-top:1px solid var(--line)"><div style="flex:1.2;min-width:0;font-size:13px;font-weight:600">'+c5esc(j.name)+'</div><div style="flex:2;display:flex;flex-wrap:wrap;gap:5px">'+chips+'</div></div>';}).join('');
+  return '<div class="c5seclab" style="margin-top:18px">Non-adversarial risk lane · loss without an attacker</div>'+
+    '<div>'+rows+'</div>'+
+    '<div class="c5foot" style="margin-top:8px">Not every risk is an adversary. The ATT&CK view above is the <b>adversarial</b> lane; these are the <b>non-adversarial</b> ways a crown jewel is lost — outage/DR, data corruption, insider error, a third-party/supply-chain failure, or a privacy/regulatory breach. A crown jewel carries both lanes; each category routes to the executive who owns it (COO, CIO, CLO, Procurement).</div>';
+}
+/* CISO two-axis lens: per crown jewel, CONTROL PRESENCE (share of attack techniques with a MAPPED
+   control — presence, NOT proven effectiveness) and DETECTION (share with telemetry), with the
+   residual band. Reads the same LIVE.crown_jewel_residual the CRO ranking uses — one model. */
 function c5PreventDetect(){
   var rank=(typeof c5ResidualRank==='function')?c5ResidualRank():[];
   if(!rank.length)return '';
+  var measured=(typeof c5EffectivenessMeasured==='function')&&c5EffectivenessMeasured();
   function bar(pct,col){return '<div style="flex:1;min-width:70px"><div style="height:6px;background:var(--surface-2);border-radius:3px;overflow:hidden"><i style="display:block;height:100%;width:'+pct+'%;background:'+col+'"></i></div></div>';}
-  var rows=rank.map(function(x){var bc=x.band==='High'?'crit':x.band==='Medium'?'warn':'good';var pp=Math.round(x.prevention*100),dp=Math.round(x.detection*100);
+  var rows=rank.map(function(x){var bc=x.band==='High'?'crit':x.band==='Medium'?'warn':'good';var pp=Math.round(x.control_presence*100),dp=Math.round(x.detection*100);
     return '<div style="display:flex;align-items:center;gap:12px;padding:9px 0;border-top:1px solid var(--line)">'+
       '<div style="flex:1.4;min-width:0;font-size:13px;font-weight:600">'+c5esc(x.name)+'</div>'+
-      '<div style="flex:2;display:flex;align-items:center;gap:8px"><span style="font-size:10px;font-weight:700;color:var(--good);width:52px">PREVENT</span>'+bar(pp,'var(--good)')+'<span style="font-size:11px;color:var(--muted);width:34px;text-align:right">'+pp+'%</span></div>'+
-      '<div style="flex:2;display:flex;align-items:center;gap:8px"><span style="font-size:10px;font-weight:700;color:var(--blue);width:46px">DETECT</span>'+bar(dp,'var(--blue)')+'<span style="font-size:11px;color:var(--muted);width:34px;text-align:right">'+dp+'%</span></div>'+
+      '<div style="flex:2;display:flex;align-items:center;gap:8px"><span style="font-size:10px;font-weight:700;color:var(--good);width:74px">CONTROL PRESENT</span>'+bar(pp,'var(--good)')+'<span style="font-size:11px;color:var(--muted);width:34px;text-align:right">'+pp+'%</span></div>'+
+      '<div style="flex:2;display:flex;align-items:center;gap:8px"><span style="font-size:10px;font-weight:700;color:var(--blue);width:58px">DETECTION</span>'+bar(dp,'var(--blue)')+'<span style="font-size:11px;color:var(--muted);width:34px;text-align:right">'+dp+'%</span></div>'+
       '<span style="font-size:10.5px;font-weight:700;color:var(--'+bc+');width:58px;text-align:right">'+x.residual+' '+x.band+'</span>'+
     '</div>';}).join('');
-  return '<div class="c5seclab" style="margin-top:18px">Prevent / detect coverage by crown jewel</div>'+
+  return '<div class="c5seclab" style="margin-top:18px">Control presence / detection coverage by crown jewel</div>'+
     '<div>'+rows+'</div>'+
-    '<div class="c5foot" style="margin-top:8px">Two axes per crown jewel — <b style="color:var(--good)">prevent</b> (share of attack techniques with a blocking control) and <b style="color:var(--blue)">detect</b> (share with telemetry). The residual on the right is the impact left after both; the highest-residual jewels are where the next control dollar goes first.</div>';
+    '<div class="c5foot" style="margin-top:8px">Two axes, each claiming only what telemetry proves — <b style="color:var(--good)">control present</b> (a control is <b>mapped</b> to the technique — presence, <b>not proof it works</b>) and <b style="color:var(--blue)">detection</b> (telemetry that would observe it). The residual is the impact left after both. '+(measured?'Effectiveness is validated by BAS/purple-team.':'<b>Effectiveness is not yet measured</b> — a hook for breach-and-attack-simulation / purple-team results; nothing here claims a control is proven effective.')+'</div>';
 }
 function c5Threats(){
   var host=document.getElementById('c5-threats');if(!host)return;
@@ -3298,6 +3314,7 @@ function c5Threats(){
     '<div class="c5attgrid">'+cells+'</div>'+
     '<div class="c5foot" style="margin-top:10px">'+tactics.length+' tactics mapped; coverage strength varies by evidence and control type. Identity-dependent tactics remain partial while identity operating evidence is incomplete.</div>'+
     c5PreventDetect()+
+    c5NonAdversarialLane()+
     c5bl('Bottom line','The most material threat path runs through '+TD.phrase+'.',null,'Closing the '+TD.short+' gap improves coverage across Initial Access, Credential Access, Privilege Escalation, Persistence and Lateral Movement. Prioritize '+TD.short+' attack-path remediation.',{mid:TD.mid,txt:'Close '+c5esc(TD.short)+' attack-path gaps'})+
     '<div class="c5foot">Coverage maps MITRE ATT&CK tactics to your detection and prevention controls.'+(demo?' Values are demo telemetry.':'')+'</div>';
 }
@@ -3694,10 +3711,10 @@ function c5cfOverview(){
   var RC=(typeof LIVE!=='undefined'&&LIVE&&LIVE.revenue_confirmation)||null;
   var rcConn=!!RC;var rcProv=rcConn?(Number(RC.provisional_jewels)||0):0;
   var dRev=(rcConn
-    ?('Crown jewels are derived <b>only</b> from the revenue processes you’ve confirmed. <b>'+RC.confirmed+' of '+RC.processes+'</b> processes are confirmed ('+RC.brings_money+' bring money)'+
-      (rcProv>0?(', and <b>'+rcProv+'</b> crown jewel'+(rcProv>1?'s remain':' remains')+' <b>provisional</b> — awaiting confirmation of '+c5esc(RC.top_unconfirmed||'an unconfirmed revenue process')+' before it’s promoted.'):' — every crown jewel is backed by a confirmed revenue process.')+
-      ' Confirm the rest in onboarding (the CFO step) to promote them.')
-    :'Confirm which processes bring money in onboarding — crown jewels are derived only from confirmed revenue processes; the rest stay provisional.');
+    ?('<b>Revenue is the primary path</b> to crown-jewel status, and it’s your confirmed input. <b>'+RC.confirmed+' of '+RC.processes+'</b> processes are confirmed ('+RC.brings_money+' bring money)'+
+      (rcProv>0?(', and <b>'+rcProv+'</b> crown jewel'+(rcProv>1?'s remain':' remains')+' <b>provisional</b> — awaiting confirmation of '+c5esc(RC.top_unconfirmed||'an unconfirmed revenue process')+' before promotion.'):' — every revenue-linked jewel is backed by a confirmed process.')+
+      ' Confirm the rest in onboarding (the CFO step). Note: an asset can <b>also</b> qualify without revenue if it’s high-impact-if-lost — regulated data (PHI/PCI), safety-critical, under legal hold, or brand-critical.')
+    :'Confirm which processes bring money in onboarding — revenue is the primary path to crown-jewel status; high-impact assets (regulated data, safety, legal hold, brand) also qualify.');
   var cards=[
     c5ovFig({id:'cf_c1',title:'Vs appetite',value:(ap.connected?(aleN>0?aleStr:ap.displayValue):'Set appetite'),status:(ap.connected?(over?('Over by '+overStr):('Within · '+headStr)):'—'),pill:(ap.connected?(over?'r':'g'):'n'),owner:'CFO / CRO',ownerSeat:'cro',detail:dApp,sources:[c5bdMod('modeled loss vs the board-set appetite'),c5bdSelf('Risk appetite','board-set at onboarding')]}),
     c5ovFig({id:'cf_c2',title:'Worst-year loss',value:(tail.connected?tail.displayValue:'—'),status:(tail.connected?'Modeled':'—'),pill:(tail.connected?'a':'n'),owner:'CFO',ownerSeat:'cfo',detail:dWorst,sources:[c5bdMod('95th-percentile annual loss from the loss model')]}),
@@ -3790,22 +3807,26 @@ function c5ctOverview(){
 }
 /* ── CRO ── */
 /* Residual-risk formula — browser mirror of the backend ResidualRiskService / config/residual.js
-   (the one tunable place): residual = impact × unmitigated-prevention × detection-gap, with per-axis
-   floors so neither control layer alone zeroes it. Returns a 0..100 banded score. */
-function c5Residual(impact,prevention,detection){
-  var PF=0.10,DF=0.30; // prevention / detection floors (mirror config/residual.js defaults)
-  var imp=Math.max(0,Math.min(1,impact||0)),prev=Math.max(0,Math.min(1,prevention||0)),det=Math.max(0,Math.min(1,detection||0));
-  var unmit=PF+(1-PF)*(1-prev),detGap=DF+(1-DF)*(1-det);
-  var r01=Math.max(0,Math.min(1,imp*unmit*detGap)),score=Math.round(r01*100);
-  return {residual:score,band:(score>=50?'High':score>=25?'Medium':'Low'),unmit:unmit,detGap:detGap};
+   (the one tunable place): residual = impact × no-control-present × detection-gap, with per-axis
+   floors. HONEST axes (Phase E): controlPresence = a control is MAPPED (presence, NOT proven
+   effectiveness); detection = telemetry coverage. Effectiveness (BAS/purple-team) is a hook. */
+function c5Residual(impact,controlPresence,detection){
+  var PF=0.10,DF=0.30; // presence / detection floors (mirror config/residual.js defaults)
+  var imp=Math.max(0,Math.min(1,impact||0)),pres=Math.max(0,Math.min(1,controlPresence||0)),det=Math.max(0,Math.min(1,detection||0));
+  var noCtrl=PF+(1-PF)*(1-pres),detGap=DF+(1-DF)*(1-det);
+  var r01=Math.max(0,Math.min(1,imp*noCtrl*detGap)),score=Math.round(r01*100);
+  return {residual:score,band:(score>=50?'High':score>=25?'Medium':'Low'),noCtrl:noCtrl,detGap:detGap};
 }
-/* Rank the org's crown jewels by residual risk (Phase D — CRO lens). */
+/* Rank the org's crown jewels by residual risk (Phase D — CRO lens). control_presence is the
+   honest axis name; `prevention` is read as a legacy alias if present. */
 function c5ResidualRank(){
   var L=(typeof LIVE!=='undefined'&&LIVE&&Array.isArray(LIVE.crown_jewel_residual))?LIVE.crown_jewel_residual:[];
-  return L.map(function(j){var r=c5Residual(j.impact,j.prevention,j.detection);
-    return {name:j.name,prevention:j.prevention,detection:j.detection,residual:r.residual,band:r.band};})
+  return L.map(function(j){var pres=(j.control_presence!=null?j.control_presence:j.prevention);var r=c5Residual(j.impact,pres,j.detection);
+    return {name:j.name,control_presence:pres,detection:j.detection,residual:r.residual,band:r.band};})
     .sort(function(a,b){return b.residual-a.residual;});
 }
+/* Whether control effectiveness has been independently measured (BAS/purple-team). Hook — false until wired. */
+function c5EffectivenessMeasured(){return !!(typeof LIVE!=='undefined'&&LIVE&&LIVE.effectiveness_measured);}
 function c5crOverview(){
   var host=document.getElementById('cr-overview');if(!host)return;
   var RR=(typeof c5RiskRegister==='function')?c5RiskRegister():{cyberResidual:0,appetite:0,cyberRank:null,total:0};var IDF=c5IdFix();var idm=c5get(IDF.mid);
@@ -3819,17 +3840,17 @@ function c5crOverview(){
   // Residual-risk ranking across crown jewels (impact × unmitigated-prevention × detection-gap).
   var resRank=(typeof c5ResidualRank==='function')?c5ResidualRank():[];var resTop=resRank[0]||null;var resHigh=resRank.filter(function(x){return x.band==='High';}).length;
   var dResidual=(resRank.length
-    ?('Crown jewels ranked by <b>residual risk</b> — impact left open after prevention and detection. '+
-      '<b>'+c5esc((resTop&&resTop.name)||'the top jewel')+'</b> carries the most ('+(resTop?resTop.residual:'—')+'/100, '+(resTop?resTop.band:'')+'): prevention covers '+(resTop?Math.round(resTop.prevention*100):0)+'% of its attack techniques and detection '+(resTop?Math.round(resTop.detection*100):0)+'%, so the rest is unmitigated. '+
-      '<div style="margin-top:8px">'+resRank.slice(0,5).map(function(x,i){var bc=x.band==='High'?'crit':x.band==='Medium'?'warn':'good';return '<div style="display:flex;align-items:center;gap:8px;padding:3px 0"><span style="width:16px;color:var(--muted);font-size:11px">'+(i+1)+'</span><span style="flex:1;min-width:0">'+c5esc(x.name)+'</span><span style="font-size:11px;color:var(--muted)">P '+Math.round(x.prevention*100)+'% · D '+Math.round(x.detection*100)+'%</span><span style="font-weight:700;color:var(--'+bc+')">'+x.residual+'</span><span style="font-size:10.5px;font-weight:700;color:var(--'+bc+')">'+x.band+'</span></div>';}).join('')+'</div>'+
-      (resHigh>0?('The '+resHigh+' High-residual jewel'+(resHigh>1?'s are':' is')+' where the next control dollar removes the most risk — led by the identity fix.'):'Every crown jewel is inside Medium/Low residual this quarter.'))
-    :'Connect your control telemetry and we’ll rank each crown jewel by residual risk — impact left open after prevention and detection.');
+    ?('Crown jewels ranked by <b>residual risk</b> — impact left open after control presence and detection. '+
+      '<b>'+c5esc((resTop&&resTop.name)||'the top jewel')+'</b> carries the most ('+(resTop?resTop.residual:'—')+'/100, '+(resTop?resTop.band:'')+'): a control is <b>present</b> for '+(resTop?Math.round(resTop.control_presence*100):0)+'% of its attack techniques and detection covers '+(resTop?Math.round(resTop.detection*100):0)+'%, so the rest is uncovered. '+
+      '<div style="margin-top:8px">'+resRank.slice(0,5).map(function(x,i){var bc=x.band==='High'?'crit':x.band==='Medium'?'warn':'good';return '<div style="display:flex;align-items:center;gap:8px;padding:3px 0"><span style="width:16px;color:var(--muted);font-size:11px">'+(i+1)+'</span><span style="flex:1;min-width:0">'+c5esc(x.name)+'</span><span style="font-size:11px;color:var(--muted)">present '+Math.round(x.control_presence*100)+'% · detect '+Math.round(x.detection*100)+'%</span><span style="font-weight:700;color:var(--'+bc+')">'+x.residual+'</span><span style="font-size:10.5px;font-weight:700;color:var(--'+bc+')">'+x.band+'</span></div>';}).join('')+'</div>'+
+      (resHigh>0?('The '+resHigh+' High-residual jewel'+(resHigh>1?'s are':' is')+' where the next control dollar removes the most risk — led by the identity fix. Note: presence is not proven effectiveness — validate with BAS/purple-team.'):'Every crown jewel is inside Medium/Low residual this quarter.'))
+    :'Connect your control telemetry and we’ll rank each crown jewel by residual risk — impact left open after control presence and detection.');
   var cards=[
     c5ovFig({id:'cr_c1',title:'Rank vs other risks',value:rankStr,status:(RR.cyberRank?'Ranked':'—'),pill:(over?'a':'n'),owner:'CRO',ownerSeat:'cro',detail:dRank,sources:[c5bdMod('cyber residual vs the other principal risks on the register'),c5bdSelf('Risk register','ERM inputs, self-reported')]}),
     c5ovFig({id:'cr_c2',title:'Residual loss',value:(RR.cyberResidual>0?usd(RR.cyberResidual):'—'),status:(over?'Over appetite':(RR.cyberResidual>0?'Within':'—')),pill:(over?'r':(RR.cyberResidual>0?'g':'n')),owner:'CRO / CFO',ownerSeat:'cfo',detail:dApp,sources:[c5bdMod('modeled residual cyber loss vs appetite'),c5bdSelf('Risk appetite','board-set')]}),
     c5ovFig({id:'cr_c3',title:'Direction',value:dirWord,status:(T.improving?'Improving':T.worsening?'Worsening':'Steady'),pill:(T.improving?'g':T.worsening?'r':'n'),owner:'CRO / CISO',ownerSeat:'ciso',detail:dTrend,sources:[c5bdMod('quarter-over-quarter change in residual risk')]}),
     c5ovFig({id:'cr_c4',title:'Top driver',value:'Identity access',status:'Funded',pill:'b',owner:'CISO / CIO',ownerSeat:'ciso',detail:dDriver,sources:[c5bdMod('the single driver above its appetite share')]}),
-    c5ovFig({id:'cr_residual',title:'Residual ranking',value:(resTop?c5esc(resTop.name):'—'),status:(resTop?(resTop.residual+' · '+resTop.band):'—'),pill:(resTop?(resTop.band==='High'?'r':resTop.band==='Medium'?'a':'g'):'n'),owner:'CRO / CISO',ownerSeat:'ciso',detail:dResidual,sources:[c5bdMod('residual = impact × unmitigated-prevention × detection-gap (tunable; ResidualRiskService)'),c5bdTelem(['crowdstrike','splunk','okta'],'Prevent/detect coverage','edr_pct')]})
+    c5ovFig({id:'cr_residual',title:'Residual ranking',value:(resTop?c5esc(resTop.name):'—'),status:(resTop?(resTop.residual+' · '+resTop.band):'—'),pill:(resTop?(resTop.band==='High'?'r':resTop.band==='Medium'?'a':'g'):'n'),owner:'CRO / CISO',ownerSeat:'ciso',detail:dResidual,sources:[c5bdMod('residual = impact × no-control-present × detection-gap (tunable; ResidualRiskService) — presence, not proven effectiveness'),c5bdTelem(['crowdstrike','splunk','okta'],'Control-presence / detection coverage','edr_pct')]})
   ];
   var questions=[
     c5ovFig({id:'cr_q1',title:'Rank',question:'Where does cyber rank among our principal risks?',owner:'CRO',ownerSeat:'cro',status:(RR.cyberRank?'Ranked':'—'),pill:(over?'a':'n'),value:rankStr,detail:dRank,

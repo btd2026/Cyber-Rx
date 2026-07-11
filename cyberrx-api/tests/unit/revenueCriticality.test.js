@@ -69,31 +69,49 @@ describe('RevenueCriticalityService.rankProcesses', () => {
   });
 });
 
-describe('CriticalityService gate — crown jewels derive only from CONFIRMED revenue processes', () => {
-  const jewel = { id: 'A1', name: 'Billing platform', data_classification: ['PCI', 'Financial'], exposure: 'internet_facing' };
+describe('CriticalityService gate — revenue-confirmed OR high-impact-if-lost (guardrail 3)', () => {
+  const regulated = { id: 'A1', name: 'Billing platform', data_classification: ['PCI', 'Financial'], exposure: 'internet_facing' };
+  // non-regulated: qualifies ONLY through revenue, so the provisional path still applies to it
+  const plain = { id: 'A2', name: 'Ops scheduler', data_classification: ['Internal'], exposure: 'internet_facing' };
 
-  test('CONFIRMED critical process => real crown jewel', () => {
-    const r = Crit.scoreAsset(jewel, { processes: [{ criticality: 'Critical', criticality_confirmed: true }], isSpof: true });
+  test('CONFIRMED critical revenue process => crown jewel by revenue', () => {
+    const r = Crit.scoreAsset(regulated, { processes: [{ criticality: 'Critical', criticality_confirmed: true }], isSpof: true });
     expect(r.crown_jewel).toBe(true);
+    expect(r.qualified_by).toBe('revenue');
     expect(r.provisional).toBe(false);
   });
 
-  test('UNCONFIRMED critical process => NOT a crown jewel, marked provisional', () => {
-    const r = Crit.scoreAsset(jewel, { processes: [{ criticality: 'Critical', criticality_confirmed: false }], isSpof: true });
+  test('regulated data (PCI/PHI) qualifies via the IMPACT path even when revenue is unconfirmed', () => {
+    const r = Crit.scoreAsset(regulated, { processes: [{ criticality: 'Critical', criticality_confirmed: false }], isSpof: true });
+    expect(r.crown_jewel).toBe(true);
+    expect(r.qualified_by).toBe('impact');
+    expect(r.provisional).toBe(false);
+    expect(r.rationale).toMatch(/HIGH-IMPACT/);
+  });
+
+  test('an explicit designation (legal_hold) qualifies via impact with no regulated data', () => {
+    const r = Crit.scoreAsset({ id: 'A3', name: 'Litigation archive', data_classification: ['Internal'], legal_hold: true }, { processes: [] });
+    expect(r.crown_jewel).toBe(true);
+    expect(r.qualified_by).toBe('impact');
+    expect(r.impact_flags.legal_hold).toBe(true);
+  });
+
+  test('a NON-regulated asset with an UNCONFIRMED critical revenue process stays PROVISIONAL', () => {
+    const r = Crit.scoreAsset(plain, { processes: [{ criticality: 'Critical', criticality_confirmed: false }, { criticality: 'Critical', criticality_confirmed: false }], isSpof: true });
     expect(r.crown_jewel).toBe(false);
     expect(r.provisional).toBe(true);
-    expect(r.provisional_score).toBeGreaterThanOrEqual(r.score);
+    expect(r.qualified_by).toBe('provisional');
     expect(r.rationale).toMatch(/PROVISIONAL/);
   });
 
   test('backward-compatible: processes with no confirmation field behave as confirmed (legacy)', () => {
-    const r = Crit.scoreAsset(jewel, { processes: [{ criticality: 'Critical' }], isSpof: true });
+    const r = Crit.scoreAsset(regulated, { processes: [{ criticality: 'Critical' }], isSpof: true });
     expect(r.crown_jewel).toBe(true);
     expect(r.provisional).toBe(false);
   });
 
-  test('a low-value asset stays neither crown nor provisional even if its process is unconfirmed', () => {
-    const low = { id: 'A2', name: 'Intranet', data_classification: ['Internal'], exposure: 'internal_only' };
+  test('a low-value non-regulated asset is neither crown nor provisional', () => {
+    const low = { id: 'A4', name: 'Intranet', data_classification: ['Internal'], exposure: 'internal_only' };
     const r = Crit.scoreAsset(low, { processes: [{ criticality: 'Low', criticality_confirmed: false }], isSpof: false });
     expect(r.crown_jewel).toBe(false);
     expect(r.provisional).toBe(false);

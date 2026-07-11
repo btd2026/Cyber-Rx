@@ -5,9 +5,13 @@
  * (spec §4, Phase C). Pure, deterministic, explainable. The formula lives here and its knobs live
  * in config/residual.js — clearly labeled as tunable.
  *
- * Two axes come from the ATT&CK coverage the platform already computes (technique_coverage:
- * prevent | detect | none). This service summarizes a scoped technique set into those two axes and
- * turns impact + the two axes into a residual indicator with an auditable breakdown.
+ * HONESTY GUARDRAIL (Phase E): the two axes claim only what telemetry proves.
+ *   - CONTROL PRESENCE — a capability is MAPPED to the technique (a control exists). This is NOT
+ *     proof the control is effective; it is presence, not proven protection.
+ *   - DETECTION COVERAGE — telemetry exists that would observe the technique.
+ * Neither axis asserts effectiveness. `effectiveness` is a clearly-marked HOOK for future
+ * breach-and-attack-simulation / purple-team results; until that data is wired it stays
+ * { measured:false } and is never faked.
  */
 
 const cfg = require('../../config/residual');
@@ -15,51 +19,57 @@ const cfg = require('../../config/residual');
 const clamp01 = (x) => (x < 0 ? 0 : x > 1 ? 1 : x);
 const round = (n) => Math.round(n * 1000) / 1000;
 
+// A clearly-marked hook: effectiveness is only known once BAS / purple-team data is wired.
+const EFFECTIVENESS_HOOK = { measured: false, source: 'BAS / purple-team', note: 'hook — control effectiveness not yet measured; presence ≠ proven protection' };
+
 /**
  * Summarize a scoped ATT&CK technique set into the two axes.
- * @param {Array<{status:'prevent'|'detect'|'none', supporting?:boolean}>} techniques
- *   status is the highest coverage established for the technique. `supporting` (control-level only,
- *   no direct telemetry) counts as PARTIAL prevention / but not confirmed detection.
- * @returns {{ prevent:{mitigated,partial,gap,total,coverage}, detect:{observed,blind,total,coverage} }}
+ * @param {Array<{status:'present'|'detect'|'none'|'prevent', supporting?:boolean}>} techniques
+ *   status is the highest coverage established for the technique. 'prevent' is accepted as a legacy
+ *   alias for 'present' (a mapped control). `supporting` (control-level only, no direct telemetry)
+ *   counts as a PARTIAL mapping, not confirmed detection.
+ * @returns {{ controlPresence:{present,partial,absent,total,coverage}, detection:{observed,blind,total,coverage}, effectiveness:object }}
  */
 function coverageAxes(techniques = []) {
   const t = Array.isArray(techniques) ? techniques : [];
   const total = t.length;
-  let mitigated = 0, partial = 0, observed = 0;
+  let present = 0, partial = 0, observed = 0;
   for (const x of t) {
     const s = String(x && x.status || 'none').toLowerCase();
     const supporting = !!(x && x.supporting);
-    if (s === 'prevent') { if (supporting) partial++; else mitigated++; }
+    if (s === 'present' || s === 'prevent') { if (supporting) partial++; else present++; }
     else if (s === 'detect') { observed++; }
     // 'none' contributes to neither
   }
-  const gap = Math.max(0, total - mitigated - partial);
+  const absent = Math.max(0, total - present - partial);
   const blind = Math.max(0, total - observed);
-  // prevention coverage credits partial at half weight (control mapped, telemetry not confirmed).
-  const preventCoverage = total ? clamp01((mitigated + 0.5 * partial) / total) : 0;
+  // control-presence coverage credits a partial (control mapped, telemetry not confirmed) at half weight.
+  const presenceCoverage = total ? clamp01((present + 0.5 * partial) / total) : 0;
   const detectCoverage = total ? clamp01(observed / total) : 0;
   return {
-    prevent: { mitigated, partial, gap, total, coverage: round(preventCoverage) },
-    detect: { observed, blind, total, coverage: round(detectCoverage) },
+    controlPresence: { present, partial, absent, total, coverage: round(presenceCoverage) },
+    detection: { observed, blind, total, coverage: round(detectCoverage) },
+    effectiveness: EFFECTIVENESS_HOOK,
   };
 }
 
 /**
  * The residual formula (tunable — config/residual.js). Product form per spec, with per-axis floors.
- * @param {{impact:number, prevention:number, detection:number}} inp  each 0..1
- * @returns {{ residual:number, residual01:number, band:'High'|'Medium'|'Low', breakdown:object }}
+ * @param {{impact:number, controlPresence:number, detection:number, prevention?:number}} inp  each 0..1
+ *   `prevention` is a legacy alias for `controlPresence`.
+ * @returns {{ residual:number, residual01:number, band:'High'|'Medium'|'Low', breakdown:object, effectiveness:object }}
  */
-function residual({ impact = 0, prevention = 0, detection = 0 } = {}) {
+function residual({ impact = 0, controlPresence, prevention, detection = 0 } = {}) {
   const imp = clamp01(impact);
-  const prev = clamp01(prevention);
+  const presence = clamp01(controlPresence != null ? controlPresence : (prevention != null ? prevention : 0));
   const det = clamp01(detection);
 
-  // Unmitigated prevention, floored: even full prevention leaves preventionFloor of exposure.
-  const unmitPrev = cfg.preventionFloor + (1 - cfg.preventionFloor) * (1 - prev);
+  // Exposure left where no control is even PRESENT, floored: presence alone (unproven) never zeroes it.
+  const noControl = cfg.presenceFloor + (1 - cfg.presenceFloor) * (1 - presence);
   // Detection gap, floored: even full detection can't drop residual below detectionFloor of impact.
   const detGap = cfg.detectionFloor + (1 - cfg.detectionFloor) * (1 - det);
 
-  const residual01 = clamp01(imp * unmitPrev * detGap);
+  const residual01 = clamp01(imp * noControl * detGap);
   const score = Math.round(residual01 * cfg.scale);
   const band = score >= cfg.highBand ? 'High' : score >= cfg.medBand ? 'Medium' : 'Low';
 
@@ -69,11 +79,12 @@ function residual({ impact = 0, prevention = 0, detection = 0 } = {}) {
     band,
     breakdown: {
       impact: round(imp),
-      unmitigated_prevention: round(unmitPrev),
+      no_control_present: round(noControl), // exposure where no control is mapped (presence, not effectiveness)
       detection_gap: round(detGap),
-      prevention_coverage: round(prev),
+      control_presence_coverage: round(presence),
       detection_coverage: round(det),
     },
+    effectiveness: EFFECTIVENESS_HOOK,
   };
 }
 
@@ -83,17 +94,17 @@ function residual({ impact = 0, prevention = 0, detection = 0 } = {}) {
  */
 function residualForJewel(jewel = {}) {
   const axes = coverageAxes(jewel.techniques || []);
-  const r = residual({ impact: jewel.impact, prevention: axes.prevent.coverage, detection: axes.detect.coverage });
+  const r = residual({ impact: jewel.impact, controlPresence: axes.controlPresence.coverage, detection: axes.detection.coverage });
   return { ...r, axes, rationale: rationale(jewel, axes, r) };
 }
 
 function rationale(jewel, axes, r) {
   const name = jewel.name || jewel.id || 'this crown jewel';
   const bits = [];
-  if (axes.prevent.gap > 0) bits.push(`${axes.prevent.gap} of ${axes.prevent.total} attack techniques have no prevention`);
-  if (axes.detect.blind > 0) bits.push(`${axes.detect.blind} are detection blind spots`);
-  const head = bits.length ? bits.join('; ') : 'well covered on both prevention and detection';
-  return `${name}: ${head} — residual ${r.residual}/100 (${r.band}).`;
+  if (axes.controlPresence.absent > 0) bits.push(`${axes.controlPresence.absent} of ${axes.controlPresence.total} attack techniques have no mapped control`);
+  if (axes.detection.blind > 0) bits.push(`${axes.detection.blind} are detection blind spots`);
+  const head = bits.length ? bits.join('; ') : 'a control is mapped and detection exists across the scoped techniques';
+  return `${name}: ${head} — residual ${r.residual}/100 (${r.band}). Presence, not proven effectiveness — validate with BAS/purple-team.`;
 }
 
-module.exports = { coverageAxes, residual, residualForJewel };
+module.exports = { coverageAxes, residual, residualForJewel, EFFECTIVENESS_HOOK };

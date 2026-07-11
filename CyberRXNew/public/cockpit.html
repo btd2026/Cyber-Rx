@@ -2930,15 +2930,18 @@ function demoLive(){
     // Phase B/D — assisted revenue-confirmation state (drives which jewels are promoted).
     revenue_confirmation:{ processes:8, confirmed:7, brings_money:5, unconfirmed:1, provisional_jewels:1,
       top_unconfirmed:'Financials / ERP consolidation' },
-    // Phase C/D — per-crown-jewel two-axis ATT&CK coverage (0..1) for the residual-risk lens.
+    // Phase C/D/E — per-crown-jewel two-axis ATT&CK coverage (0..1). HONEST axes: control_presence
+    // = a control is MAPPED (presence, not proven effectiveness); detection = telemetry coverage.
+    // effectiveness (BAS/purple-team) is a hook — not yet measured, never faked.
     crown_jewel_residual:[
-      {name:'Customer billing platform', impact:0.95, prevention:0.25, detection:0.45},
-      {name:'Customer identity & access', impact:0.90, prevention:0.35, detection:0.55},
-      {name:'Global supply chain', impact:0.70, prevention:0.50, detection:0.45},
-      {name:'Order-to-cash', impact:0.85, prevention:0.60, detection:0.70},
-      {name:'Financials / ERP', impact:0.65, prevention:0.70, detection:0.60},
-      {name:'Payments (PCI)', impact:0.75, prevention:0.80, detection:0.75}
+      {name:'Customer billing platform', impact:0.95, control_presence:0.25, detection:0.45, non_adversarial:['outage_dr','privacy_regulatory']},
+      {name:'Customer identity & access', impact:0.90, control_presence:0.35, detection:0.55, non_adversarial:['insider','third_party_supply_chain']},
+      {name:'Global supply chain', impact:0.70, control_presence:0.50, detection:0.45, non_adversarial:['third_party_supply_chain','outage_dr']},
+      {name:'Order-to-cash', impact:0.85, control_presence:0.60, detection:0.70, non_adversarial:['data_corruption']},
+      {name:'Financials / ERP', impact:0.65, control_presence:0.70, detection:0.60, non_adversarial:['privacy_regulatory','data_corruption']},
+      {name:'Payments (PCI)', impact:0.75, control_presence:0.80, detection:0.75, non_adversarial:['privacy_regulatory','third_party_supply_chain']}
     ],
+    effectiveness_measured:false, // hook: BAS / purple-team not yet wired
     initiatives:[
       {name:'Customer-platform identity & access re-architecture', cost:'$18M', exposureRemoved:'$95M', owner:'CISO / CIO', status:'Funded', source:'decisions'},
       {name:'Phishing-resistant MFA rollout', cost:'$6M', exposureRemoved:'$40M', owner:'CISO', status:'In flight', source:'ticketing'},
