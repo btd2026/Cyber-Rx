@@ -3246,6 +3246,40 @@ function c5ThreatsEvidencePanel(E){
 /* The four-item posture summary strip was removed from the Threats tab (it duplicated
    the evidence panel and hard-coded a top exposure path); the tab now leads with the
    answer line and the top attack paths. */
+/* Non-adversarial risk lane (Phase E guardrail 2) — loss WITHOUT an attacker. ATT&CK is the
+   adversarial lane; this parallel lane covers outage/DR, data corruption, insider, third-party/
+   supply-chain and privacy/regulatory. A crown jewel can carry both; nothing is forced through ATT&CK.
+   Mirrors the backend config/riskLanes.js taxonomy. */
+var C5_NONADV={outage_dr:{l:'Outage / DR',o:'COO / CIO'},data_corruption:{l:'Data corruption',o:'CIO / CISO'},insider:{l:'Insider',o:'CISO / CHRO'},third_party_supply_chain:{l:'Third-party / supply-chain',o:'CISO / Procurement'},privacy_regulatory:{l:'Privacy / regulatory',o:'CLO'}};
+function c5NonAdversarialLane(){
+  var L=(typeof LIVE!=='undefined'&&LIVE&&Array.isArray(LIVE.crown_jewel_residual))?LIVE.crown_jewel_residual:[];
+  var withNA=L.filter(function(j){return Array.isArray(j.non_adversarial)&&j.non_adversarial.length;});
+  if(!withNA.length)return '';
+  var rows=withNA.map(function(j){var chips=j.non_adversarial.map(function(id){var c=C5_NONADV[id];return c?('<span style="font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--surface-2);color:var(--ink-2)">'+c5esc(c.l)+'</span>'):'';}).join(' ');
+    return '<div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-top:1px solid var(--line)"><div style="flex:1.2;min-width:0;font-size:13px;font-weight:600">'+c5esc(j.name)+'</div><div style="flex:2;display:flex;flex-wrap:wrap;gap:5px">'+chips+'</div></div>';}).join('');
+  return '<div class="c5seclab" style="margin-top:18px">Non-adversarial risk lane · loss without an attacker</div>'+
+    '<div>'+rows+'</div>'+
+    '<div class="c5foot" style="margin-top:8px">Not every risk is an adversary. The ATT&CK view above is the <b>adversarial</b> lane; these are the <b>non-adversarial</b> ways a crown jewel is lost — outage/DR, data corruption, insider error, a third-party/supply-chain failure, or a privacy/regulatory breach. A crown jewel carries both lanes; each category routes to the executive who owns it (COO, CIO, CLO, Procurement).</div>';
+}
+/* CISO two-axis lens: per crown jewel, CONTROL PRESENCE (share of attack techniques with a MAPPED
+   control — presence, NOT proven effectiveness) and DETECTION (share with telemetry), with the
+   residual band. Reads the same LIVE.crown_jewel_residual the CRO ranking uses — one model. */
+function c5PreventDetect(){
+  var rank=(typeof c5ResidualRank==='function')?c5ResidualRank():[];
+  if(!rank.length)return '';
+  var measured=(typeof c5EffectivenessMeasured==='function')&&c5EffectivenessMeasured();
+  function bar(pct,col){return '<div style="flex:1;min-width:70px"><div style="height:6px;background:var(--surface-2);border-radius:3px;overflow:hidden"><i style="display:block;height:100%;width:'+pct+'%;background:'+col+'"></i></div></div>';}
+  var rows=rank.map(function(x){var bc=x.band==='High'?'crit':x.band==='Medium'?'warn':'good';var pp=Math.round(x.control_presence*100),dp=Math.round(x.detection*100);
+    return '<div style="display:flex;align-items:center;gap:12px;padding:9px 0;border-top:1px solid var(--line)">'+
+      '<div style="flex:1.4;min-width:0;font-size:13px;font-weight:600">'+c5esc(x.name)+'</div>'+
+      '<div style="flex:2;display:flex;align-items:center;gap:8px"><span style="font-size:10px;font-weight:700;color:var(--good);width:74px">CONTROL PRESENT</span>'+bar(pp,'var(--good)')+'<span style="font-size:11px;color:var(--muted);width:34px;text-align:right">'+pp+'%</span></div>'+
+      '<div style="flex:2;display:flex;align-items:center;gap:8px"><span style="font-size:10px;font-weight:700;color:var(--blue);width:58px">DETECTION</span>'+bar(dp,'var(--blue)')+'<span style="font-size:11px;color:var(--muted);width:34px;text-align:right">'+dp+'%</span></div>'+
+      '<span style="font-size:10.5px;font-weight:700;color:var(--'+bc+');width:58px;text-align:right">'+x.residual+' '+x.band+'</span>'+
+    '</div>';}).join('');
+  return '<div class="c5seclab" style="margin-top:18px">Control presence / detection coverage by crown jewel</div>'+
+    '<div>'+rows+'</div>'+
+    '<div class="c5foot" style="margin-top:8px">Two axes, each claiming only what telemetry proves — <b style="color:var(--good)">control present</b> (a control is <b>mapped</b> to the technique — presence, <b>not proof it works</b>) and <b style="color:var(--blue)">detection</b> (telemetry that would observe it). The residual is the impact left after both. '+(measured?'Effectiveness is validated by BAS/purple-team.':'<b>Effectiveness is not yet measured</b> — a hook for breach-and-attack-simulation / purple-team results; nothing here claims a control is proven effective.')+'</div>';
+}
 function c5Threats(){
   var host=document.getElementById('c5-threats');if(!host)return;
   var demo=(typeof signalsAreDemo==='function')&&signalsAreDemo();
@@ -3279,6 +3313,8 @@ function c5Threats(){
     '<div class="c5seclab" style="margin-top:16px">MITRE ATT&CK coverage · evidence-aware</div>'+
     '<div class="c5attgrid">'+cells+'</div>'+
     '<div class="c5foot" style="margin-top:10px">'+tactics.length+' tactics mapped; coverage strength varies by evidence and control type. Identity-dependent tactics remain partial while identity operating evidence is incomplete.</div>'+
+    c5PreventDetect()+
+    c5NonAdversarialLane()+
     c5bl('Bottom line','The most material threat path runs through '+TD.phrase+'.',null,'Closing the '+TD.short+' gap improves coverage across Initial Access, Credential Access, Privilege Escalation, Persistence and Lateral Movement. Prioritize '+TD.short+' attack-path remediation.',{mid:TD.mid,txt:'Close '+c5esc(TD.short)+' attack-path gaps'})+
     '<div class="c5foot">Coverage maps MITRE ATT&CK tactics to your detection and prevention controls.'+(demo?' Values are demo telemetry.':'')+'</div>';
 }
@@ -3671,11 +3707,20 @@ function c5cfOverview(){
   var dWorst=(tail.connected?('The <b>worst-year loss</b> is the roughly-1-in-20 bad year (95th percentile), <b>'+tail.displayValue+'</b> — the number to reserve against, not the average year. The single biggest lever that pulls it down is the funded identity fix, which removes the largest slice of the tail.'):'Connect your financials and risk register and we’ll model the worst-year loss you should plan against.');
   var dRoi=(er.connected?('Your controls return <b>'+er.displayValue+'</b> of risk removed per dollar — a positive return. The best next dollar is the identity fix: it removes more risk per dollar than anything else on the list and is already scoped ('+IDF.owner+', '+IDF.timeline+').'):'Connect your security tools and we’ll show the return per dollar and the single highest-return investment.');
   var dIns=(insGap.connected?((insGap.color==='warn')?('Our policy covers up to <b>'+(insLim.connected?insLim.displayValue:'the stated limit')+'</b>, but the modeled worst case runs higher — so we’re self-carrying about <b>'+insGap.displayValue+'</b>. Closing the identity gap lowers that worst case, which is the cheapest way to shrink what we carry ourselves.'):'Our policy limit covers the modeled worst case, so the uninsured tail is minimal this quarter. We re-check it whenever the exposure or the policy changes.'):'Add your cyber policy at onboarding and we’ll size the uninsured tail you’re carrying.');
+  // Phase D — the revenue-confirmation gate, surfaced to the CFO (the persona who owns it).
+  var RC=(typeof LIVE!=='undefined'&&LIVE&&LIVE.revenue_confirmation)||null;
+  var rcConn=!!RC;var rcProv=rcConn?(Number(RC.provisional_jewels)||0):0;
+  var dRev=(rcConn
+    ?('<b>Revenue is the primary path</b> to crown-jewel status, and it’s your confirmed input. <b>'+RC.confirmed+' of '+RC.processes+'</b> processes are confirmed ('+RC.brings_money+' bring money)'+
+      (rcProv>0?(', and <b>'+rcProv+'</b> crown jewel'+(rcProv>1?'s remain':' remains')+' <b>provisional</b> — awaiting confirmation of '+c5esc(RC.top_unconfirmed||'an unconfirmed revenue process')+' before promotion.'):' — every revenue-linked jewel is backed by a confirmed process.')+
+      ' Confirm the rest in onboarding (the CFO step). Note: an asset can <b>also</b> qualify without revenue if it’s high-impact-if-lost — regulated data (PHI/PCI), safety-critical, under legal hold, or brand-critical.')
+    :'Confirm which processes bring money in onboarding — revenue is the primary path to crown-jewel status; high-impact assets (regulated data, safety, legal hold, brand) also qualify.');
   var cards=[
     c5ovFig({id:'cf_c1',title:'Vs appetite',value:(ap.connected?(aleN>0?aleStr:ap.displayValue):'Set appetite'),status:(ap.connected?(over?('Over by '+overStr):('Within · '+headStr)):'—'),pill:(ap.connected?(over?'r':'g'):'n'),owner:'CFO / CRO',ownerSeat:'cro',detail:dApp,sources:[c5bdMod('modeled loss vs the board-set appetite'),c5bdSelf('Risk appetite','board-set at onboarding')]}),
     c5ovFig({id:'cf_c2',title:'Worst-year loss',value:(tail.connected?tail.displayValue:'—'),status:(tail.connected?'Modeled':'—'),pill:(tail.connected?'a':'n'),owner:'CFO',ownerSeat:'cfo',detail:dWorst,sources:[c5bdMod('95th-percentile annual loss from the loss model')]}),
     c5ovFig({id:'cf_c3',title:'Return on spend',value:(er.connected?er.displayValue:'—'),status:(er.connected?'Positive':'—'),pill:(er.connected?'g':'n'),owner:'CFO / CISO',ownerSeat:'ciso',detail:dRoi,sources:[c5bdMod('risk removed per dollar of controls'),ctrlTelem]}),
-    c5ovFig({id:'cf_c4',title:'Uninsured tail',value:(insGap.connected?insGap.displayValue:'—'),status:(insGap.connected?(insGap.color==='warn'?'Gap':'Covered'):'—'),pill:(insGap.connected?(insGap.color==='warn'?'a':'g'):'n'),owner:'CFO / CLO',ownerSeat:'clo',detail:dIns,sources:[c5bdMod('worst-case tail minus policy limit'),c5bdSelf('Insurance policy','captured at onboarding')]})
+    c5ovFig({id:'cf_c4',title:'Uninsured tail',value:(insGap.connected?insGap.displayValue:'—'),status:(insGap.connected?(insGap.color==='warn'?'Gap':'Covered'):'—'),pill:(insGap.connected?(insGap.color==='warn'?'a':'g'):'n'),owner:'CFO / CLO',ownerSeat:'clo',detail:dIns,sources:[c5bdMod('worst-case tail minus policy limit'),c5bdSelf('Insurance policy','captured at onboarding')]}),
+    c5ovFig({id:'cf_rev',title:'Revenue-confirmed jewels',value:(rcConn?(RC.confirmed+' of '+RC.processes):'Confirm'),status:(rcConn?(rcProv>0?(rcProv+' provisional'):'All confirmed'):'—'),pill:(rcConn?(rcProv>0?'a':'g'):'n'),owner:'CFO',ownerSeat:'cfo',detail:dRev,sources:[c5bdSelf('Revenue confirmation','confirmed in onboarding — the CFO step'),c5bdMod('crown jewels promoted only from confirmed revenue processes')]})
   ];
   var questions=[
     c5ovFig({id:'cf_q1',title:'Appetite',question:'Are we within the board’s risk appetite?',owner:'CFO / CRO',ownerSeat:'cro',status:(over?('Over by '+overStr):(ap.connected?('Within · '+headStr):'—')),pill:(over?'r':(ap.connected?'g':'n')),value:(ap.connected?(aleN>0?aleStr:ap.displayValue):'—'),detail:dApp,
@@ -3707,7 +3752,15 @@ function c5coOverview(){
   var dRec=(cpGap?('Most services recover on time. The outlier is <b>'+c5esc(cpName)+'</b> — about <b>'+cp.rto+' hours</b> against a <b>'+cp.tgt+'-hour</b> target — because identity and access must come back first. Fixing identity ('+IDF.owner+', '+IDF.timeline+') closes that gap; a backup cloud host is the second lever.'):'Every critical service recovers within its target time and data-loss window. We keep it there by testing recovery each cycle.');
   var dVend=(spof.length?('<b>'+spof.length+'</b> critical vendor'+(spof.length>1?'s have':' has')+' no backup, led by the <b>'+c5esc(vName)+'</b>'+(vProc?(' behind '+c5esc(vProc)):'')+'. If it went down there is no automatic failover. We’re monitoring its health; the recommended fix is a backup provider or a contracted failover SLA.'):'No critical vendor is a single point of failure — each has a backup or a contracted alternative.');
   var dRoot='Every gap on this page traces back to one thing: the identity and access model for '+c5esc(cpName)+'. That’s why a single fix ('+IDF.owner+', '+IDF.timeline+') closes the recovery miss and the platform exposure together — the move to fund first.';
+  // Phase D — COO single-point-of-failure lens: crown jewels carrying non-adversarial SPOF risk
+  // (outage/DR or a third-party/supply-chain dependency with no failover).
+  var CJR=(typeof LIVE!=='undefined'&&Array.isArray(LIVE&&LIVE.crown_jewel_residual))?LIVE.crown_jewel_residual:[];
+  var spofJewels=CJR.filter(function(j){return Array.isArray(j.non_adversarial)&&(j.non_adversarial.indexOf('outage_dr')>=0||j.non_adversarial.indexOf('third_party_supply_chain')>=0);});
+  var dSpof=(spofJewels.length
+    ?('<b>'+spofJewels.length+'</b> crown jewel'+(spofJewels.length>1?'s carry':' carries')+' a single-point-of-failure risk — an outage/DR exposure or a third-party dependency with no automatic failover: '+c5esc(spofJewels.map(function(j){return j.name;}).slice(0,4).join(', '))+'. These are availability risks (loss <b>without</b> an attacker); the fix is a tested failover or a contracted alternative, prioritized by which jewel is most revenue-critical.')
+    :'No crown jewel is a single point of failure — each has a tested failover or a contracted alternative.');
   var cards=[
+    c5ovFig({id:'co_spof',title:'Single points of failure',value:(spofJewels.length?(spofJewels.length+' crown jewels'):'None'),status:(spofJewels.length?'Watch':'Diversified'),pill:(spofJewels.length?'a':'g'),owner:'COO / CIO',ownerSeat:'coo',detail:dSpof,sources:[c5bdMod('crown jewels with an outage/DR or third-party dependency and no failover (non-adversarial lane)'),backupTelem]}),
     c5ovFig({id:'co_c1',title:'Business continuity',value:(svc.length?(okN+' of '+svc.length+' on target'):'—'),status:(cpGap?'1 gap':(svc.length?'On target':'—')),pill:(cpGap?'a':(svc.length?'g':'n')),owner:'COO',ownerSeat:'coo',detail:dCont,sources:[c5bdMod('services meeting their recovery target'),backupTelem]}),
     c5ovFig({id:'co_c2',title:'Recovery time',value:(cpGap?(cp.rto+'h vs '+cp.tgt+'h target'):'Within target'),status:(cpGap?'Behind':'On target'),pill:(cpGap?'a':'g'),owner:'COO',ownerSeat:'coo',detail:dRec,sources:[c5bdMod('recovery time vs target from the resilience model'),backupTelem]}),
     c5ovFig({id:'co_c3',title:'Critical vendors',value:(spof.length?(spof.length+' single points'):'Diversified'),status:(spof.length?'Watch':'OK'),pill:(spof.length?'a':'g'),owner:'COO / Procurement',ownerSeat:'coo',detail:dVend,sources:[c5bdMod('critical vendors with no failover'),c5bdSelf('Vendor register','captured at onboarding')]}),
@@ -3739,7 +3792,15 @@ function c5ctOverview(){
   var dVuln=(cv.connected?('Open critical vulnerabilities across the estate, from your scanner: <b>'+cv.displayValue+'</b>. These are patched on the standard SLA; the ones on the customer-platform authentication path are prioritized and land alongside the identity fix.'):'Connect your vulnerability scanner and we’ll show open critical vulnerabilities and where they concentrate.');
   var dAI=(aig.connected?('Our production AI systems are '+(aig.color==='good'?'inventoried and governed — data access is controlled and use is monitored.':'only partly governed. The gap is a formal framework and an EU AI Act mapping; we’re standing that up so every model has a named owner and a control.')):'Register your AI/ML systems at onboarding and we’ll show which are governed and where the gaps are.');
   var dSupply=(adv.connected?('We continuously check our third-party components for known issues. '+((adv.color==='crit'||adv.color==='warn')?'One open advisory sits on the authentication library the customer platform relies on — the patch is scheduled, and the identity fix hardens that path further.':'No critical advisories are open against the components we depend on right now.')):'Connect your build pipeline (SBOM) and we’ll continuously check your components against known advisories.');
+  // Phase D — CIO lineage + ingestion coverage / blind-spot health.
+  var EC=(typeof LIVE!=='undefined'&&LIVE&&LIVE.estate_coverage)||null;
+  var ecConn=!!EC;var ecBlind=ecConn?(Number(EC.blind_spots)||0):0;var ecMappedPct=ecConn?Math.round((EC.mapped/EC.assets)*100):0;
+  var dCoverage=(ecConn
+    ?('Lineage is mapped for <b>'+EC.lineage_complete+' of '+EC.lineage_total+'</b> crown jewels (process → application → infrastructure), and <b>'+EC.mapped+' of '+EC.assets+'</b> assets ('+ecMappedPct+'%) feed telemetry. '+
+      (ecBlind>0?('The <b>'+ecBlind+' blind spot'+(ecBlind>1?'s':'')+'</b> — '+c5esc((EC.blind_examples||[]).join(', '))+' — are assets in the dependency path with no live signal; they’re where an incident could hide. Onboarding them closes the gap.'):'Every asset on the crown-jewel path feeds telemetry — no blind spots.'))
+    :'Connect your CMDB / systems inventory and we’ll map each crown jewel’s lineage and flag assets with no telemetry (blind spots).');
   var cards=[
+    c5ovFig({id:'ct_coverage',title:'Lineage & coverage',value:(ecConn?(EC.mapped+' of '+EC.assets+' mapped'):'—'),status:(ecConn?(ecBlind>0?(ecBlind+' blind spot'+(ecBlind>1?'s':'')):'Full coverage'):'—'),pill:(ecConn?(ecBlind>0?'a':'g'):'n'),owner:'CIO',ownerSeat:'cio',detail:dCoverage,sources:[c5bdMod('lineage completeness + asset telemetry coverage from the dependency graph'),c5bdTelem(['servicenow','splunk'],'CMDB + telemetry ingestion','siem_log_sources')]}),
     c5ovFig({id:'ct_c1',title:'Platform health',value:(ph.connected?ph.displayValue:'—'),status:(ph.connected?(ph.color==='crit'?'At risk':ph.color==='warn'?'Watch':'Healthy'):'—'),pill:(ph.connected?(ph.color==='crit'?'r':ph.color==='warn'?'a':'g'):'n'),owner:'CIO',ownerSeat:'cio',detail:dEstate,sources:[c5bdMod('estate health from architecture + control coverage'),ctrlTelem]}),
     c5ovFig({id:'ct_c2',title:'Critical vulnerabilities',value:(cv.connected?cv.displayValue:'—'),status:(cv.connected?(cv.color==='crit'?'Action':'On track'):'—'),pill:(cv.connected?(cv.color==='crit'?'r':cv.color==='warn'?'a':'g'):'n'),owner:'CIO / IT Ops',ownerSeat:'cio',detail:dVuln,sources:[vulnTelem||c5bdMod('open critical vulnerabilities from the scanner')]}),
     c5ovFig({id:'ct_c3',title:'AI governance',value:(aig.connected?aig.displayValue:'Stand up'),status:(aig.connected?(aig.color==='good'?'Governed':'Gaps'):'Not started'),pill:(aig.connected?(aig.color==='good'?'g':'a'):'a'),owner:'CIO',ownerSeat:'cio',detail:dAI,sources:[c5bdSelf('AI governance','model registry + policy at onboarding')]}),
@@ -3761,6 +3822,27 @@ function c5ctOverview(){
     footnote:'Estate, AI and supply-chain figures come from your tools and inventories. Click any box for the source and confidence.'});
 }
 /* ── CRO ── */
+/* Residual-risk formula — browser mirror of the backend ResidualRiskService / config/residual.js
+   (the one tunable place): residual = impact × no-control-present × detection-gap, with per-axis
+   floors. HONEST axes (Phase E): controlPresence = a control is MAPPED (presence, NOT proven
+   effectiveness); detection = telemetry coverage. Effectiveness (BAS/purple-team) is a hook. */
+function c5Residual(impact,controlPresence,detection){
+  var PF=0.10,DF=0.30; // presence / detection floors (mirror config/residual.js defaults)
+  var imp=Math.max(0,Math.min(1,impact||0)),pres=Math.max(0,Math.min(1,controlPresence||0)),det=Math.max(0,Math.min(1,detection||0));
+  var noCtrl=PF+(1-PF)*(1-pres),detGap=DF+(1-DF)*(1-det);
+  var r01=Math.max(0,Math.min(1,imp*noCtrl*detGap)),score=Math.round(r01*100);
+  return {residual:score,band:(score>=50?'High':score>=25?'Medium':'Low'),noCtrl:noCtrl,detGap:detGap};
+}
+/* Rank the org's crown jewels by residual risk (Phase D — CRO lens). control_presence is the
+   honest axis name; `prevention` is read as a legacy alias if present. */
+function c5ResidualRank(){
+  var L=(typeof LIVE!=='undefined'&&LIVE&&Array.isArray(LIVE.crown_jewel_residual))?LIVE.crown_jewel_residual:[];
+  return L.map(function(j){var pres=(j.control_presence!=null?j.control_presence:j.prevention);var r=c5Residual(j.impact,pres,j.detection);
+    return {name:j.name,control_presence:pres,detection:j.detection,residual:r.residual,band:r.band};})
+    .sort(function(a,b){return b.residual-a.residual;});
+}
+/* Whether control effectiveness has been independently measured (BAS/purple-team). Hook — false until wired. */
+function c5EffectivenessMeasured(){return !!(typeof LIVE!=='undefined'&&LIVE&&LIVE.effectiveness_measured);}
 function c5crOverview(){
   var host=document.getElementById('cr-overview');if(!host)return;
   var RR=(typeof c5RiskRegister==='function')?c5RiskRegister():{cyberResidual:0,appetite:0,cyberRank:null,total:0};var IDF=c5IdFix();var idm=c5get(IDF.mid);
@@ -3771,11 +3853,20 @@ function c5crOverview(){
   var dApp=(RR.cyberResidual>0?(over?('Residual cyber loss of <b>'+usd(RR.cyberResidual)+'</b> is above the board-set appetite'+(RR.appetite>0?(' of '+usd(RR.appetite)):'')+'. One treatment closes the gap — the funded identity fix ('+IDF.owner+', '+IDF.timeline+'). Interim exposure remains until it lands, which we track.'):'Residual cyber loss of <b>'+usd(RR.cyberResidual)+'</b> is within the board-set appetite. We hold it by keeping the top controls funded and the identity fix on track.'):'Set your appetite and we’ll show the gap and exactly what closes it.');
   var dTrend=(T.improving?'Residual cyber risk is <b>falling</b> quarter over quarter. The one lever that keeps it falling is the identity fix — the largest single reduction still available, and it’s funded.':T.worsening?'Residual cyber risk is <b>rising</b>. The customer-platform identity exposure is the biggest reason; funding its fix ('+IDF.owner+', '+IDF.timeline+') is the fastest way to bend the trend back down.':'The trend builds as quarters record. The identity fix is the largest single reduction available and is funded.');
   var dDriver='The single risk driver above its appetite share is the <b>identity and access exposure on the customer platform</b>. It’s why cyber ranks where it does and why it’s over appetite. One funded treatment ('+IDF.owner+', '+IDF.timeline+') addresses it and moves every number on this page in the right direction.';
+  // Residual-risk ranking across crown jewels (impact × unmitigated-prevention × detection-gap).
+  var resRank=(typeof c5ResidualRank==='function')?c5ResidualRank():[];var resTop=resRank[0]||null;var resHigh=resRank.filter(function(x){return x.band==='High';}).length;
+  var dResidual=(resRank.length
+    ?('Crown jewels ranked by <b>residual risk</b> — impact left open after control presence and detection. '+
+      '<b>'+c5esc((resTop&&resTop.name)||'the top jewel')+'</b> carries the most ('+(resTop?resTop.residual:'—')+'/100, '+(resTop?resTop.band:'')+'): a control is <b>present</b> for '+(resTop?Math.round(resTop.control_presence*100):0)+'% of its attack techniques and detection covers '+(resTop?Math.round(resTop.detection*100):0)+'%, so the rest is uncovered. '+
+      '<div style="margin-top:8px">'+resRank.slice(0,5).map(function(x,i){var bc=x.band==='High'?'crit':x.band==='Medium'?'warn':'good';return '<div style="display:flex;align-items:center;gap:8px;padding:3px 0"><span style="width:16px;color:var(--muted);font-size:11px">'+(i+1)+'</span><span style="flex:1;min-width:0">'+c5esc(x.name)+'</span><span style="font-size:11px;color:var(--muted)">present '+Math.round(x.control_presence*100)+'% · detect '+Math.round(x.detection*100)+'%</span><span style="font-weight:700;color:var(--'+bc+')">'+x.residual+'</span><span style="font-size:10.5px;font-weight:700;color:var(--'+bc+')">'+x.band+'</span></div>';}).join('')+'</div>'+
+      (resHigh>0?('The '+resHigh+' High-residual jewel'+(resHigh>1?'s are':' is')+' where the next control dollar removes the most risk — led by the identity fix. Note: presence is not proven effectiveness — validate with BAS/purple-team.'):'Every crown jewel is inside Medium/Low residual this quarter.'))
+    :'Connect your control telemetry and we’ll rank each crown jewel by residual risk — impact left open after control presence and detection.');
   var cards=[
     c5ovFig({id:'cr_c1',title:'Rank vs other risks',value:rankStr,status:(RR.cyberRank?'Ranked':'—'),pill:(over?'a':'n'),owner:'CRO',ownerSeat:'cro',detail:dRank,sources:[c5bdMod('cyber residual vs the other principal risks on the register'),c5bdSelf('Risk register','ERM inputs, self-reported')]}),
     c5ovFig({id:'cr_c2',title:'Residual loss',value:(RR.cyberResidual>0?usd(RR.cyberResidual):'—'),status:(over?'Over appetite':(RR.cyberResidual>0?'Within':'—')),pill:(over?'r':(RR.cyberResidual>0?'g':'n')),owner:'CRO / CFO',ownerSeat:'cfo',detail:dApp,sources:[c5bdMod('modeled residual cyber loss vs appetite'),c5bdSelf('Risk appetite','board-set')]}),
     c5ovFig({id:'cr_c3',title:'Direction',value:dirWord,status:(T.improving?'Improving':T.worsening?'Worsening':'Steady'),pill:(T.improving?'g':T.worsening?'r':'n'),owner:'CRO / CISO',ownerSeat:'ciso',detail:dTrend,sources:[c5bdMod('quarter-over-quarter change in residual risk')]}),
-    c5ovFig({id:'cr_c4',title:'Top driver',value:'Identity access',status:'Funded',pill:'b',owner:'CISO / CIO',ownerSeat:'ciso',detail:dDriver,sources:[c5bdMod('the single driver above its appetite share')]})
+    c5ovFig({id:'cr_c4',title:'Top driver',value:'Identity access',status:'Funded',pill:'b',owner:'CISO / CIO',ownerSeat:'ciso',detail:dDriver,sources:[c5bdMod('the single driver above its appetite share')]}),
+    c5ovFig({id:'cr_residual',title:'Residual ranking',value:(resTop?c5esc(resTop.name):'—'),status:(resTop?(resTop.residual+' · '+resTop.band):'—'),pill:(resTop?(resTop.band==='High'?'r':resTop.band==='Medium'?'a':'g'):'n'),owner:'CRO / CISO',ownerSeat:'ciso',detail:dResidual,sources:[c5bdMod('residual = impact × no-control-present × detection-gap (tunable; ResidualRiskService) — presence, not proven effectiveness'),c5bdTelem(['crowdstrike','splunk','okta'],'Control-presence / detection coverage','edr_pct')]})
   ];
   var questions=[
     c5ovFig({id:'cr_q1',title:'Rank',question:'Where does cyber rank among our principal risks?',owner:'CRO',ownerSeat:'cro',status:(RR.cyberRank?'Ranked':'—'),pill:(over?'a':'n'),value:rankStr,detail:dRank,
@@ -6264,7 +6355,7 @@ function c5CrownTreeInput(){
           if(!risks.length)return;
           var val=perJewel>0?perJewel:(a.risks||[]).reduce(function(s,r){return s+(Number(r.exposure_usd)||0);},0);
           if(!(val>0))return;
-          jewels.push({name:a.name||'Crown jewel',type:isInfra(a.name)?'Infrastructure':'Application',value:val/1e9,risks:risks});
+          jewels.push({name:a.name||'Crown jewel',type:isInfra(a.name)?'Infrastructure':'Application',value:val/1e9,provisional:!!a.provisional,risks:risks});
         });
         if(jewels.length)procs.push({name:p.name||'Process',jewels:jewels});
       });
@@ -6845,22 +6936,26 @@ function c5ViewDoc(fname){
         (g.reason?('<div style="font-size:11.5px;color:var(--ink-2);line-height:1.5;margin-top:4px">'+c5esc(g.reason.slice(0,200))+'</div>'):'')+
       '</div>';
     }
-    // A keyword-matched requirement. When we located it in the text (kwHits[j] is its
-    // annotation number) the card is numbered + clickable, and jumps to the blue highlight —
-    // so the reader sees exactly where in the document it was found. When it couldn't be
-    // pinpointed, it still shows as met (it drove the score) but without a jump.
-    function matchItem(mm,j){
-      var ann=(annotated&&annotated.kwHits)?annotated.kwHits[j]:null;
-      if(ann!=null){
-        return '<div class="c5annp" id="c5annp-'+ann+'" data-annidx="'+ann+'" style="border:1px solid var(--line);border-left:3px solid var(--blue);border-radius:8px;padding:8px 11px;margin-bottom:7px;background:var(--surface);cursor:pointer">'+
-          '<div style="display:flex;align-items:center;gap:7px"><span style="flex:none;width:18px;height:18px;border-radius:50%;background:var(--blue);color:#fff;font-size:10px;font-weight:800;display:inline-flex;align-items:center;justify-content:center">'+(ann+1)+'</span><b style="font-size:12.5px;color:var(--ink)">'+c5esc(mm.label)+'</b></div>'+
-          '<div style="font-size:11px;color:var(--muted);margin-top:3px">matched for '+mm.items.map(c5esc).join(' · ')+' · <span style="color:var(--blue)">click to see it in the document →</span></div></div>';
-      }
-      return '<div style="border:1px solid var(--line);border-left:3px solid color-mix(in srgb,var(--good) 55%,var(--line));border-radius:8px;padding:7px 11px;margin-bottom:6px;background:var(--surface)"><div style="display:flex;align-items:center;gap:7px"><span style="color:var(--good);font-weight:800">✓</span><b style="font-size:12px;color:var(--ink)">'+c5esc(mm.label)+'</b></div><div style="font-size:11px;color:var(--muted);margin-top:2px">matched for '+mm.items.map(c5esc).join(' · ')+'</div></div>';
+    // Split keyword-matched requirements by whether we could actually LOCATE them in this
+    // document's text. A match we can pinpoint (kwHits[j]) is honest — numbered, clickable,
+    // jumps to the blue highlight. A match we CANNOT locate is not evidenced by this document
+    // (common when the file is a data export like a risk-register CSV, not a policy) — we show it
+    // honestly as "scored elsewhere, not found here", never as a confident green ✓.
+    var _kw=(annotated&&annotated.kwHits)||{};
+    var matchedLoc=[],matchedUnloc=[];
+    matched.forEach(function(mm,j){ if(_kw[j]!=null){matchedLoc.push({mm:mm,ann:_kw[j]});} else {matchedUnloc.push(mm);} });
+    function matchLocItem(o){var mm=o.mm,ann=o.ann;
+      return '<div class="c5annp" id="c5annp-'+ann+'" data-annidx="'+ann+'" style="border:1px solid var(--line);border-left:3px solid var(--blue);border-radius:8px;padding:8px 11px;margin-bottom:7px;background:var(--surface);cursor:pointer">'+
+        '<div style="display:flex;align-items:center;gap:7px"><span style="flex:none;width:18px;height:18px;border-radius:50%;background:var(--blue);color:#fff;font-size:10px;font-weight:800;display:inline-flex;align-items:center;justify-content:center">'+(ann+1)+'</span><b style="font-size:12.5px;color:var(--ink)">'+c5esc(mm.label)+'</b></div>'+
+        '<div style="font-size:11px;color:var(--muted);margin-top:3px">located for '+mm.items.map(c5esc).join(' · ')+' · <span style="color:var(--blue)">click to see it in the document →</span></div></div>';
     }
-    var panel='<div style="font-size:12px;color:var(--ink-2);margin-bottom:12px;line-height:1.5"><b style="color:var(--good)">'+(met.length+matched.length)+'</b> requirement'+((met.length+matched.length)===1?'':'s')+' met'+(met.length?(' ('+met.length+' with a quoted passage)'):'')+' · <b style="color:var(--warn)">'+gaps.length+'</b> gap'+(gaps.length===1?'':'s')+' — what drove this document’s control scores.</div>'+
+    function matchUnlocItem(mm){
+      return '<div style="border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:8px;padding:7px 11px;margin-bottom:6px;background:var(--surface);opacity:.9"><div style="display:flex;align-items:center;gap:7px"><span style="color:var(--warn);font-weight:800">⚠</span><b style="font-size:12px;color:var(--ink)">'+c5esc(mm.label)+'</b></div><div style="font-size:11px;color:var(--muted);margin-top:2px">'+mm.items.map(c5esc).join(' · ')+' — <b>not located in this document</b></div></div>';
+    }
+    var panel='<div style="font-size:12px;color:var(--ink-2);margin-bottom:12px;line-height:1.5"><b style="color:var(--good)">'+(met.length+matchedLoc.length)+'</b> requirement'+((met.length+matchedLoc.length)===1?'':'s')+' evidenced in this text'+(met.length?(' ('+met.length+' with a quoted passage)'):'')+' · <b style="color:var(--warn)">'+gaps.length+'</b> gap'+(gaps.length===1?'':'s')+(matchedUnloc.length?(' · <b style="color:var(--warn)">'+matchedUnloc.length+'</b> scored elsewhere, not found here'):'')+'.</div>'+
       (met.length?('<div style="font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--good);margin:4px 0 8px">✓ Evidenced — quoted in the text</div>'+met.map(metItem).join('')):'')+
-      (matched.length?('<div style="font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--blue);margin:14px 0 6px">✓ Matched — sentence match</div><div style="font-size:11px;color:var(--muted);margin-bottom:8px">These requirements were found and scored. The numbered ones are highlighted in <b style="color:var(--blue)">blue</b> on the sentence that carries the most of the requirement’s language — click one to jump to it. (The analyst-grade LLM review adds the exact quoted passage.)</div>'+matched.map(matchItem).join('')):'')+
+      (matchedLoc.length?('<div style="font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--blue);margin:14px 0 6px">✓ Located — sentence match</div><div style="font-size:11px;color:var(--muted);margin-bottom:8px">Found in <b>this</b> document and highlighted in <b style="color:var(--blue)">blue</b> on the sentence carrying the most of the requirement’s language — click one to jump to it.</div>'+matchedLoc.map(matchLocItem).join('')):'')+
+      (matchedUnloc.length?('<div style="font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--warn);margin:14px 0 6px">⚠ Scored elsewhere — not found in this document</div><div style="font-size:11px;color:var(--muted);margin-bottom:8px">The control score credited these, but Nerion could <b>not</b> locate them in this document’s text. That is expected when the file is a <b>data export</b> (e.g. a risk-register CSV) rather than a policy or procedure — a list of risks is not the same as documenting the control. They are <b>not</b> evidenced here; verify against the document that actually describes the control.</div>'+matchedUnloc.map(matchUnlocItem).join('')):'')+
       (gaps.length?('<div style="font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--warn);margin:14px 0 8px">⚠ Gaps — expected, not found</div>'+gaps.map(gapItem).join('')):'')+
       ((!met.length&&!gaps.length&&!matched.length)?('<div style="font-size:12.5px;color:var(--ink-2);line-height:1.6">No attribute-level review is on file for this document, so it isn’t contributing to any control score. This happens when a policy was uploaded but not analysed. Run the review to score it against the control catalog.</div>'+((typeof window!=='undefined'&&typeof window.reanalyzeStoredDocs==='function')?('<button type="button" id="c5annReanalyze" style="margin-top:12px;border:1px solid var(--line);background:var(--surface);color:var(--blue);font-weight:600;font-size:12.5px;padding:8px 14px;border-radius:8px;cursor:pointer">↻ Run document review</button>'):'<div style="margin-top:10px;font-size:11.5px;color:var(--muted)">Re-upload and analyse this policy in onboarding to score it.</div>')):'');
     wrap.innerHTML='<div style="width:min(1160px,96vw);max-height:92vh;display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 24px 60px rgba(20,33,72,.45);overflow:hidden">'+

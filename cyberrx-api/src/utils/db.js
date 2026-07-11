@@ -810,6 +810,18 @@ async function init() {
       ALTER TABLE business_processes ADD COLUMN IF NOT EXISTS source     TEXT;   -- upload | cmdb | manual | llm
       ALTER TABLE business_processes ADD COLUMN IF NOT EXISTS confidence NUMERIC;
       ALTER TABLE business_processes ADD COLUMN IF NOT EXISTS status     TEXT DEFAULT 'proposed'; -- proposed | validated | rejected
+      -- Assisted, human-confirmed revenue criticality (Phase B). Advisory score is a
+      -- SUGGESTION; crown jewels derive only from confirmed revenue processes.
+      ALTER TABLE business_processes ADD COLUMN IF NOT EXISTS revenue_criticality_score  NUMERIC;   -- advisory 0..1
+      ALTER TABLE business_processes ADD COLUMN IF NOT EXISTS revenue_criticality_basis  JSONB;     -- per-signal contributions (explainable)
+      ALTER TABLE business_processes ADD COLUMN IF NOT EXISTS brings_money               BOOLEAN;    -- user's confirm/deny flag
+      ALTER TABLE business_processes ADD COLUMN IF NOT EXISTS criticality_confirmed      BOOLEAN DEFAULT FALSE;
+      ALTER TABLE business_processes ADD COLUMN IF NOT EXISTS confirmed_financial_impact NUMERIC;   -- annual $, user-entered
+      ALTER TABLE business_processes ADD COLUMN IF NOT EXISTS criticality_override       JSONB;      -- captured overrides for future tuning
+      ALTER TABLE business_processes ADD COLUMN IF NOT EXISTS confirmed_by               TEXT;
+      ALTER TABLE business_processes ADD COLUMN IF NOT EXISTS confirmed_at               TIMESTAMPTZ;
+      CREATE INDEX IF NOT EXISTS business_processes_rev_crit ON business_processes(organization_id, revenue_criticality_score DESC);
+      CREATE INDEX IF NOT EXISTS business_processes_crit_confirmed ON business_processes(organization_id, criticality_confirmed);
       -- Application provenance + descriptive fields.
       ALTER TABLE applications ADD COLUMN IF NOT EXISTS vendor              TEXT;
       ALTER TABLE applications ADD COLUMN IF NOT EXISTS hosting             TEXT;

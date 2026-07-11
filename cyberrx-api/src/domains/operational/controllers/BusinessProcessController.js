@@ -40,6 +40,38 @@ class BusinessProcessController {
   }
 
   /**
+   * Phase B — ranked advisory revenue-criticality candidates for the confirm step.
+   * GET /api/business-processes/revenue-candidates
+   */
+  async getRevenueCandidates(req, res, next) {
+    try {
+      const organizationId = req.orgId;
+      const result = await this.businessProcessService.getRevenueCandidates(organizationId);
+      res.json({ organizationId, ...result });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Phase B — record the human confirmation for one process (the crown-jewel gate).
+   * POST /api/business-processes/:id/confirm-revenue  { brings_money, financial_impact?, by? }
+   */
+  async confirmRevenue(req, res, next) {
+    try {
+      const { id } = req.params;
+      const organizationId = req.orgId;
+      if (typeof req.body.brings_money !== 'boolean') {
+        const e = new Error('brings_money (boolean) is required'); e.statusCode = 400; throw e;
+      }
+      const updated = await this.businessProcessService.confirmRevenue(id, organizationId, req.body);
+      res.json(updated);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
    * Get business process by ID
    * GET /api/business-processes/:id
    */

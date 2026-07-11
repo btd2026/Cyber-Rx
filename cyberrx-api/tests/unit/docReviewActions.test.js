@@ -173,7 +173,8 @@ describe('5 · Open document renders the auditor annotations (highlights + margi
     expect(ciso).toContain('c5ann c5annkw'); // blue keyword-match highlight (locate where a keyword hit)
     expect(ciso).toContain('✦ Nauditor-annotated'); // header badge (Nerion Auditor branding)
     expect(ciso).toContain('Evidenced — quoted in the text'); // margin panel (quoted matches)
-    expect(ciso).toContain('Matched — sentence match'); // sentence-level matches that drove the score
+    expect(ciso).toContain('Located — sentence match'); // matches actually located in THIS document's text
+    expect(ciso).toContain('Scored elsewhere — not found in this document'); // honest: not-located matches are not green-checked
     expect(ciso).toContain('Gaps — expected, not found');
   });
   it('collector groups by quote (merging controls) and gathers gaps; highlighter is whitespace-tolerant', () => {

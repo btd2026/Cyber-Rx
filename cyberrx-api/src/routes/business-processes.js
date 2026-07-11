@@ -46,6 +46,22 @@ router.get('/summary', authenticateJWT, (req, res, next) => {
 }, errorHandler);
 
 /**
+ * GET /api/business-processes/revenue-candidates - Phase B: ranked advisory revenue-criticality
+ * candidates for the human confirm step. Registered before /:id so it isn't captured as an id.
+ */
+router.get('/revenue-candidates', authenticateJWT, (req, res, next) => {
+  businessProcessController.getRevenueCandidates(req, res, next);
+}, errorHandler);
+
+/**
+ * POST /api/business-processes/:id/confirm-revenue - Phase B: record the human confirmation
+ * (the crown-jewel derivation gate). Body: { brings_money, financial_impact?, by? }
+ */
+router.post('/:id/confirm-revenue', authenticateJWT, (req, res, next) => {
+  businessProcessController.confirmRevenue(req, res, next);
+}, errorHandler);
+
+/**
  * PUT /api/business-processes/:id/systems - Map systems to process
  */
 router.put('/:id/systems', authenticateJWT, (req, res, next) => {
