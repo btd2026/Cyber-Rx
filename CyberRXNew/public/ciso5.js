@@ -6172,7 +6172,7 @@ function c5DocsReviewHtml(){
   return '<div>'+
     '<p style="color:var(--ink-2);font-size:13px;line-height:1.55;max-width:760px;margin:0 0 20px">Every policy you uploaded, read control-by-control against <b>NIST CSF 2.0</b> and <b>NIST SP 800-53 Rev 5</b> — each expected attribute judged on whether the language satisfies the control’s intent, with the <b>verbatim evidence quoted</b> and the gap named where it doesn’t. Every finding is carried across <b>CIS Controls v8</b>, <b>SOC 2</b> and the <b>HIPAA Security Rule</b> through the public crosswalk. This is the evidence behind the scores in this tab.</p>'+
     html+
-    '<div style="font-size:11px;color:var(--muted);line-height:1.5;border-top:1px solid var(--line);padding-top:12px">Documents marked <b>✦ AI-reviewed</b> are read by Nerion’s analyst-grade document engine — semantic control-intent matching with quoted evidence, to a standard at or above human review; others use deterministic keyword analysis. CIS · SOC 2 · HIPAA are mapped by public crosswalk (NIST CSF 2.0 informative references · SP 800-66) — a readiness indicator, not an independent audit opinion; CIS/SOC 2 shown by number/criterion only.</div>'+
+    '<div style="font-size:11px;color:var(--muted);line-height:1.5;border-top:1px solid var(--line);padding-top:12px">Documents marked <b>✦ AI-reviewed</b> are read by Nerion’s analyst-grade document engine — semantic control-intent matching with quoted evidence, to a standard at or above human review; others use deterministic sentence-level matching (the sentence carrying the most of a requirement’s terms, not a single keyword). CIS · SOC 2 · HIPAA are mapped by public crosswalk (NIST CSF 2.0 informative references · SP 800-66) — a readiness indicator, not an independent audit opinion; CIS/SOC 2 shown by number/criterion only.</div>'+
   '</div>';
 }
 function c5OpenDocsReview(){
@@ -6269,6 +6269,17 @@ function c5DocAnnotations(fname){
    mark-wrapped HTML, how many of each were located, and — per keyword item — the
    annotation number it got (or null when it couldn't be located), so the panel can add a
    jump link to the ones that were pinpointed. */
+/* Sentence-level requirement matching — a more accurate locator than a single-keyword hit.
+   Rather than jumping to the FIRST place any one of a requirement's words appears, we split
+   the document into sentences and pick the sentence that contains the MOST of the
+   requirement's distinct terms (and any multi-word phrase from it), requiring at least two
+   distinct terms when the requirement has them. This finds the sentence that actually states
+   the requirement, not an incidental single-word mention. (The green tier is higher still:
+   verbatim quotes from the analyst-grade semantic review.) */
+var C5_STOP={the:1,and:1,for:1,with:1,that:1,this:1,are:1,was:1,were:1,from:1,which:1,their:1,they:1,them:1,have:1,has:1,had:1,been:1,into:1,such:1,each:1,other:1,across:1,within:1,through:1,shall:1,must:1,will:1,would:1,should:1,any:1,all:1,per:1,its:1,not:1,but:1,also:1,when:1,then:1,than:1,over:1,upon:1};
+function c5Sentences(text){var out=[],n=text.length,start=0,i;for(i=0;i<n;i++){var c=text.charAt(i);var brk=(c==='\n')||((c==='.'||c==='!'||c==='?')&&(i+1>=n||/\s/.test(text.charAt(i+1))));if(brk){var s=start,e=i+1;while(s<e&&/\s/.test(text.charAt(s)))s++;if(e-s>=3)out.push({start:s,end:e});start=i+1;}}if(start<n){var s2=start;while(s2<n&&/\s/.test(text.charAt(s2)))s2++;if(n-s2>=3)out.push({start:s2,end:n});}return out;}
+function c5ReqTerms(mm){var phrases=[],terms={};var src=String((mm&&mm.pat)||'');(src?src.split('|'):[]).forEach(function(a){a=a.replace(/[()\[\]\\.*+?^${}]/g,' ').trim().toLowerCase();if(!a)return;var ws=a.match(/[a-z]{3,}/g)||[];if(ws.length>=2)phrases.push(ws.join(' '));ws.forEach(function(w){if(w.length>=4&&!C5_STOP[w])terms[w]=1;});});(String((mm&&mm.label)||'').toLowerCase().match(/[a-z]{4,}/g)||[]).forEach(function(w){if(!C5_STOP[w])terms[w]=1;});return {phrases:phrases,terms:Object.keys(terms)};}
+function c5BestSentence(mm,text,sents){var rt=c5ReqTerms(mm);var terms=rt.terms,phrases=rt.phrases;if(!terms.length&&!phrases.length)return null;var need=terms.length>=2?2:1;var best=null,bestScore=0;for(var i=0;i<sents.length;i++){var sp=sents[i];var lc=text.slice(sp.start,sp.end).toLowerCase();var tc=0;for(var k=0;k<terms.length;k++){if(lc.indexOf(terms[k])>=0)tc++;}var pc=0;for(var p=0;p<phrases.length;p++){if(lc.indexOf(phrases[p])>=0)pc++;}if(tc<need&&pc===0)continue;var score=pc*3+tc;if(score>bestScore||(score===bestScore&&best&&(sp.end-sp.start)<(best.end-best.start))){bestScore=score;best=sp;}}return best;}
 function c5AnnotateText(text,met,matched){
   met=met||[];matched=matched||[];
   // Build a case-insensitive locator for a keyword requirement, preferring the exact
@@ -6296,9 +6307,12 @@ function c5AnnotateText(text,met,matched){
     var mm=re.exec(text);if(mm)ranges.push({start:mm.index,end:mm.index+mm[0].length,ann:idx,kind:'q'});
   });
   var kwHits=matched.map(function(){return null;});
+  var sents=c5Sentences(text);
   matched.forEach(function(mm,j){
-    var re=kwRe(mm);if(!re)return;var hit=re.exec(text);if(!hit)return;
-    var sp=sentence(text,hit.index,hit[0].length);
+    // Prefer the best-matching whole sentence (most requirement terms/phrases); fall back to
+    // the legacy single-keyword hit only if no sentence clears the multi-term bar.
+    var sp=c5BestSentence(mm,text,sents);
+    if(!sp){var re=kwRe(mm);if(!re)return;var hit=re.exec(text);if(!hit)return;sp=sentence(text,hit.index,hit[0].length);}
     ranges.push({start:sp.start,end:sp.end,ann:met.length+j,kind:'k',kw:j});
   });
   ranges.sort(function(a,b){return a.start-b.start;});
@@ -6307,7 +6321,7 @@ function c5AnnotateText(text,met,matched){
   kept.forEach(function(r){
     out+=c5esc(text.slice(pos,r.start));
     if(r.kind==='k'){kwLocated++;kwHits[r.kw]=r.ann;
-      out+='<mark class="c5ann c5annkw" data-annidx="'+r.ann+'" title="Keyword match — where this requirement’s language appears" style="background:color-mix(in srgb,var(--blue) 16%,transparent);border-bottom:2px solid var(--blue);border-radius:2px;cursor:pointer;padding:0 1px">'+c5esc(text.slice(r.start,r.end))+'<sup style="font-size:9px;font-weight:800;color:var(--blue);margin-left:1px">'+(r.ann+1)+'</sup></mark>';
+      out+='<mark class="c5ann c5annkw" data-annidx="'+r.ann+'" title="Sentence match — the sentence carrying the most of this requirement’s language" style="background:color-mix(in srgb,var(--blue) 16%,transparent);border-bottom:2px solid var(--blue);border-radius:2px;cursor:pointer;padding:0 1px">'+c5esc(text.slice(r.start,r.end))+'<sup style="font-size:9px;font-weight:800;color:var(--blue);margin-left:1px">'+(r.ann+1)+'</sup></mark>';
     } else {located++;
       out+='<mark class="c5ann" data-annidx="'+r.ann+'" title="Requirement evidenced — click for the finding" style="background:color-mix(in srgb,var(--good) 20%,transparent);border-bottom:2px solid var(--good);border-radius:2px;cursor:pointer;padding:0 1px">'+c5esc(text.slice(r.start,r.end))+'<sup style="font-size:9px;font-weight:800;color:var(--good);margin-left:1px">'+(r.ann+1)+'</sup></mark>';
     }
@@ -6330,7 +6344,7 @@ function c5ViewDoc(fname){
     var _locTot=(annotated.located||0)+(annotated.kwLocated||0),_reqTot=met.length+matched.length;
     // Left column — the annotated document (or an honest note if the text wasn't retained).
     var docCol=txt
-      ?('<div style="font-size:11px;color:var(--muted);margin-bottom:10px"><span style="background:color-mix(in srgb,var(--good) 20%,transparent);border-bottom:2px solid var(--good);padding:0 3px;border-radius:2px">green</span> = a quoted passage · <span style="background:color-mix(in srgb,var(--blue) 16%,transparent);border-bottom:2px solid var(--blue);padding:0 3px;border-radius:2px">blue</span> = a keyword match — each shows <b>where in the document</b> the requirement was found; the number ties to the margin note. '+_locTot+' of '+_reqTot+' requirements located in the text.</div>'+
+      ?('<div style="font-size:11px;color:var(--muted);margin-bottom:10px"><span style="background:color-mix(in srgb,var(--good) 20%,transparent);border-bottom:2px solid var(--good);padding:0 3px;border-radius:2px">green</span> = a quoted passage · <span style="background:color-mix(in srgb,var(--blue) 16%,transparent);border-bottom:2px solid var(--blue);padding:0 3px;border-radius:2px">blue</span> = a sentence match — each shows <b>where in the document</b> the requirement was found; the number ties to the margin note. '+_locTot+' of '+_reqTot+' requirements located in the text.</div>'+
          '<div id="c5annDoc" style="white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.7;color:var(--ink)">'+annotated.html+'</div>')
       :('<div style="color:var(--ink-2);font-size:13px;line-height:1.6">The document text isn’t retained in this browser, so it can’t be shown inline — but the auditor findings Nerion recorded are in the panel. Re-upload the policy in onboarding to read it with the highlights in place.</div>');
     // Right column — the requirements panel (evidenced + gaps).
@@ -6365,7 +6379,7 @@ function c5ViewDoc(fname){
     }
     var panel='<div style="font-size:12px;color:var(--ink-2);margin-bottom:12px;line-height:1.5"><b style="color:var(--good)">'+(met.length+matched.length)+'</b> requirement'+((met.length+matched.length)===1?'':'s')+' met'+(met.length?(' ('+met.length+' with a quoted passage)'):'')+' · <b style="color:var(--warn)">'+gaps.length+'</b> gap'+(gaps.length===1?'':'s')+' — what drove this document’s control scores.</div>'+
       (met.length?('<div style="font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--good);margin:4px 0 8px">✓ Evidenced — quoted in the text</div>'+met.map(metItem).join('')):'')+
-      (matched.length?('<div style="font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--blue);margin:14px 0 6px">✓ Matched — keyword review</div><div style="font-size:11px;color:var(--muted);margin-bottom:8px">These requirements were found and scored. The numbered ones are highlighted in <b style="color:var(--blue)">blue</b> where they appear in the document — click one to jump to it. (The analyst-grade LLM review adds the exact quoted passage.)</div>'+matched.map(matchItem).join('')):'')+
+      (matched.length?('<div style="font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--blue);margin:14px 0 6px">✓ Matched — sentence match</div><div style="font-size:11px;color:var(--muted);margin-bottom:8px">These requirements were found and scored. The numbered ones are highlighted in <b style="color:var(--blue)">blue</b> on the sentence that carries the most of the requirement’s language — click one to jump to it. (The analyst-grade LLM review adds the exact quoted passage.)</div>'+matched.map(matchItem).join('')):'')+
       (gaps.length?('<div style="font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--warn);margin:14px 0 8px">⚠ Gaps — expected, not found</div>'+gaps.map(gapItem).join('')):'')+
       ((!met.length&&!gaps.length&&!matched.length)?('<div style="font-size:12.5px;color:var(--ink-2);line-height:1.6">No attribute-level review is on file for this document, so it isn’t contributing to any control score. This happens when a policy was uploaded but not analysed. Run the review to score it against the control catalog.</div>'+((typeof window!=='undefined'&&typeof window.reanalyzeStoredDocs==='function')?('<button type="button" id="c5annReanalyze" style="margin-top:12px;border:1px solid var(--line);background:var(--surface);color:var(--blue);font-weight:600;font-size:12.5px;padding:8px 14px;border-radius:8px;cursor:pointer">↻ Run document review</button>'):'<div style="margin-top:10px;font-size:11.5px;color:var(--muted)">Re-upload and analyse this policy in onboarding to score it.</div>')):'');
     wrap.innerHTML='<div style="width:min(1160px,96vw);max-height:92vh;display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 24px 60px rgba(20,33,72,.45);overflow:hidden">'+
