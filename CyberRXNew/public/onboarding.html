@@ -459,6 +459,12 @@
     <div id="mapBody"><div class="mapempty">Load your processes and systems above and the mapping appears here.</div></div>
   </div>
 
+  <!-- 5c · Confirm what brings money (revenue-criticality gate) -->
+  <div class="sec" id="revSec" style="display:none">
+    <div class="sh"><div class="sn">✦</div><div><div class="st">Confirm what brings money</div><div class="sd">Crown jewels are derived <b>only</b> from the processes you confirm actually generate revenue. Nerion ranks your processes by an advisory signal — <b>you confirm</b>. Unconfirmed processes stay <b>provisional</b> and are not promoted to crown jewels. <span style="color:var(--muted)">This is the CFO's call; captured once here, it also surfaces in the CFO cockpit.</span></div></div><div class="badge" id="brev">your confirmation</div></div>
+    <div id="revBody"><div class="mapempty">Load your processes above and the ranked confirmation list appears here.</div></div>
+  </div>
+
   <!-- 6 · Risk register -->
   <div class="sec">
     <div class="sh"><div class="sn">6</div><div><div class="st">Risk register</div><div class="sd">Open risks with dollar exposure — turns the crown-jewel map into a material-exposure figure.</div></div><div class="badge" id="b6">optional</div></div>
@@ -818,12 +824,12 @@
     var nc=findCol(h,['process_name','name','title','process']),rvc=findCol(h,['revenue','rev','value']),rtc=findCol(h,['rto','recovery']),dc=findCol(h,['data','domain','sensitivity','category']),cc=findCol(h,['criticality','crit','tier','priority']),txc=findCol(h,['transactions_per_day','transactions','tx_per_day','daily_transactions','volume','throughput']),tlc=findCol(h,['downtime_tolerance','tolerance','board_tolerance','loss_tolerance']),fnc=findCol(h,['function','business_function','biz_function','capability','area']);
     PROC=p.rows.map(function(c){return {name:get(c,nc)||c[0],revenue:get(c,rvc)||get(c,2),rto:get(c,rtc),data:get(c,dc)||get(c,1)||'Process',criticality:get(c,cc),tx:get(c,txc),tolerance:get(c,tlc),func:get(c,fnc)};}).filter(function(x){return x.name;});
     showRows(document.getElementById('resProc'),PROC,function(x){return '<div class="xrow"><span class="nm">'+x.name+'</span><span class="mt">'+(x.data||'')+(x.revenue?(' · '+x.revenue):'')+(x.rto?(' · RTO '+x.rto+'h'):'')+'</span></div>';});
-    var b=document.getElementById('b4');b.dataset.n=PROC.length;badgeDone('b4');updateSummary();renderMap();});});
+    var b=document.getElementById('b4');b.dataset.n=PROC.length;badgeDone('b4');updateSummary();renderMap();try{renderRevConfirm();}catch(_){}});});
   wireDrop('dropApp','fileApp',function(file){readFile(file,function(p){var h=p.headers;
     var nc=findCol(h,['application_name','app_name','name','title','application']),hc=findCol(h,['ci_class','hosting','host','class','type']),dc=findCol(h,['data','sensitivity','classification']),vc=findCol(h,['vendor','provider','supplier','cloud']),ec=findCol(h,['eol','end_of_life','supported','lifecycle']),rc=findCol(h,['recovery','recovery_hours','restore','rto']),txc=findCol(h,['transactions_per_day','transactions','tx_per_day','daily_transactions','volume']),vlc=findCol(h,['value_per_day','daily_value','value_processed','daily_revenue']),vyc=findCol(h,['value_per_year','annual_value','annual_volume','yearly_value','value_per_annum']);
     APP=p.rows.map(function(c){return {name:get(c,nc)||c[0],host:get(c,hc)||get(c,1)||'—',data:get(c,dc)||get(c,2)||'—',vendor:get(c,vc),eol:get(c,ec),recovery:get(c,rc),tx:get(c,txc),value:get(c,vlc),valueYear:get(c,vyc)};}).filter(function(x){return x.name;});
     showRows(document.getElementById('resApp'),APP,function(x){return '<div class="xrow"><span class="nm">'+x.name+'</span><span class="mt">'+(x.host||'')+(x.vendor?(' · '+x.vendor):'')+'</span></div>';});
-    var b=document.getElementById('b5');b.dataset.n=APP.length;badgeDone('b5');updateSummary();renderMap();});});
+    var b=document.getElementById('b5');b.dataset.n=APP.length;badgeDone('b5');updateSummary();renderMap();try{renderRevConfirm();}catch(_){}});});
   wireDrop('dropRisk','fileRisk',function(file){readFile(file,function(p){var h=p.headers;
     var tc=findCol(h,['title','risk','name','description']),sc=findCol(h,['severity','sev','priority','rating']),ac=findCol(h,['asset','system','application','app','ci']),ec=findCol(h,['exposure','financial','impact','loss','ale','amount']),stc=findCol(h,['status','state']);
     RISK=p.rows.map(function(c){return {title:get(c,tc)||c[0],severity:get(c,sc)||'High',asset:get(c,ac)||'',exposure:get(c,ec)||'',status:get(c,stc)||'open'};}).filter(function(x){return x.title;});
@@ -1329,6 +1335,61 @@
     });
     return {procs:procs,apps:apps};
   }
+  /* ===== Phase B — assisted, human-confirmed revenue criticality =====
+     Advisory scorer mirrors the backend RevenueCriticalityService: financial + revenue-function +
+     name signals → a 0..1 SUGGESTION. The user confirms; crown jewels derive only from confirmed
+     revenue processes (unconfirmed stay provisional). Confirmations persist on each PROC row and
+     ride the ingest payload. */
+  var REV_TERMS=['revenue','sales','billing','invoic','order-to-cash','order to cash','quote-to-cash','payment','collections','premium','checkout','commerce','subscription','renewal','booking','reservation','fulfil','merchant','point of sale','point-of-sale','trading','settlement','underwrit','claims','disburse','monetiz'];
+  function revTermHit(t){t=' '+String(t||'').toLowerCase()+' ';return REV_TERMS.some(function(k){return t.indexOf(k)>=0;});}
+  function revToNum(v){if(v==null)return 0;if(typeof v==='number')return isFinite(v)?v:0;var s=String(v).trim().toLowerCase().replace(/[$,\s]/g,'');var m=s.match(/^(-?\d*\.?\d+)([kmb])?$/);if(!m)return 0;var n=parseFloat(m[1]);if(!isFinite(n))return 0;if(m[2]==='k')n*=1e3;else if(m[2]==='m')n*=1e6;else if(m[2]==='b')n*=1e9;return n;}
+  function revScore(p,maxFin){
+    var fin=revToNum(p.confirmedFinancialImpact!=null?p.confirmedFinancialImpact:p.revenue);
+    var financial=0;if(fin>0&&maxFin>0)financial=Math.min(1,Math.log10(1+fin)/Math.log10(1+maxFin));else if(fin>0)financial=0.6;
+    var fnHit=revTermHit((p.func||'')+' '+(p.data||''))?1:0;
+    var nameHit=revTermHit(p.name)?1:0;
+    var basis={financial:Math.round(0.55*financial*1000)/1000,func:Math.round(0.30*fnHit*1000)/1000,name:Math.round(0.15*nameHit*1000)/1000};
+    var score=Math.min(1,basis.financial+basis.func+basis.name);
+    return {score:Math.round(score*1000)/1000,suggested:score>=0.5,basis:basis};
+  }
+  function revRank(){var maxFin=PROC.reduce(function(m,p){var v=revToNum(p.revenue);return v>m?v:m;},0);
+    return PROC.map(function(p,i){var r=revScore(p,maxFin);p.revScore=r.score;p.revSuggested=r.suggested;return {i:i,p:p,r:r};}).sort(function(a,b){return b.r.score-a.r.score;});}
+  function renderRevConfirm(){
+    var sec=document.getElementById('revSec');if(!sec)return;
+    if(!PROC.length){sec.style.display='none';return;}
+    sec.style.display=(typeof OB_ACTIVE==='undefined'||OB_ACTIVE==='inv')?'':'none';
+    var ranked=revRank();
+    var confN=PROC.filter(function(p){return p.criticalityConfirmed;}).length;
+    var moneyN=PROC.filter(function(p){return p.criticalityConfirmed&&p.bringsMoney;}).length;
+    var provN=PROC.length-confN;
+    var summary='<div style="display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline;margin-bottom:12px;font-size:13px">'+
+      '<b>'+confN+' of '+PROC.length+'</b> confirmed'+
+      '<span style="color:var(--muted)">· '+moneyN+' bring money · '+provN+' provisional (not yet promoted to crown jewels)</span>'+
+      (provN?'<button type="button" id="revConfAll" style="margin-left:auto;font-size:12px;font-weight:600;color:var(--blue);background:none;border:0;cursor:pointer">Accept all suggestions →</button>':'')+'</div>';
+    var rows=ranked.map(function(o){var p=o.p,pc=Math.round(o.r.score*100);
+      var barCol=o.r.score>=0.66?'var(--good)':o.r.score>=0.4?'var(--gold)':'var(--muted)';
+      var confirmed=!!p.criticalityConfirmed,yes=confirmed&&p.bringsMoney;
+      var stateChip=confirmed?('<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:'+(yes?'rgba(12,163,12,.12);color:var(--good)':'var(--surface-2);color:var(--muted)')+'">'+(yes?'✓ brings money':'not revenue')+'</span>'):('<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(250,178,25,.14);color:var(--warn)">provisional</span>');
+      return '<div class="revrow" data-i="'+o.i+'" style="display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--line)">'+
+        '<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:13.5px">'+String(p.name||'—')+(o.r.suggested&&!confirmed?' <span style="font-size:10.5px;font-weight:700;color:var(--blue)">· suggested: revenue</span>':'')+'</div>'+
+          '<div style="display:flex;align-items:center;gap:8px;margin-top:4px"><div style="width:120px;height:5px;background:var(--surface-2);border-radius:3px;overflow:hidden"><i style="display:block;height:100%;width:'+pc+'%;background:'+barCol+'"></i></div><span style="font-size:11px;color:var(--muted)">advisory '+pc+'%</span></div></div>'+
+        stateChip+
+        '<div style="display:flex;gap:6px;flex:none">'+
+          '<button type="button" class="revyes" data-i="'+o.i+'" style="font-size:12px;font-weight:600;padding:6px 12px;border-radius:8px;border:1px solid '+(yes?'var(--good)':'var(--line)')+';background:'+(yes?'rgba(12,163,12,.1)':'var(--surface)')+';color:'+(yes?'var(--good)':'var(--ink)')+';cursor:pointer">Brings money</button>'+
+          '<button type="button" class="revno" data-i="'+o.i+'" style="font-size:12px;font-weight:600;padding:6px 12px;border-radius:8px;border:1px solid '+(confirmed&&!yes?'var(--muted)':'var(--line)')+';background:var(--surface);color:var(--ink);cursor:pointer">No</button>'+
+        '</div>'+
+        '<input class="revamt" data-i="'+o.i+'" placeholder="annual $" value="'+String(p.confirmedFinancialImpact||'').replace(/"/g,'&quot;')+'" style="width:96px;flex:none;font-size:12.5px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);visibility:'+(yes?'visible':'hidden')+'">'+
+      '</div>';
+    }).join('');
+    document.getElementById('revBody').innerHTML=summary+'<div>'+rows+'</div>'+
+      '<div style="font-size:11.5px;color:var(--muted);margin-top:10px">The advisory % is a suggestion from your entered revenue, the process\'s function and its name — never an automatic decision. Only the processes you mark <b>Brings money</b> become confirmed revenue processes that promote their applications to crown jewels.</div>';
+    function setConf(i,money){if(!PROC[i])return;PROC[i].criticalityConfirmed=true;PROC[i].bringsMoney=!!money;if(!money)PROC[i].confirmedFinancialImpact='';renderRevConfirm();try{updateSummary();}catch(_){}try{renderMap();}catch(_){}}
+    document.querySelectorAll('#revBody .revyes').forEach(function(b){b.addEventListener('click',function(){setConf(+b.dataset.i,true);});});
+    document.querySelectorAll('#revBody .revno').forEach(function(b){b.addEventListener('click',function(){setConf(+b.dataset.i,false);});});
+    document.querySelectorAll('#revBody .revamt').forEach(function(inp){inp.addEventListener('change',function(){if(PROC[+inp.dataset.i]){PROC[+inp.dataset.i].confirmedFinancialImpact=inp.value.trim();}});});
+    var all=document.getElementById('revConfAll');if(all)all.addEventListener('click',function(){ranked.forEach(function(o){if(!o.p.criticalityConfirmed){o.p.criticalityConfirmed=true;o.p.bringsMoney=!!o.r.suggested;}});renderRevConfirm();try{updateSummary();renderMap();}catch(_){}});
+    var brev=document.getElementById('brev');if(brev){brev.dataset.n=confN;if(confN)badgeDone('brev');}
+  }
   function renderMap(){
     var sec=document.getElementById('mapSec');
     if(!PROC.length||!APP.length){sec.style.display='none';return;}
@@ -1452,10 +1513,10 @@
     var inv=IND_INV[invKey()]||IND_INV.tech;
     if(k==='app'){APP=inv.sys.map(function(r){var c=r.split('|');return {name:c[0],host:c[1],data:c[2],vendor:c[3],eol:c[4],recovery:c[5]};});
       showRows(document.getElementById('resApp'),APP,function(x){return '<div class="xrow"><span class="nm">'+x.name+'</span><span class="mt">'+(x.host||'')+(x.vendor?(' · '+x.vendor):'')+'</span></div>';});
-      var b5=document.getElementById('b5');b5.dataset.n=APP.length;badgeDone('b5');updateSummary();renderMap();
+      var b5=document.getElementById('b5');b5.dataset.n=APP.length;badgeDone('b5');updateSummary();renderMap();try{renderRevConfirm();}catch(_){}
     } else if(k==='proc'){PROC=inv.proc.map(function(r){var c=r.split('|');return {name:c[0],revenue:c[1],rto:c[2],data:c[3],criticality:c[4]};});
       showRows(document.getElementById('resProc'),PROC,function(x){return '<div class="xrow"><span class="nm">'+x.name+'</span><span class="mt">'+(x.data||'')+(x.revenue?(' · '+x.revenue):'')+(x.rto?(' · RTO '+x.rto+'h'):'')+'</span></div>';});
-      var b4=document.getElementById('b4');b4.dataset.n=PROC.length;badgeDone('b4');updateSummary();renderMap();}
+      var b4=document.getElementById('b4');b4.dataset.n=PROC.length;badgeDone('b4');updateSummary();renderMap();try{renderRevConfirm();}catch(_){}}
     b.textContent='✓ Pulled';b.classList.add('done');
     msg.innerHTML='✓ Pulled <b>'+(k==='app'?APP.length:PROC.length)+'</b> '+(k==='app'?'systems':'business services')+' from <b>'+sys+'</b> <span style="color:var(--muted)">(representative — the live '+sys+' Table API syncs your real inventory on go-live)</span>. Edit any in the list, or switch to Upload for a full export.';msg.style.color='var(--good)';
   });});
@@ -1570,7 +1631,8 @@
       appetite:mval('finAppetite'),budget:mval('finBudget'),dataRecords:mval('finRecords'),
       principalRisks:{creditMarket:mval('ermCredit'),operational:mval('ermOps'),thirdParty:mval('ermTP'),compliance:mval('ermComp')},
       insurance:{limit:mval('insLimit'),premium:mval('insPrem'),renewal:v('insRenew')},
-      processes:PROC.map(function(p){return {name:p.name,data:p.data,rev:p.revenue,revenue:p.revenue,rto:p.rto,criticality:p.criticality,txPerDay:p.tx,tolerance:p.tolerance,function:p.func||null};}),
+      processes:PROC.map(function(p){return {name:p.name,data:p.data,rev:p.revenue,revenue:p.revenue,rto:p.rto,criticality:p.criticality,txPerDay:p.tx,tolerance:p.tolerance,function:p.func||null,
+        revenue_criticality_score:(p.revScore!=null?p.revScore:null),brings_money:(p.bringsMoney!=null?!!p.bringsMoney:null),criticality_confirmed:!!p.criticalityConfirmed,confirmed_financial_impact:(p.confirmedFinancialImpact||null)};}),
       apps:APP.map(function(a){return {name:a.name,host:a.host,data:a.data,vendor:a.vendor,eol:a.eol,recovery:a.recovery,txPerDay:a.tx,valuePerDay:a.value,valuePerYear:a.valueYear,processes:Array.isArray(a.processes)?a.processes:[]};}),
       risks:RISK.map(function(r){return {title:r.title,severity:r.severity,asset:r.asset,status:r.status,financial_exposure:r.exposure};}),
       initiatives:INIT,
@@ -1645,7 +1707,7 @@
     {k:'org',l:'Organization',m:['organization']},
     {k:'gov',l:'Governance & AI',m:['board governance','ai risk','strategic initiatives','policy & document']},
     {k:'fin',l:'Financials',m:['financials','enterprise risk','growth engine','insurance']},
-    {k:'inv',l:'Inventory',m:['business processes','systems','map applications']},
+    {k:'inv',l:'Inventory',m:['business processes','systems','map applications','brings money']},
     {k:'risk',l:'Risks & projects',m:['risk register','business capability map','crown jewel register','business impact analysis','software bill of materials','risk appetite statements','regulatory register','materiality criteria','benchmark data','cyber projects','initiatives']},
     {k:'tools',l:'Connect tools',m:['connect your tools']}
   ];
@@ -1677,7 +1739,9 @@
   function obShow(key){OB_ACTIVE=key;
     obSecs().forEach(function(sec){var tk=obTabOf(sec);var vis=(tk===key);
       if(sec.id==='mapSec')vis=vis&&PROC.length&&APP.length; // map only when built
+      if(sec.id==='revSec')vis=vis&&PROC.length;             // revenue confirm only when processes exist
       sec.style.display=vis?'':'none';});
+    if(key==='inv'){try{renderRevConfirm();}catch(_){}}
     document.querySelectorAll('.obtab').forEach(function(b){b.classList.toggle('on',b.dataset.k===key);});
     // Per-page "Next" button — advances to the next tab, hidden on the last tab.
     var tabs=obPresentTabs(),idx=-1;for(var i=0;i<tabs.length;i++){if(tabs[i].k===key)idx=i;}
