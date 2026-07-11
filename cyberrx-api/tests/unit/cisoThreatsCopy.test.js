@@ -23,7 +23,7 @@ describe('Threats — no overclaiming', () => {
   it('displays "No confirmed active intrusion"', () => {
     expect(src).toContain('No confirmed active intrusion in connected telemetry');
     // the highest-threat path is the data-ranked top driver, not a hard-coded "identity"
-    expect(region).toContain("No confirmed active intrusion, but the attack path through '+TD.phrase+' remains the highest threat exposure.");
+    expect(region).toContain("No confirmed active intrusion — but the path through '+TD.phrase+' is our highest threat exposure.");
     expect(region).toContain('var TD=c5TopDriver()');
   });
   it('tactic coverage is labelled "coverage", never "defended"', () => {

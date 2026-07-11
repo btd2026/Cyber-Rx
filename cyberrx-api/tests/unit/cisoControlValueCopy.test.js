@@ -24,10 +24,10 @@ describe('Control Value tab — question & answer', () => {
     expect(cv).toContain('which controls reduce the most business exposure');
   });
   it('headline says controls reduce modeled exposure, ranked by value delivered', () => {
-    expect(cv).toMatch(/reduce '\+usd\(rr\.total\)\+' of modeled exposure — ranked by business value delivered/);
+    expect(cv).toMatch(/reduce '\+usd\(rr\.total\)\+' of modeled exposure, ranked by value delivered/);
   });
   it('surfaces the highest-value control and the largest remaining gap when both differ', () => {
-    expect(cv).toMatch(/delivers the highest current value, while '\+nm\(topGap\.c\)\+' has the largest remaining gap/);
+    expect(cv).toMatch(/delivers the most; '\+nm\(topGap\.c\)\+' is the biggest remaining gap/);
   });
 });
 
