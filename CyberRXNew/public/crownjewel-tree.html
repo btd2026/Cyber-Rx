@@ -76,6 +76,10 @@
   .node .nums.eqrow{flex-wrap:wrap;gap:6px 14px;align-items:flex-start}
   .node .nums.eqrow .eqop{font-size:19px;color:var(--muted);font-weight:500;align-self:center;line-height:1}
   .node.org .eqcaption{margin-top:9px;font-size:10.5px;color:var(--muted);line-height:1.45;white-space:normal;max-width:520px}
+  .node.org .fairline{margin-top:12px;padding-top:11px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;font-size:12.5px;color:var(--text)}
+  .node.org .fairline b{font-family:'Inter',system-ui,sans-serif;font-size:14px;color:var(--ink)}
+  .node.org .fairline .fairk{font-size:9.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#fff;background:var(--accent);border-radius:5px;padding:2px 7px}
+  .node.org .fairline .fairbadge{font-size:9.5px;color:var(--muted);letter-spacing:.02em;margin-left:auto}
   .node .val{font-family:'Inter',system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px}
   .node .rk{font-family:'Inter',system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;color:var(--risk)}
   .node .mf{color:#3f8a4f;font-size:.82em;font-family:'Inter',system-ui,-apple-system,"Segoe UI",sans-serif}
@@ -176,6 +180,7 @@
 </div>
 <div class="tip" id="tip"></div>
 
+<script src="fair-engine.js"></script>
 <script>
 const TARGET=4, CATALOG=106;
 const MAT=["#B23A2E","#B23A2E","#D8862B","#C4A526","#4E9A51","#2E7D46"];
@@ -258,6 +263,36 @@ let DATA=[
 const MITIGATED=3;
 let ORG='Northwind Insurance';
 let LIVEMODE=false; // flips true once the host posts real inventory
+/* Compute the enterprise loss with the shared FAIR engine (fair-engine.js): map this tree
+   (function → process → crown jewel → risk → control) into FAIR nodes and roll up an
+   Expected Annual Loss and a 1-in-20-year tail. Business value comes from each jewel (the
+   BIA); each control's effectiveness is its maturity/5; TEF and inherent vulnerability use
+   sector defaults (clearly modeled). Seeded, so the number is reproducible. Runs AFTER the
+   per-risk slices (r.pot) are computed in build(). */
+function computeFair(){
+  if(typeof FairEngine==='undefined')return null;
+  const nodes=[{id:'ENT',type:'function',parentId:null,name:ORG}];
+  DATA.forEach((f,fi)=>{const fid='F'+fi;nodes.push({id:fid,type:'function',parentId:'ENT',name:f.name});
+    (f.procs||[]).forEach((p,pi)=>{const pid=fid+'P'+pi;nodes.push({id:pid,type:'process',parentId:fid,name:p.name});
+      (p.jewels||[]).forEach((j,ji)=>{const jid=pid+'J'+ji;nodes.push({id:jid,type:'app',parentId:pid,name:j.name,businessValue:j.value});
+        (j.risks||[]).forEach((r,ri)=>{const slice=(r.pot>0?r.pot:(j.value/((j.risks||[]).length||1)));
+          nodes.push({id:jid+'R'+ri,type:'risk',parentId:jid,appId:jid,businessValue:j.value,
+            threatEventFrequency:{min:0.5,mostLikely:1,max:3,dist:'pert'},
+            vulnerability_inherent:{min:0.1,mostLikely:0.35,max:0.7,dist:'pert'},
+            lossMagnitude:{primary:{min:slice*0.5,mostLikely:slice,max:Math.min(j.value,slice*1.5),dist:'pert'}},
+            correlationGroupIds:[r.id],
+            controls:(r.ctrls||[]).map(c=>{const cf=(C[c[0]]&&C[c[0]].f)||'PR';const factor=(cf==='DE'||cf==='RS'||cf==='RC')?'magnitude':'frequency';
+              return {id:c[0],factor:factor,effectiveness:Math.max(0,Math.min(1,(c[1]||0)/5)),effectivenessSource:{type:LIVEMODE?'self_reported':'modeled',name:'control maturity',confidence:'med'}};}),
+            tefSources:[{type:'modeled',name:'sector-default frequency',confidence:'low'}],
+            vulnSources:[{type:'modeled',name:'sector-default vulnerability',confidence:'low'}],
+            lmSources:[{type:'self_reported',name:'business value (BIA)',confidence:'med'}]});
+        });
+      });
+    });
+  });
+  try{const tree=FairEngine.computeTree(nodes,{seed:1337,iters:4000});const ent=tree.byId['ENT'];
+    return {eal:ent.EAL,tail:ent.tail,ver:FairEngine.VERSION,conf:ent.confidence};}catch(e){return null;}
+}
 function build(){
 document.getElementById('brandName').textContent=ORG;
 var _sub=document.getElementById('brandSub');if(_sub)_sub.textContent='Cyber value tree · '+(LIVEMODE?'live from your data':'illustrative');
@@ -328,6 +363,7 @@ document.getElementById("tree").innerHTML=`<ul><li><div class="node org"><div cl
      <div class="eqop">=</div>
      <div><span class="big mathhover" style="color:var(--risk)" data-mtype="rollup" data-label="Enterprise" data-live="${TOTR}" data-mit="${TOTM}">${$B(TOTR)}</span><span class="nlab">residual at risk</span></div></div>
    <div class="eqcaption">Total value − mitigated by controls = residual at risk · rolls up from every crown jewel below, so each level’s children sum back to its value.</div>
+   ${(function(){var f=null;try{f=computeFair();}catch(_){}return f?('<div class="fairline"><span class="fairk">FAIR loss model</span><span>Expected annual loss <b>'+$B(f.eal)+'</b></span><span>1-in-20-year loss <b>'+$B(f.tail)+'</b></span><span class="fairbadge">computed live · FAIR engine v'+f.ver+' · seeded &amp; reproducible</span></div>'):'';})()}
  </div></div><ul>${DATA.map(fnNode).join("")}</ul></li></ul>`;
 
 document.getElementById("scope").innerHTML=`<div class="big">${inScope}<small>of ${CATALOG}</small></div>
