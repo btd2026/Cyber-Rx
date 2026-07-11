@@ -160,7 +160,8 @@ try {
 try {
   vm.runInContext("if(typeof LIVE==='object'&&LIVE){LIVE.crown_jewel_risk={items:[{asset:'Claims platform',exposure_usd:34000000,risk:82}]};}", ctx);
   const croAsks = vm.runInContext("JSON.stringify(c5AskModel('cro'))", ctx);
-  if (!/risk[- ]?accept|Risk acceptance/i.test(croAsks) || croAsks.indexOf('Claims platform') < 0) problems.push('[asks] CRO risk-acceptance ask not grounded in top exposure');
+  // a risk-acceptance ask has kind:'accept' and offers to "Approve acceptance" of the residual risk
+  if (!/"kind":"accept"|accept/i.test(croAsks) || croAsks.indexOf('Claims platform') < 0) problems.push('[asks] CRO risk-acceptance ask not grounded in top exposure');
   const boardAsks = vm.runInContext("JSON.stringify(c5AskModel('board'))", ctx);
   if (boardAsks.indexOf('materiality') < 0) problems.push('[asks] Board attestation missing');
   const rt = vm.runInContext("c5AskSave('t_x',{status:'Approve acceptance',ts:1}); (c5AskStore()['t_x']||{}).status", ctx);
