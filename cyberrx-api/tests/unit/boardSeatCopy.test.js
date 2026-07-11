@@ -54,12 +54,26 @@ describe('Board provenance data layer (c5bdFigures) — derived, never hardcoded
   });
 });
 
-describe('Board provenance drawer (c5bdInspect)', () => {
+describe('Board detail drawer (c5bdInspect) — matches the CISO metric inspector', () => {
   const d = fnOf('c5bdInspect');
   it('opens via the shared drawer shell and shows a source-type badge per source', () => {
     expect(d).toContain('openDrill(');
     expect(d).toContain('c5bdProvBadge(s.type)');
-    expect(d).toContain('Source &amp; confidence');
+  });
+  it('renders the same executive sections as the CISO drawer', () => {
+    // Result hero · Severity/Owner/ETA/Confidence chips · Business impact · What this means /
+    // Who / Why · Decision · Recommended action · View evidence · View sources.
+    expect(d).toContain('Result');
+    expect(d).toContain("_chip('Severity'");
+    expect(d).toContain("_chip('Evidence confidence'");
+    expect(d).toContain('Business impact:');
+    expect(d).toContain("_xr('What this means'");
+    expect(d).toContain("_xr('Who / what is affected'");
+    expect(d).toContain("_xr('Why it matters now'");
+    expect(d).toContain('Decision');
+    expect(d).toContain('Recommended action');
+    expect(d).toContain("c5acc('View evidence'");
+    expect(d).toContain("c5acc('View sources'");
   });
   it('shows confidence, owner and an as-of in a compact footer (no separate Owned-by panel)', () => {
     expect(d).toContain('Confidence');

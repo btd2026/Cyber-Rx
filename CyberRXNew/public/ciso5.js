@@ -2970,12 +2970,12 @@ function c5Exposure(){
   bodyA+='<div class="c5foot">Every figure traces to its source'+(anyDerived?'; figures marked “illustrative” are not yet fully evidenced':'')+'.</div>';
   // TAB B — control value (which controls reduce the most business exposure?)
   var cvVerdict=haveCtrls
-    ?('Your controls reduce '+usd(rr.total)+' of modeled exposure — ranked by business value delivered.'+((topCtrl&&topGap&&topGap.c.k!==topCtrl.c.k)?(' '+nm(topCtrl.c)+' delivers the highest current value, while '+nm(topGap.c)+' has the largest remaining gap.'):''))
+    ?('Your controls reduce '+usd(rr.total)+' of modeled exposure, ranked by value delivered'+((topCtrl&&topGap&&topGap.c.k!==topCtrl.c.k)?(' — '+nm(topCtrl.c)+' delivers the most; '+nm(topGap.c)+' is the biggest remaining gap.'):'.'))
     :'Connect your security tools to rank each control by the business exposure it reduces.';
   var bodyB=c5header()+
     c5shell('Control value · which controls reduce the most business exposure?',
       cvVerdict,
-      null,
+      (haveCtrls?'warn':null),
       'Modeled exposure reduction estimates the business exposure reduced by covered controls across protected assets and business services'+(demoCV?' (demo values).':' — coverage × asset exposure × business-service criticality.'));
   if(haveCtrls){
     bodyB+=c5ControlValueEvidencePanel(ctrlConn,rr,demoCV)+
@@ -3273,7 +3273,7 @@ function c5Threats(){
   var pathCards=THREAT_PATHS.map(function(p){return c5PathCard(p,(p.id==='ap_identity'&&!demo)?'Identity evidence partial':pathEv);}).join('');
   var TD=c5TopDriver(); // data-ranked top driver, not hard-coded identity
   host.innerHTML=c5header()+
-    c5shell('Threats · are we ready for the behaviors most likely to hit us?','No confirmed active intrusion, but the attack path through '+TD.phrase+' remains the highest threat exposure.',null,'Nerion maps connected telemetry to MITRE ATT&CK tactics and business-relevant attack paths. The strongest signal today is not an active intrusion; it is the path through '+TD.phrase+' that could enable access to customer-platform services.')+
+    c5shell('Threats · are we ready for the behaviors most likely to hit us?','No confirmed active intrusion — but the path through '+TD.phrase+' is our highest threat exposure.','warn','Nerion maps connected telemetry to MITRE ATT&CK tactics and business-relevant attack paths. The strongest signal today is not an active intrusion; it is the path through '+TD.phrase+' that could enable access to customer-platform services.')+
     '<div class="c5seclab" style="margin-top:16px">Top attack paths requiring attention</div><div class="c5aigrid">'+pathCards+'</div>'+
     c5ThreatsEvidencePanel(E)+
     '<div class="c5seclab" style="margin-top:16px">MITRE ATT&CK coverage · evidence-aware</div>'+
@@ -4969,33 +4969,92 @@ function c5bdProvBadge(type){if(type==='telemetry')return '<span class="c5pill g
 /* Shared figure registry — every seat's Overview registers its provenance figures here so
    the one drawer (c5bdInspect) can render any of them. Keyed by figure id (bd_*, ce_*, …). */
 function c5regFigs(F){try{window.C5_FIGS=Object.assign(window.C5_FIGS||{},F);}catch(_){}return F;}
-/* The provenance drawer for any Overview figure — opened by clicking a data-c5bd box. */
+/* ── Shared helpers so every non-CISO drawer reads like the CISO metric inspector:
+   Result · Severity/Owner/ETA/Confidence · Business impact · What this means / Who / Why ·
+   Decision · Recommended action · View evidence · View sources. Derived from the figure
+   the box already carries, so the English style and structure match across every seat. */
+function c5bdSeverity(pc){return pc==='r'?{t:'High',c:'crit'}:pc==='a'?{t:'Medium',c:'warn'}:pc==='g'?{t:'Low',c:'good'}:pc==='b'?{t:'Decision',c:'blue'}:{t:'Monitor',c:'muted'};}
+function c5bdImpact(pc){return (pc==='r'||pc==='a')
+  ?'This is exposure the business is carrying now — the weaker it is, the more room an incident has to cause harm, so it bears directly on the loss the company could take.'
+  :'This is a part of your cyber posture that bears on the business — the stronger it is, the less exposure the organization carries.';}
+function c5bdWhyNow(pc){return pc==='r'?'It is outside tolerance today; left open, the exposure the business carries keeps rising until it is closed.'
+  :pc==='a'?'It is off target today — close it before it becomes an incident; the longer it sits, the more it costs to fix.'
+  :pc==='g'?'Within target today — hold the line; the risk here is drift, so keep it monitored on the current cadence.'
+  :'Under watch — no pressure on the business today, but it stays on the board until its source is fully connected.';}
+function c5bdAction(pc){var fix=(typeof c5ovFix==='function')?c5ovFix():'the funded fix';
+  return (pc==='r'||pc==='a')
+    ?('Close this gap — '+fix+' addresses it. Track it to done and re-check the number at the next refresh.')
+    :'No action required beyond holding the posture — keep the evidence current so this stays where it is.';}
+function c5bdDominantType(sources){sources=sources||[];var has={};sources.forEach(function(s){if(s&&s.type)has[s.type]=1;});
+  if(has.telemetry&&(has.self_reported||has.modeled))return 'mixed';
+  if(has.telemetry)return 'telemetry';if(has.self_reported)return 'self_reported';if(has.modeled)return 'modeled';return 'none';}
+function c5bdTypeLabel(t){return t==='telemetry'?'Live telemetry':t==='self_reported'?'Self-reported':t==='modeled'?'Modeled':t==='mixed'?'Mixed sources':'Not connected';}
+function c5bdWhyIcon(pc){return pc==='g'?'check':(pc==='r'||pc==='a')?'alert':pc==='b'?'gauge':'plug';}
+/* The executive detail drawer for any Overview / Board figure — opened by clicking a data-c5bd
+   box. Same layout and English as the CISO metric inspector (c5InspectObj). */
 function c5bdInspect(id){
   var f=(typeof window!=='undefined'&&window.C5_FIGS&&window.C5_FIGS[id])||null;
   if(!f){var F=c5bdFigures();f=F[id];}
   if(!f)return;
-  var pc=f.pill||'n';var col=(pc==='r'?'crit':pc==='a'?'warn':pc==='g'?'good':pc==='b'?'blue':'muted');
-  var conf=String(f.confidence||'').toLowerCase();var confCol=(conf==='high'?'good':conf==='medium'?'warn':conf==='low'?'muted':'muted');
-  // 1) Headline: the figure and its status.
-  var h='<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px"><div style="font-size:16px;font-weight:600;color:var(--ink);line-height:1.3">'+c5esc(f.title)+'</div><span class="c5pill '+pc+'" style="flex:none;margin-top:2px">'+c5esc(f.status||'')+'</span></div>';
-  h+='<div style="font-size:26px;font-weight:600;color:var(--'+(pc==='n'?'ink':col)+');margin-top:6px;line-height:1.15">'+c5esc(f.value||'—')+'</div>';
-  // 2) The plain-English answer (for the question figures).
-  if(f.detail)h+='<div style="margin-top:12px;font-size:13.5px;color:var(--ink-2);line-height:1.6">'+f.detail+'</div>';
-  // 3) Source & confidence — every source with its own type badge.
-  h+='<div class="ev-sec">Source &amp; confidence</div>';
-  if(!f.sources||!f.sources.length){
-    h+='<div class="conf" style="border-left:3px solid var(--muted)"><b>Source not yet connected.</b> Shown as modeled until the tool or document is connected at onboarding — then it becomes measured.</div>';
+  var pc=f.pill||'n';var col=(pc==='r'?'crit':pc==='a'?'warn':pc==='g'?'good':pc==='b'?'blue':'ink');
+  var isDec=!!(f.headline||f.kicker);
+  var conf=String(f.confidence||'').toLowerCase();var confCol=(conf==='high'?'good':(conf==='medium'||conf==='med')?'warn':'muted');
+  var demo=(typeof signalsAreDemo==='function'&&signalsAreDemo())||(typeof demoActive==='function'&&demoActive());
+  var stype=c5bdDominantType(f.sources);var slabel=c5bdTypeLabel(stype);
+  var sev=c5bdSeverity(isDec?'b':pc);
+  // 1) RESULT — status-coloured hero: the value, its status pill and the source label.
+  var h='<div style="display:flex;align-items:center;gap:14px;margin:2px 0 2px;padding:14px 16px;border-radius:12px;border:1px solid var(--line);border-left:3px solid var(--'+col+');background:var(--surface-2)">'+
+    '<div style="width:42px;height:42px;border-radius:11px;flex:none;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--'+col+') 16%,var(--surface));color:var(--'+col+')">'+c5icon(c5bdWhyIcon(isDec?'b':pc))+'</div>'+
+    '<div style="min-width:0;flex:1"><div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">Result</div><div style="font-size:23px;font-weight:700;line-height:1.15;color:var(--'+col+')">'+c5esc(f.value||'—')+'</div></div>'+
+    '<div style="text-align:right;flex:none"><span class="c5pill '+pc+'">'+c5esc(f.status||'')+'</span><div style="font-size:10px;color:var(--muted);margin-top:5px;text-transform:uppercase;letter-spacing:.05em">'+(demo?'Demo':c5esc(slabel))+'</div></div>'+
+  '</div>';
+  // 2) HEADER FACTS — severity · owner · ETA · evidence confidence.
+  function _chip(label,val,c){return '<div style="border:1px solid var(--line);border-radius:9px;padding:6px 11px;background:var(--surface-2)"><div style="font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)">'+label+'</div><div style="font-size:12.5px;font-weight:600;color:var(--'+(c||'ink')+');margin-top:1px">'+c5esc(val)+'</div></div>';}
+  h+='<div style="display:flex;flex-wrap:wrap;gap:8px;margin:11px 0 2px">'+
+    _chip('Severity',sev.t,sev.c)+
+    _chip('Owner',(f.owner||'Accountable owner'),'ink')+
+    _chip('ETA / due',(f.due||(isDec?'Your call':'Not scheduled')),((f.due||isDec)?'ink':'muted'))+
+    _chip('Evidence confidence',(demo?'Demo':(f.confidence||'—')),(demo?'muted':confCol))+
+  '</div>';
+  // 3) BUSINESS IMPACT — the consequence, one line.
+  h+='<div style="margin-top:9px;font-size:12.5px;color:var(--ink-2);line-height:1.5"><b style="color:var(--ink)">Business impact:</b> '+(f.impact||c5bdImpact(pc))+'</div>';
+  // 4) EXECUTIVE SUMMARY — what this means · who/what is affected · why it matters now.
+  function _xr(label,txt,c){return txt?('<div style="margin-bottom:11px"><div style="font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--'+(c||'muted')+')">'+label+'</div><div style="font-size:12.5px;color:var(--ink-2);line-height:1.5;margin-top:2px">'+txt+'</div></div>'):'';}
+  var means=f.means||f.detail||f.body||'';
+  var affected=f.affected||'The systems, services and people this measure covers — traced to the sources below.';
+  var whyNow=f.whyNow||c5bdWhyNow(pc);
+  var _summ=_xr('What this means',means,'good')+_xr('Who / what is affected',affected,'muted')+_xr('Why it matters now',whyNow,(pc==='r'?'crit':pc==='a'?'warn':'blue'));
+  if(_summ)h+='<div style="margin-top:11px;padding:13px 16px 2px;border:1px solid var(--line);border-radius:12px;background:var(--surface)">'+_summ+'</div>';
+  // 5) DECISION — explicit, always.
+  h+='<div class="ev-sec">Decision</div>';
+  if(isDec){
+    h+='<div class="conf" style="border-left:3px solid var(--blue)"><b>'+c5esc(f.headline||'Your call')+'</b>'+(f.body?('<div style="margin-top:4px">'+f.body+'</div>'):'')+'</div>';
+  } else if(pc==='r'||pc==='a'){
+    h+='<div class="conf" style="border-left:3px solid var(--'+col+')"><b>A decision is on the table:</b> this is carrying exposure now — the options and the recommended call are in this seat’s Decisions tab.</div>';
   } else {
-    h+=f.sources.map(function(s){
+    h+='<div class="conf" style="border-left:3px solid var(--muted)"><b>No executive decision needed now:</b> hold the current cadence; Nerion surfaces a decision here if the status changes.</div>';
+  }
+  // 6) RECOMMENDED ACTION — the single next step (decisions carry their own action above).
+  if(!isDec){
+    h+='<div class="ev-sec">Recommended action</div><div class="conf" style="border-left:3px solid var(--blue)">'+(f.action||c5bdAction(pc))+(f.owner?('<div style="margin-top:6px;font-size:11px;color:var(--muted)">Owner: '+c5esc(f.owner)+'</div>'):'')+'</div>';
+  }
+  // 7) VIEW EVIDENCE — how the figure is derived + its confidence (collapsed).
+  var evNote='This figure is '+(stype==='none'?'not yet evidenced':('drawn from '+c5esc(slabel).toLowerCase()))+
+    (f.sources&&f.sources.length?(', combining '+f.sources.length+' source'+(f.sources.length>1?'s':'')+' listed below'):'')+
+    '. Confidence: <b style="color:var(--'+confCol+')">'+c5esc(f.confidence||'—')+'</b>'+(conf&&conf!=='high'?' — self-reported and modeled figures are not rated high confidence until independently tested.':'.');
+  h+=c5acc('View evidence','<div class="drill-p">'+evNote+'</div>');
+  // 8) VIEW SOURCES — each source with its own provenance badge (collapsed).
+  var _src;
+  if(!f.sources||!f.sources.length){
+    _src='<div class="conf" style="border-left:3px solid var(--muted)"><b>Source not yet connected.</b> Shown as modeled until the tool or document is connected at onboarding — then it becomes measured.</div>';
+  } else {
+    _src=f.sources.map(function(s){
       var meta=[];if(s.detail)meta.push(c5esc(s.detail));if(s.syncedAt)meta.push('synced '+c5esc(s.syncedAt));if(s.coverage)meta.push(c5esc(s.coverage)+' coverage');
       return '<div style="border:1px solid var(--line);border-radius:10px;padding:11px 13px;margin-bottom:8px;background:var(--surface)"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><b style="font-size:13px;color:var(--ink)">'+c5esc(s.name||'Source')+'</b>'+c5bdProvBadge(s.type)+'</div>'+(meta.length?('<div style="font-size:12px;color:var(--ink-2);line-height:1.5;margin-top:4px">'+meta.join(' · ')+'</div>'):'')+'</div>';
-    }).join('');
-    var badges=(typeof c5sourceTypeList==='function')?'':'';
-    h+='<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:2px;font-size:11.5px;color:var(--muted)">'+
-      '<span>'+(f.sources.length>1?'Combined from the sources above.':'')+'</span>'+
-      '<span>Confidence: <b style="color:var(--'+confCol+')">'+c5esc(f.confidence||'—')+'</b></span></div>';
+    }).join('')+(f.sources.length>1?'<div style="font-size:11.5px;color:var(--muted);margin-top:2px">Combined from the sources above.</div>':'');
   }
-  // 4) Compact footer: owner + as-of (no separate owner panel/button).
+  h+=c5acc('View sources',_src);
+  // Compact footer.
   h+='<div class="c5foot">'+(f.owner?('Owner: '+c5esc(f.owner)+' · '):'')+'as of '+c5esc(f.asOf||'')+(conf&&conf!=='high'?' · self-reported and modeled figures are not rated high confidence until independently tested':'')+'</div>';
   if(typeof openDrill==='function')openDrill(f.title,h);
 }

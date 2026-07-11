@@ -81,9 +81,9 @@
   .node.org .fairline .fairk{font-size:9.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#fff;background:var(--accent);border-radius:5px;padding:2px 7px}
   .node.org .fairline .fairbadge{font-size:9.5px;color:var(--muted);letter-spacing:.02em;margin-left:auto}
   /* FAIR expected-annual-loss chip carried down the tree (function → risk → control) */
-  .fairchip{display:inline-flex;align-items:baseline;gap:5px;font-size:10.5px;color:var(--muted);margin-top:6px;white-space:nowrap}
-  .fairchip .fk{font-size:8.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--accent);border:1px solid var(--accent);border-radius:4px;padding:1px 4px;opacity:.85}
-  .fairchip b{font-family:'Inter',system-ui,sans-serif;font-size:11.5px;color:var(--text);font-weight:700}
+  .fairchip{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 5px;font-size:10.5px;color:var(--muted);margin-top:6px;max-width:100%;line-height:1.35}
+  .fairchip .fk{font-size:8.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--accent);border:1px solid var(--accent);border-radius:4px;padding:1px 4px;opacity:.85;flex:0 0 auto}
+  .fairchip b{font-family:'Inter',system-ui,sans-serif;font-size:11.5px;color:var(--text);font-weight:700;white-space:nowrap}
   .node.ct .fairchip{margin-top:5px;font-size:9.5px}
   .node.ct .fairchip b{font-size:10.5px}
   .node .val{font-family:'Inter',system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px}
@@ -288,7 +288,10 @@ function computeFair(){
             lossMagnitude:{primary:{min:slice*0.5,mostLikely:slice,max:Math.min(j.value,slice*1.5),dist:'pert'}},
             correlationGroupIds:[r.id],
             controls:(r.ctrls||[]).map(c=>{const cf=(C[c[0]]&&C[c[0]].f)||'PR';const factor=(cf==='DE'||cf==='RS'||cf==='RC')?'magnitude':'frequency';
-              return {id:c[0],factor:factor,effectiveness:Math.max(0,Math.min(1,(c[1]||0)/5)),effectivenessSource:{type:LIVEMODE?'self_reported':'modeled',name:'control maturity',confidence:'med'}};}),
+              // effectiveness = maturity/5, but capped at 0.9: even an "Optimizing" (5/5) control is
+              // never 100% — the cap keeps residual expected loss > 0 (several strong controls otherwise
+              // multiply the residual to a literal $0, which reads as a broken "$0K" on the tree).
+              return {id:c[0],factor:factor,effectiveness:Math.max(0,Math.min(0.9,(c[1]||0)/5)),effectivenessSource:{type:LIVEMODE?'self_reported':'modeled',name:'control maturity',confidence:'med'}};}),
             tefSources:[{type:'modeled',name:'sector-default frequency',confidence:'low'}],
             vulnSources:[{type:'modeled',name:'sector-default vulnerability',confidence:'low'}],
             lmSources:[{type:'self_reported',name:'business value (BIA)',confidence:'med'}]});
@@ -339,7 +342,7 @@ DATA.forEach(f=>{f.value=0;f.risk=0;f.mit=0;
   f.exposure=f.risk/f.value;TOTV+=f.value;TOTR+=f.risk;TOTM+=f.mit;});
 const inScope=scope.size;
 const FAIR=attachFair();
-const $F=v=>{if(v==null)return'';if(v>=1)return '$'+v.toFixed(1)+'B';var m=v*1000;if(m>=1)return '$'+(m>=10?m.toFixed(0):m.toFixed(1))+'M';return '$'+(v*1000000).toFixed(0)+'K';};
+const $F=v=>{if(v==null)return'';if(v>=1)return '$'+v.toFixed(1)+'B';var m=v*1000;if(m>=1)return '$'+(m>=10?m.toFixed(0):m.toFixed(1))+'M';var k=v*1e6;if(k>=100)return '$'+k.toFixed(0)+'K';return '<$0.1M';};
 
 document.getElementById("rl").innerHTML=Object.entries(RISKS).map(([k,v])=>`<div class="rlitem"><span class="rid">${k}</span><span>${v}</span></div>`).join("");
 const mini=e=>`<div class="minibar"><i style="width:${Math.min(100,e*100)}%;background:${expColor(e)}"></i></div>`;
