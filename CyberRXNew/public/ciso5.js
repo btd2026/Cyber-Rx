@@ -5122,8 +5122,7 @@ function c5fwFinding(sel,node){
   var F=c5fwFindingData(sel,node);
   h+='<div class="ev-sec">Condition (what was tested)</div><div class="drill-p">'+F.condition+'</div>';
   h+='<div class="ev-sec">Criteria</div><div class="drill-p">'+F.criteria+'</div>';
-  h+='<div class="ev-sec">Cause</div><div class="drill-p">'+F.cause+'</div>';
-  h+='<div class="ev-sec">Effect (risk)</div><div class="drill-p">'+F.effect+'</div>';
+  h+='<div class="ev-sec">Conclusion</div><div class="drill-p">'+F.conclusion+'</div>';
   h+='<div class="ev-sec">Recommendation</div><div class="drill-p">'+F.recommendation+(F.targetUplift?(' — target uplift '+F.targetUplift+'.'):'')+'</div>';
   if(F.mappings&&F.mappings.length){h+='<div class="ev-sec">Cross-framework</div><div class="drill-p">'+F.mappings.map(function(id){return '<span class="c5fw-chip">'+id+'</span>';}).join('')+'</div>';}
   h+=c5DesignSection(node.id);
@@ -5216,37 +5215,79 @@ function c5OpenDocsReviewAt(cid){
 }
 /* Plain-text finding fields for a control — the single source used by both the tab
    (left panel) and the auditor-pack PPTX, so the deck matches the tab exactly. */
+/* Plain-English evidence-source phrasing per control domain — used to paraphrase what
+   Nerion actually collected and assessed for a control (the "what was tested" narrative),
+   keyed off the NIST CSF 2.0 family (or, for a mapped-framework control, the family of the
+   CSF subcategory it inherits from). Falls back to a generic phrase so every control reads
+   sensibly. */
+var C5FW_EVID={
+  'PR.AA':{ev:'authentication and access',src:'identity providers, sign-in logs, service/API identity inventories, device management tools, PAM platforms, and authoritative user, device, and application inventories'},
+  'PR.AT':{ev:'security-awareness',src:'the learning-management system, phishing-simulation results, and training-completion records'},
+  'PR.DS':{ev:'data-protection',src:'encryption configurations, key-management systems, DLP tooling, and storage and transport security settings'},
+  'PR.PS':{ev:'platform-security',src:'configuration baselines, patch-management records, secure-build pipelines, and endpoint-hardening reports'},
+  'PR.IR':{ev:'infrastructure-resilience',src:'network-segmentation records, firewall and network-edge configurations, and resilience and failover test results'},
+  'PR':{ev:'safeguard',src:'the connected protective tools and governing policies mapped to this control'},
+  'ID.AM':{ev:'asset-inventory',src:'asset-management systems, the CMDB, and software and service inventories'},
+  'ID.RA':{ev:'risk-assessment',src:'vulnerability scanners, threat-intelligence feeds, and the risk register'},
+  'ID':{ev:'identification and risk',src:'asset-management systems, vulnerability scanners, and the risk register'},
+  'GV':{ev:'governance',src:'governance policies, roles-and-responsibilities records, and oversight and committee documentation'},
+  'DE.CM':{ev:'monitoring',src:'SIEM, EDR, and network-monitoring telemetry'},
+  'DE.AE':{ev:'event-analysis',src:'SIEM correlation rules, alert-triage records, and event-analysis workflows'},
+  'DE':{ev:'detection',src:'SIEM, EDR, and network-monitoring telemetry'},
+  'RS':{ev:'incident-response',src:'incident-response runbooks, ticketing records, and post-incident reviews'},
+  'RC':{ev:'recovery',src:'backup systems, recovery-plan test results, and restoration logs'}
+};
+function c5fwEvid(node){
+  var key=(node&&node.id)||'';
+  if(node&&node.src==='mapped'&&node.mapped&&node.mapped.length)key=node.mapped[0];
+  var m=key.match(/^([A-Z]{2}\.[A-Z]{2})/);var fam=m?m[1]:'';
+  var f2=key.match(/^([A-Z]{2})/);var fn=f2?f2[1]:'';
+  return C5FW_EVID[fam]||C5FW_EVID[fn]||{ev:'control',src:'the connected security tools and governing documents mapped to this control'};
+}
+function c5fwObjPhrase(node){var n=String((node&&node.name)||'this control objective').replace(/\.$/,'');return n.charAt(0).toLowerCase()+n.slice(1);}
+/* Paraphrased control objective + the evidence Nerion collected, e.g. "Nerion collected
+   authentication and access evidence from identity providers, sign-in logs … to assess
+   whether users, services & hardware are authenticated". `seek` swaps the verb for
+   not-yet-evidenced controls (sought, not collected). */
+function c5fwCondLead(node,seek){var e=c5fwEvid(node);return 'Nerion '+(seek?'sought':'collected')+' '+e.ev+' evidence from '+e.src+' to assess whether '+c5fwObjPhrase(node);}
+/* The auditor's conclusion for a control — plain-English, phrased as Nerion's note. */
+function c5fwConclusion(st,node){
+  if(node&&node.src==='none')return 'Nerion could not conclude on the control criteria — the control is not yet evidenced.';
+  if(st.key==='meets')return 'Nerion noted that all control criteria are functioning as expected.';
+  if(st.key==='obs')return 'Nerion noted that the control criteria are largely functioning, but coverage falls short of the CMMI '+C5FW_TARGET.toFixed(1)+' target.';
+  return 'Nerion noted that the control criteria are not functioning as expected — the control is below the CMMI '+C5FW_TARGET.toFixed(1)+' assurance threshold.';
+}
 function c5fwFindingData(sel,node){
   var st=c5fwStatus(node.score),pct=(node.toolPct!=null)?node.toolPct:null;
   var crit='Control '+node.id+' ('+node.name+') is assessed against a maturity target of CMMI '+C5FW_TARGET.toFixed(1)+' (Defined+).';
   var cond,cause,effect,rec,ev=[];
   if(node.src==='mapped'){
-    cond='Derived by crosswalk: this control inherits the maturity of the '+((node.mapped||[]).length)+' NIST CSF 2.0 subcategor'+((node.mapped||[]).length===1?'y':'ies')+' it maps to, assessed at CMMI '+node.score.toFixed(1)+'.';
+    cond=c5fwCondLead(node)+'. Assessed by crosswalk from the '+((node.mapped||[]).length)+' NIST CSF 2.0 subcategor'+((node.mapped||[]).length===1?'y':'ies')+' it maps to, at CMMI '+node.score.toFixed(1)+'.';
     cause='The mapped CSF controls carry the deficiency; this framework reflects it through the public crosswalk.';
     effect=st.key==='def'?'A deficiency in the mapped controls leaves this requirement below assurance level.':(st.key==='obs'?'The mapped posture is below target — an observation to raise toward the goal.':'The mapped posture meets the target.');
     rec='Uplift the underlying CSF controls (see mapping); this requirement rises with them. Refer to your organization’s own '+(sel==='cis'?'CIS Controls license':'framework license')+' for implementation-tier detail.';
     ev.push(['Derivation','Public CSF 2.0 crosswalk']);ev.push(['Mapped controls',(node.mapped||[]).join(', ')]);
   } else if(node.src==='system'){
-    cond='Automated continuous monitoring measured '+(pct!=null?(pct+'% effective coverage across the in-scope population'):'coverage')+' — '+(pct!=null?((100-pct)+'% of the population is outside the control'):'a residual population remains outside the control')+'. Assessed at CMMI '+node.score.toFixed(1)+'.';
+    cond=c5fwCondLead(node)+'. '+(pct!=null?('Automated continuous monitoring measured '+pct+'% effective coverage across the in-scope population — '+(100-pct)+'% remains outside the control; '):'')+'assessed at CMMI '+node.score.toFixed(1)+'.';
     cause=st.key==='meets'?'Coverage meets the maturity threshold.':'Coverage sits below the ≥90% threshold required for full maturity, leaving a residual population unprotected.';
     effect=st.key==='def'?'The uncovered population is a control deficiency — exploitable exposure until remediated.':(st.key==='obs'?'The residual population is an observation — a gap to close toward target.':'No material exposure at current coverage.');
     rec=st.key==='meets'?'Maintain coverage and retain the tool’s evidence export each cycle.':'Extend the control to the residual population to raise coverage toward ≥90%';
     ev.push(['Method','Automated continuous control monitoring']);if(pct!=null)ev.push(['Measured coverage',pct+'%']);ev.push(['Maturity','CMMI '+node.score]);
   } else if(node.src==='document'){
-    cond='Document review found '+(node.doc&&node.doc.attrs?('the governing policy present '+(node.doc.attrs.filter(function(a){return a.found;}).length)+' of '+node.doc.attrs.length+' expected control attributes'):'the governing policy partially satisfies the expected attributes')+'. Assessed at CMMI '+node.score.toFixed(1)+'.';
+    cond=c5fwCondLead(node)+'. '+(node.doc&&node.doc.attrs?('Document review found the governing policy present '+(node.doc.attrs.filter(function(a){return a.found;}).length)+' of '+node.doc.attrs.length+' expected control attributes'):'Document review found the governing policy partially satisfies the expected attributes')+'; assessed at CMMI '+node.score.toFixed(1)+'.';
     cause=st.key==='meets'?'The policy evidences the required attributes.':'Some expected attributes are absent from the analyzed policy, capping maturity below target.';
     effect=st.key==='meets'?'Documented control operating as designed.':'Design gap — the control may not operate consistently until the policy is completed.';
     rec=st.key==='meets'?'Maintain the policy and re-verify on the '+c5fwCadence()+' cadence.':'Complete the missing policy attributes and re-submit for document review';
     ev.push(['Method','Document review']);ev.push(['Maturity','CMMI '+node.score]);
   } else {
-    cond='No evidence is on file for this control — neither connected-tool telemetry nor an analyzed policy. Assessed at CMMI 0 (Not evidenced).';
+    cond=c5fwCondLead(node,true)+'. No evidence is on file for this control — neither connected-tool telemetry nor an analyzed policy. Assessed at CMMI 0 (Not evidenced).';
     cause='The control’s source tool is not connected and no governing policy has been analyzed.';
     effect='Assurance cannot be given for this control until it is evidenced — a deficiency by default.';
     rec='Connect the control’s tool or upload the governing policy so the control gains an evidenced maturity score';
     ev.push(['Evidence','None on file']);
   }
   var cur=Math.round(node.score),tgt=Math.min(5,Math.max(cur+1,Math.ceil(C5FW_TARGET)));
-  return {ref:node.id,name:node.name,classification:st.t,score:node.score,condition:cond,criteria:crit,cause:cause,effect:effect,recommendation:rec,
+  return {ref:node.id,name:node.name,classification:st.t,score:node.score,condition:cond,criteria:crit,cause:cause,conclusion:c5fwConclusion(st,node),effect:effect,recommendation:rec,
     targetUplift:(node.score<C5FW_TARGET)?('L'+cur+' → L'+tgt+' within one '+c5fwCadence()+' cycle'):'',mappings:node.mapped||[],evidence:ev};
 }
 /* Build the full assessment payload from the tree + findings and POST it to the
