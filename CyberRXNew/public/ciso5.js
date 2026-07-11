@@ -3564,6 +3564,59 @@ function c5ceHealth(){
 /* Tab 02 — Strategic risk */
 /* CEO 01 — Value at risk. Cyber value against enterprise value/strategy: the strategic
    objectives exposed and the crown-jewel revenue engine behind most of it. Board-ready. */
+/* ── CEO — two-tab cockpit (01 Overview · 02 Decisions). The Overview folds the former
+   Value-at-risk / Crown-jewels / Trust tabs into one concise page: the CISO answering the
+   CEO's key questions, every box click-to-source via the shared provenance drawer. ── */
+function c5ceFigures(){
+  var M=(typeof c5expModel==='function')?c5expModel():{total:0};
+  var IDF=c5IdFix();var expT=c5get('exp_total');var idm=c5get(IDF.mid);var idUsd=idm.connected?idm.displayValue:(IDF.usd||null);
+  var O=(typeof c5Objectives==='function')?c5Objectives():{total:0,atRisk:0,protected:0};
+  var Scr=(typeof c5Services==='function')?c5Services():{list:[],total:0,atRisk:0};
+  var oi=(typeof sig==='function')?sig('open_incidents'):null;var incident=(oi!=null&&oi>0);
+  var gov=(typeof LIVE!=='undefined'&&LIVE&&LIVE.governance)||{};var irTested=/yes|tested|tabletop/i.test((gov.ir&&gov.ir.tested)||'');
+  var rev=(typeof LIVE!=='undefined'&&LIVE&&LIVE.economics&&Number(LIVE.economics.revenue))||0;
+  var valUsd=expT.connected?expT.displayValue:(M.total>0?usd(M.total):null);
+  var atR=Scr.atRisk||0,crownN=Scr.total||0,protN=Math.max(0,crownN-atR);
+  var ctrlTelem=c5bdTelem(['okta','entra'],'Identity coverage (MFA / access)','mfa_pct')||c5bdTelem(['crowdstrike','defender'],'Endpoint coverage','edr_pct');
+  var siemTelem=c5bdTelem(['splunk','sentinel'],'Security incidents','open_incidents');
+  var cjDoc=c5bdDocSrc('crown|inventory|asset','Crown-jewel / asset inventory');
+  function fig(o){o.sources=(o.sources||[]).filter(Boolean);o.confidence=o.confidence||c5bdConf(o.sources);o.asOf=o.asOf||(typeof c5ago==='function'?c5ago():'now');return o;}
+  var F={};
+  F.ce_value=fig({title:'Value at risk',value:(valUsd||'—'),status:(M.total>0?'Modeled':'—'),pill:(M.total>0?'a':'n'),owner:'CFO / CISO',ownerSeat:'cfo',
+    sources:[c5bdMod('value at risk = modeled expected loss on crown jewels; inputs: exposure model (modeled), control telemetry (measured)'),ctrlTelem]});
+  F.ce_crown=fig({title:'Crown jewels',value:(crownN>0?(protN+' of '+crownN+' protected'):'—'),status:(atR>0?'One exposed':'Protected'),pill:(atR>0?'a':'g'),owner:'COO / CISO',ownerSeat:'coo',
+    sources:[c5bdMod('crown-jewel exposure = per-engine modeled exposure vs its controls'),cjDoc||c5bdSelf('Crown-jewel inventory','revenue engines mapped at onboarding')]});
+  F.ce_trust=fig({title:'Customer trust',value:(incident?'Incident active':'Intact'),status:(incident?'Incident':'Intact'),pill:(incident?'r':'g'),owner:'CLO / CISO',ownerSeat:'clo',
+    sources:[siemTelem||c5bdMod('trust signal = active customer-impacting incidents from the SIEM feed')]});
+  F.ce_disc=fig({title:'Disclosure',value:'8-K ≤ 4 days',status:(irTested?'SEC-ready':'Watch'),pill:(irTested?'g':'a'),owner:'CLO',ownerSeat:'clo',
+    sources:[c5bdSelf('SEC disclosure process','Item 1.05 8-K materiality process — '+(irTested?'tabletop-tested':'documented')+' at onboarding'),c5bdDocSrc('incident|disclosure|IR','IR / disclosure runbook')]});
+  F.ce_q1=fig({title:'Q1 · What is our cyber value at risk?',q:'What is our cyber value at risk?',a:(valUsd?(valUsd+' modeled, concentrated in the customer platform'):'modeled value at risk, concentrated in the customer platform'),metric:(valUsd||'—')+((rev>0&&M.total>0)?(' · '+(M.total/rev*100).toFixed(2)+'% of revenue'):''),value:(valUsd||'—'),status:(M.total>0?'Watch':'—'),pill:(M.total>0?'a':'n'),owner:'CFO / CISO',ownerSeat:'cfo',
+    sources:[c5bdMod('value at risk = modeled expected loss; inputs: exposure (modeled), control telemetry (measured)'),ctrlTelem]});
+  F.ce_q2=fig({title:'Q2 · Which crown jewels are exposed?',q:'Which crown jewels are exposed?',a:(atR>0?(atR+' of '+crownN+' at risk — the customer platform'):(crownN>0?'all revenue engines protected':'map your crown jewels at onboarding')),metric:(crownN>0?(protN+' of '+crownN+' protected'):'—'),value:(crownN>0?(protN+' of '+crownN+' protected'):'—'),status:(atR>0?'One gap':'Protected'),pill:(atR>0?'a':'g'),owner:'COO / CISO',ownerSeat:'coo',
+    sources:[c5bdMod('per-engine modeled exposure vs its controls'),cjDoc||c5bdSelf('Crown-jewel inventory','mapped at onboarding')]});
+  F.ce_q3=fig({title:'Q3 · Are we protecting trust — and ready to disclose?',q:'Are we protecting trust — and ready to disclose?',a:((incident?'incident active':'trust intact')+' · SEC 4-day process '+(irTested?'tested':'documented')),metric:'8-K ≤ 4 days',value:(incident?'Incident active':'Intact · 8-K ≤ 4 days'),status:(incident?'Watch':(irTested?'Ready':'Watch')),pill:(incident?'a':(irTested?'g':'a')),owner:'CLO',ownerSeat:'clo',
+    sources:[siemTelem||c5bdMod('trust signal from the SIEM incident feed'),c5bdSelf('SEC materiality process','4-business-day 8-K process — '+(irTested?'tested':'documented'))]});
+  F.ce_decision=fig({title:'Fund the identity remediation',value:((idUsd?(idUsd+' · '):'')+IDF.owner+' · '+IDF.timeline),status:'Needs sign-off',pill:'b',owner:IDF.owner,ownerSeat:'ciso',
+    sources:[c5bdMod('the one fix behind most of the value at risk; brings the platform within appetite'),c5bdSelf('Funding decision',IDF.owner+' · '+IDF.timeline)]});
+  return F;
+}
+function c5ceOverview(){
+  var host=document.getElementById('ce-overview');if(!host)return;
+  var F=c5regFigs(c5ceFigures());var M=(typeof c5expModel==='function')?c5expModel():{total:0};
+  function card(id){var f=F[id];if(!f)return '';var vc=(f.pill==='r'?'crit':f.pill==='a'?'warn':f.pill==='g'?'good':f.pill==='b'?'blue':'ink');
+    return '<div class="c5card c5bdbox" data-c5bd="'+id+'"><div class="c5card-top"><span class="c5card-l">'+c5esc(f.title)+'</span><span class="c5pill '+(f.pill||'n')+'">'+c5esc(f.status||'')+'</span></div><div class="c5card-v" style="color:var(--'+vc+')">'+c5esc(f.value||'—')+'</div></div>';}
+  var qrows=['ce_q1','ce_q2','ce_q3'].map(function(id,i){var f=F[id];
+    return '<div class="c5prow c5bdbox" data-c5bd="'+id+'"><span style="flex:0 0 auto;width:22px;height:22px;border-radius:50%;background:var(--surface-2);border:1px solid var(--line);display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--ink-2)">'+(i+1)+'</span><div style="flex:1;min-width:0"><div class="c5row-t">'+c5esc(f.q)+'</div><div class="c5row-s">'+c5esc(f.a)+' · '+c5esc(f.metric)+' · owner: '+c5esc(f.owner)+'</div></div><span class="c5pill '+(f.pill||'n')+'" style="flex:none">'+c5esc(f.status)+'</span></div>';}).join('');
+  var dfig=F.ce_decision;
+  var decision='<div class="c5bl c5bdbox" data-c5bd="ce_decision" style="border-left:3px solid var(--blue)"><div class="c5bl-k">Needs your sign-off · one decision</div><div class="c5bl-h">Approve funding for the identity remediation.</div><div class="c5bl-p">It sits behind the value at risk, the exposed crown jewel and disclosure readiness, and is funded ('+c5esc(dfig.value)+') — one signature protects the growth-critical platform and customer trust.</div><button class="c5btn" data-c5bdtab="1">Approve — open Decisions</button></div>';
+  var head=(M.total>0)?'Cyber puts modeled enterprise value at risk — concentrated in the customer platform — and one funded decision protects it.':'Cyber is protecting enterprise value this quarter — no crown jewel carries a material exposure.';
+  host.innerHTML=c5header()+
+    c5shell('Executive overview · what could cyber cost the business?',head,(M.total>0?'warn':null),'Your cyber value at risk, the crown jewels behind it, and whether customer trust and disclosure are ready — each traced to its owner. <b>Click any box</b> to see its source and provenance.')+
+    '<div class="c5cards">'+card('ce_value')+card('ce_crown')+card('ce_trust')+card('ce_disc')+'</div>'+
+    '<div style="border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:14px"><div class="c5rank-h">The questions the CEO asks — answered</div><div style="padding:2px 15px">'+qrows+'</div></div>'+
+    decision+
+    '<div class="c5foot">Each answer traces to the owning executive’s tab and carries its own confidence. Click any box for its source.</div>';
+}
 function c5ceValue(){
   var host=document.getElementById('ce-value');if(!host)return;
   var demo=(typeof signalsAreDemo==='function')&&signalsAreDemo();
@@ -4678,9 +4731,14 @@ function c5bdFigures(){
   return F;
 }
 function c5bdProvBadge(type){if(type==='telemetry')return '<span class="c5pill g">Live telemetry</span>';if(type==='self_reported')return '<span class="c5pill a">Self-reported</span>';if(type==='modeled')return '<span class="c5pill n">Modeled</span>';return '<span class="c5pill n">—</span>';}
-/* The provenance drawer for a board figure — opened by clicking any Oversight box. */
+/* Shared figure registry — every seat's Overview registers its provenance figures here so
+   the one drawer (c5bdInspect) can render any of them. Keyed by figure id (bd_*, ce_*, …). */
+function c5regFigs(F){try{window.C5_FIGS=Object.assign(window.C5_FIGS||{},F);}catch(_){}return F;}
+/* The provenance drawer for any Overview figure — opened by clicking a data-c5bd box. */
 function c5bdInspect(id){
-  var F=c5bdFigures();var f=F[id];if(!f)return;
+  var f=(typeof window!=='undefined'&&window.C5_FIGS&&window.C5_FIGS[id])||null;
+  if(!f){var F=c5bdFigures();f=F[id];}
+  if(!f)return;
   var pc=f.pill||'n';var col=(pc==='r'?'crit':pc==='a'?'warn':pc==='g'?'good':pc==='b'?'blue':'muted');
   var h='<div class="ev-claim">'+c5esc(f.title)+' <span class="c5pill '+pc+'">'+c5esc(f.status||'')+'</span></div>';
   h+='<div style="display:flex;align-items:center;gap:14px;margin:12px 0 2px;padding:14px 16px;border-radius:12px;border:1px solid var(--line);border-left:3px solid var(--'+col+');background:var(--surface-2)">'+
@@ -4713,7 +4771,7 @@ if(typeof document!=='undefined'&&!window.__c5bdWired){window.__c5bdWired=true;
 /* Tab 01 — Oversight (with Regulatory & Assurance as panels). */
 function c5bdHealth(){
   var host=document.getElementById('bd-health');if(!host)return;
-  var F=c5bdFigures();var IDF=c5IdFix();var RR=c5RiskRegister();
+  var F=c5regFigs(c5bdFigures());var IDF=c5IdFix();var RR=c5RiskRegister();
   var over=(RR.appetite>0&&RR.cyberResidual>RR.appetite);
   function card(id){var f=F[id];if(!f)return '';var vc=(f.pill==='r'?'crit':f.pill==='a'?'warn':f.pill==='g'?'good':f.pill==='b'?'blue':'ink');
     return '<div class="c5card c5bdbox" data-c5bd="'+id+'"><div class="c5card-top"><span class="c5card-l">'+c5esc(f.title)+'</span><span class="c5pill '+(f.pill||'n')+'">'+c5esc(f.status||'')+'</span></div><div class="c5card-v" style="color:var(--'+vc+')">'+c5esc(f.value||'—')+'</div></div>';}
