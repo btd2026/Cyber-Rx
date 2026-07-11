@@ -2972,7 +2972,16 @@ function demoLive(){
       {name:'Financials / ERP', impact:0.65, control_presence:0.70, detection:0.60, non_adversarial:['privacy_regulatory','data_corruption']},
       {name:'Payments (PCI)', impact:0.75, control_presence:0.80, detection:0.75, non_adversarial:['privacy_regulatory','third_party_supply_chain']}
     ],
-    effectiveness_measured:false, // hook: BAS / purple-team not yet wired
+    // Effectiveness hook (BAS / purple-team). Where a capability has a MEASURED result,
+    // "prevent" graduates from control PRESENCE to PROVEN effectiveness — the share of
+    // simulated attacks it actually blocked/detected. Capabilities without a reading stay
+    // presence-only; nothing is inferred or faked. In production this map is fed by a
+    // connected BAS platform (AttackIQ, SafeBreach, Cymulate) or a purple-team exercise.
+    control_effectiveness:{
+      edr:{blocked:0.86, detected:0.94, tested:true, source:'BAS · Cymulate', last:'2026-06-30', scenarios:124},
+      mfa:{blocked:0.78, tested:true, source:'Purple-team exercise', last:'2026-05-18', scenarios:16}
+    },
+    effectiveness_measured:true, // hook now wired — a subset of capabilities has a measured reading
     // Phase D — CIO asset/infra lineage + ingestion coverage / blind-spot health.
     estate_coverage:{ assets:240, mapped:222, lineage_complete:5, lineage_total:6, blind_spots:2,
       blind_examples:['East-region billing replica','Legacy reconciliation batch host'] },

@@ -6471,6 +6471,11 @@ var NEURON_XWALK={
   aware: {domain:'Human Risk',role:'prevent',lanes:['insider','privacy_regulatory'],
           cis:['14.1','14.2','14.9'],iso:['A.6.3'],soc2:['CC1.4','CC2.2'],pci:['12.6']}
 };
+/* Effectiveness readings (BAS / purple-team), keyed by capability. Fed by a connected
+   BAS platform or a purple-team exercise; empty until one is wired. This is the hook
+   that lets "prevent" graduate from control presence to PROVEN effectiveness — the
+   share of simulated attacks a capability actually blocked/detected. Never inferred. */
+function neuronEffectiveness(){return (typeof LIVE!=='undefined'&&LIVE&&LIVE.control_effectiveness)||{};}
 /* The live registry: every capability enriched with its telemetry, evidence
    class, adversarial coverage and framework projection — computed, never stored. */
 function neuronControls(){
@@ -6485,9 +6490,15 @@ function neuronControls(){
     var frac=(p!=null?Math.max(0,Math.min(100,p))/100:0);
     var prevent=(x.role==='prevent'||x.role==='both')?frac:0;  // control presence, NOT proven effectiveness
     var detect=(x.role==='detect'||x.role==='both')?frac:0;    // detection coverage
+    // Effectiveness hook: a MEASURED reading (BAS / purple-team) graduates prevent from
+    // presence to proven. Absent → presence-only; never inferred from deployment.
+    var ef=(typeof neuronEffectiveness==='function')?neuronEffectiveness()[c.k]:null;
+    var effectiveness=(ef&&ef.tested)
+      ? {measured:true,blocked:(ef.blocked!=null?ef.blocked:null),detected:(ef.detected!=null?ef.detected:null),source:ef.source||'BAS / purple-team',last:ef.last||null,scenarios:ef.scenarios||null}
+      : {measured:false};
     out.push({k:c.k,name:c.name,tool:c.tool,domain:x.domain,role:x.role,
       telemetry:p,deployed:deployed,evidence:evidence,maturityCeil:ceil,
-      attack:{prevent:prevent,detect:detect},lanes:x.lanes||[],
+      attack:{prevent:prevent,detect:detect},effectiveness:effectiveness,lanes:x.lanes||[],
       crosswalk:{csf:(fw&&fw.csf)||[],r53:(fw&&fw.r53)||[],cis:x.cis||[],iso:x.iso||[],soc2:x.soc2||[],pci:x.pci||[]}});
   });
   return out;
@@ -6548,6 +6559,7 @@ function c5NeuronControls(host){
   var live=nc.filter(function(n){return n.evidence==='live';}).length;
   var hyb=nc.filter(function(n){return n.evidence==='hybrid';}).length;
   var off=nc.filter(function(n){return n.evidence==='none';}).length;
+  var effN=nc.filter(function(n){return n.effectiveness&&n.effectiveness.measured;}).length;
   var FW=[{k:'csf',l:'NIST CSF 2.0'},{k:'r53',l:'NIST SP 800-53'},{k:'cis',l:'CIS v8'},{k:'iso',l:'ISO 27001'},{k:'soc2',l:'SOC 2'},{k:'pci',l:'PCI DSS'}];
   function evPill(ev){
     var m={live:['🟢 live telemetry','good'],hybrid:['🔌 hybrid · human-validated','blue'],none:['— not deployed','muted']}[ev]||['—','muted'];
@@ -6567,13 +6579,26 @@ function c5NeuronControls(host){
     var cards=domains[dom].map(function(n){
       var xw=n.crosswalk;
       var proj=FW.map(function(f){var ids=xw[f.k]||[];return ids.length?('<span title="'+esc(ids.join(', '))+'" style="font-size:10.5px;color:var(--ink-2)"><b style="color:var(--ink)">'+f.l+'</b> '+ids.length+'</span>'):'';}).filter(Boolean).join('<span style="color:var(--line)"> · </span>');
+      // Prevent graduates to PROVEN where a BAS / purple-team reading exists; otherwise
+      // it stays presence-only. The proven bar is the measured block rate; presence is
+      // shown alongside (muted) so the difference between "deployed" and "works" is visible.
+      var eff=n.effectiveness||{measured:false};
+      var effPill=(eff.measured&&eff.blocked!=null)?('<span title="'+esc((eff.source||'')+(eff.last?(' · '+eff.last):'')+(eff.scenarios?(' · '+eff.scenarios+' scenarios'):''))+'" style="font-size:10px;font-weight:700;color:var(--good);background:color-mix(in srgb,var(--good) 14%,transparent);border:1px solid color-mix(in srgb,var(--good) 32%,transparent);border-radius:20px;padding:2px 8px;white-space:nowrap">✓ proven '+Math.round(eff.blocked*100)+'%</span>'):'';
+      var preventBlock=(eff.measured&&eff.blocked!=null)
+        ? (axisBar('Prevent · proven',eff.blocked,'good')
+           +'<div style="font-size:10px;color:var(--muted);margin:2px 0 0 125px">'+esc(eff.source||'BAS / purple-team')+(eff.last?(' · '+esc(eff.last)):'')+'</div>'
+           +'<div style="height:5px"></div>'+axisBar('Prevent · presence',n.attack.prevent,'muted'))
+        : axisBar('Prevent · presence',n.attack.prevent,'blue');
+      var detectBlock=(eff.measured&&eff.detected!=null)
+        ? (axisBar('Detect · proven',eff.detected,'good')+'<div style="height:5px"></div>'+axisBar('Detect · coverage',n.attack.detect,'muted'))
+        : axisBar('Detect · coverage',n.attack.detect,'good');
       return '<div style="border:1px solid var(--line);border-radius:12px;padding:14px 15px;background:var(--surface)">'
-        +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:3px"><b style="font-size:13.5px;color:var(--ink)">'+esc(n.name)+'</b>'+evPill(n.evidence)+'</div>'
+        +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:3px"><b style="font-size:13.5px;color:var(--ink)">'+esc(n.name)+'</b><div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end">'+evPill(n.evidence)+effPill+'</div></div>'
         +'<div style="font-size:11px;color:var(--muted);margin-bottom:10px">'+esc(n.tool||'')+'</div>'
         +(typeof capBar==='function'?('<div style="margin-bottom:10px">'+capBar(n.telemetry)+'</div>'):'')
-        +axisBar('Prevent · presence',n.attack.prevent,'blue')
+        +preventBlock
         +'<div style="height:5px"></div>'
-        +axisBar('Detect · coverage',n.attack.detect,'good')
+        +detectBlock
         +'<div style="display:flex;flex-wrap:wrap;gap:5px;margin:11px 0 9px">'+n.lanes.map(laneChip).join('')+'</div>'
         +'<div style="border-top:1px solid var(--line);padding-top:8px;line-height:1.7">'+(proj||'<span style="font-size:10.5px;color:var(--muted)">no external mapping</span>')+'</div>'
         +'</div>';
@@ -6617,7 +6642,7 @@ function c5NeuronControls(host){
     +'<div style="font-size:15px;font-weight:800;color:var(--ink)">Neuron Controls</div>'
     +'<div style="font-size:12.5px;color:var(--ink-2);line-height:1.6;margin:5px 0 4px;max-width:760px">Your security capabilities, measured once from live telemetry and scored against <b>both</b> risk lenses — adversarial (MITRE ATT&CK: prevent / detect) and the five non-adversarial lanes — then <b>projected</b> onto every framework control they map to. <span style="color:var(--muted)">Measure once, report everywhere.</span></div>'
     +'<div style="font-size:12px;color:var(--ink-2);margin:10px 0 4px"><b style="color:var(--ink)">'+nc.length+'</b> Neuron Controls · <b style="color:var(--good)">'+live+'</b> live telemetry · <b style="color:var(--blue)">'+hyb+'</b> hybrid (a human validates) · <b style="color:var(--muted)">'+off+'</b> not deployed</div>'
-    +'<div style="font-size:11px;color:var(--muted);margin-bottom:6px">Prevent reflects <b>control presence</b> (the capability is mapped &amp; deployed), not proven effectiveness — effectiveness (BAS / purple-team) is a future signal, never faked here.</div>'
+    +'<div style="font-size:11px;color:var(--muted);margin-bottom:6px">Prevent reflects <b>control presence</b> (the capability is mapped &amp; deployed). Where a <b>BAS / purple-team</b> reading exists it graduates to <b style="color:var(--good)">proven</b> — the share of simulated attacks actually blocked. '+(effN>0?('<b style="color:var(--good)">'+effN+'</b> of '+nc.length+' capabilities '+(effN===1?'has':'have')+' a measured reading; the rest are presence-only.'):'No effectiveness readings yet — connect a BAS platform (AttackIQ, SafeBreach, Cymulate) or a purple-team feed to graduate presence to proven. Nothing is inferred.')+'</div>'
     +cardsHtml
     +'<div style="margin-top:24px"><div style="font-size:12.5px;font-weight:800;color:var(--ink);margin-bottom:4px">Non-adversarial risk lanes</div>'
     +'<div style="font-size:11.5px;color:var(--muted);margin-bottom:8px">The exposures that are not an intrusion — outage, corruption, insider, supply-chain, privacy — each covered by the same telemetry, so the whole estate is answered, not just crown jewels.</div>'+laneRows+'</div>'
