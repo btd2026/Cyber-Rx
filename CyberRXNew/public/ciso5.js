@@ -5855,7 +5855,7 @@ function c5FrameworksClassic(host){
       +'<i style="width:11px;height:'+b2+'px;background:var(--'+col+');border-radius:2px;display:inline-block"></i></span>';
     return '<div class="c5card" data-c5fwcard="trend"><div class="c5card-top"><span class="c5card-l">Trend · vs last refresh</span><span class="c5chip c5-computed">computed</span></div>'
       +'<div class="c5card-v" style="display:flex;align-items:center;gap:10px">'+chart+'<span style="color:var(--'+col+');font-size:18px">'+arrow+' '+deltaStr+'</span></div>'
-      +'<div class="cn">Overall CMMI '+prev.toFixed(1)+' → <b>'+cur.toFixed(1)+'</b> · vs last refresh</div></div>';
+      +'<div class="cn">Last '+prev.toFixed(1)+' · current <b>'+cur.toFixed(1)+'</b></div></div>';
   })();
   var cards='<div class="c5cards">'+
     '<div class="c5card" data-c5fwcard="overall"><div class="c5card-top"><span class="c5card-l">Overall maturity</span><span class="c5chip c5-computed">computed</span></div><div class="c5card-v" style="color:var(--'+c5fwCol(T.overall)+')">'+T.overall.toFixed(1)+' / 5</div><div class="cn">'+c5fwLvl(T.overall)+' · target '+C5FW_TARGET.toFixed(1)+'</div></div>'+
