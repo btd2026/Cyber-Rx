@@ -22,9 +22,8 @@
   .brand{display:flex;align-items:center;gap:12px;font-weight:600}
   .brand .dot{width:10px;height:10px;border-radius:2px;background:var(--accent);box-shadow:0 0 0 4px #0e7c8633}
   .brand small{display:block;font-weight:400;color:#9fb2cc;font-size:12px;letter-spacing:.04em;text-transform:uppercase}
-  .toggle{display:inline-flex;background:#ffffff14;border:1px solid #ffffff2b;border-radius:999px;padding:3px}
-  .toggle button{border:0;background:transparent;padding:6px 13px;border-radius:999px;font-size:12.5px;font-weight:600;color:#9fb2cc;cursor:pointer}
-  .toggle button.on{background:#fff;color:var(--ink)}
+  .headnote{font-size:12px;color:#9fb2cc;letter-spacing:.02em}
+  .headnote b{color:#eaf0f8;font-weight:600}
   .hero{padding:22px 0 16px}
   .eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#7fd3d8;font-weight:700}
   .hero h1{margin:.35em 0 .35em;font-weight:500;font-size:clamp(21px,2.9vw,31px);line-height:1.15;color:#fff}
@@ -36,6 +35,7 @@
 
   .risklegend{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:14px 16px;margin-top:16px}
   .risklegend h3{margin:0 0 10px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+  .risklegend h3 .rlsrc{text-transform:none;letter-spacing:.01em;font-weight:500;color:var(--accent)}
   .rlgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:8px 20px}
   .rlitem{display:flex;gap:9px;align-items:flex-start;font-size:13px;color:var(--text)}
   .rid{flex:0 0 auto;background:var(--ink);color:#fff;font-family:'Inter',system-ui,-apple-system,"Segoe UI",sans-serif;font-weight:700;font-size:12px;border-radius:6px;padding:2px 7px}
@@ -72,6 +72,10 @@
   .node .ttl{font-weight:650;font-size:13px;line-height:1.25}
   .node .sub{color:var(--muted);font-size:11px;margin-top:2px}
   .node .nums{display:flex;gap:12px;margin-top:8px;align-items:baseline}
+  .node .nums.nwrap{flex-wrap:wrap;gap:5px 12px}
+  .node .nums.eqrow{flex-wrap:wrap;gap:6px 14px;align-items:flex-start}
+  .node .nums.eqrow .eqop{font-size:19px;color:var(--muted);font-weight:500;align-self:center;line-height:1}
+  .node.org .eqcaption{margin-top:9px;font-size:10.5px;color:var(--muted);line-height:1.45;white-space:normal;max-width:520px}
   .node .val{font-family:'Inter',system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px}
   .node .rk{font-family:'Inter',system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;color:var(--risk)}
   .node .mf{color:#3f8a4f;font-size:.82em;font-family:'Inter',system-ui,-apple-system,"Segoe UI",sans-serif}
@@ -83,7 +87,7 @@
   .expander{position:absolute;bottom:-11px;left:50%;transform:translateX(-50%);width:20px;height:20px;border-radius:50%;background:#fff;border:2px solid var(--conn);color:var(--muted);font-size:12px;display:grid;place-items:center;z-index:2;font-weight:700}
   .node.haschild:hover{border-color:var(--accent)}
 
-  .node.org{width:320px}.node.org .accent{background:var(--accent)}.node.org .big{font-family:'Inter',system-ui,-apple-system,"Segoe UI",sans-serif;font-size:22px}
+  .node.org{width:auto;min-width:360px;max-width:600px}.node.org .accent{background:var(--accent)}.node.org .big{font-family:'Inter',system-ui,-apple-system,"Segoe UI",sans-serif;font-size:22px}
   .node.fn{width:190px}
   .node.proc{width:170px;background:#f7f9fc}.node.proc .ttl{font-size:12px}
   .node.proc .tag{font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700}
@@ -130,7 +134,7 @@
   <div class="wrap">
     <div class="head-top">
       <div class="brand"><span class="dot"></span><div><span id="brandName">Northwind Insurance</span><small id="brandSub">Cyber value tree · illustrative</small></div></div>
-      <div class="toggle" id="toggle"><button data-mode="code" class="on">CSF numbers</button><button data-mode="name">+ names</button></div>
+      <div class="headnote">NIST CSF control number <b>+ name</b> shown on every control</div>
     </div>
     <div class="hero">
       <div class="eyebrow">Top-down · risk-based</div>
@@ -144,7 +148,7 @@
         <span class="step">NIST CSF control + score</span>
       </div>
     </div>
-    <div class="risklegend"><h3>Risk legend</h3><div class="rlgrid" id="rl"></div></div>
+    <div class="risklegend"><h3>Risk legend <span class="rlsrc" id="rlSrc">· illustrative risk set</span></h3><div class="rlgrid" id="rl"></div></div>
     <div class="bar-legend">
       <div class="grp"><span class="sw" style="background:#4E9A51"></span>well mitigated</div>
       <div class="grp"><span class="sw" style="background:#D8862B"></span>partial</div>
@@ -168,7 +172,7 @@
   </div>
   <div class="scroll"><div class="tree" id="tree"></div></div>
   <div class="scope" id="scope"></div>
-  <footer>Illustrative sample data (an insurance carrier, to match the “Claims Processing” example). Crown jewels are applications and key infrastructure (firewalls, identity) — data is protected as a risk to the application or system that holds it, not as a separate crown jewel. Each crown jewel's value is split across its controls; a control at <b>maturity 3 or higher</b> is treated as mitigating its slice (struck through), and live $ at risk sums only the slices guarded by controls below 3 — rolled up jewel → process → function → enterprise. Hover any control for its NIST CSF 2.0 name and description.</footer>
+  <footer>Illustrative sample data (an insurance carrier, to match the “Claims Processing” example); the risks (R1, R2, …) are an illustrative stand-in for the risk register you upload at onboarding. Crown jewels are applications and key infrastructure (firewalls, identity) — data is protected as a risk to the application or system that holds it, not as a separate crown jewel. Each node reconciles the same way: <b>value (total) = mitigated by controls + residual at risk</b>, so a level's children always sum back to its value. A control at <b>maturity 3 or higher</b> mitigates its slice (struck through); residual $ at risk sums only the slices guarded by controls below 3 — rolled up jewel → process → function → enterprise. Hover any control for its NIST CSF 2.0 name and description.</footer>
 </div>
 <div class="tip" id="tip"></div>
 
@@ -257,6 +261,7 @@ let LIVEMODE=false; // flips true once the host posts real inventory
 function build(){
 document.getElementById('brandName').textContent=ORG;
 var _sub=document.getElementById('brandSub');if(_sub)_sub.textContent='Cyber value tree · '+(LIVEMODE?'live from your data':'illustrative');
+var _rlSrc=document.getElementById('rlSrc');if(_rlSrc)_rlSrc.textContent=LIVEMODE?'· from the risk register you uploaded at onboarding':'· illustrative risk set';
 let TOTV=0,TOTR=0,TOTM=0; const scope=new Set();
 DATA.forEach(f=>{f.value=0;f.risk=0;f.mit=0;
   f.procs.forEach(p=>{p.value=0;p.risk=0;p.mit=0;
@@ -269,16 +274,27 @@ DATA.forEach(f=>{f.value=0;f.risk=0;f.mit=0;
     p.exposure=p.risk/p.value;f.value+=p.value;f.risk+=p.risk;f.mit+=p.mit;});
   f.exposure=f.risk/f.value;TOTV+=f.value;TOTR+=f.risk;TOTM+=f.mit;});
 const inScope=scope.size;
-let mode="code";
 
 document.getElementById("rl").innerHTML=Object.entries(RISKS).map(([k,v])=>`<div class="rlitem"><span class="rid">${k}</span><span>${v}</span></div>`).join("");
 const mini=e=>`<div class="minibar"><i style="width:${Math.min(100,e*100)}%;background:${expColor(e)}"></i></div>`;
 const riskCell=(live,mit)=> (mit>0&&live>0)?`<s class="mf">${$B(mit)}</s> <span class="lf">${$B(live)}</span>`:(live===0)?`<s class="mf">${$B(mit)}</s>`:`<span class="lf">${$B(live)}</span>`;
+// Every rollup node shows the same reconciling triplet: VALUE (total) = MITIGATED (controlled) + AT RISK (residual).
+// value is the business value carried by the node and always equals mitigated + at risk, so a node's children
+// sum back to it exactly (e.g. a function's key-process values add up to the function value).
+const moneyTriplet=(o)=>{
+  const mh=(o.mtype==='jewel')
+    ? `class="rk mathhover" data-mtype="jewel" data-val="${o.value}" data-total="${o.total}" data-live="${o.live}" data-mit="${o.mit}"`
+    : `class="rk mathhover" data-mtype="rollup" data-label="${o.label}" data-live="${o.live}" data-mit="${o.mit}"`;
+  return `<div class="nums nwrap">
+    <div><span class="val">${$B(o.value)}</span><span class="nlab">value</span></div>
+    <div><span class="mf">${o.mit>0?'<s>'+$B(o.mit)+'</s>':'$0'}</span><span class="nlab">mitigated</span></div>
+    <div><span ${mh}>${$B(o.live)}</span><span class="nlab">at risk</span></div>
+  </div>`;};
 
 function ctrlNode(c){const info=C[c[0]];
   return `<li><div class="node ct ${c.mit?'mitig':'atrisk'}" data-code="${c[0]}" data-m="${c[1]}" data-jval="${c.jval}" data-total="${c.total}" data-share="${c.share}"><div class="pad">
     <span class="hintdot">i</span>
-    <div class="code">${c[0]}</div><div class="cname">${mode==='name'?info.name:''}</div>
+    <div class="code">${c[0]}</div><div class="cname">${info.name}</div>
     <div class="score" style="background:${matColor(c[1])}">${c[1]}</div>
     <div class="cmoney">${c.mit?'<s>'+$B(c.share)+'</s><span class="mtag">mitigated</span>':'<span class="atag">'+$B(c.share)+' at risk</span>'}</div>
     <div><span class="cfunc" style="background:${FUNCCOL[info.f]}">${FUNCNAME[info.f]}</span></div></div></div></li>`;}
@@ -293,24 +309,25 @@ function jewelNode(j){
   return `<li class="collapsed"><div class="node jewel haschild"><span class="crown">👑</span><div class="accent"></div>
    <div class="pad"><div class="cjline"><span class="tpill" style="background:${TYPECOL[j.type]}">${j.type==='Infrastructure'?'INFRA':j.type==='Application'?'APP':'DATA'}</span><span class="cjtag">Crown jewel</span></div>
      <div class="ttl">${j.name}</div>
-     <div class="nums"><div><span class="val">${$B(j.value)}</span><span class="nlab">value</span></div>
-       <div><span class="rk mathhover" data-mtype="jewel" data-val="${j.value}" data-total="${j.total}" data-live="${j.risk}" data-mit="${j.mit}">${riskCell(j.risk,j.mit)}</span><span class="nlab">at risk</span></div></div>${mini(j.exposure)}</div>
+     ${moneyTriplet({value:j.value,mit:j.mit,live:j.risk,mtype:'jewel',total:j.total})}${mini(j.exposure)}</div>
    <div class="expander">+</div></div><ul>${j.risks.map(riskNode).join("")}</ul></li>`;}
 function procNode(p){return `<li><div class="node proc haschild"><div class="accent" style="background:${expColor(p.exposure)}"></div>
    <div class="pad"><div class="tag">Key process</div><div class="ttl">${p.name}</div>
-     <div class="nums"><div><span class="rk mathhover" data-mtype="rollup" data-label="Key process" data-live="${p.risk}" data-mit="${p.mit}">${riskCell(p.risk,p.mit)}</span><span class="nlab">at risk</span></div></div></div>
+     ${moneyTriplet({value:p.value,mit:p.mit,live:p.risk,mtype:'rollup',label:'Key process'})}${mini(p.exposure)}</div>
    <div class="expander">−</div></div><ul>${p.jewels.map(jewelNode).join("")}</ul></li>`;}
 function fnNode(f){return `<li><div class="node fn haschild"><div class="accent" style="background:${expColor(f.exposure)}"></div>
    <div class="pad"><div class="ttl">${f.name}</div><div class="sub">${f.crit} function</div>
-     <div class="nums"><div><span class="val">${$B(f.value)}</span><span class="nlab">value</span></div>
-       <div><span class="rk mathhover" data-mtype="rollup" data-label="Function" data-live="${f.risk}" data-mit="${f.mit}">${riskCell(f.risk,f.mit)}</span><span class="nlab">at risk</span></div></div>${mini(f.exposure)}</div>
+     ${moneyTriplet({value:f.value,mit:f.mit,live:f.risk,mtype:'rollup',label:'Function'})}${mini(f.exposure)}</div>
    <div class="expander">−</div></div><ul>${f.procs.map(procNode).join("")}</ul></li>`;}
 
 document.getElementById("tree").innerHTML=`<ul><li><div class="node org"><div class="accent"></div><div class="pad">
    <div class="ttl">${ORG}</div><div class="sub">Enterprise exposure on crown jewels</div>
-   <div class="nums"><div><span class="big">${$B(TOTV)}</span><span class="nlab">business value</span></div>
-     <div><span class="big mathhover" style="color:var(--risk)" data-mtype="rollup" data-label="Enterprise" data-live="${TOTR}" data-mit="${TOTM}">${$B(TOTR)}</span><span class="nlab">at risk (live)</span></div>
-     <div><span class="big" style="color:#3f8a4f"><s>${$B(TOTM)}</s></span><span class="nlab">already mitigated</span></div></div>
+   <div class="nums eqrow"><div><span class="big">${$B(TOTV)}</span><span class="nlab">business value (total)</span></div>
+     <div class="eqop">−</div>
+     <div><span class="big" style="color:#3f8a4f"><s>${$B(TOTM)}</s></span><span class="nlab">mitigated by controls</span></div>
+     <div class="eqop">=</div>
+     <div><span class="big mathhover" style="color:var(--risk)" data-mtype="rollup" data-label="Enterprise" data-live="${TOTR}" data-mit="${TOTM}">${$B(TOTR)}</span><span class="nlab">residual at risk</span></div></div>
+   <div class="eqcaption">Total value − mitigated by controls = residual at risk · rolls up from every crown jewel below, so each level’s children sum back to its value.</div>
  </div></div><ul>${DATA.map(fnNode).join("")}</ul></li></ul>`;
 
 document.getElementById("scope").innerHTML=`<div class="big">${inScope}<small>of ${CATALOG}</small></div>
@@ -341,9 +358,6 @@ function wire(){
       showTip(`<b>${el.dataset.code} · ${c.name}</b><br><span class="mut">${FUNCNAME[c.f]} › ${c.cat}</span><br><br>${c.desc}<br><br><span class="mut">Maturity <b style="color:#fff">${m}/5</b> — ${lvl}. ${m>=3?'<b style="color:#7fe0a0">Risk mitigated</b> (3+).':'<b style="color:#ff9d90">Below the 3+ mitigation threshold.</b>'}</span>`,e);});
     el.addEventListener("mouseleave",()=>tip.classList.remove("on"));});
 }
-document.getElementById("toggle").querySelectorAll("button").forEach(b=>b.onclick=()=>{mode=b.dataset.mode;[...b.parentNode.children].forEach(x=>x.classList.toggle("on",x===b));
-  document.querySelectorAll(".node.ct").forEach(el=>{el.querySelector(".cname").textContent=mode==='name'?C[el.dataset.code].name:'';});});
-
 // ---- global fold controls ----
 function setCol(li,val){li.classList.toggle('collapsed',val);const ex=li.querySelector(':scope > .node .expander');if(ex)ex.textContent=val?'+':'−';}
 function applyView(act){
@@ -372,7 +386,7 @@ window.addEventListener('message',function(e){var d=(e&&e.data)||{};if(d.type!==
   LIVEMODE=true; // real inventory posted → no longer illustrative
   try{build();
     var ft=document.querySelector('footer');
-    if(ft)ft.innerHTML="Live from your Nerion onboarding — business functions, key processes, and crown-jewel applications & infrastructure come from your inventory; each crown jewel's business value is the value of the process it carries, and control maturity comes from your assessments and connected tools. A control at <b>maturity 3 or higher</b> mitigates its slice of the jewel's value (struck through); live $ at risk sums only the slices behind controls below 3 — rolled up jewel → process → function → enterprise. Hover any control for its NIST CSF 2.0 name and description.";
+    if(ft)ft.innerHTML="Live from your Nerion onboarding — business functions, key processes, and crown-jewel applications & infrastructure come from your inventory, and the risks (R1, R2, …) come from the risk register you uploaded at onboarding; control maturity comes from your assessments and connected tools. Each node reconciles the same way: <b>value (total) = mitigated by controls + residual at risk</b>, so a level's children always sum back to its value. A control at <b>maturity 3 or higher</b> mitigates its slice of the jewel's value (struck through); residual $ at risk sums only the slices behind controls below 3 — rolled up jewel → process → function → enterprise. Hover any control for its NIST CSF 2.0 name and description.";
   }catch(err){try{console.error(err);}catch(_){}}});
 try{parent.postMessage({type:'crowntree-ready'},'*');}catch(_){}
 build();  // render the built-in sample immediately; a host may post real data to override
