@@ -56,7 +56,7 @@ describe('CISO decision tab (c5DecProj) is standardized and renamed "Decisions"'
     expect(ciso).not.toContain('class="c5dp-wrap"');
   });
   it('the CISO section is titled just "Decisions" (not "Decisions & projections")', () => {
-    expect(seatsFile).toContain("sec('04','Decisions','','<div id=\"c5-decproj\"></div>')");
+    expect(seatsFile).toContain("sec('06','Decisions','','<div id=\"c5-decproj\"></div>')");
     expect(seatsFile).not.toContain('Decisions &amp; projections');
   });
 });

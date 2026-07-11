@@ -4970,10 +4970,8 @@ function c5bdInspect(id){
       '<span>'+(f.sources.length>1?'Combined from the sources above.':'')+'</span>'+
       '<span>Confidence: <b style="color:var(--'+confCol+')">'+c5esc(f.confidence||'—')+'</b></span></div>';
   }
-  // 4) Owner + link to the detail.
-  var seat=f.ownerSeat||'ciso';var seatNm=(typeof c5seatLabel==='function'?c5seatLabel(seat):String(seat).toUpperCase());
-  h+='<div class="ev-sec">Owned by</div><div class="conf" style="border-left:3px solid var(--blue)"><b>'+c5esc(f.owner||seatNm)+'</b> — full detail on the '+c5esc(seatNm)+' view.<div style="margin-top:8px"><button class="c5btn" data-c5goseat="'+c5esc(seat)+'">Open the '+c5esc(seatNm)+' view →</button></div></div>';
-  h+='<div class="c5foot">As of '+c5esc(f.asOf||'')+(conf&&conf!=='high'?' · self-reported and modeled figures are not rated high confidence until independently tested':'')+'</div>';
+  // 4) Compact footer: owner + as-of (no separate owner panel/button).
+  h+='<div class="c5foot">'+(f.owner?('Owner: '+c5esc(f.owner)+' · '):'')+'as of '+c5esc(f.asOf||'')+(conf&&conf!=='high'?' · self-reported and modeled figures are not rated high confidence until independently tested':'')+'</div>';
   if(typeof openDrill==='function')openDrill(f.title,h);
 }
 /* Delegated wiring: click any board box → provenance drawer; owner-tab button → switch seats. */
