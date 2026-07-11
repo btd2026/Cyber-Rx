@@ -2814,7 +2814,10 @@ function ctrlNextGeneric(p){if(p==null)return 'Connect data source';if(p>=100)re
    section renders only when it has real data; otherwise the tab just introduces
    itself. */
 function c5Exposure(){
-  var host=document.getElementById('c5-exposure');if(!host)return;
+  // Tab A (c5-exposure, "core business areas") was folded away in the six-tab layout; the
+  // Controls tab (c5-exposure2) is the one that must render. Only bail if NEITHER host exists.
+  var host=document.getElementById('c5-exposure');
+  if(!host&&!document.getElementById('c5-exposure2'))return;
   var TARGET=75; // the platform's healthy-coverage bar, consistent with capability scoring
   var caps=(typeof c5CapSource==='function')?c5CapSource():((typeof LIVE!=='undefined'&&LIVE&&LIVE.capabilities)||[]);
   var areas=caps.map(function(c){return {name:c.name,score:c5protScore(c),gaps:c5protGaps(c),grc:c.grc_status||null,exp:Number(c.exposure_usd)||0,measured:(c.control_coverage!=null),risks:(c.risks||[])};}).filter(function(a){return a.name&&a.score!=null;});
@@ -2991,8 +2994,8 @@ function c5Exposure(){
     bodyB+='<div class="c5foot" style="padding:16px 4px">No controls connected yet — connect EDR, MFA, PAM, SIEM and the rest so Nerion can rank each by the business exposure it reduces.</div>';
   }
   var host2=document.getElementById('c5-exposure2');
-  if(host2){host.innerHTML=bodyA;host2.innerHTML=bodyB;}
-  else{host.innerHTML=bodyA+bodyB;} // single-tab fallback
+  if(host2){host2.innerHTML=bodyB;if(host)host.innerHTML=bodyA;}   // Controls tab (+ optional areas tab)
+  else if(host){host.innerHTML=bodyA+bodyB;}                       // single-tab fallback
 }
 /* Evidence confidence for the Protection tab. Tracks the eight source categories the
    protection read depends on, computes an overall level that can never read "High"
@@ -4939,12 +4942,23 @@ function c5bdFigures(){
   F.bd_reg_dora=fig({title:'DORA',value:'ICT major-incident reporting',status:'On track',pill:'g',owner:'CLO',ownerSeat:'clo',
     detail:'DORA requires an <b>initial major-ICT-incident report within ~4 hours</b> of classification, plus operational-resilience testing of critical providers. Our reporting process is attested and mapped to the same incident workflow that drives SEC disclosure.',
     sources:[c5bdSelf('Operational-resilience programme','DORA reporting process attested at onboarding')]});
-  var auditDoc=c5bdDocSrc('audit|assessment|assurance','External audit');
-  var pentestDoc=c5bdDocSrc('pen.?test|penetration|red.?team','Penetration test');
-  var counselDoc=c5bdDocSrc('counsel|legal|disclosure.?controls','Counsel review');
-  F.bd_as_maturity=fig({title:'Maturity — external audit',value:(auditDoc?'Independently validated':'Not yet validated'),status:(auditDoc?'Validated':'Asserted'),pill:(auditDoc?'g':'a'),owner:'CISO',ownerSeat:'ciso',sources:[auditDoc],validated:!!auditDoc});
-  F.bd_as_recovery=fig({title:'Recovery — penetration test',value:(pentestDoc?'Independently validated':'Not yet validated'),status:(pentestDoc?'Validated':'Asserted'),pill:(pentestDoc?'g':'a'),owner:'COO',ownerSeat:'coo',sources:[pentestDoc],validated:!!pentestDoc});
-  F.bd_as_disclosure=fig({title:'Disclosure controls — counsel review',value:(counselDoc?'Independently validated':'Not yet validated'),status:(counselDoc?'Validated':'Asserted'),pill:(counselDoc?'g':'a'),owner:'CLO',ownerSeat:'clo',sources:[counselDoc],validated:!!counselDoc});
+  // Independent validation requires a GENUINE third-party artifact — an external-audit /
+  // SOC 2 / ISO certification report, a penetration-test report, or an outside-counsel opinion.
+  // A self-reported upload (a risk register, a policy PDF) is NOT independent validation, so the
+  // regexes are strict: they never match a register or a generic policy, and if no such artifact
+  // is on file the item reads the honest "Asserted — not yet independently validated".
+  var auditDoc=c5bdDocSrc('external.?audit|third.?party.?(audit|assessment)|independent.?assessment|soc.?2|iso.?27001|attestation.?report','External audit / SOC 2');
+  var pentestDoc=c5bdDocSrc('pen.?test|penetration.?test|red.?team.?report','Penetration test');
+  var counselDoc=c5bdDocSrc('outside.?counsel|law.?firm|counsel.?(opinion|review|memo)|disclosure.?controls.?(opinion|review)','Outside-counsel review');
+  F.bd_as_maturity=fig({title:'Maturity — external audit',value:(auditDoc?'Independently validated':'Asserted — audit pending'),status:(auditDoc?'Validated':'Asserted'),pill:(auditDoc?'g':'a'),owner:'CISO',ownerSeat:'ciso',
+    detail:(auditDoc?'An independent external audit / SOC 2 report is on file, so the maturity score is third-party validated — not self-attestation.':'Maturity is <b>self-assessed</b> today, scored from your connected tools and reviewed policies — credible, but not the same as an independent external audit. No third-party audit or SOC 2 report is on file yet, so this reads <b>asserted</b>. Upload one and it flips to independently validated.'),
+    sources:[auditDoc||c5bdSelf('Self-assessed maturity','scored from connected tools + reviewed policies — no external audit on file')],validated:!!auditDoc});
+  F.bd_as_recovery=fig({title:'Recovery — penetration test',value:(pentestDoc?'Independently validated':'Asserted — test pending'),status:(pentestDoc?'Validated':'Asserted'),pill:(pentestDoc?'g':'a'),owner:'COO',ownerSeat:'coo',
+    detail:(pentestDoc?'An independent penetration-test / red-team report is on file, so recovery and resilience claims are third-party validated.':'Recovery targets are <b>self-reported</b> and rehearsed internally. No independent penetration-test or red-team report is on file yet, so this reads <b>asserted</b> until one validates it.'),
+    sources:[pentestDoc||c5bdSelf('Self-reported recovery','tested internally — no independent pen-test on file')],validated:!!pentestDoc});
+  F.bd_as_disclosure=fig({title:'Disclosure controls — counsel review',value:(counselDoc?'Independently validated':'Asserted — review pending'),status:(counselDoc?'Validated':'Asserted'),pill:(counselDoc?'g':'a'),owner:'CLO',ownerSeat:'clo',
+    detail:(counselDoc?'An outside-counsel opinion on the disclosure controls is on file, so the disclosure-readiness claim is independently reviewed.':'The disclosure process is <b>self-attested</b> and tabletop-tested internally. No outside-counsel opinion is on file yet, so this reads <b>asserted</b> until counsel reviews it.'),
+    sources:[counselDoc||c5bdSelf('Self-attested disclosure controls','tabletop-tested internally — no outside-counsel opinion on file')],validated:!!counselDoc});
   F.bd_as_exposure=fig({title:'Exposure model — management-asserted',value:'Modeled, not independently tested',status:'Asserted',pill:'a',owner:'CRO',ownerSeat:'cro',sources:[c5bdMod('exposure = modeled loss; not independently validated')]});
   F.bd_as_appetite=fig({title:'Risk appetite — management-asserted',value:'Self-reported, not independently tested',status:'Asserted',pill:'a',owner:'CFO',ownerSeat:'cfo',sources:[apDoc||c5bdSelf('Risk appetite','management-set at onboarding, not independently tested')]});
   F.bd_decision=fig({title:'Fund the identity remediation',value:((idUsd?(idUsd+' · '):'')+IDF.owner+' · '+IDF.timeline),status:'Needs the board',pill:'b',owner:IDF.owner,ownerSeat:'ciso',

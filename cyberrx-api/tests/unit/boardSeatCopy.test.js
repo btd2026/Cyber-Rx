@@ -43,10 +43,14 @@ describe('Board provenance data layer (c5bdFigures) — derived, never hardcoded
     expect(f).toContain('c5bdMod(');
     expect(f).toContain('c5bdDocSrc(');
   });
-  it('Assurance "validated" items require a real uploaded artifact (else they drop to asserted)', () => {
-    expect(f).toContain("c5bdDocSrc('audit|assessment|assurance'");
-    expect(f).toContain("c5bdDocSrc('pen.?test|penetration|red.?team'");
+  it('Assurance "validated" items require a GENUINE third-party artifact (self-reported uploads stay asserted)', () => {
+    // strict: an external-audit / SOC 2 / ISO report — a risk register or policy PDF never matches
+    expect(f).toContain("c5bdDocSrc('external.?audit|third.?party.?(audit|assessment)|independent.?assessment|soc.?2|iso.?27001|attestation.?report'");
+    expect(f).toContain("c5bdDocSrc('pen.?test|penetration.?test|red.?team.?report'");
     expect(f).toContain('validated:!!auditDoc');
+    // no artifact on file → honest "Asserted", never a green "Independently validated"
+    expect(f).toContain("'Asserted — audit pending'");
+    expect(f).toContain('Self-assessed maturity');
   });
 });
 

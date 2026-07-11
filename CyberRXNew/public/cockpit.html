@@ -2907,7 +2907,7 @@ function loadSignals(){applyDemoSignals();var base=apiBase(),o=orgId();if(!base|
    answer reads fully populated without a backend. Used ONLY in demo/trial mode and only when
    the backend returns nothing; a real backend always overrides it. Cyber is deliberately OVER
    appetite (the identity story), so the narrative is coherent across every seat. */
-var DEMO_TOOLS={crowdstrike:{on:true,vendor:'CrowdStrike',demo:true},okta:{on:true,vendor:'Okta',demo:true},cyberark:{on:true,vendor:'CyberArk',demo:true},qualys:{on:true,vendor:'Qualys',demo:true},knowbe4:{on:true,vendor:'KnowBe4',demo:true},proofpoint:{on:true,vendor:'Proofpoint',demo:true},splunk:{on:true,vendor:'Splunk',demo:true},aws:{on:true,vendor:'AWS',demo:true},sap:{on:true,vendor:'SAP',demo:true},onetrust:{on:true,vendor:'OneTrust',demo:true},recordedfuture:{on:true,vendor:'Recorded Future',demo:true},cisa:{on:true,vendor:'CISA KEV',demo:true},salesforce:{on:true,vendor:'Salesforce',demo:true},whistic:{on:true,vendor:'Whistic',demo:true},rubrik:{on:true,vendor:'Rubrik',demo:true},github:{on:true,vendor:'GitHub',demo:true},servicenow_grc:{on:true,vendor:'ServiceNow GRC',demo:true}};
+var DEMO_TOOLS={crowdstrike:{on:true,vendor:'CrowdStrike',demo:true},okta:{on:true,vendor:'Okta',demo:true},cyberark:{on:true,vendor:'CyberArk',demo:true},qualys:{on:true,vendor:'Qualys',demo:true},firewall:{on:true,vendor:'Palo Alto Networks',demo:true},knowbe4:{on:true,vendor:'KnowBe4',demo:true},proofpoint:{on:true,vendor:'Proofpoint',demo:true},splunk:{on:true,vendor:'Splunk',demo:true},aws:{on:true,vendor:'AWS',demo:true},sap:{on:true,vendor:'SAP',demo:true},onetrust:{on:true,vendor:'OneTrust',demo:true},recordedfuture:{on:true,vendor:'Recorded Future',demo:true},cisa:{on:true,vendor:'CISA KEV',demo:true},salesforce:{on:true,vendor:'Salesforce',demo:true},whistic:{on:true,vendor:'Whistic',demo:true},rubrik:{on:true,vendor:'Rubrik',demo:true},github:{on:true,vendor:'GitHub',demo:true},servicenow_grc:{on:true,vendor:'ServiceNow GRC',demo:true}};
 function demoLive(){
   return {
     org_name:(typeof orgName==='function'&&orgName())||'Acme Corp',
@@ -5421,7 +5421,7 @@ function sysCard(s){var metric=s.live?(180+Math.floor(Math.random()*70))+' '+s.m
 /* The full demo tool set — the canonical keys the demo signals key off. Used as a
    fallback so "Enable demo mode" always shows a fully-connected cockpit, even if
    the tools were not persisted to cyberrx_tools (e.g. demo enabled without go-live). */
-var DEMO_TOOLSET=['okta','defender','qualys','splunk','cyberark','knowbe4','proofpoint','wiz','sap','servicenow','salesforce','whistic','securityscorecard','onetrust','recordedfuture','rubrik','github','servicenow_grc'];
+var DEMO_TOOLSET=['okta','defender','qualys','splunk','cyberark','firewall','knowbe4','proofpoint','wiz','sap','servicenow','salesforce','whistic','securityscorecard','onetrust','recordedfuture','rubrik','github','servicenow_grc'];
 function connectedTools(){try{var t=JSON.parse(localStorage.getItem('cyberrx_tools')||'{}');if(!t||typeof t!=='object')t={};
   if(!Object.keys(t).length&&demoActive()){var d={};DEMO_TOOLSET.forEach(function(k){d[k]={on:true,demo:true,vendor:'Demo'};});return d;}
   return t;}catch(_){return {};}}
