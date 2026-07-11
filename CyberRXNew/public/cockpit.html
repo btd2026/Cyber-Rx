@@ -2930,6 +2930,15 @@ function demoLive(){
     // Phase B/D — assisted revenue-confirmation state (drives which jewels are promoted).
     revenue_confirmation:{ processes:8, confirmed:7, brings_money:5, unconfirmed:1, provisional_jewels:1,
       top_unconfirmed:'Financials / ERP consolidation' },
+    // Phase C/D — per-crown-jewel two-axis ATT&CK coverage (0..1) for the residual-risk lens.
+    crown_jewel_residual:[
+      {name:'Customer billing platform', impact:0.95, prevention:0.25, detection:0.45},
+      {name:'Customer identity & access', impact:0.90, prevention:0.35, detection:0.55},
+      {name:'Global supply chain', impact:0.70, prevention:0.50, detection:0.45},
+      {name:'Order-to-cash', impact:0.85, prevention:0.60, detection:0.70},
+      {name:'Financials / ERP', impact:0.65, prevention:0.70, detection:0.60},
+      {name:'Payments (PCI)', impact:0.75, prevention:0.80, detection:0.75}
+    ],
     initiatives:[
       {name:'Customer-platform identity & access re-architecture', cost:'$18M', exposureRemoved:'$95M', owner:'CISO / CIO', status:'Funded', source:'decisions'},
       {name:'Phishing-resistant MFA rollout', cost:'$6M', exposureRemoved:'$40M', owner:'CISO', status:'In flight', source:'ticketing'},

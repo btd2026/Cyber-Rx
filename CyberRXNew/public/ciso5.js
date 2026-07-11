@@ -3770,6 +3770,23 @@ function c5ctOverview(){
     footnote:'Estate, AI and supply-chain figures come from your tools and inventories. Click any box for the source and confidence.'});
 }
 /* ── CRO ── */
+/* Residual-risk formula — browser mirror of the backend ResidualRiskService / config/residual.js
+   (the one tunable place): residual = impact × unmitigated-prevention × detection-gap, with per-axis
+   floors so neither control layer alone zeroes it. Returns a 0..100 banded score. */
+function c5Residual(impact,prevention,detection){
+  var PF=0.10,DF=0.30; // prevention / detection floors (mirror config/residual.js defaults)
+  var imp=Math.max(0,Math.min(1,impact||0)),prev=Math.max(0,Math.min(1,prevention||0)),det=Math.max(0,Math.min(1,detection||0));
+  var unmit=PF+(1-PF)*(1-prev),detGap=DF+(1-DF)*(1-det);
+  var r01=Math.max(0,Math.min(1,imp*unmit*detGap)),score=Math.round(r01*100);
+  return {residual:score,band:(score>=50?'High':score>=25?'Medium':'Low'),unmit:unmit,detGap:detGap};
+}
+/* Rank the org's crown jewels by residual risk (Phase D — CRO lens). */
+function c5ResidualRank(){
+  var L=(typeof LIVE!=='undefined'&&LIVE&&Array.isArray(LIVE.crown_jewel_residual))?LIVE.crown_jewel_residual:[];
+  return L.map(function(j){var r=c5Residual(j.impact,j.prevention,j.detection);
+    return {name:j.name,prevention:j.prevention,detection:j.detection,residual:r.residual,band:r.band};})
+    .sort(function(a,b){return b.residual-a.residual;});
+}
 function c5crOverview(){
   var host=document.getElementById('cr-overview');if(!host)return;
   var RR=(typeof c5RiskRegister==='function')?c5RiskRegister():{cyberResidual:0,appetite:0,cyberRank:null,total:0};var IDF=c5IdFix();var idm=c5get(IDF.mid);
@@ -3780,11 +3797,20 @@ function c5crOverview(){
   var dApp=(RR.cyberResidual>0?(over?('Residual cyber loss of <b>'+usd(RR.cyberResidual)+'</b> is above the board-set appetite'+(RR.appetite>0?(' of '+usd(RR.appetite)):'')+'. One treatment closes the gap — the funded identity fix ('+IDF.owner+', '+IDF.timeline+'). Interim exposure remains until it lands, which we track.'):'Residual cyber loss of <b>'+usd(RR.cyberResidual)+'</b> is within the board-set appetite. We hold it by keeping the top controls funded and the identity fix on track.'):'Set your appetite and we’ll show the gap and exactly what closes it.');
   var dTrend=(T.improving?'Residual cyber risk is <b>falling</b> quarter over quarter. The one lever that keeps it falling is the identity fix — the largest single reduction still available, and it’s funded.':T.worsening?'Residual cyber risk is <b>rising</b>. The customer-platform identity exposure is the biggest reason; funding its fix ('+IDF.owner+', '+IDF.timeline+') is the fastest way to bend the trend back down.':'The trend builds as quarters record. The identity fix is the largest single reduction available and is funded.');
   var dDriver='The single risk driver above its appetite share is the <b>identity and access exposure on the customer platform</b>. It’s why cyber ranks where it does and why it’s over appetite. One funded treatment ('+IDF.owner+', '+IDF.timeline+') addresses it and moves every number on this page in the right direction.';
+  // Residual-risk ranking across crown jewels (impact × unmitigated-prevention × detection-gap).
+  var resRank=(typeof c5ResidualRank==='function')?c5ResidualRank():[];var resTop=resRank[0]||null;var resHigh=resRank.filter(function(x){return x.band==='High';}).length;
+  var dResidual=(resRank.length
+    ?('Crown jewels ranked by <b>residual risk</b> — impact left open after prevention and detection. '+
+      '<b>'+c5esc((resTop&&resTop.name)||'the top jewel')+'</b> carries the most ('+(resTop?resTop.residual:'—')+'/100, '+(resTop?resTop.band:'')+'): prevention covers '+(resTop?Math.round(resTop.prevention*100):0)+'% of its attack techniques and detection '+(resTop?Math.round(resTop.detection*100):0)+'%, so the rest is unmitigated. '+
+      '<div style="margin-top:8px">'+resRank.slice(0,5).map(function(x,i){var bc=x.band==='High'?'crit':x.band==='Medium'?'warn':'good';return '<div style="display:flex;align-items:center;gap:8px;padding:3px 0"><span style="width:16px;color:var(--muted);font-size:11px">'+(i+1)+'</span><span style="flex:1;min-width:0">'+c5esc(x.name)+'</span><span style="font-size:11px;color:var(--muted)">P '+Math.round(x.prevention*100)+'% · D '+Math.round(x.detection*100)+'%</span><span style="font-weight:700;color:var(--'+bc+')">'+x.residual+'</span><span style="font-size:10.5px;font-weight:700;color:var(--'+bc+')">'+x.band+'</span></div>';}).join('')+'</div>'+
+      (resHigh>0?('The '+resHigh+' High-residual jewel'+(resHigh>1?'s are':' is')+' where the next control dollar removes the most risk — led by the identity fix.'):'Every crown jewel is inside Medium/Low residual this quarter.'))
+    :'Connect your control telemetry and we’ll rank each crown jewel by residual risk — impact left open after prevention and detection.');
   var cards=[
     c5ovFig({id:'cr_c1',title:'Rank vs other risks',value:rankStr,status:(RR.cyberRank?'Ranked':'—'),pill:(over?'a':'n'),owner:'CRO',ownerSeat:'cro',detail:dRank,sources:[c5bdMod('cyber residual vs the other principal risks on the register'),c5bdSelf('Risk register','ERM inputs, self-reported')]}),
     c5ovFig({id:'cr_c2',title:'Residual loss',value:(RR.cyberResidual>0?usd(RR.cyberResidual):'—'),status:(over?'Over appetite':(RR.cyberResidual>0?'Within':'—')),pill:(over?'r':(RR.cyberResidual>0?'g':'n')),owner:'CRO / CFO',ownerSeat:'cfo',detail:dApp,sources:[c5bdMod('modeled residual cyber loss vs appetite'),c5bdSelf('Risk appetite','board-set')]}),
     c5ovFig({id:'cr_c3',title:'Direction',value:dirWord,status:(T.improving?'Improving':T.worsening?'Worsening':'Steady'),pill:(T.improving?'g':T.worsening?'r':'n'),owner:'CRO / CISO',ownerSeat:'ciso',detail:dTrend,sources:[c5bdMod('quarter-over-quarter change in residual risk')]}),
-    c5ovFig({id:'cr_c4',title:'Top driver',value:'Identity access',status:'Funded',pill:'b',owner:'CISO / CIO',ownerSeat:'ciso',detail:dDriver,sources:[c5bdMod('the single driver above its appetite share')]})
+    c5ovFig({id:'cr_c4',title:'Top driver',value:'Identity access',status:'Funded',pill:'b',owner:'CISO / CIO',ownerSeat:'ciso',detail:dDriver,sources:[c5bdMod('the single driver above its appetite share')]}),
+    c5ovFig({id:'cr_residual',title:'Residual ranking',value:(resTop?c5esc(resTop.name):'—'),status:(resTop?(resTop.residual+' · '+resTop.band):'—'),pill:(resTop?(resTop.band==='High'?'r':resTop.band==='Medium'?'a':'g'):'n'),owner:'CRO / CISO',ownerSeat:'ciso',detail:dResidual,sources:[c5bdMod('residual = impact × unmitigated-prevention × detection-gap (tunable; ResidualRiskService)'),c5bdTelem(['crowdstrike','splunk','okta'],'Prevent/detect coverage','edr_pct')]})
   ];
   var questions=[
     c5ovFig({id:'cr_q1',title:'Rank',question:'Where does cyber rank among our principal risks?',owner:'CRO',ownerSeat:'cro',status:(RR.cyberRank?'Ranked':'—'),pill:(over?'a':'n'),value:rankStr,detail:dRank,
