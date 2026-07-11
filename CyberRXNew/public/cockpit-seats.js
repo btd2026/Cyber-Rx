@@ -89,8 +89,9 @@ var SEATS = {
    +sec('02','Exposure','','<div id="c5-health"></div>')
    +sec('03','Controls','','<div id="c5-exposure2"></div>')
    +sec('04','Operations','','<div id="c5-effect"></div>')
-   +sec('05','Threats &amp; AI','','<div id="c5-threats"></div><div id="c5-aisupply"></div>')
-   +sec('06','Decisions','','<div id="c5-decproj"></div>')
+   +sec('05','Threats','','<div id="c5-threats"></div>')
+   +sec('06','AI','','<div id="c5-aisupply"></div>')
+   +sec('07','Decisions','','<div id="c5-decproj"></div>')
   );}
  }
 };
