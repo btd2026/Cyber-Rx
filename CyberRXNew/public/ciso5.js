@@ -5655,11 +5655,29 @@ function c5fwTree(sel,cov){
    down by SOURCE (document review vs connected tool vs not-yet), which is what
    tells you WHY controls are unevidenced and what to do about it. */
 function c5fwSrcCounts(T){
-  var d=0,s=0,m=0,n=0,nat=0;
-  function tally(v){if(v==='document')d++;else if(v==='system')s++;else if(v==='mapped')m++;else if(v==='native')nat++;else n++;}
+  var d=0,s=0,m=0,n=0,nat=0,h=0;
+  var _cov=(typeof fwDeployedIds==='function')?fwDeployedIds():{};
+  // A crosswalk-mapped control (CIS / SOC 2 / HIPAA / ISO) inherits its evidence from the CSF
+  // controls it maps to — so it carries the STRONGEST class among them: live > hybrid > document.
+  // This makes the four evidence classes apply to every framework, not just CSF / 800-53.
+  var RANK={system:4,hybrid:3,document:2,none:1};
+  function effSrc(node){
+    // Crosswalked (CIS/SOC2/HIPAA/ISO) and 800-53-inherited controls carry the strongest evidence
+    // class of the CSF controls they map to. Native-assessed controls resolve the same way via their
+    // mapped/related CSF ids; a native control with no CSF backing counts as tool-assessed.
+    if((node.src==='mapped'||node.src==='native')&&typeof controlCmmi==='function'){
+      var ids=node.mapped||node.related||[];
+      if(ids.length){var best='none';ids.forEach(function(cid){var cc=controlCmmi(cid,_cov);if((RANK[cc.src]||0)>(RANK[best]||0))best=cc.src;});
+        if(best!=='none'||node.src!=='native')return best;}
+      return node.src==='native'?'system':'none';
+    }
+    if(node.src==='native-pending')return 'none';
+    return node.src;
+  }
+  function tally(node){var v=effSrc(node);if(v==='document')d++;else if(v==='system')s++;else if(v==='hybrid')h++;else if(v==='mapped')m++;else if(v==='native')nat++;else n++;}
   (T.groups||[]).forEach(function(g){(g.children||[]).forEach(function(c){
-    if(c.type==='cat')(c.children||[]).forEach(function(x){tally(x.src);});else tally(c.src);});});
-  return {doc:d,sys:s,mapped:m,none:n,native:nat};
+    if(c.type==='cat')(c.children||[]).forEach(function(x){tally(x);});else tally(c);});});
+  return {doc:d,sys:s,hybrid:h,mapped:m,none:n,native:nat};
 }
 /* The unevidenced controls grouped by the SOURCE they await — so the gap reads as
    "upload these 5 documents / connect these 2 tools", not "90 deficiencies". */
@@ -5720,6 +5738,20 @@ function c5fwSource(node){
     var pct=(node.toolPct!=null)?(' · '+node.toolPct+'% coverage'):'';
     h+='<div class="c5fw-src"><span class="c5fw-srcic">🔌</span><div><b>'+c5esc(vend)+'</b> — '+c5esc(live)+pct+
       (tool?('<div class="c5fw-srcsub">'+c5esc(tool.name.replace(/ *\(.*\)/,''))+' capability</div>'):'')+'</div></div>';
+  } else if(node.src==='hybrid'){
+    // Telemetry is pulled from a connected tool, but the tool can't fully prove the control on its
+    // own (semi-/manual-automation), so a human validates it. A governing policy may also apply.
+    var htool=(typeof c5fwCtrlTool==='function')?c5fwCtrlTool(node.id):null;
+    var hs=(htool&&typeof capSource==='function')?capSource(htool):null;
+    var hvend=hs?hs.vendor:(htool?htool.tool:'connected tool');
+    var hlive=hs?(hs.connected?(hs.demo?'demo telemetry':'live telemetry'):'representative telemetry'):'telemetry';
+    var hpct=(node.toolPct!=null)?(' · '+node.toolPct+'% coverage'):'';
+    var hceil=(htool&&typeof capAutoCeil==='function')?capAutoCeil(htool):(node.ceil||4);
+    var hwhy=hceil===3?'manual capability — telemetry informs it, a human confirms':'semi-automated — telemetry is pulled, a human validates the rest';
+    h+='<div style="font-size:11.5px;font-weight:700;color:color-mix(in srgb,var(--good) 55%,var(--blue));margin-bottom:6px">HYBRID — telemetry pulled, a human validates ('+hwhy+')</div>';
+    h+='<div class="c5fw-src"><span class="c5fw-srcic">🔌</span><div><b>'+c5esc(hvend)+'</b> — '+c5esc(hlive)+hpct+(htool?('<div class="c5fw-srcsub">'+c5esc(htool.name.replace(/ *\(.*\)/,''))+' capability · caps at CMMI '+hceil+' until a human validates</div>'):'')+'</div></div>';
+    if(node.doc&&node.doc.doc){var hattrs=(Array.isArray(node.doc.attrs))?node.doc.attrs:[];var hatt=hattrs.length?(' · '+hattrs.filter(function(a){return a.found;}).length+' of '+hattrs.length+' attributes present'):'';
+      h+='<div class="c5fw-src"><span class="c5fw-srcic">📄</span><div style="flex:1;min-width:0"><b>'+c5esc(node.doc.doc)+'</b>'+hatt+'<div class="c5fw-srcsub">Governing policy also on file · <button type="button" class="c5fw-jump" data-c5docopen="'+c5esc(node.doc.doc)+'" title="Open and read the uploaded document">→ open</button></div></div></div>';}
   } else if(node.src==='document'){
     var fn=(node.doc&&node.doc.doc)?node.doc.doc:'Uploaded policy';
     var attrs=(node.doc&&Array.isArray(node.doc.attrs))?node.doc.attrs:[];
@@ -5750,7 +5782,7 @@ function c5fwSource(node){
       // the crosswalk is verifiable, not a black box.
       var _mids=node.mapped||[],_cov=(typeof fwDeployedIds==='function')?fwDeployedIds():{};
       var _rows=_mids.slice(0,8).map(function(cid){var cc=(typeof controlCmmi==='function')?controlCmmi(cid,_cov):{score:0,src:'none'};
-        var _ic=cc.src==='document'?'📄 document review':cc.src==='system'?'🔌 connected tool':'— not evidenced';
+        var _ic=cc.src==='hybrid'?'🔌+📄 tool + policy':cc.src==='document'?'📄 document review':cc.src==='system'?'🔌 connected tool':'— not evidenced';
         var _dn=(cc.doc&&cc.doc.doc)?(' · '+c5esc(cc.doc.doc)):'';
         return '<div style="font-size:11px;color:var(--ink-2);line-height:1.4"><b>'+c5esc(cid)+'</b> — '+_ic+_dn+' · CMMI '+(cc.score!=null?cc.score:0)+'</div>';}).join('');
       h+='<div class="c5fw-src"><span class="c5fw-srcic">🔗</span><div style="flex:1;min-width:0">Scored by crosswalk from <b>your evidence</b> — this control inherits the maturity of the <b>'+_mids.length+'</b> NIST CSF 2.0 subcategor'+(_mids.length===1?'y':'ies')+' it shares an objective with. Each of those is evidenced from your connected tools + reviewed documents:'+
@@ -6470,18 +6502,22 @@ function c5FrameworksClassic(host){
   // Inline "how controls are evidenced" + "close the gap" box (non-native frameworks).
   var _sc=c5fwSrcCounts(T),_tot=T.total,_gaps=c5fwGaps(T);
   function _w(n){return (_tot>0?Math.max(0,Math.min(100,n/_tot*100)):0)+'%';}
-  var evBox=T.native?'':('<div style="display:grid;grid-template-columns:1fr 1fr;gap:22px;border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:14px">'+
+  var evBox=(!T.total)?'':('<div style="display:grid;grid-template-columns:1fr 1fr;gap:22px;border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:14px">'+
     '<div>'+
-      '<div style="font-weight:600;font-size:13px;color:var(--ink);margin-bottom:11px">How '+_tot+' controls are evidenced</div>'+
+      '<div style="font-weight:600;font-size:13px;color:var(--ink);margin-bottom:4px">How '+_tot+' controls are evidenced</div>'+
+      // Continuous assessment = every control a connected tool pulls telemetry for (live + hybrid).
+      '<div style="font-size:11.5px;color:var(--muted);margin-bottom:11px"><b style="color:var(--good)">'+(_sc.sys+_sc.hybrid)+' of '+_tot+'</b> continuously assessed from your connected tools — <b>'+_sc.sys+'</b> fully automated, <b>'+_sc.hybrid+'</b> hybrid (telemetry pulled, a human validates). Only <b>'+_sc.doc+'</b> can’t be automated at all.</div>'+
       '<div style="display:flex;height:10px;border-radius:6px;overflow:hidden;background:var(--line)">'+
         '<div style="width:'+_w(_sc.sys)+';background:var(--good)"></div>'+
+        (_sc.hybrid?('<div style="width:'+_w(_sc.hybrid)+';background:color-mix(in srgb,var(--good) 50%,var(--blue))"></div>'):'')+
         '<div style="width:'+_w(_sc.doc)+';background:var(--blue)"></div>'+
         (_sc.mapped?('<div style="width:'+_w(_sc.mapped)+';background:color-mix(in srgb,var(--blue) 42%,var(--surface))"></div>'):'')+
         '<div style="width:'+_w(_sc.none)+';background:color-mix(in srgb,var(--warn) 65%,var(--line))"></div>'+
       '</div>'+
-      '<div style="display:flex;gap:18px;margin-top:9px;font-size:12px;color:var(--ink-2);flex-wrap:wrap">'+
-        '<span><b style="color:var(--ink)">'+_sc.sys+'</b> live telemetry</span>'+
-        '<span><b style="color:var(--ink)">'+_sc.doc+'</b> policy</span>'+
+      '<div style="display:flex;gap:16px;margin-top:9px;font-size:12px;color:var(--ink-2);flex-wrap:wrap">'+
+        '<span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--good);margin-right:5px;vertical-align:middle"></span><b style="color:var(--ink)">'+_sc.sys+'</b> live telemetry</span>'+
+        (_sc.hybrid?('<span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:color-mix(in srgb,var(--good) 50%,var(--blue));margin-right:5px;vertical-align:middle"></span><b style="color:var(--ink)">'+_sc.hybrid+'</b> hybrid (telemetry + review)</span>'):'')+
+        '<span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--blue);margin-right:5px;vertical-align:middle"></span><b style="color:var(--ink)">'+_sc.doc+'</b> document</span>'+
         (_sc.mapped?('<span><b style="color:var(--ink)">'+_sc.mapped+'</b> mapped (crosswalk)</span>'):'')+
         '<span><b style="color:var(--ink)">'+_sc.none+'</b> not evidenced</span>'+
       '</div>'+
