@@ -55,18 +55,18 @@ describe('Board provenance drawer (c5bdInspect)', () => {
   it('opens via the shared drawer shell and shows a source-type badge per source', () => {
     expect(d).toContain('openDrill(');
     expect(d).toContain('c5bdProvBadge(s.type)');
-    expect(d).toContain('Provenance — where this figure comes from');
+    expect(d).toContain('Source &amp; confidence');
   });
   it('shows confidence, owner + a link to the owner tab, and an as-of', () => {
     expect(d).toContain('Confidence');
     expect(d).toContain('data-c5goseat="');
-    expect(d).toContain('as of ');
+    expect(d).toContain('As of ');
   });
   it('honestly reports an unwired figure instead of fabricating a source', () => {
     expect(d).toContain('Source not yet connected');
   });
   it('a mixed figure labels each source individually', () => {
-    expect(d).toContain('is <b>mixed</b>');
+    expect(d).toContain('Combined from the sources above');
   });
   const badge = fnOf('c5bdProvBadge');
   it('the source-type badges are the three required types', () => {

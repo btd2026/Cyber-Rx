@@ -3567,55 +3567,238 @@ function c5ceHealth(){
 /* ── CEO — two-tab cockpit (01 Overview · 02 Decisions). The Overview folds the former
    Value-at-risk / Crown-jewels / Trust tabs into one concise page: the CISO answering the
    CEO's key questions, every box click-to-source via the shared provenance drawer. ── */
-function c5ceFigures(){
-  var M=(typeof c5expModel==='function')?c5expModel():{total:0};
-  var IDF=c5IdFix();var expT=c5get('exp_total');var idm=c5get(IDF.mid);var idUsd=idm.connected?idm.displayValue:(IDF.usd||null);
-  var O=(typeof c5Objectives==='function')?c5Objectives():{total:0,atRisk:0,protected:0};
-  var Scr=(typeof c5Services==='function')?c5Services():{list:[],total:0,atRisk:0};
-  var oi=(typeof sig==='function')?sig('open_incidents'):null;var incident=(oi!=null&&oi>0);
-  var gov=(typeof LIVE!=='undefined'&&LIVE&&LIVE.governance)||{};var irTested=/yes|tested|tabletop/i.test((gov.ir&&gov.ir.tested)||'');
-  var rev=(typeof LIVE!=='undefined'&&LIVE&&LIVE.economics&&Number(LIVE.economics.revenue))||0;
-  var valUsd=expT.connected?expT.displayValue:(M.total>0?usd(M.total):null);
-  var atR=Scr.atRisk||0,crownN=Scr.total||0,protN=Math.max(0,crownN-atR);
-  var ctrlTelem=c5bdTelem(['okta','entra'],'Identity coverage (MFA / access)','mfa_pct')||c5bdTelem(['crowdstrike','defender'],'Endpoint coverage','edr_pct');
-  var siemTelem=c5bdTelem(['splunk','sentinel'],'Security incidents','open_incidents');
-  var cjDoc=c5bdDocSrc('crown|inventory|asset','Crown-jewel / asset inventory');
-  function fig(o){o.sources=(o.sources||[]).filter(Boolean);o.confidence=o.confidence||c5bdConf(o.sources);o.asOf=o.asOf||(typeof c5ago==='function'?c5ago():'now');return o;}
-  var F={};
-  F.ce_value=fig({title:'Value at risk',value:(valUsd||'—'),status:(M.total>0?'Modeled':'—'),pill:(M.total>0?'a':'n'),owner:'CFO / CISO',ownerSeat:'cfo',
-    sources:[c5bdMod('value at risk = modeled expected loss on crown jewels; inputs: exposure model (modeled), control telemetry (measured)'),ctrlTelem]});
-  F.ce_crown=fig({title:'Crown jewels',value:(crownN>0?(protN+' of '+crownN+' protected'):'—'),status:(atR>0?'One exposed':'Protected'),pill:(atR>0?'a':'g'),owner:'COO / CISO',ownerSeat:'coo',
-    sources:[c5bdMod('crown-jewel exposure = per-engine modeled exposure vs its controls'),cjDoc||c5bdSelf('Crown-jewel inventory','revenue engines mapped at onboarding')]});
-  F.ce_trust=fig({title:'Customer trust',value:(incident?'Incident active':'Intact'),status:(incident?'Incident':'Intact'),pill:(incident?'r':'g'),owner:'CLO / CISO',ownerSeat:'clo',
-    sources:[siemTelem||c5bdMod('trust signal = active customer-impacting incidents from the SIEM feed')]});
-  F.ce_disc=fig({title:'Disclosure',value:'8-K ≤ 4 days',status:(irTested?'SEC-ready':'Watch'),pill:(irTested?'g':'a'),owner:'CLO',ownerSeat:'clo',
-    sources:[c5bdSelf('SEC disclosure process','Item 1.05 8-K materiality process — '+(irTested?'tabletop-tested':'documented')+' at onboarding'),c5bdDocSrc('incident|disclosure|IR','IR / disclosure runbook')]});
-  F.ce_q1=fig({title:'Q1 · What is our cyber value at risk?',q:'What is our cyber value at risk?',a:(valUsd?(valUsd+' modeled, concentrated in the customer platform'):'modeled value at risk, concentrated in the customer platform'),metric:(valUsd||'—')+((rev>0&&M.total>0)?(' · '+(M.total/rev*100).toFixed(2)+'% of revenue'):''),value:(valUsd||'—'),status:(M.total>0?'Watch':'—'),pill:(M.total>0?'a':'n'),owner:'CFO / CISO',ownerSeat:'cfo',
-    sources:[c5bdMod('value at risk = modeled expected loss; inputs: exposure (modeled), control telemetry (measured)'),ctrlTelem]});
-  F.ce_q2=fig({title:'Q2 · Which crown jewels are exposed?',q:'Which crown jewels are exposed?',a:(atR>0?(atR+' of '+crownN+' at risk — the customer platform'):(crownN>0?'all revenue engines protected':'map your crown jewels at onboarding')),metric:(crownN>0?(protN+' of '+crownN+' protected'):'—'),value:(crownN>0?(protN+' of '+crownN+' protected'):'—'),status:(atR>0?'One gap':'Protected'),pill:(atR>0?'a':'g'),owner:'COO / CISO',ownerSeat:'coo',
-    sources:[c5bdMod('per-engine modeled exposure vs its controls'),cjDoc||c5bdSelf('Crown-jewel inventory','mapped at onboarding')]});
-  F.ce_q3=fig({title:'Q3 · Are we protecting trust — and ready to disclose?',q:'Are we protecting trust — and ready to disclose?',a:((incident?'incident active':'trust intact')+' · SEC 4-day process '+(irTested?'tested':'documented')),metric:'8-K ≤ 4 days',value:(incident?'Incident active':'Intact · 8-K ≤ 4 days'),status:(incident?'Watch':(irTested?'Ready':'Watch')),pill:(incident?'a':(irTested?'g':'a')),owner:'CLO',ownerSeat:'clo',
-    sources:[siemTelem||c5bdMod('trust signal from the SIEM incident feed'),c5bdSelf('SEC materiality process','4-business-day 8-K process — '+(irTested?'tested':'documented'))]});
-  F.ce_decision=fig({title:'Fund the identity remediation',value:((idUsd?(idUsd+' · '):'')+IDF.owner+' · '+IDF.timeline),status:'Needs sign-off',pill:'b',owner:IDF.owner,ownerSeat:'ciso',
-    sources:[c5bdMod('the one fix behind most of the value at risk; brings the platform within appetite'),c5bdSelf('Funding decision',IDF.owner+' · '+IDF.timeline)]});
-  return F;
+/* ═══════════ Leader-seat Overview — shared, plain-English, click-to-source ═══════════
+   One concise page per leader (CEO/CFO/COO/CIO/CRO/CLO): a clear headline, four status cards,
+   the leader's key questions each answered in complete plain English (naming the specific gap and
+   what we're doing about it), and one decision. No jargon, no filler, no redundant breadcrumb.
+   Every box is click-to-source via the shared provenance drawer. */
+function c5ovFix(){var IDF=c5IdFix();return 'the funded identity fix ('+IDF.owner+', '+IDF.timeline+')';}
+function c5ovVc(pill){return pill==='r'?'crit':pill==='a'?'warn':pill==='g'?'good':pill==='b'?'blue':'ink';}
+function c5ovCard(f){if(!f)return '';return '<div class="c5card c5bdbox" data-c5bd="'+f.id+'"><div class="c5card-top"><span class="c5card-l">'+c5esc(f.title)+'</span><span class="c5pill '+(f.pill||'n')+'">'+c5esc(f.status||'')+'</span></div><div class="c5card-v" style="color:var(--'+c5ovVc(f.pill)+')">'+c5esc(f.value||'—')+'</div></div>';}
+function c5ovQBlock(title,qs){
+  var rows=qs.map(function(f,i){
+    return '<div class="c5prow c5bdbox" data-c5bd="'+f.id+'" style="align-items:flex-start;gap:11px;padding:14px 4px">'
+      +'<span style="flex:0 0 auto;width:22px;height:22px;border-radius:50%;background:var(--surface-2);border:1px solid var(--line);display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--ink-2);margin-top:1px">'+(i+1)+'</span>'
+      +'<div style="flex:1;min-width:0"><div class="c5row-t" style="margin-bottom:3px">'+c5esc(f.question)+'</div>'
+      +'<div style="font-size:12.5px;color:var(--ink-2);line-height:1.55">'+f.detail+'</div>'
+      +'<div style="font-size:11px;color:var(--muted);margin-top:4px">Owner: '+c5esc(f.owner)+'</div></div>'
+      +'<span class="c5pill '+(f.pill||'n')+'" style="flex:none;margin-top:1px">'+c5esc(f.status)+'</span></div>';
+  }).join('');
+  return '<div style="border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:14px"><div class="c5rank-h">'+c5esc(title)+'</div><div style="padding:2px 15px">'+rows+'</div></div>';
 }
+function c5ovDecision(f,tabIdx,btnLabel){
+  return '<div class="c5bl c5bdbox" data-c5bd="'+f.id+'" style="border-left:3px solid var(--blue)"><div class="c5bl-k">'+c5esc(f.kicker||'Needs your decision')+'</div><div class="c5bl-h">'+c5esc(f.headline)+'</div><div class="c5bl-p">'+f.body+'</div><button class="c5btn" data-c5bdtab="'+tabIdx+'">'+c5esc(btnLabel||'Open Decisions')+'</button></div>';
+}
+/* Render a seat Overview. data = { host, tabIdx, headline, headColor, qTitle, cards[], questions[],
+   decision, decisionBtn, footnote }. Registers every figure for the drawer; no breadcrumb. */
+function c5ovDo(data){
+  var host=document.getElementById(data.host);if(!host)return;
+  var F={};data.cards.forEach(function(f){F[f.id]=f;});data.questions.forEach(function(f){F[f.id]=f;});if(data.decision)F[data.decision.id]=data.decision;
+  c5regFigs(F);
+  host.innerHTML=c5header()
+    +'<div class="c5verdict"'+(data.headColor?(' style="color:var(--'+data.headColor+')"'):'')+'>'+data.headline+'</div>'
+    +'<div class="c5intro" style="margin-top:5px;color:var(--muted);font-size:12.5px">Each answer is traced to its source — click any box to see it.</div>'
+    +'<div class="c5cards">'+data.cards.map(c5ovCard).join('')+'</div>'
+    +c5ovQBlock(data.qTitle||'Your key questions — answered',data.questions)
+    +(data.decision?c5ovDecision(data.decision,data.tabIdx,data.decisionBtn):'')
+    +(data.footnote?('<div class="c5foot">'+data.footnote+'</div>'):'');
+}
+/* small shared builders for provenance sources */
+function c5ovFig(o){o.sources=(o.sources||[]).filter(Boolean);o.confidence=o.confidence||c5bdConf(o.sources);o.asOf=o.asOf||(typeof c5ago==='function'?c5ago():'now');return o;}
+
+/* ── CEO ── */
 function c5ceOverview(){
   var host=document.getElementById('ce-overview');if(!host)return;
-  var F=c5regFigs(c5ceFigures());var M=(typeof c5expModel==='function')?c5expModel():{total:0};
-  function card(id){var f=F[id];if(!f)return '';var vc=(f.pill==='r'?'crit':f.pill==='a'?'warn':f.pill==='g'?'good':f.pill==='b'?'blue':'ink');
-    return '<div class="c5card c5bdbox" data-c5bd="'+id+'"><div class="c5card-top"><span class="c5card-l">'+c5esc(f.title)+'</span><span class="c5pill '+(f.pill||'n')+'">'+c5esc(f.status||'')+'</span></div><div class="c5card-v" style="color:var(--'+vc+')">'+c5esc(f.value||'—')+'</div></div>';}
-  var qrows=['ce_q1','ce_q2','ce_q3'].map(function(id,i){var f=F[id];
-    return '<div class="c5prow c5bdbox" data-c5bd="'+id+'"><span style="flex:0 0 auto;width:22px;height:22px;border-radius:50%;background:var(--surface-2);border:1px solid var(--line);display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--ink-2)">'+(i+1)+'</span><div style="flex:1;min-width:0"><div class="c5row-t">'+c5esc(f.q)+'</div><div class="c5row-s">'+c5esc(f.a)+' · '+c5esc(f.metric)+' · owner: '+c5esc(f.owner)+'</div></div><span class="c5pill '+(f.pill||'n')+'" style="flex:none">'+c5esc(f.status)+'</span></div>';}).join('');
-  var dfig=F.ce_decision;
-  var decision='<div class="c5bl c5bdbox" data-c5bd="ce_decision" style="border-left:3px solid var(--blue)"><div class="c5bl-k">Needs your sign-off · one decision</div><div class="c5bl-h">Approve funding for the identity remediation.</div><div class="c5bl-p">It sits behind the value at risk, the exposed crown jewel and disclosure readiness, and is funded ('+c5esc(dfig.value)+') — one signature protects the growth-critical platform and customer trust.</div><button class="c5btn" data-c5bdtab="1">Approve — open Decisions</button></div>';
-  var head=(M.total>0)?'Cyber puts modeled enterprise value at risk — concentrated in the customer platform — and one funded decision protects it.':'Cyber is protecting enterprise value this quarter — no crown jewel carries a material exposure.';
-  host.innerHTML=c5header()+
-    c5shell('Executive overview · what could cyber cost the business?',head,(M.total>0?'warn':null),'Your cyber value at risk, the crown jewels behind it, and whether customer trust and disclosure are ready — each traced to its owner. <b>Click any box</b> to see its source and provenance.')+
-    '<div class="c5cards">'+card('ce_value')+card('ce_crown')+card('ce_trust')+card('ce_disc')+'</div>'+
-    '<div style="border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:14px"><div class="c5rank-h">The questions the CEO asks — answered</div><div style="padding:2px 15px">'+qrows+'</div></div>'+
-    decision+
-    '<div class="c5foot">Each answer traces to the owning executive’s tab and carries its own confidence. Click any box for its source.</div>';
+  var M=(typeof c5expModel==='function')?c5expModel():{total:0};var IDF=c5IdFix();var idm=c5get(IDF.mid);
+  var expT=c5get('exp_total');var tail=c5get('cf_tail');var Scr=(typeof c5Services==='function')?c5Services():{total:0,atRisk:0};
+  var oi=(typeof sig==='function')?sig('open_incidents'):null;var incident=(oi!=null&&oi>0);
+  var gov=(typeof LIVE!=='undefined'&&LIVE&&LIVE.governance)||{};var irTested=/yes|tested|tabletop/i.test((gov.ir&&gov.ir.tested)||'');
+  var atR=Scr.atRisk||0,crownN=Scr.total||0,protN=Math.max(0,crownN-atR);var connected=(M.total>0);
+  var valUsd=expT.connected?expT.displayValue:(M.total>0?usd(M.total):null);
+  var tailUsd=tail.connected?tail.displayValue:null;
+  var ctrlTelem=c5bdTelem(['okta','entra'],'Identity & access coverage','mfa_pct')||c5bdTelem(['crowdstrike','defender'],'Endpoint coverage','edr_pct');
+  var siemTelem=c5bdTelem(['splunk','sentinel'],'Security incidents','open_incidents');
+  var fix=c5ovFix();
+  var cards=[
+    c5ovFig({id:'ce_value',title:'Value at risk',value:(valUsd||'Connect financials'),status:connected?'Modeled':'—',pill:connected?'a':'n',owner:'CFO / CISO',ownerSeat:'cfo',sources:[c5bdMod('modeled expected loss on the crown-jewel systems; inputs: exposure model (modeled) + control telemetry (measured)'),ctrlTelem]}),
+    c5ovFig({id:'ce_crown',title:'Crown jewels',value:(crownN>0?(protN+' of '+crownN+' protected'):'Map at onboarding'),status:(atR>0?'1 exposed':(crownN>0?'Protected':'—')),pill:(atR>0?'a':(crownN>0?'g':'n')),owner:'COO / CISO',ownerSeat:'coo',sources:[c5bdMod('per-system exposure vs its controls'),c5bdDocSrc('crown|inventory|asset','Revenue-system inventory')||c5bdSelf('Revenue-system inventory','mapped at onboarding')]}),
+    c5ovFig({id:'ce_trust',title:'Customer trust',value:(incident?'Incident active':'Intact'),status:(incident?'Incident':'Intact'),pill:(incident?'r':'g'),owner:'CLO / CISO',ownerSeat:'clo',sources:[siemTelem||c5bdMod('active customer-impacting incidents from the SIEM feed')]}),
+    c5ovFig({id:'ce_disc',title:'SEC disclosure',value:'Ready · 4 days',status:(irTested?'Ready':'In progress'),pill:(irTested?'g':'a'),owner:'CLO',ownerSeat:'clo',sources:[c5bdSelf('SEC disclosure process',(irTested?'tabletop-tested':'documented')+' at onboarding'),c5bdDocSrc('incident|disclosure|IR','Incident-response runbook')]})
+  ];
+  var questions=[
+    c5ovFig({id:'ce_q1',title:'Value at risk',question:'What could cyber cost the business?',owner:'CFO / CISO',ownerSeat:'cfo',status:connected?'Watch':'—',pill:connected?'a':'n',value:(tailUsd||valUsd||'—'),
+      detail:connected?('In a severe year, a cyber loss could reach <b>'+(tailUsd||valUsd)+'</b>. Most of that traces to one weak spot — the customer platform’s identity and access controls. We have funded the fix ('+fix+'), which removes the largest share of that exposure.'):'We’ll put a dollar figure on this as soon as your financials and security tools are connected — no estimates before then.',
+      sources:[c5bdMod('worst-year loss (95th percentile) from the loss model; inputs: exposure (modeled) + control telemetry (measured)'),ctrlTelem]}),
+    c5ovFig({id:'ce_q2',title:'Crown jewels',question:'Which revenue systems are exposed, and what are we doing?',owner:'COO / CISO',ownerSeat:'coo',status:(atR>0?'1 gap':(crownN>0?'Protected':'—')),pill:(atR>0?'a':(crownN>0?'g':'n')),value:(crownN>0?(protN+' of '+crownN+' protected'):'—'),
+      detail:(atR>0)?('<b>'+protN+' of '+crownN+'</b> revenue systems are fully protected. The one exception is the <b>customer platform</b>: weak identity and access controls could let an attacker reach customer data. Remediation is funded and underway — '+fix+'.'):(crownN>0?('All <b>'+crownN+'</b> revenue systems are protected this quarter — no single system carries a material exposure.'):'Map your revenue systems at onboarding and this will list each one and its status.'),
+      sources:[c5bdMod('per-system exposure vs controls'),c5bdDocSrc('crown|inventory|asset','Revenue-system inventory')||c5bdSelf('Revenue-system inventory','mapped at onboarding')]}),
+    c5ovFig({id:'ce_q3',title:'Trust & disclosure',question:'Are we protecting customer trust and ready to disclose?',owner:'CLO',ownerSeat:'clo',status:(incident?'Watch':(irTested?'Ready':'In progress')),pill:(incident?'a':(irTested?'g':'a')),value:(incident?'Incident active':'Intact'),
+      detail:(incident?'A customer-impacting incident is active; the response is running from the War Room and legal is on the disclosure clock. ':'No customer-impacting incident is active, so trust is intact. ')+'Our SEC disclosure process is '+(irTested?'tested':'documented but not yet tabletop-tested')+', so if an event became material we could file the required 8-K within the four-business-day deadline.',
+      sources:[siemTelem||c5bdMod('active incidents from the SIEM feed'),c5bdSelf('SEC materiality & 8-K process',(irTested?'tabletop-tested':'documented')+' at onboarding')]})
+  ];
+  var decision=c5ovFig({id:'ce_decision',title:'Fund the identity remediation',value:((idm.connected?(idm.displayValue+' · '):'')+IDF.owner+' · '+IDF.timeline),status:'Your sign-off',pill:'b',owner:IDF.owner,ownerSeat:'ciso',
+    kicker:'Needs your sign-off · one decision',headline:'Approve funding for the identity fix.',
+    body:'This single fix removes the largest share of the value at risk, protects the customer platform, and brings cyber within the board’s appetite. It is scoped and funded ('+IDF.owner+', '+IDF.timeline+'). Your sign-off records executive support and starts the review clock.',
+    sources:[c5bdMod('the one fix behind the top exposure; brings the platform within appetite'),c5bdSelf('Funding decision',IDF.owner+' · '+IDF.timeline)]});
+  var headline=connected?('Our worst-case cyber loss is concentrated in the customer platform — and the fix is already funded.'):('Cyber is protecting the business this quarter; connect your financials to size the exposure in dollars.');
+  c5ovDo({host:'ce-overview',tabIdx:1,headline:headline,headColor:(atR>0||incident?'warn':null),qTitle:'The three questions a CEO asks — answered',cards:cards,questions:questions,decision:decision,decisionBtn:'Approve — open Decisions',
+    footnote:'Plain-language answers, each traceable to the executive who owns it. Click any box for the exact source, coverage and confidence.'});
+}
+/* ── CFO ── */
+function c5cfOverview(){
+  var host=document.getElementById('cf-overview');if(!host)return;
+  var IDF=c5IdFix();var idm=c5get(IDF.mid);var ap=c5get('cf_appetite');var tail=c5get('cf_tail');var er=c5get('eff_return');var insGap=c5get('cf_ins_gap');var insLim=c5get('cf_ins_cov');
+  var over=ap.connected&&(ap.color==='crit'||ap.color==='warn');var fix=c5ovFix();
+  var ctrlTelem=c5bdTelem(['okta','entra'],'Identity & access coverage','mfa_pct');
+  var cards=[
+    c5ovFig({id:'cf_c1',title:'Vs appetite',value:(ap.connected?ap.displayValue:'Set appetite'),status:(ap.connected?(over?'Over':'Within'):'—'),pill:(ap.connected?(over?'r':'g'):'n'),owner:'CFO / CRO',ownerSeat:'cro',sources:[c5bdMod('modeled loss vs the board-set appetite'),c5bdSelf('Risk appetite','board-set at onboarding')]}),
+    c5ovFig({id:'cf_c2',title:'Worst-year loss',value:(tail.connected?tail.displayValue:'—'),status:(tail.connected?'Modeled':'—'),pill:(tail.connected?'a':'n'),owner:'CFO',ownerSeat:'cfo',sources:[c5bdMod('95th-percentile annual loss from the loss model')]}),
+    c5ovFig({id:'cf_c3',title:'Return on spend',value:(er.connected?er.displayValue:'—'),status:(er.connected?'Positive':'—'),pill:(er.connected?'g':'n'),owner:'CFO / CISO',ownerSeat:'ciso',sources:[c5bdMod('risk removed per dollar of controls'),ctrlTelem]}),
+    c5ovFig({id:'cf_c4',title:'Uninsured tail',value:(insGap.connected?insGap.displayValue:'—'),status:(insGap.connected?(insGap.color==='warn'?'Gap':'Covered'):'—'),pill:(insGap.connected?(insGap.color==='warn'?'a':'g'):'n'),owner:'CFO / CLO',ownerSeat:'clo',sources:[c5bdMod('worst-case tail minus policy limit'),c5bdSelf('Insurance policy','captured at onboarding')]})
+  ];
+  var questions=[
+    c5ovFig({id:'cf_q1',title:'Appetite',question:'Are we within the board’s risk appetite?',owner:'CFO / CRO',ownerSeat:'cro',status:(over?'Over':(ap.connected?'Within':'—')),pill:(over?'r':(ap.connected?'g':'n')),value:(ap.connected?ap.displayValue:'—'),
+      detail:(ap.connected?(over?('Modeled cyber loss is <b>above</b> the board’s appetite. The overage comes from one place — the customer platform’s identity exposure. Funding that fix ('+fix+') brings us back within appetite; nothing else moves the number as much.'):'Modeled cyber loss sits <b>within</b> the board’s appetite, with headroom. We hold this by keeping the top controls funded.'):'Set the board’s appetite at onboarding and we’ll show exactly how much headroom you have.'),
+      sources:[c5bdMod('modeled loss vs appetite'),c5bdSelf('Risk appetite','board-set at onboarding')]}),
+    c5ovFig({id:'cf_q2',title:'ROI',question:'Is our security spend paying off — and where’s the best next dollar?',owner:'CFO / CISO',ownerSeat:'ciso',status:(er.connected?'Positive':'—'),pill:(er.connected?'g':'n'),value:(er.connected?er.displayValue:'—'),
+      detail:(er.connected?('Your controls return <b>'+er.displayValue+'</b> of risk removed per dollar spent — a positive return. The best next dollar is the identity fix: it removes more risk per dollar than anything else on the list, and it’s already scoped ('+IDF.owner+', '+IDF.timeline+').'):'Connect your security tools and we’ll show the return per dollar and the single highest-return investment.'),
+      sources:[c5bdMod('risk removed ÷ control spend'),ctrlTelem]}),
+    c5ovFig({id:'cf_q3',title:'Insurance',question:'Are we insured efficiently — and what are we self-carrying?',owner:'CFO / CLO',ownerSeat:'clo',status:(insGap.connected?(insGap.color==='warn'?'Gap':'Adequate'):'—'),pill:(insGap.connected?(insGap.color==='warn'?'a':'g'):'n'),value:(insGap.connected?insGap.displayValue:'—'),
+      detail:(insGap.connected?('Our policy covers up to <b>'+(insLim.connected?insLim.displayValue:'the stated limit')+'</b>. The modeled worst case runs higher, so we’re self-carrying about <b>'+insGap.displayValue+'</b>. Closing the identity gap lowers that worst case, which shrinks the amount we carry ourselves — the cheapest way to cut the tail.'):'Add your cyber policy at onboarding and we’ll size the uninsured tail you’re carrying.'),
+      sources:[c5bdMod('worst-case tail − policy limit'),c5bdSelf('Insurance policy','captured at onboarding')]})
+  ];
+  var decision=c5ovFig({id:'cf_decision',title:'Fund the identity remediation',value:((idm.connected?(idm.displayValue+' · '):'')+IDF.owner+' · '+IDF.timeline),status:'Your call',pill:'b',owner:IDF.owner,ownerSeat:'ciso',
+    kicker:'Needs your decision · one call',headline:'Fund the identity fix — the highest-return risk reduction.',
+    body:'It brings cyber within appetite, delivers the most risk removed per dollar, and trims the uninsured tail you’re self-carrying. Scoped and priced ('+IDF.owner+', '+IDF.timeline+'). Recording it starts the funding and review workflow.',
+    sources:[c5bdMod('highest risk-removed-per-dollar; reduces exposure vs appetite and the tail'),c5bdSelf('Funding decision',IDF.owner+' · '+IDF.timeline)]});
+  var headline=(over?'Cyber sits above the board’s appetite — one funded fix brings it back, and it’s the best return on the table.':'Cyber loss is within appetite and your security spend is paying off — with one clear best next dollar.');
+  c5ovDo({host:'cf-overview',tabIdx:1,headline:headline,headColor:(over?'warn':null),qTitle:'The three questions a CFO asks — answered',cards:cards,questions:questions,decision:decision,decisionBtn:'Record — open Decisions',
+    footnote:'Every dollar figure is modeled from your own inputs. Click any box for the exact basis, coverage and confidence.'});
+}
+/* ── COO ── */
+function c5coOverview(){
+  var host=document.getElementById('co-overview');if(!host)return;
+  var IDF=c5IdFix();var idm=c5get(IDF.mid);var fix=c5ovFix();
+  var svc=(typeof c5CriticalServices==='function')?c5CriticalServices():[];var cp=svc[0]||{};
+  var cpGap=(cp.rto!=null&&cp.tgt!=null&&Number(cp.rto)>Number(cp.tgt));
+  var vm=(typeof c5vendorMatrix==='function')?c5vendorMatrix():[];var spof=vm.filter(function(v){return v.status==='single';});var topV=spof[0]||vm[0]||{};
+  var backupTelem=c5bdTelem(['rubrik','veeam','cohesity','commvault'],'Backup & recovery','backup_immutable_pct');
+  var okN=svc.filter(function(s){return !(s.rto!=null&&s.tgt!=null&&Number(s.rto)>Number(s.tgt));}).length;
+  var cards=[
+    c5ovFig({id:'co_c1',title:'Business continuity',value:(svc.length?(okN+' of '+svc.length+' on target'):'—'),status:(cpGap?'1 gap':(svc.length?'On target':'—')),pill:(cpGap?'a':(svc.length?'g':'n')),owner:'COO',ownerSeat:'coo',sources:[c5bdMod('services meeting their recovery target'),backupTelem]}),
+    c5ovFig({id:'co_c2',title:'Recovery time',value:(cpGap?(cp.rto+'h vs '+cp.tgt+'h target'):'Within target'),status:(cpGap?'Behind':'On target'),pill:(cpGap?'a':'g'),owner:'COO',ownerSeat:'coo',sources:[c5bdMod('recovery time vs target from the resilience model'),backupTelem]}),
+    c5ovFig({id:'co_c3',title:'Critical vendors',value:(spof.length?(spof.length+' single points'):'Diversified'),status:(spof.length?'Watch':'OK'),pill:(spof.length?'a':'g'),owner:'COO / Procurement',ownerSeat:'coo',sources:[c5bdMod('critical vendors with no failover'),c5bdSelf('Vendor register','captured at onboarding')]}),
+    c5ovFig({id:'co_c4',title:'Root cause',value:'Identity access',status:'Funded',pill:'b',owner:'CISO / CIO',ownerSeat:'ciso',sources:[c5bdMod('the shared identity/access dependency behind the recovery gap')]})
+  ];
+  var questions=[
+    c5ovFig({id:'co_q1',title:'Continuity',question:'Can the business keep running through a disruption?',owner:'COO',ownerSeat:'coo',status:(cpGap?'1 gap':(svc.length?'Yes':'—')),pill:(cpGap?'a':(svc.length?'g':'n')),value:(svc.length?(okN+' of '+svc.length+' on target'):'—'),
+      detail:(svc.length?(cpGap?('<b>'+okN+' of '+svc.length+'</b> critical services can recover within target. The exception is the <b>customer platform</b>: it can’t hit its recovery target because restoring identity and access is the bottleneck. The funded fix ('+fix+') repairs that path.'):'All <b>'+svc.length+'</b> critical services can recover within their targets — continuity is covered this quarter.'):'Add your critical services and recovery targets at onboarding and we’ll show each one’s status.'),
+      sources:[c5bdMod('services meeting recovery target'),backupTelem]}),
+    c5ovFig({id:'co_q2',title:'Recovery',question:'If we’re hit, do we recover within our targets?',owner:'COO',ownerSeat:'coo',status:(cpGap?'Behind on 1':'On target'),pill:(cpGap?'a':'g'),value:(cpGap?(cp.rto+'h vs '+cp.tgt+'h'):'Within target'),
+      detail:(cpGap?('Most services recover on time. The customer platform is the outlier — about <b>'+cp.rto+' hours</b> against a <b>'+cp.tgt+'-hour</b> target — because identity/access has to come back first. Fixing identity ('+fix+') closes that gap; a cloud-host failover is the second lever.'):'Every critical service recovers within its target time and data-loss window. We keep this by testing recovery each cycle.'),
+      sources:[c5bdMod('recovery time vs target'),backupTelem]}),
+    c5ovFig({id:'co_q3',title:'Vendors',question:'Which vendors could stop us, and what are we doing?',owner:'COO / Procurement',ownerSeat:'coo',status:(spof.length?'Watch':'OK'),pill:(spof.length?'a':'g'),value:(spof.length?(spof.length+' single points'):'Diversified'),
+      detail:(spof.length?('<b>'+spof.length+'</b> critical vendor'+(spof.length>1?'s have':' has')+' no backup — led by the <b>'+(topV.cat||'cloud host')+'</b> behind the customer platform. We’re monitoring '+(topV.cat||'them')+' and the recommended action is a failover (a backup provider or a contracted failover SLA).'):'No critical vendor is a single point of failure — each has a backup or contracted alternative.'),
+      sources:[c5bdMod('critical vendors without failover'),c5bdSelf('Vendor register','captured at onboarding')]})
+  ];
+  var decision=c5ovFig({id:'co_decision',title:'Add a cloud-host failover',value:'Removes the platform single point of failure',status:'Your call',pill:'b',owner:'COO',ownerSeat:'coo',
+    kicker:'Needs your decision · two moves',headline:'Fund identity, then add a cloud-host failover.',
+    body:'Fixing identity ('+IDF.owner+', '+IDF.timeline+') restores the recovery path; adding a backup cloud host removes the last single point of failure on the customer platform. Together they bring the platform inside its recovery target.',
+    sources:[c5bdMod('the two moves that bring the platform within its recovery target'),c5bdSelf('Funding decision',IDF.owner+' · '+IDF.timeline)]});
+  var headline=(cpGap?'Every critical service recovers on time except the customer platform — and the fix for it is funded.':'The business can keep running and recover within targets across every critical service.');
+  c5ovDo({host:'co-overview',tabIdx:1,headline:headline,headColor:(cpGap||spof.length?'warn':null),qTitle:'The three questions a COO asks — answered',cards:cards,questions:questions,decision:decision,decisionBtn:'Record — open Decisions',
+    footnote:'Recovery and vendor figures come from your resilience model and vendor register. Click any box for the source and confidence.'});
+}
+/* ── CIO ── */
+function c5ctOverview(){
+  var host=document.getElementById('ct-overview');if(!host)return;
+  var IDF=c5IdFix();var idm=c5get(IDF.mid);var fix=c5ovFix();
+  var ph=c5get('ct_platform_health');var cv=c5get('ct_critical_vulns');var aig=c5get('ct_ai_governed');var adv=c5get('ct_advisories');
+  var ctrlTelem=c5bdTelem(['okta','entra'],'Identity & access coverage','mfa_pct');var vulnTelem=c5bdTelem(['qualys','tenable'],'Vulnerability scanning','patch_pct');
+  var cards=[
+    c5ovFig({id:'ct_c1',title:'Platform health',value:(ph.connected?ph.displayValue:'—'),status:(ph.connected?(ph.color==='crit'?'At risk':ph.color==='warn'?'Watch':'Healthy'):'—'),pill:(ph.connected?(ph.color==='crit'?'r':ph.color==='warn'?'a':'g'):'n'),owner:'CIO',ownerSeat:'cio',sources:[c5bdMod('estate health from architecture + control coverage'),ctrlTelem]}),
+    c5ovFig({id:'ct_c2',title:'Critical vulnerabilities',value:(cv.connected?cv.displayValue:'—'),status:(cv.connected?(cv.color==='crit'?'Action':'On track'):'—'),pill:(cv.connected?(cv.color==='crit'?'r':cv.color==='warn'?'a':'g'):'n'),owner:'CIO / IT Ops',ownerSeat:'cio',sources:[vulnTelem||c5bdMod('open critical vulnerabilities from the scanner')]}),
+    c5ovFig({id:'ct_c3',title:'AI governance',value:(aig.connected?aig.displayValue:'Stand up'),status:(aig.connected?(aig.color==='good'?'Governed':'Gaps'):'Not started'),pill:(aig.connected?(aig.color==='good'?'g':'a'):'a'),owner:'CIO',ownerSeat:'cio',sources:[c5bdSelf('AI governance','model registry + policy at onboarding')]}),
+    c5ovFig({id:'ct_c4',title:'Supply chain',value:(adv.connected?adv.displayValue:'—'),status:(adv.connected?(adv.color==='crit'?'Advisory':'OK'):'—'),pill:(adv.connected?(adv.color==='crit'?'r':adv.color==='warn'?'a':'g'):'n'),owner:'CIO / AppSec',ownerSeat:'cio',sources:[c5bdMod('active advisories in the software supply chain'),c5bdDocSrc('sbom','SBOM')]})
+  ];
+  var questions=[
+    c5ovFig({id:'ct_q1',title:'Estate',question:'Is our technology estate secure and modern?',owner:'CIO',ownerSeat:'cio',status:(ph.connected?(ph.color==='crit'?'At risk':ph.color==='warn'?'Watch':'Healthy'):'—'),pill:(ph.connected?(ph.color==='crit'?'r':ph.color==='warn'?'a':'g'):'n'),value:(ph.connected?ph.displayValue:'—'),
+      detail:(ph.connected?('The estate is largely healthy. The one architectural weak spot is the <b>customer platform’s identity and access design</b> — the same gap driving the enterprise’s top risk. Modernizing it is funded ('+fix+'); the rest of the estate is on its normal refresh cycle.'):'Connect your systems inventory and control tools and we’ll grade the estate and flag the weak spots.'),
+      sources:[c5bdMod('architecture + control coverage'),ctrlTelem]}),
+    c5ovFig({id:'ct_q2',title:'AI',question:'Are we shipping AI safely?',owner:'CIO',ownerSeat:'cio',status:(aig.connected?(aig.color==='good'?'Governed':'Gaps'):'Not started'),pill:(aig.connected?(aig.color==='good'?'g':'a'):'a'),value:(aig.connected?aig.displayValue:'—'),
+      detail:(aig.connected?('Our production AI systems are '+(aig.color==='good'?'inventoried and governed — access to data is controlled and use is monitored.':'partly governed. The gap is a formal framework and an EU AI Act mapping; we’re standing that up so every model has a named owner and control.')):'Register your AI/ML systems at onboarding and we’ll show which are governed and where the gaps are.'),
+      sources:[c5bdSelf('AI governance','model registry + policy, self-reported at onboarding')]}),
+    c5ovFig({id:'ct_q3',title:'Supply chain',question:'Is our software supply chain sound?',owner:'CIO / AppSec',ownerSeat:'cio',status:(adv.connected?(adv.color==='crit'?'Advisory':'OK'):'—'),pill:(adv.connected?(adv.color==='crit'?'r':adv.color==='warn'?'a':'g'):'n'),value:(adv.connected?adv.displayValue:'—'),
+      detail:(adv.connected?('We track our third-party components for known issues. '+((adv.color==='crit'||adv.color==='warn')?'There is an open advisory on the authentication library the customer platform relies on — patching it is scheduled, and the identity fix hardens that path further.':'No critical advisories are open against the components we depend on right now.')):'Connect your build pipeline (SBOM) and we’ll continuously check your components against known advisories.'),
+      sources:[c5bdMod('advisories matched to your components'),c5bdDocSrc('sbom','Software bill of materials')]})
+  ];
+  var decision=c5ovFig({id:'ct_decision',title:'Modernize the identity architecture',value:(IDF.owner+' · '+IDF.timeline),status:'Your call',pill:'b',owner:IDF.owner,ownerSeat:'ciso',
+    kicker:'Needs your decision · one call',headline:'Fund the identity architecture fix.',
+    body:'It closes the estate’s biggest weak spot, hardens the authentication path the supply-chain advisory sits on, and secures the customer-data access AI systems rely on. Scoped and funded ('+IDF.owner+', '+IDF.timeline+').',
+    sources:[c5bdMod('the fix that closes the estate, supply-chain and AI-access gaps at once'),c5bdSelf('Funding decision',IDF.owner+' · '+IDF.timeline)]});
+  c5ovDo({host:'ct-overview',tabIdx:1,headline:'The estate is healthy except one architectural gap — customer-platform identity — and modernizing it is funded.',headColor:'warn',qTitle:'The three questions a CIO asks — answered',cards:cards,questions:questions,decision:decision,decisionBtn:'Record — open Decisions',
+    footnote:'Estate, AI and supply-chain figures come from your tools and inventories. Click any box for the source and confidence.'});
+}
+/* ── CRO ── */
+function c5crOverview(){
+  var host=document.getElementById('cr-overview');if(!host)return;
+  var RR=(typeof c5RiskRegister==='function')?c5RiskRegister():{cyberResidual:0,appetite:0,cyberRank:null,total:0};var IDF=c5IdFix();var idm=c5get(IDF.mid);
+  var T=(typeof c5T==='function')?c5T():{improving:false,worsening:false};var fix=c5ovFix();
+  var over=(RR.appetite>0&&RR.cyberResidual>RR.appetite);var rankStr=RR.cyberRank?('#'+RR.cyberRank+' of '+RR.total):'—';
+  var dirWord=T.improving?'Falling':T.worsening?'Rising':'Steady';
+  var cards=[
+    c5ovFig({id:'cr_c1',title:'Rank vs other risks',value:rankStr,status:(RR.cyberRank?'Ranked':'—'),pill:(over?'a':'n'),owner:'CRO',ownerSeat:'cro',sources:[c5bdMod('cyber residual vs the other principal risks on the register'),c5bdSelf('Risk register','ERM inputs, self-reported')]}),
+    c5ovFig({id:'cr_c2',title:'Residual loss',value:(RR.cyberResidual>0?usd(RR.cyberResidual):'—'),status:(over?'Over appetite':(RR.cyberResidual>0?'Within':'—')),pill:(over?'r':(RR.cyberResidual>0?'g':'n')),owner:'CRO / CFO',ownerSeat:'cfo',sources:[c5bdMod('modeled residual cyber loss vs appetite'),c5bdSelf('Risk appetite','board-set')]}),
+    c5ovFig({id:'cr_c3',title:'Direction',value:dirWord,status:(T.improving?'Improving':T.worsening?'Worsening':'Steady'),pill:(T.improving?'g':T.worsening?'r':'n'),owner:'CRO / CISO',ownerSeat:'ciso',sources:[c5bdMod('quarter-over-quarter change in residual risk')]}),
+    c5ovFig({id:'cr_c4',title:'Top driver',value:'Identity access',status:'Funded',pill:'b',owner:'CISO / CIO',ownerSeat:'ciso',sources:[c5bdMod('the single driver above its appetite share')]})
+  ];
+  var questions=[
+    c5ovFig({id:'cr_q1',title:'Rank',question:'Where does cyber rank among our principal risks?',owner:'CRO',ownerSeat:'cro',status:(RR.cyberRank?'Ranked':'—'),pill:(over?'a':'n'),value:rankStr,
+      detail:(RR.cyberRank?('Cyber is the <b>'+rankStr+'</b> principal risk by modeled loss'+(over?', and the only one currently <b>above</b> its appetite share. The overage traces to the identity exposure; '+fix+' moves it back within share and down the ranking.':'. It sits within its appetite share this quarter.')):'Add your enterprise risk register at onboarding and we’ll rank cyber against your other principal risks.'),
+      sources:[c5bdMod('residual vs the register'),c5bdSelf('Risk register','ERM inputs')]}),
+    c5ovFig({id:'cr_q2',title:'Appetite',question:'Are we within appetite, and what closes the gap?',owner:'CRO / CFO',ownerSeat:'cfo',status:(over?'Over':(RR.cyberResidual>0?'Within':'—')),pill:(over?'r':(RR.cyberResidual>0?'g':'n')),value:(RR.cyberResidual>0?usd(RR.cyberResidual):'—'),
+      detail:(RR.cyberResidual>0?(over?('Residual cyber loss of <b>'+usd(RR.cyberResidual)+'</b> is above the board-set appetite'+(RR.appetite>0?(' of '+usd(RR.appetite)):'')+'. One treatment closes the gap — the funded identity fix ('+IDF.owner+', '+IDF.timeline+'). Interim exposure remains until it lands, which we track.'):'Residual cyber loss of <b>'+usd(RR.cyberResidual)+'</b> is within appetite. We hold it by keeping the top controls funded.'):'Set your appetite and we’ll show the gap and what closes it.'),
+      sources:[c5bdMod('residual vs appetite'),c5bdSelf('Risk appetite','board-set')]}),
+    c5ovFig({id:'cr_q3',title:'Trend',question:'Which way is cyber risk trending?',owner:'CRO / CISO',ownerSeat:'ciso',status:(T.improving?'Improving':T.worsening?'Worsening':'Steady'),pill:(T.improving?'g':T.worsening?'a':'n'),value:dirWord,
+      detail:(T.improving?'Residual cyber risk is <b>falling</b> quarter over quarter. The one lever that keeps it falling is the identity fix — it’s the largest single reduction still available, and it’s funded.':T.worsening?'Residual cyber risk is <b>rising</b>. The identity exposure is the biggest reason; funding its fix ('+fix+') is the fastest way to bend the trend back down.':'The trend builds as quarters record. The identity fix is the largest single reduction available and is funded.'),
+      sources:[c5bdMod('residual-risk series, quarter over quarter')]})
+  ];
+  var decision=c5ovFig({id:'cr_decision',title:'Treat the identity exposure',value:(IDF.owner+' · '+IDF.timeline),status:'Your call',pill:'b',owner:IDF.owner,ownerSeat:'ciso',
+    kicker:'Needs your decision · one treatment',headline:'Treat the identity exposure — the one driver over appetite.',
+    body:'It is the single principal-risk driver above its appetite share and the largest reduction available. Treating it ('+IDF.owner+', '+IDF.timeline+') brings cyber within appetite and bends the trend down. The honest caveat: interim exposure remains until it lands.',
+    sources:[c5bdMod('the one driver over appetite; largest single reduction'),c5bdSelf('Funding decision',IDF.owner+' · '+IDF.timeline)]});
+  c5ovDo({host:'cr-overview',tabIdx:1,headline:(over?'Cyber is our top risk and the only one over appetite — one funded treatment brings it back within limits.':'Cyber is a managed principal risk within appetite and trending in the right direction.'),headColor:(over?'warn':null),qTitle:'The three questions a CRO asks — answered',cards:cards,questions:questions,decision:decision,decisionBtn:'Record — open Decisions',
+    footnote:'Rank, residual and appetite read from one shared risk register. Click any box for the basis and confidence.'});
+}
+/* ── CLO ── */
+function c5clOverview(){
+  var host=document.getElementById('cl-overview');if(!host)return;
+  var IDF=c5IdFix();var idm=c5get(IDF.mid);var fix=c5ovFix();
+  var gov=(typeof LIVE!=='undefined'&&LIVE&&LIVE.governance)||{};var irTested=/yes|tested|tabletop/i.test((gov.ir&&gov.ir.tested)||'');
+  var regs=(typeof c5legalRegimes==='function')?c5legalRegimes():[];var insGap=c5get('cf_ins_gap');
+  var cards=[
+    c5ovFig({id:'cl_c1',title:'Regulatory exposure',value:(regs.length?(regs.length+' regimes'):'Set regions'),status:(regs.length?'Mapped':'—'),pill:(regs.length?'a':'n'),owner:'CLO',ownerSeat:'clo',sources:[c5bdSelf('Jurisdiction ruleset','operating regions, set at onboarding')]}),
+    c5ovFig({id:'cl_c2',title:'Disclosure clock',value:'8-K · 4 days',status:(irTested?'Ready':'In progress'),pill:(irTested?'g':'a'),owner:'CLO',ownerSeat:'clo',sources:[c5bdSelf('SEC 8-K process',(irTested?'tabletop-tested':'documented')+' at onboarding')]}),
+    c5ovFig({id:'cl_c3',title:'Contract exposure',value:'Uptime warranties',status:'At risk',pill:'a',owner:'CLO',ownerSeat:'clo',sources:[c5bdSelf('Contract lifecycle mgmt','connect your CLM to count exactly')]}),
+    c5ovFig({id:'cl_c4',title:'Uninsured tail',value:(insGap.connected?insGap.displayValue:'—'),status:(insGap.connected?(insGap.color==='warn'?'Gap':'Covered'):'—'),pill:(insGap.connected?(insGap.color==='warn'?'a':'g'):'n'),owner:'CLO / CFO',ownerSeat:'cfo',sources:[c5bdMod('worst-case tail − policy limit'),c5bdSelf('Insurance policy','captured at onboarding')]})
+  ];
+  var questions=[
+    c5ovFig({id:'cl_q1',title:'Regulatory',question:'Where are we exposed by regulation, and what’s most likely to trigger a filing?',owner:'CLO',ownerSeat:'clo',status:(regs.length?'Mapped':'—'),pill:(regs.length?'a':'n'),value:(regs.length?(regs.length+' regimes'):'—'),
+      detail:(regs.length?('We track <b>'+regs.length+'</b> regimes in scope (SEC disclosure, GDPR/CCPA, DORA, EU AI Act, EU CRA). The exposure most likely to trigger a reportable event is the <b>customer-platform identity gap</b> — a breach there starts the notification clocks. Closing it ('+fix+') lowers that likelihood; the compliance call remains counsel’s.'):'Set your operating regions at onboarding and we’ll list every regime, its clock and its penalty.'),
+      sources:[c5bdSelf('Jurisdiction ruleset','operating regions'),c5bdMod('exposure most likely to trigger a filing')]}),
+    c5ovFig({id:'cl_q2',title:'Contracts',question:'Which contracts and liabilities are most at risk?',owner:'CLO',ownerSeat:'clo',status:'Watch',pill:'a',value:'Uptime warranties',
+      detail:'The concentration is in <b>customer contracts that warrant platform uptime</b> — an identity-driven outage could breach them — plus the uninsured tail we self-carry. Closing the identity gap protects those warranties and lowers the tail. Exact contract counts need your CLM connected.',
+      sources:[c5bdSelf('Contract lifecycle mgmt','connect your CLM'),c5bdMod('exposure mapped to the platform')]}),
+    c5ovFig({id:'cl_q3',title:'Disclosure',question:'Are we ready to disclose an incident on the clock?',owner:'CLO',ownerSeat:'clo',status:(irTested?'Ready':'In progress'),pill:(irTested?'g':'a'),value:'8-K ≤ 4 days',
+      detail:('We can meet the clocks: the SEC 8-K process is '+(irTested?'tested':'documented')+' and the fastest deadline is four business days. The one thin spot is <b>forensic evidence and privilege</b> on the identity access path — the identity fix ('+fix+') improves the logging and record-keeping that make a disclosure defensible.'),
+      sources:[c5bdSelf('SEC 8-K & IR process',(irTested?'tabletop-tested':'documented')),c5bdMod('forensic readiness on the identity path')]})
+  ];
+  var decision=c5ovFig({id:'cl_decision',title:'Close the top obligation or coverage gap',value:(IDF.owner+' · '+IDF.timeline),status:'Your call',pill:'b',owner:IDF.owner,ownerSeat:'ciso',
+    kicker:'Needs your decision · one call',headline:'Support the identity fix and close the top compliance gap.',
+    body:'The identity fix ('+IDF.owner+', '+IDF.timeline+') lowers your most likely breach trigger, protects the contracts tied to uptime, and strengthens forensic defensibility. Alongside it, close the highest-priority obligation or insurance-adequacy gap — assign an owner and a date.',
+    sources:[c5bdMod('reduces disclosure, contract and privacy exposure at once'),c5bdSelf('Funding decision',IDF.owner+' · '+IDF.timeline)]});
+  c5ovDo({host:'cl-overview',tabIdx:1,headline:'We can meet every disclosure clock; the same identity gap is our likeliest trigger and our thinnest forensic spot — and its fix is funded.',headColor:'warn',qTitle:'The three questions a General Counsel asks — answered',cards:cards,questions:questions,decision:decision,decisionBtn:'Record — open Decisions',
+    footnote:'Obligations and clocks come from your jurisdiction ruleset; not legal advice. Click any box for the source and confidence.'});
 }
 function c5ceValue(){
   var host=document.getElementById('ce-value');if(!host)return;
@@ -4740,24 +4923,30 @@ function c5bdInspect(id){
   if(!f){var F=c5bdFigures();f=F[id];}
   if(!f)return;
   var pc=f.pill||'n';var col=(pc==='r'?'crit':pc==='a'?'warn':pc==='g'?'good':pc==='b'?'blue':'muted');
-  var h='<div class="ev-claim">'+c5esc(f.title)+' <span class="c5pill '+pc+'">'+c5esc(f.status||'')+'</span></div>';
-  h+='<div style="display:flex;align-items:center;gap:14px;margin:12px 0 2px;padding:14px 16px;border-radius:12px;border:1px solid var(--line);border-left:3px solid var(--'+col+');background:var(--surface-2)">'+
-    '<div style="min-width:0;flex:1"><div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">Value</div><div style="font-size:22px;font-weight:700;line-height:1.15;color:var(--ink)">'+c5esc(f.value||'—')+'</div></div>'+
-    '<div style="text-align:right;flex:none"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Confidence</div><div style="font-size:15px;font-weight:700;color:var(--'+(f.confidence==='High'?'good':f.confidence==='Medium'?'warn':'muted')+')">'+c5esc(f.confidence||'—')+'</div></div>'+
-  '</div>';
-  h+='<div class="ev-sec">Provenance — where this figure comes from</div>';
-  if(!f.sources.length){
-    h+='<div class="conf" style="border-left:3px solid var(--muted)"><b>Source not yet connected.</b> This figure is shown behind a Modeled / Illustrative badge until its tool or document is wired. Connect it in onboarding to make it measured.</div>';
+  var conf=String(f.confidence||'').toLowerCase();var confCol=(conf==='high'?'good':conf==='medium'?'warn':conf==='low'?'muted':'muted');
+  // 1) Headline: the figure and its status.
+  var h='<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px"><div style="font-size:16px;font-weight:600;color:var(--ink);line-height:1.3">'+c5esc(f.title)+'</div><span class="c5pill '+pc+'" style="flex:none;margin-top:2px">'+c5esc(f.status||'')+'</span></div>';
+  h+='<div style="font-size:26px;font-weight:600;color:var(--'+(pc==='n'?'ink':col)+');margin-top:6px;line-height:1.15">'+c5esc(f.value||'—')+'</div>';
+  // 2) The plain-English answer (for the question figures).
+  if(f.detail)h+='<div style="margin-top:12px;font-size:13.5px;color:var(--ink-2);line-height:1.6">'+f.detail+'</div>';
+  // 3) Source & confidence — every source with its own type badge.
+  h+='<div class="ev-sec">Source &amp; confidence</div>';
+  if(!f.sources||!f.sources.length){
+    h+='<div class="conf" style="border-left:3px solid var(--muted)"><b>Source not yet connected.</b> Shown as modeled until the tool or document is connected at onboarding — then it becomes measured.</div>';
   } else {
     h+=f.sources.map(function(s){
       var meta=[];if(s.detail)meta.push(c5esc(s.detail));if(s.syncedAt)meta.push('synced '+c5esc(s.syncedAt));if(s.coverage)meta.push(c5esc(s.coverage)+' coverage');
-      return '<div style="border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px;background:var(--surface)"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><b style="font-size:13px;color:var(--ink)">'+c5esc(s.name||'Source')+'</b>'+c5bdProvBadge(s.type)+'</div>'+(meta.length?('<div style="font-size:12px;color:var(--ink-2);line-height:1.5;margin-top:4px">'+meta.join(' · ')+'</div>'):'')+'</div>';
+      return '<div style="border:1px solid var(--line);border-radius:10px;padding:11px 13px;margin-bottom:8px;background:var(--surface)"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><b style="font-size:13px;color:var(--ink)">'+c5esc(s.name||'Source')+'</b>'+c5bdProvBadge(s.type)+'</div>'+(meta.length?('<div style="font-size:12px;color:var(--ink-2);line-height:1.5;margin-top:4px">'+meta.join(' · ')+'</div>'):'')+'</div>';
     }).join('');
-    if(f.sources.length>1)h+='<div style="font-size:11px;color:var(--muted);margin-top:2px">This figure is <b>mixed</b> — each contributing source carries its own type badge above.</div>';
+    var badges=(typeof c5sourceTypeList==='function')?'':'';
+    h+='<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:2px;font-size:11.5px;color:var(--muted)">'+
+      '<span>'+(f.sources.length>1?'Combined from the sources above.':'')+'</span>'+
+      '<span>Confidence: <b style="color:var(--'+confCol+')">'+c5esc(f.confidence||'—')+'</b></span></div>';
   }
+  // 4) Owner + link to the detail.
   var seat=f.ownerSeat||'ciso';var seatNm=(typeof c5seatLabel==='function'?c5seatLabel(seat):String(seat).toUpperCase());
-  h+='<div class="ev-sec">Owner</div><div class="conf" style="border-left:3px solid var(--blue)"><b>'+c5esc(f.owner||seatNm)+'</b> — the detail lives on the '+c5esc(seatNm)+' tab.<div style="margin-top:8px"><button class="c5btn" data-c5goseat="'+c5esc(seat)+'">Open the '+c5esc(seatNm)+' tab →</button></div></div>';
-  h+='<div class="c5foot">as of '+c5esc(f.asOf||'')+' · confidence '+c5esc(f.confidence||'')+(f.confidence==='High'?'':' — self-reported / modeled figures are not High confidence until independently tested')+'</div>';
+  h+='<div class="ev-sec">Owned by</div><div class="conf" style="border-left:3px solid var(--blue)"><b>'+c5esc(f.owner||seatNm)+'</b> — full detail on the '+c5esc(seatNm)+' view.<div style="margin-top:8px"><button class="c5btn" data-c5goseat="'+c5esc(seat)+'">Open the '+c5esc(seatNm)+' view →</button></div></div>';
+  h+='<div class="c5foot">As of '+c5esc(f.asOf||'')+(conf&&conf!=='high'?' · self-reported and modeled figures are not rated high confidence until independently tested':'')+'</div>';
   if(typeof openDrill==='function')openDrill(f.title,h);
 }
 /* Delegated wiring: click any board box → provenance drawer; owner-tab button → switch seats. */

@@ -1,69 +1,43 @@
 /**
- * CLO seat restructured to the proposed set: 01 Regulatory exposure / 02 Contracts &
- * liability / 03 Incident & disclosure readiness / 04 Decisions (Privacy folded away).
- * Guards the seat body + tab labels, the contract additions (insurance adequacy; legal
- * hold/privilege/defensibility; regulatory register with the named regimes), and the
- * Decisions convergence strip + Decision 2 (close the top regulatory/insurance gap).
+ * CLO seat — two-tab cockpit (01 Overview + 02 Decisions). The Overview folds the regulatory,
+ * contracts and disclosure tabs into one concise page (c5clOverview) with plain-English answers
+ * and click-to-source on every box.
  */
-
 const fs = require('fs');
 const path = require('path');
-
 const src = fs.readFileSync(path.resolve(__dirname, '../../../CyberRXNew/public/ciso5.js'), 'utf8');
 const seats = fs.readFileSync(path.resolve(__dirname, '../../../CyberRXNew/public/cockpit-seats.js'), 'utf8');
 const html = fs.readFileSync(path.resolve(__dirname, '../../../CyberRXNew/public/cockpit.html'), 'utf8');
 function fnOf(n) { const a = src.indexOf('function ' + n + '('); return src.slice(a, src.indexOf('\nfunction ', a + 20)); }
 
-describe('CLO seat — restructured tab set', () => {
-  it('the seat body is Regulatory / Contracts & liability / Incident & disclosure (no Privacy tab)', () => {
-    expect(seats).toContain('Which contracts and liabilities are at risk?');
-    expect(seats).toContain('Are we ready for incident disclosure?');
-    expect(seats).not.toContain('id="cl-privacy"');
+describe('CLO seat — two tabs only (Overview + Decisions)', () => {
+  it('the seat body is Overview + Decisions (regulatory/contracts/disclosure folded in)', () => {
+    expect(seats).toContain('id="cl-overview"');
+    expect(seats).toContain('id="cl-decisions"');
+    expect(seats).not.toContain('id="cl-contracts"');
+    expect(seats).not.toContain('id="cl-notification"');
   });
-  it('the tabs read Regulatory exposure / Contracts & liability / Incident & disclosure', () => {
-    expect(html).toContain("'Where are we exposed by jurisdiction?':'Regulatory exposure'");
-    expect(html).toContain("'Which contracts and liabilities are at risk?':'Contracts & liability'");
-    expect(html).toContain("'Are we ready for incident disclosure?':'Incident & disclosure'");
+  it('the Overview tab reads Overview', () => {
+    expect(html).toContain("'Where are we legally exposed — and ready to disclose?':'Overview'");
   });
-});
-
-describe('CLO 01 Regulatory exposure — register + regimes', () => {
-  const r = fnOf('c5clRegulatory');
-  it('names the real regulatory regimes and counts them in the footnote', () => {
-    expect(r).toContain('SEC cyber disclosure · GDPR/CCPA · DORA · EU AI Act · EU CRA');
-    expect(r).toContain('regimes in scope');
+  it('c5clOverview is wired into the render pipeline', () => {
+    expect(src).toContain('function c5clOverview()');
+    expect(html).toContain('c5clOverview();');
   });
 });
 
-describe('CLO 02 Contracts & liability — contract', () => {
-  const c = fnOf('c5clContracts');
-  it('adds an insurance-coverage-adequacy-vs-tail row and a source footnote', () => {
-    expect(c).toContain('Insurance coverage adequacy vs modeled tail');
-    expect(c).toContain('IDF=c5IdFix()');
-    expect(c).toContain("+connN+' sources connected");
+describe('CLO Overview (c5clOverview) — answers name the gap + what we are doing', () => {
+  const o = fnOf('c5clOverview');
+  it('builds the three legal questions and the decision as click-to-source boxes', () => {
+    ["id:'cl_q1'", "id:'cl_q2'", "id:'cl_q3'", "id:'cl_decision'"].forEach(id => expect(o).toContain(id));
   });
-});
-
-describe('CLO 03 Incident & disclosure readiness — contract', () => {
-  const n = fnOf('c5clNotification');
-  it('is reframed to incident & disclosure and adds legal hold / privilege / defensibility', () => {
-    expect(n).toContain('Incident & disclosure readiness');
-    expect(n).toContain('Legal hold · privilege · defensibility');
-    expect(n).toContain('IDF=c5IdFix()');
+  it('names the real regimes and the identity trigger, in plain English', () => {
+    expect(o).toContain('SEC disclosure, GDPR/CCPA, DORA, EU AI Act, EU CRA');
+    expect(o).toContain('customer-platform identity gap');
   });
-});
-
-describe('CLO 04 Decisions — contract', () => {
-  const d = fnOf('c5clDecisions');
-  it('opens with the convergence strip and keeps the audit-trail promise', () => {
-    expect(d).toContain("c5convergeStrip('clo')");
-    expect(d).toContain('no AI/LLM at run-time');
-  });
-  it('Decision 1 is the identity fix with its honest downside', () => {
-    expect(d).toContain("Support the '+IDF.short+' fix?");
-    expect(d).toContain("Interim exposure persists across the '+IDF.timeline");
-  });
-  it('Decision 2 is closing the top regulatory-obligation / insurance-adequacy gap', () => {
-    expect(d).toContain('Close the top regulatory-obligation or insurance-adequacy gap?');
+  it('reads the shared jurisdiction ruleset and identity fix, and routes to Decisions', () => {
+    expect(o).toContain('c5legalRegimes');
+    expect(o).toContain('c5IdFix()');
+    expect(o).toContain('tabIdx:1');
   });
 });

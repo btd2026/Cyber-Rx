@@ -30,10 +30,8 @@ var SEATS = {
   sub:'Every figure opens to its model, inputs and sources — one source of truth across seats.',
   brief:'The financial read: your modeled cyber loss is within the board’s appetite, with headroom, and your security spend returns more than it costs. Your best dollar closes one identity gap — it removes the most risk per dollar and trims your insurance tail, which is where you’re thin. There’s redeployable spend to fund it, so this is close to self-funding. Three priced decisions are on your desk; one is a clear yes.',
   body:function(){return (
-   sec('01','Are we within the board’s appetite?','','<div id="cf-exposure"></div>')
-   +sec('02','Is our security spend paying off?','','<div id="cf-roi"></div>')
-   +sec('03','Are we insured efficiently?','','<div id="cf-insurance"></div>')
-   +sec('04','What decision needs me — and what does it cost?','','<div id="cfo-asks"></div><div id="cf-decisions"></div>')
+   sec('01','Are we within appetite — and is spend paying off?','','<div id="cf-overview"></div>')
+   +sec('02','What decision needs me — and what does it cost?','','<div id="cfo-asks"></div><div id="cf-decisions"></div>')
   );}
  },
 
@@ -43,10 +41,8 @@ var SEATS = {
   sub:'Every figure opens to its source system and evidence, and the shared identity, vendor and platform numbers reconcile across seats. Not legal advice.',
   brief:'From a legal standpoint your exposure is contained, but it concentrates in one place. If a breach hit today you could meet your notification clocks — provided the forensic evidence is ready, and identity is the thin spot there. A cluster of enterprise contracts warrant uptime an identity-driven outage could breach, and your privacy operations are on SLA with access hygiene the soft point. One action reduces your disclosure, contractual and privacy exposure at once. I’m surfacing obligations here, not making the legal call — that stays yours.',
   body:function(){return (
-   sec('01','Where are we exposed by jurisdiction?','','<div id="cl-regulatory"></div>')
-   +sec('02','Which contracts and liabilities are at risk?','','<div id="cl-contracts"></div>')
-   +sec('03','Are we ready for incident disclosure?','','<div id="cl-notification"></div>')
-   +sec('04','What needs my sign-off?','','<div id="clo-asks"></div><div id="cl-decisions"></div>')
+   sec('01','Where are we legally exposed — and ready to disclose?','','<div id="cl-overview"></div>')
+   +sec('02','What needs my sign-off?','','<div id="clo-asks"></div><div id="cl-decisions"></div>')
   );}
  },
 
@@ -56,10 +52,8 @@ var SEATS = {
   sub:'Every figure opens to its basis, inputs and source, and the shared cyber numbers reconcile exactly across seats.',
   brief:'On one enterprise scale, cyber sits alongside your other principal risks — and its direction, not just its size, is what to watch. You’re within appetite overall, but the identity category is over its share, and identity and third-party are where control assurance thins. Every top risk has a named owner; identity is the one that needs your governance push. Three calls: one risk to treat, one to monitor, one to accept.',
   body:function(){return (
-   sec('01','How does cyber compare to our other principal risks?','','<div id="cr-scale"></div>')
-   +sec('02','Are we within risk appetite?','','<div id="cr-appetite"></div>')
-   +sec('03','Which way is cyber risk trending?','','<div id="cr-trend"></div>')
-   +sec('04','What call is mine to make?','','<div id="cro-asks"></div><div id="cr-decisions"></div>')
+   sec('01','Where does cyber rank — and is it within appetite?','','<div id="cr-overview"></div>')
+   +sec('02','What call is mine to make?','','<div id="cro-asks"></div><div id="cr-decisions"></div>')
   );}
  },
 
@@ -69,10 +63,8 @@ var SEATS = {
   sub:'Every figure opens to its basis, inputs and source, and the shared identity, platform and vendor numbers reconcile across seats.',
   brief:'Your technology estate is largely secure and on its modernization path. The one architectural gap that matters is the customer platform’s identity and access model — it is your biggest reliability risk, your AI-data-access dependency, and the drag on your software supply chain, all at once. There is also a high-severity auth-library advisory on the critical path worth patching now. Two decisions: fund the identity fix, patch the library.',
   body:function(){return (
-   sec('01','Is our technology estate secure and modern?','','<div id="ct-tech"></div>')
-   +sec('02','Are we shipping AI safely?','','<div id="ct-ai"></div>')
-   +sec('03','Is our software supply chain sound?','','<div id="ct-supply"></div>')
-   +sec('04','What needs my decision?','','<div id="cio-asks"></div><div id="ct-decisions"></div>')
+   sec('01','Is our technology estate secure and modern?','','<div id="ct-overview"></div>')
+   +sec('02','What needs my decision?','','<div id="cio-asks"></div><div id="ct-decisions"></div>')
   );}
  },
 
@@ -82,10 +74,8 @@ var SEATS = {
   sub:'Every figure opens to its basis, inputs and source, and the shared cyber and vendor numbers reconcile across seats.',
   brief:'Operationally, you’re resilient and continuity-ready. Of your critical processes, one — the customer platform — carries a real cyber exposure, and a payments process is on watch through a single Tier-1 vendor that is a point of failure. Recovery is tested and within targets, with one weak link: restoring identity and access quickly. Two calls: fund the resilience fix, shore up the vendor.',
   body:function(){return (
-   sec('01','Can the business keep running through a disruption?','','<div id="co-resilience"></div>')
-   +sec('02','Can we recover within our targets?','','<div id="co-recovery"></div>')
-   +sec('03','Which vendors could stop us?','','<div id="co-supply"></div>')
-   +sec('04','What needs my decision?','','<div id="coo-asks"></div><div id="co-decisions"></div>')
+   sec('01','Can the business keep running — and recover?','','<div id="co-overview"></div>')
+   +sec('02','What needs my decision?','','<div id="coo-asks"></div><div id="co-decisions"></div>')
   );}
  },
 
@@ -96,13 +86,9 @@ var SEATS = {
   brief:'Here’s where the business is most exposed, priced and ranked. Your highest-risk crown jewel needs hardening before it becomes an incident — and your identity and access model is the common thread through your capability exposure, your likeliest attack scenarios, and your control gaps. The upside: the fix is scoped and funded, and it returns more risk-removed per dollar than anything else on the table. One decision closes your largest single exposure; it is worth your sign-off today.',
   body:function(){return (
    sec('01','Program health','','<div id="c5-frameworks"></div>')
-   +sec('02','Cyber exposure','','<div id="c5-health"></div>')
-   +sec('03','How are our core business areas protected?','','<div id="c5-exposure"></div>')
-   +sec('04','Which controls buy down the most risk?','','<div id="c5-exposure2"></div>')
-   +sec('05','Cyber operations','','<div id="c5-effect"></div>')
-   +sec('06','Threats','','<div id="c5-threats"></div>')
-   +sec('07','AI &amp; supply chain','','<div id="c5-aisupply"></div>')
-   +sec('08','Decisions','','<div id="c5-decproj"></div>')
+   +sec('02','Exposure &amp; controls','','<div id="c5-health"></div><div id="c5-exposure"></div><div id="c5-exposure2"></div>')
+   +sec('03','Operations &amp; threats','','<div id="c5-effect"></div><div id="c5-threats"></div><div id="c5-aisupply"></div>')
+   +sec('04','Decisions','','<div id="c5-decproj"></div>')
   );}
  }
 };
