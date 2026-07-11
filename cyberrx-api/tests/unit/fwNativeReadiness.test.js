@@ -119,12 +119,13 @@ describe('clicking a mapped native control does not throw (the sel-scope bug)', 
     global.cmmiColor = () => 'ink'; global.c5esc = (s) => String(s == null ? '' : s); global.c5fwCadence = () => 'monthly';
     global.FW_NAMES = { hipaa: 'HIPAA Security Rule' }; global.FW_SEL = 'hipaa'; global.C5_DESIGN = {}; global.designFetch = () => {}; global.fwDeployedIds = () => ({});
     global.controlCmmi = (id) => (/^[A-Z]{2}\.[A-Z]{2}-/.test(id) ? { score: 3.0, src: 'document', doc: { doc: 'Policy.pdf' } } : { score: 0, src: 'none' });
+    global.C5FW_EVID = {}; // condition-narrative source map — empty → the generic fallback phrasing
     // eslint-disable-next-line no-eval
-    const c5fwFinding = eval([grab('c5fwStatus'), grab('c5fwLvl'), grab('c5fwCol'), grab('c5fwSource'), grab('c5fwFindingData'), grab('c5DesignSection'), grab('c5fwFinding'), '\n;c5fwFinding'].join('\n'));
+    const c5fwFinding = eval([grab('c5fwStatus'), grab('c5fwLvl'), grab('c5fwCol'), grab('c5fwEvid'), grab('c5fwObjPhrase'), grab('c5fwCondLead'), grab('c5fwConclusion'), grab('c5fwSource'), grab('c5fwFindingData'), grab('c5DesignSection'), grab('c5fwFinding'), '\n;c5fwFinding'].join('\n'));
     const node = { type: 'ctl', id: '308(a)(2)', name: 'Assigned security responsibility', score: 3.0, tested: true, status: 'Readiness (crosswalk)', src: 'mapped', mapped: ['GV.RR-02'], related: ['GV.RR-02'], readiness: true };
     let html = '';
     expect(() => { html = c5fwFinding('hipaa', node); }).not.toThrow();
     expect(html.length).toBeGreaterThan(100);
-    ['C5FW_TARGET', 'C5FW_FLOOR', 'CMMI_LABELS', 'cmmiColor', 'c5esc', 'c5fwCadence', 'FW_NAMES', 'FW_SEL', 'C5_DESIGN', 'designFetch', 'fwDeployedIds', 'controlCmmi'].forEach((k) => { delete global[k]; });
+    ['C5FW_TARGET', 'C5FW_FLOOR', 'CMMI_LABELS', 'cmmiColor', 'c5esc', 'c5fwCadence', 'FW_NAMES', 'FW_SEL', 'C5_DESIGN', 'designFetch', 'fwDeployedIds', 'controlCmmi', 'C5FW_EVID'].forEach((k) => { delete global[k]; });
   });
 });

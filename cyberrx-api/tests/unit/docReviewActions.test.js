@@ -173,7 +173,7 @@ describe('5 · Open document renders the auditor annotations (highlights + margi
     expect(ciso).toContain('c5ann c5annkw'); // blue keyword-match highlight (locate where a keyword hit)
     expect(ciso).toContain('✦ Nauditor-annotated'); // header badge (Nerion Auditor branding)
     expect(ciso).toContain('Evidenced — quoted in the text'); // margin panel (quoted matches)
-    expect(ciso).toContain('Matched — keyword review'); // keyword matches that drove the score
+    expect(ciso).toContain('Matched — sentence match'); // sentence-level matches that drove the score
     expect(ciso).toContain('Gaps — expected, not found');
   });
   it('collector groups by quote (merging controls) and gathers gaps; highlighter is whitespace-tolerant', () => {
@@ -189,7 +189,7 @@ describe('5 · Open document renders the auditor annotations (highlights + margi
     });
     // strict-mode eval won't leak declarations — return them via a trailing expression
     // eslint-disable-next-line no-eval
-    const api = eval(grab('c5DocScoresSafe') + '\n' + grab('c5DocAnnotations') + '\n' + grab('c5AnnotateText') + '\n;({ann:c5DocAnnotations,mark:c5AnnotateText})');
+    const api = eval('var C5_STOP={};\n' + grab('c5Sentences') + '\n' + grab('c5ReqTerms') + '\n' + grab('c5BestSentence') + '\n' + grab('c5DocScoresSafe') + '\n' + grab('c5DocAnnotations') + '\n' + grab('c5AnnotateText') + '\n;({ann:c5DocAnnotations,mark:c5AnnotateText})');
     const ann = api.ann('d1.pdf');
     expect(ann.met).toHaveLength(1); // the two identical passages merge
     expect(ann.met[0].items.map((i) => i.control).sort()).toEqual(['GV.RR-02', 'GV.RR-03']);
@@ -214,11 +214,11 @@ describe('5 · Open document renders the auditor annotations (highlights + margi
         { label: 'Ongoing monitoring', found: true }] }, // no pat → derive from label words
     });
     // eslint-disable-next-line no-eval
-    const api = eval(grab('c5DocScoresSafe') + '\n' + grab('c5DocAnnotations') + '\n' + grab('c5AnnotateText') + '\n;({ann:c5DocAnnotations,mark:c5AnnotateText})');
+    const api = eval('var C5_STOP={};\n' + grab('c5Sentences') + '\n' + grab('c5ReqTerms') + '\n' + grab('c5BestSentence') + '\n' + grab('c5DocScoresSafe') + '\n' + grab('c5DocAnnotations') + '\n' + grab('c5AnnotateText') + '\n;({ann:c5DocAnnotations,mark:c5AnnotateText})');
     const ann = api.ann('d3.pdf');
     expect(ann.matched).toHaveLength(2);
     expect(ann.matched[0].pat).toBe('tier|critical|classification'); // the matcher travels with it
-    const text = 'Third-party program overview. Every supplier is assigned a risk tier during onboarding. The TPRM team performs ongoing monitoring of critical vendors.';
+    const text = 'Third-party program overview. Every supplier is assigned a risk tier and classification during vendor onboarding. The TPRM team performs ongoing monitoring of suppliers.';
     const out = api.mark(text, [], ann.matched);
     expect(out.kwLocated).toBe(2); // both were pinpointed in the document
     expect(out.html).toContain('c5ann c5annkw'); // blue keyword highlight

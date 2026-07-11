@@ -18,8 +18,8 @@ describe('framework control detail — document reference & annotations', () => 
   it('locates c5fwSource', () => { expect(a).toBeGreaterThan(0); });
 
   it('opens the source document reference (not just a bare "view") from the detail window', () => {
-    expect(fn).toContain('data-c5docjump="');
-    expect(fn).toContain('→ open the document reference');
+    expect(fn).toContain('data-c5docopen="');
+    expect(fn).toContain('→ open the uploaded document');
     expect(fn).not.toContain('→ view in document review');
   });
 

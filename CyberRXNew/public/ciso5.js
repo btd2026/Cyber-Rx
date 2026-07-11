@@ -77,6 +77,11 @@
     '.c5cards{display:flex;gap:12px;flex-wrap:wrap;margin-top:14px}',
     '.c5card{flex:1;min-width:150px;border:1px solid var(--line);border-radius:12px;padding:13px 15px;cursor:pointer;background:var(--surface)}',
     '.c5card:hover{border-color:var(--blue)}',
+    '.c5bdbox{cursor:pointer;position:relative}',
+    '.c5bdbox:hover{border-color:var(--blue)}',
+    '.c5bdbox::after{content:"\\203A";position:absolute;top:7px;right:10px;color:var(--muted);opacity:0;transition:opacity .12s;font-weight:700;font-size:14px;line-height:1}',
+    '.c5bdbox:hover::after{opacity:.75}',
+    '.c5prow.c5bdbox::after{top:50%;transform:translateY(-50%);right:8px}',
     '.c5card-l{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:500}',
     '.c5card-top{display:flex;justify-content:space-between;align-items:center;gap:6px}',
     '.c5card-v{font-size:22px;font-weight:500;font-family:var(--serif);margin-top:6px}',
@@ -4603,32 +4608,152 @@ function c5iaAttention(){
    / owner / review cadence / confidence never drift from the CRO or CLO. The headline is
    DERIVED from the register (rank + over/within appetite + direction) so it can't contradict
    the matrix; the identity fix is the funded treatment for the top risk. */
+/* ═══════════ Board seat — two-tab cockpit (01 Oversight · 02 Decisions) with click-to-source ═══════════
+   Every box on Oversight carries data-c5bd and opens a provenance drawer (shared openDrill shell)
+   showing each contributing SOURCE with its own type badge — Live telemetry (green) / Self-reported
+   (amber) / Modeled (neutral) — plus a confidence band, owner seat + link to that tab, and an as-of.
+   All values derive from the shared data layer; an unwired figure honestly reads "source not yet
+   connected". Regulatory & Assurance are panels on this tab, not standing tabs. */
+function c5bdTool(keys){var t=(typeof connectedTools==='function')?connectedTools():{};for(var i=0;i<keys.length;i++){var k=keys[i];if(t[k]&&t[k].on)return {vendor:t[k].vendor||k,demo:!!t[k].demo};}return null;}
+function c5bdTelem(keys,cap,covSig){var tt=c5bdTool(keys);if(!tt)return null;var cov=(covSig&&typeof sig==='function')?sig(covSig):null;var nm=tt.vendor?(String(tt.vendor).charAt(0).toUpperCase()+String(tt.vendor).slice(1)):'Connected tool';return {type:'telemetry',name:nm,detail:cap+(tt.demo?' · demo telemetry':' · live telemetry'),syncedAt:(typeof c5ago==='function'?c5ago():'recently'),coverage:(cov!=null?(cov+'%'):null)};}
+function c5bdDocSrc(rx,label){var docs=(typeof docList==='function')?docList():[];for(var i=0;i<docs.length;i++){var d=docs[i]||{};if(new RegExp(rx,'i').test(d.name||'')||new RegExp(rx,'i').test(d.type||''))return {type:'self_reported',name:d.name||d.type,detail:label+' · uploaded & analyzed at onboarding'+(d.cmmi!=null?(' · scored CMMI '+d.cmmi):''),syncedAt:null,coverage:null};}return null;}
+function c5bdMod(detail){return {type:'modeled',name:'Nerion model',detail:detail,syncedAt:null,coverage:null};}
+function c5bdSelf(name,detail){return {type:'self_reported',name:name,detail:detail,syncedAt:null,coverage:null};}
+function c5bdConf(srcs){if(!srcs||!srcs.length)return 'Low';var tel=false,self=false,mod=false;srcs.forEach(function(s){if(s.type==='telemetry')tel=true;else if(s.type==='self_reported')self=true;else mod=true;});if(tel)return 'High';if(mod||self)return 'Medium';return 'Low';}
+/* The board provenance layer — id → figure with { title, value, status, pill, sources[], confidence,
+   owner, ownerSeat, asOf } (+ q/a/metric on the five questions). Everything computed from the layer. */
+function c5bdFigures(){
+  var RR=(typeof c5RiskRegister==='function')?c5RiskRegister():{cyberResidual:0,appetite:0,cyberRank:null,total:0,controlsRemoved:0,rows:[]};
+  var IDF=c5IdFix();
+  var idm=(typeof c5get==='function')?c5get(IDF.mid||'exp_identity'):{connected:false};
+  var T=(typeof c5T==='function')?c5T():{improving:false,worsening:false};
+  var gov=(typeof LIVE!=='undefined'&&LIVE&&LIVE.governance)||{};
+  var irTested=/yes|tested|tabletop/i.test((gov.ir&&gov.ir.tested)||'');
+  var svc=(typeof c5CriticalServices==='function')?c5CriticalServices():[];
+  var cp=svc[0]||{};var cpGap=(cp.rto!=null&&cp.tgt!=null&&Number(cp.rto)>Number(cp.tgt));
+  var apUsd=RR.appetite||0, resUsd=RR.cyberResidual||0, over=(apUsd>0&&resUsd>apUsd);
+  var idUsd=idm.connected?idm.displayValue:(IDF.usd||null);
+  var mat=null;try{var cov=(typeof fwDeployedIds==='function')?fwDeployedIds():{};var tr=(typeof c5fwTree==='function')?c5fwTree('csf',cov):null;mat=tr?tr.overall:null;}catch(_){}
+  var dirWord=T.improving?'Improving':T.worsening?'Worsening':'Steady';
+  var asOf=(typeof c5ago==='function'?c5ago():'now');
+  var recStr=cpGap?((cp.rto)+'h vs '+(cp.tgt)+'h target'):'Within target';
+  var ctrlTelem=c5bdTelem(['okta','entra'],'Identity coverage (MFA / access)','mfa_pct')||c5bdTelem(['crowdstrike','defender'],'Endpoint coverage','edr_pct');
+  var policyDoc=c5bdDocSrc('policy|security','Governing policies');
+  var apDoc=c5bdDocSrc('appetite|loss','Cyber loss-appetite');
+  var backupTelem=c5bdTelem(['rubrik','veeam','cohesity','commvault'],'Backup / recovery','backup_immutable_pct');
+  function fig(o){o.sources=(o.sources||[]).filter(Boolean);o.confidence=o.confidence||c5bdConf(o.sources);o.asOf=o.asOf||asOf;return o;}
+  var F={};
+  F.bd_dir=fig({title:'Direction',value:dirWord,status:dirWord,pill:(T.improving?'g':T.worsening?'r':'n'),owner:'CISO',ownerSeat:'ciso',
+    sources:[c5bdMod('direction = quarter-over-quarter change in modeled residual risk (residual-risk series); inputs: control telemetry (measured) + risk register (self-reported)'),ctrlTelem]});
+  F.bd_risk=fig({title:'Cyber risk',value:(resUsd>0?usd(resUsd):'—'),status:(over?'Over appetite':'Within appetite'),pill:(over?'r':'g'),owner:'CFO / CRO',ownerSeat:'cro',
+    sources:[c5bdMod('residual = risk register × control-value ledger; inputs: exposure (modeled), appetite (self-reported)'),apDoc||c5bdSelf('Risk appetite',(apUsd>0?('board-set appetite '+usd(apUsd)):'appetite')+' — management-set at onboarding, not yet independently tested')]});
+  F.bd_disc=fig({title:'Disclosure',value:'8-K ≤ 4 days',status:(irTested?'SEC-ready':'Watch'),pill:(irTested?'g':'a'),owner:'CLO',ownerSeat:'clo',
+    sources:[c5bdSelf('SEC disclosure process','Item 1.05 8-K materiality process — '+(irTested?'tabletop-tested':'documented, tabletop pending')+' at onboarding'),c5bdDocSrc('incident|disclosure|IR','IR / disclosure runbook')]});
+  F.bd_oversight=fig({title:'Oversight',value:'Committee + ERM',status:((gov.committee&&/yes|integrated/i.test(gov.ermIntegrated||''))?'Active':(gov.committee?'Active':'Partial')),pill:(gov.committee?'g':'a'),owner:'Board / CISO',ownerSeat:'ciso',
+    sources:[c5bdSelf('Governance intake',(gov.committee?('Board committee = '+gov.committee):'Board committee')+(gov.cadence?(' · '+gov.cadence):'')+(gov.ermIntegrated?(' · ERM integrated = '+gov.ermIntegrated):'')+' — set by admin at onboarding')]});
+  F.bd_q1=fig({title:'Q1 · Are we getting better, or worse?',q:'Are we getting better, or worse?',a:'Improving, one gap caps it',metric:(mat!=null?('NIST CSF '+mat.toFixed(1)+'/5 ↑'):'NIST CSF ↑'),value:(mat!=null?('CSF '+mat.toFixed(1)+'/5 ↑'):'Improving'),status:'Watch',pill:'a',owner:'CISO',ownerSeat:'ciso',
+    sources:[ctrlTelem,policyDoc,c5bdMod('maturity = evidenced control CMMI across the framework; inputs: control telemetry (measured) + analyzed policy documents (self-reported)')]});
+  F.bd_q2=fig({title:'Q2 · What is our risk in dollars, vs appetite?',q:'What is our risk in dollars, vs appetite?',a:((resUsd>0?(usd(resUsd)+' residual, '):'residual ')+(over?'above appetite':'within appetite')),metric:(resUsd>0?usd(resUsd):'—')+' vs appetite',value:(resUsd>0?(usd(resUsd)+' residual'):'—'),status:(over?'Over':'Within'),pill:(over?'r':'g'),owner:'CFO / CRO',ownerSeat:'cro',
+    sources:[c5bdMod('residual exposure = modeled loss from the risk register and control-value ledger'),apDoc||c5bdSelf('Risk appetite',(apUsd>0?('appetite '+usd(apUsd)):'appetite')+' — management-set, not yet independently tested')]});
+  F.bd_q3=fig({title:'Q3 · If breached, how fast do we recover?',q:'If breached, how fast do we recover?',a:'In target except customer platform',metric:recStr,value:recStr,status:(cpGap?'One gap':'Ready'),pill:(cpGap?'a':'g'),owner:'COO',ownerSeat:'coo',
+    sources:[backupTelem,c5bdMod('recovery = critical-service RTO/RPO vs target from the resilience model; the customer platform’s identity-recovery path is the '+(cpGap?'one gap':'closed path'))]});
+  F.bd_q4=fig({title:'Q4 · Are we disclosure-ready?',q:'Are we disclosure-ready?',a:'SEC 4-day process tested',metric:'8-K ≤ 4 days',value:'8-K ≤ 4 days',status:(irTested?'Ready':'Watch'),pill:(irTested?'g':'a'),owner:'CLO',ownerSeat:'clo',
+    sources:[c5bdSelf('SEC materiality process','4-business-day 8-K process — '+(irTested?'tabletop-tested':'documented')+' at onboarding'),c5bdDocSrc('incident|disclosure|IR','IR runbook')]});
+  F.bd_q5=fig({title:'Q5 · Are we investing right — and the known gaps?',q:'Are we investing right — and the known gaps?',a:'Top controls; known gap is identity, funded',metric:(idUsd?(idUsd+' identity'):'identity, funded'),value:(idUsd?(idUsd+' identity'):'identity gap, funded'),status:'Action',pill:'a',owner:'CISO',ownerSeat:'ciso',
+    sources:[c5bdMod('largest control gap = identity, from the exposure model'),c5bdSelf('Funding decision','identity remediation funded — '+IDF.owner+' · '+IDF.timeline)]});
+  F.bd_reg_sec=fig({title:'SEC cyber disclosure',value:'Item 1.05 · Item 106',status:(irTested?'Ready':'In progress'),pill:(irTested?'g':'a'),owner:'CLO',ownerSeat:'clo',sources:[c5bdSelf('SEC disclosure process','materiality + 8-K process, '+(irTested?'tested':'documented')+' at onboarding')]});
+  F.bd_reg_gdpr=fig({title:'GDPR / privacy',value:'72-hour breach clock',status:'Compliant',pill:'g',owner:'CLO',ownerSeat:'clo',sources:[c5bdDocSrc('privacy|gdpr|dpa','Privacy programme')||c5bdSelf('Privacy programme','breach-notification process attested at onboarding')]});
+  F.bd_reg_aiact=fig({title:'EU AI Act',value:'High-risk AI obligations',status:'In progress',pill:'a',owner:'CLO',ownerSeat:'clo',sources:[]});
+  F.bd_reg_dora=fig({title:'DORA',value:'ICT major-incident reporting',status:'On track',pill:'g',owner:'CLO',ownerSeat:'clo',sources:[c5bdSelf('Operational-resilience programme','DORA reporting process attested at onboarding')]});
+  var auditDoc=c5bdDocSrc('audit|assessment|assurance','External audit');
+  var pentestDoc=c5bdDocSrc('pen.?test|penetration|red.?team','Penetration test');
+  var counselDoc=c5bdDocSrc('counsel|legal|disclosure.?controls','Counsel review');
+  F.bd_as_maturity=fig({title:'Maturity — external audit',value:(auditDoc?'Independently validated':'Not yet validated'),status:(auditDoc?'Validated':'Asserted'),pill:(auditDoc?'g':'a'),owner:'CISO',ownerSeat:'ciso',sources:[auditDoc],validated:!!auditDoc});
+  F.bd_as_recovery=fig({title:'Recovery — penetration test',value:(pentestDoc?'Independently validated':'Not yet validated'),status:(pentestDoc?'Validated':'Asserted'),pill:(pentestDoc?'g':'a'),owner:'COO',ownerSeat:'coo',sources:[pentestDoc],validated:!!pentestDoc});
+  F.bd_as_disclosure=fig({title:'Disclosure controls — counsel review',value:(counselDoc?'Independently validated':'Not yet validated'),status:(counselDoc?'Validated':'Asserted'),pill:(counselDoc?'g':'a'),owner:'CLO',ownerSeat:'clo',sources:[counselDoc],validated:!!counselDoc});
+  F.bd_as_exposure=fig({title:'Exposure model — management-asserted',value:'Modeled, not independently tested',status:'Asserted',pill:'a',owner:'CRO',ownerSeat:'cro',sources:[c5bdMod('exposure = modeled loss; not independently validated')]});
+  F.bd_as_appetite=fig({title:'Risk appetite — management-asserted',value:'Self-reported, not independently tested',status:'Asserted',pill:'a',owner:'CFO',ownerSeat:'cfo',sources:[apDoc||c5bdSelf('Risk appetite','management-set at onboarding, not independently tested')]});
+  F.bd_decision=fig({title:'Fund the identity remediation',value:((idUsd?(idUsd+' · '):'')+IDF.owner+' · '+IDF.timeline),status:'Needs the board',pill:'b',owner:IDF.owner,ownerSeat:'ciso',
+    sources:[c5bdMod('the one action behind questions 1, 2, 3 and 5 — brings cyber within appetite; inputs: exposure (modeled), funding (self-reported)'),c5bdSelf('Funding decision',IDF.owner+' · '+IDF.timeline)]});
+  return F;
+}
+function c5bdProvBadge(type){if(type==='telemetry')return '<span class="c5pill g">Live telemetry</span>';if(type==='self_reported')return '<span class="c5pill a">Self-reported</span>';if(type==='modeled')return '<span class="c5pill n">Modeled</span>';return '<span class="c5pill n">—</span>';}
+/* The provenance drawer for a board figure — opened by clicking any Oversight box. */
+function c5bdInspect(id){
+  var F=c5bdFigures();var f=F[id];if(!f)return;
+  var pc=f.pill||'n';var col=(pc==='r'?'crit':pc==='a'?'warn':pc==='g'?'good':pc==='b'?'blue':'muted');
+  var h='<div class="ev-claim">'+c5esc(f.title)+' <span class="c5pill '+pc+'">'+c5esc(f.status||'')+'</span></div>';
+  h+='<div style="display:flex;align-items:center;gap:14px;margin:12px 0 2px;padding:14px 16px;border-radius:12px;border:1px solid var(--line);border-left:3px solid var(--'+col+');background:var(--surface-2)">'+
+    '<div style="min-width:0;flex:1"><div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">Value</div><div style="font-size:22px;font-weight:700;line-height:1.15;color:var(--ink)">'+c5esc(f.value||'—')+'</div></div>'+
+    '<div style="text-align:right;flex:none"><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Confidence</div><div style="font-size:15px;font-weight:700;color:var(--'+(f.confidence==='High'?'good':f.confidence==='Medium'?'warn':'muted')+')">'+c5esc(f.confidence||'—')+'</div></div>'+
+  '</div>';
+  h+='<div class="ev-sec">Provenance — where this figure comes from</div>';
+  if(!f.sources.length){
+    h+='<div class="conf" style="border-left:3px solid var(--muted)"><b>Source not yet connected.</b> This figure is shown behind a Modeled / Illustrative badge until its tool or document is wired. Connect it in onboarding to make it measured.</div>';
+  } else {
+    h+=f.sources.map(function(s){
+      var meta=[];if(s.detail)meta.push(c5esc(s.detail));if(s.syncedAt)meta.push('synced '+c5esc(s.syncedAt));if(s.coverage)meta.push(c5esc(s.coverage)+' coverage');
+      return '<div style="border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px;background:var(--surface)"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><b style="font-size:13px;color:var(--ink)">'+c5esc(s.name||'Source')+'</b>'+c5bdProvBadge(s.type)+'</div>'+(meta.length?('<div style="font-size:12px;color:var(--ink-2);line-height:1.5;margin-top:4px">'+meta.join(' · ')+'</div>'):'')+'</div>';
+    }).join('');
+    if(f.sources.length>1)h+='<div style="font-size:11px;color:var(--muted);margin-top:2px">This figure is <b>mixed</b> — each contributing source carries its own type badge above.</div>';
+  }
+  var seat=f.ownerSeat||'ciso';var seatNm=(typeof c5seatLabel==='function'?c5seatLabel(seat):String(seat).toUpperCase());
+  h+='<div class="ev-sec">Owner</div><div class="conf" style="border-left:3px solid var(--blue)"><b>'+c5esc(f.owner||seatNm)+'</b> — the detail lives on the '+c5esc(seatNm)+' tab.<div style="margin-top:8px"><button class="c5btn" data-c5goseat="'+c5esc(seat)+'">Open the '+c5esc(seatNm)+' tab →</button></div></div>';
+  h+='<div class="c5foot">as of '+c5esc(f.asOf||'')+' · confidence '+c5esc(f.confidence||'')+(f.confidence==='High'?'':' — self-reported / modeled figures are not High confidence until independently tested')+'</div>';
+  if(typeof openDrill==='function')openDrill(f.title,h);
+}
+/* Delegated wiring: click any board box → provenance drawer; owner-tab button → switch seats. */
+if(typeof document!=='undefined'&&!window.__c5bdWired){window.__c5bdWired=true;
+  document.addEventListener('click',function(e){
+    var g=e.target.closest('[data-c5goseat]');if(g){e.preventDefault();try{if(typeof closeEv==='function')closeEv();}catch(_){}try{if(typeof selectSeat==='function')selectSeat(g.getAttribute('data-c5goseat'));}catch(_){}return;}
+    var tb=e.target.closest('[data-c5bdtab]');if(tb){e.preventDefault();e.stopPropagation();var idx=tb.getAttribute('data-c5bdtab');try{var t=document.querySelector('#secTabs .sectab[data-sec="'+idx+'"]');if(t)t.click();}catch(_){}return;}
+    var b=e.target.closest('[data-c5bd]');if(b&&b.getAttribute('data-c5bd')){e.stopPropagation();c5bdInspect(b.getAttribute('data-c5bd'));}
+  });
+}
+/* Tab 01 — Oversight (with Regulatory & Assurance as panels). */
 function c5bdHealth(){
   var host=document.getElementById('bd-health');if(!host)return;
-  var RR=c5RiskRegister();var IDF=c5IdFix();var dm=c5get(IDF.mid);var T=c5T();
+  var F=c5bdFigures();var IDF=c5IdFix();var RR=c5RiskRegister();
   var over=(RR.appetite>0&&RR.cyberResidual>RR.appetite);
-  var rankStr=RR.cyberRank?('#'+RR.cyberRank+' of '+RR.total+' principal risks'):'a principal risk';
-  var dirWord=T.improving?'trending down':T.worsening?'trending up':'steady';
-  // Every above-appetite risk on the register must have a named owner — the board's core test.
-  var ownedAll=RR.rows.every(function(r){return !!r.owner;});
-  var rows=RR.rows.map(function(r){
-    var isOver=(r.appetite!=null&&r.residual>r.appetite);
-    var dirPill=r.direction==='Falling'?'g':r.direction==='Rising'?'a':'n';
-    var sq=r.cyber?(isOver?'a':'b'):'n';
-    var sub=r.cyber
-      ? ('Owner: '+r.owner+' · reviewed '+r.cadence+' · inherent '+usd(r.inherent)+' → residual '+usd(r.residual)+' (controls −'+usd(Math.max(0,r.inherent-r.residual))+') · '+r.confidence)
-      : ('Owner: '+r.owner+' · reviewed '+r.cadence+' · '+r.confidence);
-    return '<div class="c5prow" data-c5m="'+(r.cyber?IDF.mid:'exp_total')+'"><span class="c5sq '+sq+'" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">'+c5esc(r.label)+(r.cyber&&isOver?' <span class="c5pill a" style="margin-left:6px">Above appetite</span>':'')+'</div><div class="c5row-s">'+c5esc(sub)+'</div></div><div class="c5prow-v" style="width:auto;font-weight:600">'+usd(r.residual)+'</div><span class="c5pill '+dirPill+'" style="flex:none">'+r.direction+'</span></div>';
+  function card(id){var f=F[id];if(!f)return '';var vc=(f.pill==='r'?'crit':f.pill==='a'?'warn':f.pill==='g'?'good':f.pill==='b'?'blue':'ink');
+    return '<div class="c5card c5bdbox" data-c5bd="'+id+'"><div class="c5card-top"><span class="c5card-l">'+c5esc(f.title)+'</span><span class="c5pill '+(f.pill||'n')+'">'+c5esc(f.status||'')+'</span></div><div class="c5card-v" style="color:var(--'+vc+')">'+c5esc(f.value||'—')+'</div></div>';}
+  // 5 questions
+  var qrows=['bd_q1','bd_q2','bd_q3','bd_q4','bd_q5'].map(function(id,i){var f=F[id];
+    return '<div class="c5prow c5bdbox" data-c5bd="'+id+'"><span style="flex:0 0 auto;width:22px;height:22px;border-radius:50%;background:var(--surface-2);border:1px solid var(--line);display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--ink-2)">'+(i+1)+'</span><div style="flex:1;min-width:0"><div class="c5row-t">'+c5esc(f.q)+'</div><div class="c5row-s">'+c5esc(f.a)+' · '+c5esc(f.metric)+' · owner: '+c5esc(f.owner)+'</div></div><span class="c5pill '+(f.pill||'n')+'" style="flex:none">'+c5esc(f.status)+'</span></div>';
   }).join('');
-  var strip='<div class="c5prow" style="cursor:default;background:var(--surface-2)"><div style="flex:1;min-width:0"><div class="c5row-s">Controls reduce cyber <b>inherent '+usd(RR.cyberResidual+RR.controlsRemoved)+'</b> → <b>residual '+usd(RR.cyberResidual)+'</b> — a modeled buy-down of '+usd(RR.controlsRemoved)+'. The residual '+(over?'sits above':'sits within')+' the board-set appetite'+(RR.appetite>0?(' of '+usd(RR.appetite)):'')+'.</div></div></div>';
-  var evN=[true,(typeof LIVE!=='undefined'&&LIVE&&LIVE.portfolio),dm.connected].filter(Boolean).length;
+  // Regulatory panel
+  var regRows=['bd_reg_sec','bd_reg_gdpr','bd_reg_aiact','bd_reg_dora'].map(function(id){var f=F[id];
+    return '<div class="c5prow c5bdbox" data-c5bd="'+id+'"><div style="flex:1;min-width:0"><div class="c5row-t">'+c5esc(f.title)+'</div><div class="c5row-s">'+c5esc(f.value)+'</div></div><span class="c5pill '+(f.pill||'n')+'" style="flex:none">'+c5esc(f.status)+'</span></div>';
+  }).join('');
+  // Assurance panel — two groups, validated vs asserted (validated require a real artifact)
+  function asItem(id){var f=F[id];return '<div class="c5prow c5bdbox" data-c5bd="'+id+'"><span class="c5sq '+(f.pill==='g'?'g':'a')+'" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">'+c5esc(f.title)+'</div><div class="c5row-s">'+c5esc(f.value)+'</div></div><span class="c5pill '+(f.pill||'n')+'" style="flex:none">'+c5esc(f.status)+'</span></div>';}
+  var valIds=['bd_as_maturity','bd_as_recovery','bd_as_disclosure'];
+  var validated=valIds.filter(function(id){return F[id].validated;});
+  var demoted=valIds.filter(function(id){return !F[id].validated;});
+  var assertIds=['bd_as_exposure','bd_as_appetite'].concat(demoted);
+  var asGroup=function(label,ids,note){return ids.length?('<div style="font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:6px 0 4px">'+label+(note?(' <span style="font-weight:500;text-transform:none;letter-spacing:0">'+note+'</span>'):'')+'</div>'+ids.map(asItem).join('')):'';};
+  var reg=F.bd_risk,disc=F.bd_disc;
+  var panels='<div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:14px">'+
+    '<div class="c5card" style="flex:1 1 320px;min-width:280px;padding:12px 14px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><span style="font-size:12.5px;font-weight:600;color:var(--ink)">Regulatory &amp; disclosure</span><button class="c5btn ghost" data-c5goseat="clo" style="font-size:11px;padding:3px 9px">register ›</button></div>'+regRows+'</div>'+
+    '<div class="c5card" style="flex:1 1 320px;min-width:280px;padding:12px 14px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><span style="font-size:12.5px;font-weight:600;color:var(--ink)">Assurance</span><button class="c5btn ghost" data-c5bd="bd_as_exposure" style="font-size:11px;padding:3px 9px">detail ›</button></div>'+
+      asGroup('Independently validated',validated,validated.length?'':'')+
+      (validated.length?'':'<div style="font-size:11.5px;color:var(--ink-2);margin:2px 0 4px">None on file — no external audit / pen-test / counsel artifact uploaded, so these move to management-asserted below.</div>')+
+      asGroup('Management-asserted',assertIds,'(self-reported · not yet independently tested)')+
+    '</div>'+
+  '</div>';
+  // Decision callout (clickable + Note button)
+  var dfig=F.bd_decision;var dm=c5get(IDF.mid);
+  var decision='<div class="c5bl c5bdbox" data-c5bd="bd_decision" style="border-left:3px solid var(--blue)"><div class="c5bl-k">Needs the board · one decision</div><div class="c5bl-h">Note management’s recommendation to fund the identity remediation.</div><div class="c5bl-p">It sits behind questions 1, 2, 3 and 5, is funded ('+c5esc(dfig.value)+'), and '+(over?'brings cyber within appetite — moving question&nbsp;#1 from Watch toward within-target':'closes the largest control gap — sustaining question&nbsp;#1')+'. Your role is oversight: note it and set a review date.</div><button class="c5btn" data-c5bdtab="1">Note &amp; set review date</button></div>';
+  var headline=over
+    ?'Management is actively managing cyber — and one funded decision would bring the enterprise’s largest risk within appetite.'
+    :'Management is actively managing cyber — the enterprise’s largest risk sits within appetite this quarter.';
   host.innerHTML=c5header()+
-    c5shell('Oversight · is cyber owned, within appetite, and improving?','Cyber is '+(over?'above its appetite share — owned and funded':'a managed risk within oversight')+', '+rankStr+', '+dirWord+'.',(over?'warn':null),'The board’s fiduciary view: every principal risk with its inherent vs residual, board-set appetite, direction, named owner and review cadence — read from one register the CRO and CLO share. Cyber is '+rankStr+'; its residual is Modeled. '+(ownedAll?'Every above-appetite risk has a named owner.':'One above-appetite risk still lacks a named owner.')+' Each row traces to the register.')+
-    '<div class="c5cards">'+c5card('ceo_health')+c5card('direction')+c5card('bd_material')+'</div>'+
-    '<div class="c5rank" style="padding:4px 15px;margin-top:14px"><div class="c5rank-h" style="border:0;background:transparent;padding:11px 0">Principal-risk register · inherent → residual · appetite · direction · owner · cadence</div>'+rows+strip+'</div>'+
-    c5convergeStrip('board')+
-    c5bl('For the board','Note and endorse management’s funded action on the top risk.',null,(dm.connected?('The largest exposure — the '+IDF.short+' gap, '+dm.displayValue+' — has a funded treatment underway ('+IDF.owner+' · '+IDF.timeline+'). It is the one action that moves cyber down the register and bends the trend. Nothing requires board action beyond noting and endorsing it — the honest caveat is that interim exposure persists until the fix lands.'):'The largest exposure has a funded treatment underway. Noting and endorsing it is the board’s role — the gap is not closed on day one.'),{mid:IDF.mid,txt:'Note & endorse the funded action'})+
-    '<div class="c5foot">Principal-risk register — cyber inherent/residual Modeled, ERM inputs self-reported; appetite board-set. Governance-grade, traceable to SEC Item 106. · '+RR.total+' risks on the register · '+evN+' sources connected</div>';
+    c5shell('Fiduciary oversight · is management managing cyber?',headline,(over?'warn':null),'The five questions your board asks, each traced to its owner — plus disclosure readiness and what’s independently validated versus asserted. Your role is oversight: confirm management is on it, and act on the one decision that needs you. <b>Click any box</b> to see its source and provenance.')+
+    '<div class="c5cards">'+card('bd_dir')+card('bd_risk')+card('bd_disc')+card('bd_oversight')+'</div>'+
+    '<div style="border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:14px"><div class="c5rank-h">The five questions your board asks — answered</div><div style="padding:2px 15px">'+qrows+'</div></div>'+
+    panels+
+    decision+
+    '<div class="c5foot">Answers trace to the owning executive’s tab, each carrying its own confidence; appetite is management-set and pending independent validation. Click any box for its source.</div>';
 }
 /* Tab 02 — Regulatory & disclosure · the disclosure regimes in scope, each with its clock
    and the board's readiness, plus the materiality determination under SEC Item 106. The

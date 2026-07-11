@@ -1,9 +1,8 @@
 /**
- * Board seat restructured to the proposed set: 01 Oversight / 02 Regulatory & disclosure /
- * 03 Assurance (independent validation) / 04 Decisions (Managed-risk/Trend tabs folded away).
- * Guards the seat body + tab labels, the shared principal-risk register on Oversight, the
- * named disclosure regimes, the independent-assurance provenance lens, and the Decisions
- * convergence strip + Decision 2 (commission independent assurance over cyber reporting).
+ * Board seat — two-tab cockpit: 01 Oversight (with Regulatory & Assurance as panels) and
+ * 02 Decisions, plus click-to-source provenance drawers on every Oversight box. Guards the
+ * two-tab body + labels, the provenance data layer (c5bdFigures) and drawer (c5bdInspect),
+ * the mixed source-type badges, and the "source not yet connected" honesty state.
  */
 
 const fs = require('fs');
@@ -14,70 +13,92 @@ const seats = fs.readFileSync(path.resolve(__dirname, '../../../CyberRXNew/publi
 const html = fs.readFileSync(path.resolve(__dirname, '../../../CyberRXNew/public/cockpit.html'), 'utf8');
 function fnOf(n) { const a = src.indexOf('function ' + n + '('); return src.slice(a, src.indexOf('\nfunction ', a + 20)); }
 
-describe('Board seat — restructured tab set', () => {
-  it('the seat body is Oversight / Regulatory & disclosure / Assurance (no Managed-risk or Trend tab)', () => {
-    expect(seats).toContain('Is our cyber oversight sound?');
-    expect(seats).toContain('What must we disclose — and are we ready?');
-    expect(seats).toContain('Is our cyber reporting independently validated?');
-    expect(seats).not.toContain('Is cyber a managed risk this quarter?');
-    expect(seats).not.toContain('id="bd-trend"');
+describe('Board seat — two tabs only (Oversight + Decisions)', () => {
+  it('the seat body is exactly Oversight + Decisions (Regulatory & Assurance are no longer standing tabs)', () => {
+    expect(seats).toContain("sec('01','Is management managing cyber?','','<div id=\"bd-health\"></div>')");
+    expect(seats).toContain("sec('02','What should the board note?','','<div id=\"bd-decisions\"></div>')");
+    expect(seats).not.toContain('id="bd-material"');
+    expect(seats).not.toContain('id="bd-governance"');
   });
-  it('the tabs read Oversight / Regulatory & disclosure / Assurance', () => {
-    expect(html).toContain("'Is our cyber oversight sound?':'Oversight'");
-    expect(html).toContain("'What must we disclose — and are we ready?':'Regulatory & disclosure'");
-    expect(html).toContain("'Is our cyber reporting independently validated?':'Assurance'");
+  it('the tabs read Oversight / Decisions', () => {
+    expect(html).toContain("'Is management managing cyber?':'Oversight'");
+    expect(html).toContain("'What should the board note?':'Decisions'");
   });
 });
 
-describe('Board 01 Oversight — principal-risk register', () => {
+describe('Board provenance data layer (c5bdFigures) — derived, never hardcoded', () => {
+  const f = fnOf('c5bdFigures');
+  it('derives from the shared data layer', () => {
+    expect(f).toContain('c5RiskRegister()');
+    expect(f).toContain('c5IdFix()');
+    expect(f).toContain('c5CriticalServices()');
+  });
+  it('builds the 4 summary cards, 5 questions, regulatory rows, assurance items and the decision', () => {
+    ['bd_dir','bd_risk','bd_disc','bd_oversight','bd_q1','bd_q5','bd_reg_sec','bd_reg_dora','bd_as_maturity','bd_as_appetite','bd_decision']
+      .forEach(id => expect(f).toContain('F.' + id + '='));
+  });
+  it('carries typed sources: telemetry, self_reported, modeled', () => {
+    expect(f).toContain('c5bdTelem(');
+    expect(f).toContain('c5bdSelf(');
+    expect(f).toContain('c5bdMod(');
+    expect(f).toContain('c5bdDocSrc(');
+  });
+  it('Assurance "validated" items require a real uploaded artifact (else they drop to asserted)', () => {
+    expect(f).toContain("c5bdDocSrc('audit|assessment|assurance'");
+    expect(f).toContain("c5bdDocSrc('pen.?test|penetration|red.?team'");
+    expect(f).toContain('validated:!!auditDoc');
+  });
+});
+
+describe('Board provenance drawer (c5bdInspect)', () => {
+  const d = fnOf('c5bdInspect');
+  it('opens via the shared drawer shell and shows a source-type badge per source', () => {
+    expect(d).toContain('openDrill(');
+    expect(d).toContain('c5bdProvBadge(s.type)');
+    expect(d).toContain('Provenance — where this figure comes from');
+  });
+  it('shows confidence, owner + a link to the owner tab, and an as-of', () => {
+    expect(d).toContain('Confidence');
+    expect(d).toContain('data-c5goseat="');
+    expect(d).toContain('as of ');
+  });
+  it('honestly reports an unwired figure instead of fabricating a source', () => {
+    expect(d).toContain('Source not yet connected');
+  });
+  it('a mixed figure labels each source individually', () => {
+    expect(d).toContain('is <b>mixed</b>');
+  });
+  const badge = fnOf('c5bdProvBadge');
+  it('the source-type badges are the three required types', () => {
+    expect(badge).toContain('Live telemetry');
+    expect(badge).toContain('Self-reported');
+    expect(badge).toContain('Modeled');
+  });
+});
+
+describe('Board Oversight tab (c5bdHealth) — layout + clickable boxes', () => {
   const h = fnOf('c5bdHealth');
-  it('reads the shared register with inherent → residual, appetite, direction, owner, cadence', () => {
-    expect(h).toContain('c5RiskRegister()');
-    expect(h).toContain('inherent ');
-    expect(h).toContain('residual ');
-    expect(h).toContain('reviewed ');
-    expect(h).toContain('c5convergeStrip(\'board\')');
+  it('every box is clickable (data-c5bd) — cards, questions, panels, decision', () => {
+    expect(h).toContain('data-c5bd="');
+    expect(h).toContain("card('bd_dir')");
+    expect(h).toContain('The five questions your board asks — answered');
+    expect(h).toContain('Regulatory &amp; disclosure');
+    expect(h).toContain('Assurance');
+    expect(h).toContain('data-c5bd="bd_decision"');
   });
-  it('the headline is derived from the register (rank + appetite), not hardcoded', () => {
-    expect(h).toContain('RR.cyberRank');
-    expect(h).toContain('RR.cyberResidual>RR.appetite');
+  it('the decision keeps the record action ("Note & set review date") wired to the Decisions tab', () => {
+    expect(h).toContain('Note &amp; set review date');
+    expect(h).toContain('data-c5bdtab="1"');
   });
-});
-
-describe('Board 02 Regulatory & disclosure — named regimes', () => {
-  const m = fnOf('c5bdMaterial');
-  it('names the real disclosure regimes and counts them in scope', () => {
-    expect(m).toContain('SEC · GDPR/CCPA · DORA · EU AI Act · EU CRA');
-    expect(m).toContain('regimes in scope');
-    expect(m).toContain('4 business days');
-  });
-  it('threads the identity fix as the most likely disclosure trigger', () => {
-    expect(m).toContain('IDF=c5IdFix()');
+  it('the headline cannot contradict the cyber-risk card (adapts to over/within appetite)', () => {
+    expect(h).toContain('var headline=over');
   });
 });
 
-describe('Board 03 Assurance — independent validation lens', () => {
-  const g = fnOf('c5bdGovernance');
-  it('shows tool-evidenced vs management-reported vs independently-assured provenance', () => {
-    expect(g).toContain('c5Assurance()');
-    expect(g).toContain('Tool-evidenced');
-    expect(g).toContain('Management-reported');
-    expect(g).toContain('Independently assured');
-    expect(g).toContain('None yet');
-  });
-});
-
-describe('Board 04 Decisions — contract', () => {
-  const d = fnOf('c5bdDecisions');
-  it('opens with the convergence strip and keeps the audit-trail promise', () => {
-    expect(d).toContain("c5convergeStrip('board')");
-    expect(d).toContain('no AI/LLM at run-time');
-  });
-  it('Decision 1 is the identity fix with its honest interim-exposure downside', () => {
-    expect(d).toContain("management’s '+IDF.short+' action?");
-    expect(d).toContain("Interim exposure persists across the '+IDF.timeline");
-  });
-  it('Decision 2 commissions independent assurance over cyber reporting', () => {
-    expect(d).toContain('Commission independent assurance over cyber reporting?');
+describe('Board — single shared identity constant', () => {
+  it('$382M / 90–180 days resolve to c5IdFix, not hardcoded in the board figures', () => {
+    // The only literal "90–180 days" is inside c5IdFix; board code reads IDF.timeline.
+    const matches = (src.match(/90–180 days/g) || []).length;
+    expect(matches).toBe(1);
   });
 });
