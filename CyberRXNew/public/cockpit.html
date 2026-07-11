@@ -2920,13 +2920,16 @@ function demoLive(){
       ratios:{pct_of_revenue:817e6/63e9}
     },
     crown_jewels:[
-      {name:'Customer billing platform', tier:'Critical'},
-      {name:'Customer identity & access', tier:'Critical'},
-      {name:'Order-to-cash', tier:'Critical'},
-      {name:'Global supply chain', tier:'High'},
-      {name:'Payments (PCI)', tier:'High'},
-      {name:'Financials / ERP', tier:'High'}
+      {name:'Customer billing platform', tier:'Critical', provisional:false},
+      {name:'Customer identity & access', tier:'Critical', provisional:false},
+      {name:'Order-to-cash', tier:'Critical', provisional:false},
+      {name:'Global supply chain', tier:'High', provisional:false},
+      {name:'Payments (PCI)', tier:'High', provisional:false},
+      {name:'Financials / ERP', tier:'High', provisional:true}
     ],
+    // Phase B/D — assisted revenue-confirmation state (drives which jewels are promoted).
+    revenue_confirmation:{ processes:8, confirmed:7, brings_money:5, unconfirmed:1, provisional_jewels:1,
+      top_unconfirmed:'Financials / ERP consolidation' },
     initiatives:[
       {name:'Customer-platform identity & access re-architecture', cost:'$18M', exposureRemoved:'$95M', owner:'CISO / CIO', status:'Funded', source:'decisions'},
       {name:'Phishing-resistant MFA rollout', cost:'$6M', exposureRemoved:'$40M', owner:'CISO', status:'In flight', source:'ticketing'},
