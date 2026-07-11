@@ -6408,19 +6408,191 @@ function c5CrownTreeInput(){
     return {org:org,RISKS:RISKS,C:C,DATA:DATA,CATALOG:106};
   }catch(e){try{console.warn('crown-tree adapter',e&&e.message);}catch(_){}return null;}
 }
+/* ===================================================================
+   NEURON CONTROLS — the capability-centric control layer.
+
+   The old model was control-centric: every framework control asked "what
+   evidences me?" and foraged for a document or a tool. Neuron Controls inverts
+   it. A security capability (identity, endpoint, backup, …) is MEASURED ONCE
+   from live telemetry, scored against BOTH risk lenses — adversarial (ATT&CK:
+   prevent / detect) and the five non-adversarial lanes — and its result is then
+   PROJECTED onto every framework control it maps to. Measure once, report
+   everywhere.
+
+   Honesty rails, unchanged from the rest of the platform:
+     · prevent = CONTROL PRESENCE (the capability is mapped & deployed) — never a
+       claim of proven effectiveness; detect = DETECTION COVERAGE.
+     · evidence class per capability: live (fully automated) / hybrid (telemetry
+       pulled, a human validates) / none (not deployed). A capability NEVER
+       evidences a policy-only control — those stay document-scored elsewhere.
+     · external frameworks (CIS / ISO 27001 / SOC 2 / PCI) are referenced by
+       CONTROL ID ONLY. No requirement prose is stored or rendered here.
+   =================================================================== */
+var NEURON_LANES=[
+  {id:'outage_dr',label:'Outage / disaster recovery',owner:'COO / CIO'},
+  {id:'data_corruption',label:'Data corruption / integrity',owner:'CIO / CISO'},
+  {id:'insider',label:'Insider (error & abuse)',owner:'CISO / CHRO'},
+  {id:'third_party_supply_chain',label:'Third-party / supply-chain',owner:'CISO / Procurement'},
+  {id:'privacy_regulatory',label:'Privacy / regulatory',owner:'CLO'}
+];
+var NEURON_LANE_LABEL={};NEURON_LANES.forEach(function(l){NEURON_LANE_LABEL[l.id]=l.label;});
+/* Per-capability projection: the non-adversarial lanes each capability defends,
+   its adversarial role, and the external-framework control IDs it evidences.
+   CSF + 800-53 IDs come from CAP_FRAMEWORK (already the source of truth); this
+   only ADDS the CIS / ISO / SOC 2 / PCI control identifiers + the risk lenses. */
+var NEURON_XWALK={
+  mfa:   {domain:'Identity & Access',role:'prevent',lanes:['insider','third_party_supply_chain','privacy_regulatory'],
+          cis:['6.3','6.4','6.5'],iso:['A.5.17','A.8.5'],soc2:['CC6.1','CC6.2','CC6.3'],pci:['8.3','8.4','8.5']},
+  pam:   {domain:'Identity & Access',role:'prevent',lanes:['insider','privacy_regulatory'],
+          cis:['5.4','6.8'],iso:['A.8.2','A.8.18'],soc2:['CC6.1','CC6.3'],pci:['7.2','8.6']},
+  edr:   {domain:'Endpoint',role:'both',lanes:['insider'],
+          cis:['10.1','10.6','13.7'],iso:['A.8.7','A.8.16'],soc2:['CC7.1','CC7.2'],pci:['5.2','5.3','11.5']},
+  vuln:  {domain:'Attack Surface',role:'prevent',lanes:['third_party_supply_chain'],
+          cis:['7.1','7.3','7.5','7.6'],iso:['A.8.8'],soc2:['CC7.1'],pci:['6.3','11.3']},
+  siem:  {domain:'Detection & Response',role:'detect',lanes:['insider','data_corruption','privacy_regulatory'],
+          cis:['8.2','8.5','8.9','8.11'],iso:['A.8.15','A.8.16'],soc2:['CC7.2','CC7.3'],pci:['10.2','10.4','10.6']},
+  cspm:  {domain:'Cloud Posture',role:'prevent',lanes:['outage_dr','data_corruption','privacy_regulatory'],
+          cis:['4.1','4.2','12.1'],iso:['A.8.9'],soc2:['CC6.6','CC7.1'],pci:['1.2','2.2','6.4']},
+  backup:{domain:'Resilience & Recovery',role:'prevent',lanes:['outage_dr','data_corruption'],
+          cis:['11.1','11.2','11.3','11.4'],iso:['A.8.13','A.5.29','A.5.30'],soc2:['A1.2','A1.3'],pci:[]},
+  seg:   {domain:'Network',role:'prevent',lanes:['outage_dr','insider'],
+          cis:['4.4','12.2','13.4'],iso:['A.8.20','A.8.22'],soc2:['CC6.1','CC6.6'],pci:['1.2','1.3','1.4']},
+  dlp:   {domain:'Data Protection',role:'prevent',lanes:['privacy_regulatory','insider','third_party_supply_chain'],
+          cis:['3.3','3.13'],iso:['A.8.12','A.8.10'],soc2:['CC6.7'],pci:['3.4','4.2']},
+  aware: {domain:'Human Risk',role:'prevent',lanes:['insider','privacy_regulatory'],
+          cis:['14.1','14.2','14.9'],iso:['A.6.3'],soc2:['CC1.4','CC2.2'],pci:['12.6']}
+};
+/* The live registry: every capability enriched with its telemetry, evidence
+   class, adversarial coverage and framework projection — computed, never stored. */
+function neuronControls(){
+  var out=[];var caps=(typeof CAPS!=='undefined')?CAPS:[];
+  caps.forEach(function(c){
+    var x=NEURON_XWALK[c.k];if(!x)return;
+    var fw=(typeof CAP_FRAMEWORK!=='undefined')?CAP_FRAMEWORK[c.k]:null;
+    var p=(typeof capDeploy==='function')?capDeploy(c):null;   // live telemetry %
+    var deployed=(p!=null);
+    var ceil=(typeof capAutoCeil==='function')?capAutoCeil(c):5;
+    var evidence=!deployed?'none':(ceil>=5?'live':'hybrid');   // live = fully automated; hybrid = telemetry + human
+    var frac=(p!=null?Math.max(0,Math.min(100,p))/100:0);
+    var prevent=(x.role==='prevent'||x.role==='both')?frac:0;  // control presence, NOT proven effectiveness
+    var detect=(x.role==='detect'||x.role==='both')?frac:0;    // detection coverage
+    out.push({k:c.k,name:c.name,tool:c.tool,domain:x.domain,role:x.role,
+      telemetry:p,deployed:deployed,evidence:evidence,maturityCeil:ceil,
+      attack:{prevent:prevent,detect:detect},lanes:x.lanes||[],
+      crosswalk:{csf:(fw&&fw.csf)||[],r53:(fw&&fw.r53)||[],cis:x.cis||[],iso:x.iso||[],soc2:x.soc2||[],pci:x.pci||[]}});
+  });
+  return out;
+}
+/* Per-lane non-adversarial coverage: which capabilities defend each lane and how
+   much of that defence is actually deployed (mean telemetry across its defenders). */
+function neuronLaneRollup(){
+  var nc=neuronControls();
+  return NEURON_LANES.map(function(L){
+    var defs=nc.filter(function(n){return n.lanes.indexOf(L.id)>=0;});
+    var live=defs.filter(function(n){return n.deployed;});
+    var cov=defs.length?Math.round(live.reduce(function(a,n){return a+(n.telemetry||0);},0)/defs.length):0;
+    return {id:L.id,label:L.label,owner:L.owner,defenders:defs.map(function(n){return n.name;}),
+      coverage:cov,deployed:live.length,total:defs.length};
+  });
+}
+/* Framework projection: for one framework, map each control ID to the Neuron
+   Controls that evidence it — and how many controls the layer covers in total. */
+function neuronFrameworkProjection(fwKey){
+  var nc=neuronControls();var map={};
+  nc.forEach(function(n){(n.crosswalk[fwKey]||[]).forEach(function(cid){
+    (map[cid]=map[cid]||[]).push({name:n.name,telemetry:n.telemetry,evidence:n.evidence});});});
+  var ids=Object.keys(map);
+  var evidenced=ids.filter(function(id){return map[id].some(function(m){return m.evidence!=='none';});}).length;
+  return {controls:map,total:ids.length,evidenced:evidenced};
+}
+/* The Neuron Controls lens — capability × (adversarial + 5 non-adversarial lanes)
+   × framework projection, in one view. Read-only; renders into the panel passed in. */
+function c5NeuronControls(host){
+  if(!host)return;
+  var esc=(typeof c5esc==='function')?c5esc:function(s){return s;};
+  var nc=neuronControls();
+  var live=nc.filter(function(n){return n.evidence==='live';}).length;
+  var hyb=nc.filter(function(n){return n.evidence==='hybrid';}).length;
+  var off=nc.filter(function(n){return n.evidence==='none';}).length;
+  var FW=[{k:'csf',l:'NIST CSF 2.0'},{k:'r53',l:'NIST SP 800-53'},{k:'cis',l:'CIS v8'},{k:'iso',l:'ISO 27001'},{k:'soc2',l:'SOC 2'},{k:'pci',l:'PCI DSS'}];
+  function evPill(ev){
+    var m={live:['🟢 live telemetry','good'],hybrid:['🔌 hybrid · human-validated','blue'],none:['— not deployed','muted']}[ev]||['—','muted'];
+    return '<span style="font-size:10px;font-weight:700;color:var(--'+m[1]+');background:color-mix(in srgb,var(--'+m[1]+') 12%,transparent);border:1px solid color-mix(in srgb,var(--'+m[1]+') 30%,transparent);border-radius:20px;padding:2px 8px;white-space:nowrap">'+m[0]+'</span>';
+  }
+  function axisBar(label,frac,col){
+    var w=Math.round(Math.max(0,Math.min(1,frac))*100);
+    return '<div style="display:flex;align-items:center;gap:7px;font-size:11px;color:var(--ink-2)"><span style="width:118px;flex:none">'+label+'</span>'
+      +'<div style="flex:1;height:6px;background:var(--surface-2);border-radius:4px;overflow:hidden"><i style="display:block;height:100%;width:'+w+'%;background:var(--'+col+')"></i></div>'
+      +'<span style="width:34px;text-align:right;font-weight:700;color:var(--'+col+')">'+w+'%</span></div>';
+  }
+  function laneChip(id){return '<span style="font-size:10.5px;color:var(--ink-2);background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:2px 7px;white-space:nowrap">'+esc(NEURON_LANE_LABEL[id]||id)+'</span>';}
+  // ── capability cards, grouped by domain ──
+  var domains={},order=[];
+  nc.forEach(function(n){if(!domains[n.domain]){domains[n.domain]=[];order.push(n.domain);}domains[n.domain].push(n);});
+  var cardsHtml=order.map(function(dom){
+    var cards=domains[dom].map(function(n){
+      var xw=n.crosswalk;
+      var proj=FW.map(function(f){var ids=xw[f.k]||[];return ids.length?('<span title="'+esc(ids.join(', '))+'" style="font-size:10.5px;color:var(--ink-2)"><b style="color:var(--ink)">'+f.l+'</b> '+ids.length+'</span>'):'';}).filter(Boolean).join('<span style="color:var(--line)"> · </span>');
+      return '<div style="border:1px solid var(--line);border-radius:12px;padding:14px 15px;background:var(--surface)">'
+        +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:3px"><b style="font-size:13.5px;color:var(--ink)">'+esc(n.name)+'</b>'+evPill(n.evidence)+'</div>'
+        +'<div style="font-size:11px;color:var(--muted);margin-bottom:10px">'+esc(n.tool||'')+'</div>'
+        +(typeof capBar==='function'?('<div style="margin-bottom:10px">'+capBar(n.telemetry)+'</div>'):'')
+        +axisBar('Prevent · presence',n.attack.prevent,'blue')
+        +'<div style="height:5px"></div>'
+        +axisBar('Detect · coverage',n.attack.detect,'good')
+        +'<div style="display:flex;flex-wrap:wrap;gap:5px;margin:11px 0 9px">'+n.lanes.map(laneChip).join('')+'</div>'
+        +'<div style="border-top:1px solid var(--line);padding-top:8px;line-height:1.7">'+(proj||'<span style="font-size:10.5px;color:var(--muted)">no external mapping</span>')+'</div>'
+        +'</div>';
+    }).join('');
+    return '<div style="margin-top:16px"><div style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:9px">'+esc(dom)+'</div>'
+      +'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">'+cards+'</div></div>';
+  }).join('');
+  // ── non-adversarial lane rollup ──
+  var lanes=neuronLaneRollup();
+  var laneRows=lanes.map(function(L){
+    var col=(typeof capColor==='function')?capColor(L.deployed?L.coverage:null):'muted';
+    return '<div style="display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)">'
+      +'<div style="width:210px;flex:none"><b style="font-size:12.5px;color:var(--ink)">'+esc(L.label)+'</b><div style="font-size:10.5px;color:var(--muted)">'+esc(L.owner)+' · '+L.deployed+' of '+L.total+' defenders live</div></div>'
+      +'<div style="flex:1;height:7px;background:var(--surface-2);border-radius:4px;overflow:hidden;min-width:80px"><i style="display:block;height:100%;width:'+Math.max(0,Math.min(100,L.coverage))+'%;background:var(--'+col+')"></i></div>'
+      +'<span style="width:42px;text-align:right;font-size:12.5px;font-weight:700;color:var(--'+col+')">'+L.coverage+'%</span>'
+      +'<div style="width:230px;flex:none;font-size:10.5px;color:var(--ink-2);text-align:right">'+esc(L.defenders.join(' · ')||'—')+'</div></div>';
+  }).join('');
+  // ── framework projection strip ──
+  var fwStrip=FW.map(function(f){var pj=neuronFrameworkProjection(f.k);
+    return '<div style="border:1px solid var(--line);border-radius:10px;padding:11px 13px;background:var(--surface);min-width:120px">'
+      +'<div style="font-size:11px;color:var(--muted);margin-bottom:3px">'+esc(f.l)+'</div>'
+      +'<div style="font-size:19px;font-weight:800;color:var(--ink)">'+pj.evidenced+'<span style="font-size:12px;font-weight:600;color:var(--muted)"> controls</span></div>'
+      +'<div style="font-size:10.5px;color:var(--ink-2)">projected from telemetry</div></div>';
+  }).join('');
+  host.innerHTML=
+    '<div style="max-width:1080px">'
+    +'<div style="font-size:15px;font-weight:800;color:var(--ink)">Neuron Controls</div>'
+    +'<div style="font-size:12.5px;color:var(--ink-2);line-height:1.6;margin:5px 0 4px;max-width:760px">Your security capabilities, measured once from live telemetry and scored against <b>both</b> risk lenses — adversarial (MITRE ATT&CK: prevent / detect) and the five non-adversarial lanes — then <b>projected</b> onto every framework control they map to. <span style="color:var(--muted)">Measure once, report everywhere.</span></div>'
+    +'<div style="font-size:12px;color:var(--ink-2);margin:10px 0 4px"><b style="color:var(--ink)">'+nc.length+'</b> Neuron Controls · <b style="color:var(--good)">'+live+'</b> live telemetry · <b style="color:var(--blue)">'+hyb+'</b> hybrid (a human validates) · <b style="color:var(--muted)">'+off+'</b> not deployed</div>'
+    +'<div style="font-size:11px;color:var(--muted);margin-bottom:6px">Prevent reflects <b>control presence</b> (the capability is mapped &amp; deployed), not proven effectiveness — effectiveness (BAS / purple-team) is a future signal, never faked here.</div>'
+    +cardsHtml
+    +'<div style="margin-top:24px"><div style="font-size:12.5px;font-weight:800;color:var(--ink);margin-bottom:4px">Non-adversarial risk lanes</div>'
+    +'<div style="font-size:11.5px;color:var(--muted);margin-bottom:8px">The exposures that are not an intrusion — outage, corruption, insider, supply-chain, privacy — each covered by the same telemetry, so the whole estate is answered, not just crown jewels.</div>'+laneRows+'</div>'
+    +'<div style="margin-top:24px"><div style="font-size:12.5px;font-weight:800;color:var(--ink);margin-bottom:4px">Framework projection</div>'
+    +'<div style="font-size:11.5px;color:var(--muted);margin-bottom:10px">The same measurements, reported into each framework by control ID. One control model, six frameworks.</div>'
+    +'<div style="display:flex;flex-wrap:wrap;gap:10px">'+fwStrip+'</div></div>'
+    +'</div>';
+}
 /* Program Health dispatcher — renders the tab strip, then the active panel.
    Lazy-mounts: the island is only built while "Nerion's View" is active. */
 function c5Frameworks(){
   var host=document.getElementById('c5-frameworks');if(!host)return;
-  var tab=(C5_PH_TAB==='nerion')?'nerion':'classic';
+  var tab=(C5_PH_TAB==='nerion')?'nerion':(C5_PH_TAB==='neuron')?'neuron':'classic';
   host.innerHTML=c5header()+
     '<div class="subwrap c5phwrap"><div class="subtabs">'+
       '<button class="subtab'+(tab==='classic'?' on':'')+'" data-phtab="classic">Classic View</button>'+
+      '<button class="subtab'+(tab==='neuron'?' on':'')+'" data-phtab="neuron">Neuron Controls</button>'+
       '<button class="subtab'+(tab==='nerion'?' on':'')+'" data-phtab="nerion">Nerion’s View</button>'+
     '</div></div><div id="c5ph-body"></div>';
   host.querySelectorAll('[data-phtab]').forEach(function(b){b.onclick=function(){C5_PH_TAB=b.getAttribute('data-phtab');c5Frameworks();};});
   var body=document.getElementById('c5ph-body');
   if(tab==='nerion'){c5MountCrownTree(body);}
+  else if(tab==='neuron'){c5NeuronControls(body);}
   else{c5FrameworksClassic(body);}
 }
 /* Classic View — the framework-maturity content that Program Health rendered
