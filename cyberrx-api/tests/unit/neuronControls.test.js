@@ -57,6 +57,34 @@ describe('Neuron Controls — risk-driver breakdown per framework (dual lens)', 
   });
 });
 
+describe('Neuron Controls — effectiveness hook (presence → proven, never faked)', () => {
+  const cockpit = fs.readFileSync(path.resolve(__dirname, '../../../CyberRXNew/public/cockpit.html'), 'utf8');
+
+  it('reads a measured BAS / purple-team reading from LIVE.control_effectiveness', () => {
+    expect(ciso).toContain('function neuronEffectiveness(){return (typeof LIVE!==\'undefined\'&&LIVE&&LIVE.control_effectiveness)||{};}');
+    expect(ciso).toContain('var ef=(typeof neuronEffectiveness===\'function\')?neuronEffectiveness()[c.k]:null;');
+  });
+
+  it('graduates prevent to proven ONLY when a reading is present (else presence-only)', () => {
+    expect(ciso).toContain("? {measured:true,blocked:(ef.blocked!=null?ef.blocked:null)");
+    expect(ciso).toContain(': {measured:false}');
+    // view: proven bar when measured, presence bar otherwise
+    expect(ciso).toContain("axisBar('Prevent · proven',eff.blocked,'good')");
+    expect(ciso).toContain("axisBar('Prevent · presence',n.attack.prevent,'blue')");
+  });
+
+  it('the demo wires a subset (BAS + purple-team), the rest stay presence-only', () => {
+    expect(cockpit).toContain('control_effectiveness:{');
+    expect(cockpit).toContain("source:'BAS · Cymulate'");
+    expect(cockpit).toContain("source:'Purple-team exercise'");
+  });
+
+  it('when no reading exists, the view names the connect path — nothing inferred', () => {
+    expect(ciso).toContain('connect a BAS platform (AttackIQ, SafeBreach, Cymulate)');
+    expect(ciso).toContain('Nothing is inferred.');
+  });
+});
+
 describe('Neuron Controls — honesty rails', () => {
   it('evidence class is live (automated) / hybrid (telemetry + human) / none — never faked', () => {
     expect(ciso).toContain("var evidence=!deployed?'none':(ceil>=5?'live':'hybrid');");
