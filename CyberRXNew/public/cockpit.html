@@ -2942,6 +2942,9 @@ function demoLive(){
       {name:'Payments (PCI)', impact:0.75, control_presence:0.80, detection:0.75, non_adversarial:['privacy_regulatory','third_party_supply_chain']}
     ],
     effectiveness_measured:false, // hook: BAS / purple-team not yet wired
+    // Phase D — CIO asset/infra lineage + ingestion coverage / blind-spot health.
+    estate_coverage:{ assets:240, mapped:222, lineage_complete:5, lineage_total:6, blind_spots:2,
+      blind_examples:['East-region billing replica','Legacy reconciliation batch host'] },
     initiatives:[
       {name:'Customer-platform identity & access re-architecture', cost:'$18M', exposureRemoved:'$95M', owner:'CISO / CIO', status:'Funded', source:'decisions'},
       {name:'Phishing-resistant MFA rollout', cost:'$6M', exposureRemoved:'$40M', owner:'CISO', status:'In flight', source:'ticketing'},
