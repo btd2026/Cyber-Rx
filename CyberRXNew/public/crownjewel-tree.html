@@ -107,6 +107,10 @@
   .node.jewel .crown{position:absolute;top:-13px;left:50%;transform:translateX(-50%);font-size:20px;filter:drop-shadow(0 2px 2px #0002);z-index:3}
   .node.jewel .cjline{display:flex;align-items:center;gap:6px;margin-bottom:5px}
   .node.jewel .cjtag{font-size:8.5px;letter-spacing:.06em;text-transform:uppercase;font-weight:800;color:#8a6a1e}
+  /* Provisional crown jewel — a revenue process not yet confirmed (amber, dashed). */
+  .node.jewel.provisional{border-style:dashed;border-color:#D8862B}
+  .node.jewel .cjtag.prov{color:#B23A2E}
+  .node.jewel .crown.prov{filter:grayscale(1);opacity:.6}
   .node.jewel .ttl{font-size:12.5px}
 
   .node.risk{width:116px;text-align:center}
@@ -182,7 +186,7 @@
   </div>
   <div class="scroll"><div class="tree" id="tree"></div></div>
   <div class="scope" id="scope"></div>
-  <footer>Illustrative sample data (an insurance carrier, to match the “Claims Processing” example); the risks (R1, R2, …) are an illustrative stand-in for the risk register you upload at onboarding. Crown jewels are applications and key infrastructure (firewalls, identity) — data is protected as a risk to the application or system that holds it, not as a separate crown jewel. <b>Dollars are shown at the critical function and at each risk.</b> A function carries a business value, split into <b>mitigated + residual at risk</b>. Processes and crown jewels are the structural path (no dollars). Each <b>risk’s</b> figure is the slice of the function’s value it leaves exposed, set by its controls: a control at <b>maturity 3 or higher</b> mitigates its slice (struck through); residual $ at risk sums only the slices guarded by controls below 3. The <b>FAIR</b> line on each node is a second, loss-based lens: the <b>expected annual loss</b> (and 1-in-20-year worst case) computed by the shared FAIR engine from threat frequency, vulnerability and each control’s effectiveness — it rolls up additively, so each control’s residual loss sums to its risk, and every risk sums to the enterprise total at the top. Hover any control for its NIST CSF 2.0 name and description.</footer>
+  <footer>Illustrative sample data (an insurance carrier, to match the “Claims Processing” example); the risks (R1, R2, …) are an illustrative stand-in for the risk register you upload at onboarding. Crown jewels are applications and key infrastructure (firewalls, identity) — data is protected as a risk to the application or system that holds it, not as a separate crown jewel. <b>Dollars are shown at the critical function and at each risk.</b> A function carries a business value, split into <b>mitigated + residual at risk</b>. Processes and crown jewels are the structural path (no dollars). Each <b>risk’s</b> figure is the slice of the function’s value it leaves exposed, set by its controls: a control at <b>maturity 3 or higher</b> mitigates its slice (struck through); residual $ at risk sums only the slices guarded by controls below 3. The <b>FAIR</b> line on each node is a second, loss-based lens: the <b>expected annual loss</b> (and 1-in-20-year worst case) computed by the shared FAIR engine from threat frequency, vulnerability and each control’s effectiveness — it rolls up additively, so each control’s residual loss sums to its risk, and every risk sums to the enterprise total at the top. A jewel marked <b style="color:#B23A2E">Provisional · confirm revenue</b> is derived from a revenue process not yet confirmed — it stays a candidate until confirmed (the CFO step), not a promoted crown jewel. Hover any control for its NIST CSF 2.0 name and description.</footer>
 </div>
 <div class="tip" id="tip"></div>
 
@@ -243,7 +247,7 @@ let DATA=[
      {name:"Policy admin & rating engine",type:"Application",value:2.0,risks:[
        {id:"R3",ctrls:[["PR.AA-05",3],["PR.PS-06",3]]}]}]},
    {name:"Assess external risk data",jewels:[
-     {name:"Underwriting data platform",type:"Application",value:1.1,risks:[
+     {name:"Underwriting data platform",type:"Application",value:1.1,provisional:true,risks:[
        {id:"R6",ctrls:[["GV.SC-04",3],["GV.SC-07",2]]}]}]}
  ]},
  {name:"Billing & Payments",crit:"High",procs:[
@@ -377,8 +381,13 @@ function riskNode(r){const rexp=r.pot?r.live/r.pot:0; const col=r.mitigated?'#4E
      ${r.fairEAL!=null?`<div class="fairchip"><span class="fk">FAIR</span>EAL <b>${$F(r.fairEAL)}</b> · worst-year <b>${$F(r.fairTail)}</b></div>`:''}</div>
    <div class="expander">−</div></div><ul>${r.ctrls.map(ctrlNode).join("")}</ul></li>`;}
 function jewelNode(j){
-  return `<li class="collapsed"><div class="node jewel haschild"><span class="crown">👑</span><div class="accent"></div>
-   <div class="pad"><div class="cjline"><span class="tpill" style="background:${TYPECOL[j.type]}">${j.type==='Infrastructure'?'INFRA':j.type==='Application'?'APP':'DATA'}</span><span class="cjtag">Crown jewel</span></div>
+  // A PROVISIONAL jewel is derived from a revenue process the user hasn't yet confirmed — shown
+  // as a candidate (amber), not promoted to a confirmed crown jewel until the CFO confirms.
+  var prov=!!j.provisional;
+  var tag=prov?'<span class="cjtag prov">Provisional · confirm revenue</span>':'<span class="cjtag">Crown jewel</span>';
+  var crown=prov?'<span class="crown prov">◇</span>':'<span class="crown">👑</span>';
+  return `<li class="collapsed"><div class="node jewel haschild${prov?' provisional':''}">${crown}<div class="accent"></div>
+   <div class="pad"><div class="cjline"><span class="tpill" style="background:${TYPECOL[j.type]}">${j.type==='Infrastructure'?'INFRA':j.type==='Application'?'APP':'DATA'}</span>${tag}</div>
      <div class="ttl">${j.name}</div>
      ${mini(j.exposure)}</div>
    <div class="expander">+</div></div><ul>${j.risks.map(riskNode).join("")}</ul></li>`;}

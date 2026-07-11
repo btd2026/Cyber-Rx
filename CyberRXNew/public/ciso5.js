@@ -6299,7 +6299,7 @@ function c5CrownTreeInput(){
           if(!risks.length)return;
           var val=perJewel>0?perJewel:(a.risks||[]).reduce(function(s,r){return s+(Number(r.exposure_usd)||0);},0);
           if(!(val>0))return;
-          jewels.push({name:a.name||'Crown jewel',type:isInfra(a.name)?'Infrastructure':'Application',value:val/1e9,risks:risks});
+          jewels.push({name:a.name||'Crown jewel',type:isInfra(a.name)?'Infrastructure':'Application',value:val/1e9,provisional:!!a.provisional,risks:risks});
         });
         if(jewels.length)procs.push({name:p.name||'Process',jewels:jewels});
       });
