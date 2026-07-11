@@ -1559,26 +1559,30 @@ function c5AuditAreas(kind){
 /* Customer-facing services from the crown-jewel systems; the top one carries the
    identity/access risk (the same shared exposure), the rest read secure. */
 function c5Services(){
-  var cj=(typeof LIVE!=='undefined'&&LIVE&&LIVE.crown_jewels)||[];var M=c5expModel();var idMat=M.drivers.some(function(d){return d.id==='exp_identity'&&d.usd>0;});
+  var cjAll=(typeof LIVE!=='undefined'&&LIVE&&LIVE.crown_jewels)||[];var M=c5expModel();var idMat=M.drivers.some(function(d){return d.id==='exp_identity'&&d.usd>0;});
   var edr=sig('edr_pct'),patch=sig('patch_pct'),oi=sig('open_incidents');
   // Telemetry source string, named honestly. Per-asset EDR/VM feeds aren't wired
   // yet, so we read the estate signals; the src column names the tools they come
   // from rather than a vague "within posture".
   var vmTxt=(patch!=null?('VM: '+(100-patch)+'% critical open'):'VM: not connected');
   var edrTxt=(edr!=null?('EDR '+edr+'% deployed'):'EDR: not connected');
-  // The authoritative crown-jewel set is exactly what onboarding derived and the
-  // user confirmed (LIVE.crown_jewels = apps that clear the criticality threshold).
-  // Use ALL of them — never re-truncate here, or the cockpit count drifts from the
-  // onboarding preview (the "2 here, 6 there" bug). The denominator must equal the
-  // onboarding crown-jewel count.
+  // Only CONFIRMED crown jewels count toward the headline. Per the revenue gate, a
+  // crown jewel is promoted only from a process the CFO confirmed brings money;
+  // candidates from unconfirmed processes stay `provisional` and are NOT counted —
+  // exactly as the onboarding preview promotes them. Counting provisional candidates
+  // here is what made the cockpit read "9" while onboarding showed "6": same set,
+  // different gate. Filter to confirmed so the two numbers can never drift, and
+  // surface the provisional candidates separately (labelled, never in the headline).
+  var cj=cjAll.filter(function(c){return !c.provisional;});
+  var provisional=cjAll.filter(function(c){return c.provisional;}).length;
   var list=cj.map(function(c,i){var o={name:c.name,tier:c.tier};
     if(i===0&&idMat){o.status='At risk';o.c='warn';o.sub='Identity / access path is exposed';o.src='EDR + identity/access telemetry';o.why='exp_identity';}
     else{o.status='Secure';o.c='good';o.sub='No active detection';o.src=edrTxt+' · '+vmTxt;}
     return o;});
-  // Denominator = the authoritative onboarding crown-jewel count (counts.crown_jewels),
-  // so "X of N at risk" always traces to the onboarding crown-jewel set.
-  var total=(typeof LIVE!=='undefined'&&LIVE&&LIVE.counts&&Number(LIVE.counts.crown_jewels))||list.length;
-  return {list:list,total:total,atRisk:list.filter(function(x){return x.status==='At risk';}).length};
+  // Denominator = the confirmed crown-jewel set actually shown, so "X of N" always
+  // equals the list on screen AND the onboarding-promoted count — one number, no drift.
+  var total=list.length;
+  return {list:list,total:total,atRisk:list.filter(function(x){return x.status==='At risk';}).length,provisional:provisional,candidateTotal:cjAll.length};
 }
 /* Plain-English "why is this crown jewel at risk?" — opened from the "why?" link in the
    crown-jewels inspector. Explains, in prose, that the identity/access path is the
@@ -3665,9 +3669,13 @@ function c5ceOverview(){
   var dValue=connected
     ?('In a severe (1-in-20) year, a cyber loss could reach <b>'+(tailUsd||valUsd)+'</b> — the figure to plan against, not the average year. Nearly all of it sits in one system, <b>'+c5esc(atName)+'</b>'+(cpDep?(' ('+c5esc(cpDep)+')'):'')+', where identity and access controls are the weak point. The funded fix ('+IDF.owner+', '+IDF.timeline+') removes the largest share.')
     :'We’ll put a dollar figure on this the moment your financials and security tools are connected — never an estimate before then.';
-  var dCrown=(atR>0)
+  var provN=Scr.provisional||0;
+  // Explain any provisional candidates so the confirmed count never looks like it "lost"
+  // systems — they are candidates from processes not yet confirmed to bring money.
+  var provClause=(provN>0)?(' <b>'+provN+'</b> further candidate'+(provN>1?'s remain':' remains')+' <b>provisional</b> — awaiting confirmation that '+(provN>1?'their':'its')+' revenue process brings money before promotion to a crown jewel; '+(provN>1?'they are':'it is')+' not counted here.'):'';
+  var dCrown=((atR>0)
     ?('<b>'+protN+' of '+crownN+'</b> revenue systems are fully protected. The exception is <b>'+c5esc(atName)+'</b> — its identity and access controls are weak enough that an attacker could reach customer data, and it is among your highest-value systems. Remediation is funded and underway ('+IDF.owner+', '+IDF.timeline+').')
-    :(crownN>0?('All <b>'+crownN+'</b> revenue systems are protected this quarter — none carries a material exposure.'):'Map your revenue systems at onboarding and each one’s status will list here.');
+    :(crownN>0?('All <b>'+crownN+'</b> revenue systems are protected this quarter — none carries a material exposure.'):'Map your revenue systems at onboarding and each one’s status will list here.'))+provClause;
   var dTrust=(incident
     ?'A customer-impacting incident is <b>active</b>. The response is running from the War Room and legal has started the disclosure clock.'
     :'No customer-impacting incident is active, so customer trust is <b>intact</b> this quarter. If one occurred, the War Room runs the response and legal starts the clock the same day.');
