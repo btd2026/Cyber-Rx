@@ -1155,10 +1155,11 @@ function drillRoi(k){var s=ROI_STATE||{};
     '<div class="drill-p" style="color:var(--muted)">Portfolio return is computed on the totals, not by averaging individual ratios. The gross multiple and the net ROSI are both standard, defensible framings of the same result.</div>'+prov;
   return '<div class="drill-hero">'+(s.n||0)+' initiatives</div>'+
     '<div class="drill-p">The funded portfolio: <b>'+(s.fromTicketing||0)+'</b> in-flight project'+((s.fromTicketing||0)===1?'':'s')+' pulled from your ticketing system and <b>'+(s.fromDecisions||0)+'</b> decision'+((s.fromDecisions||0)===1?'':'s')+' recorded in this cockpit, presented as a single register. Select any initiative to trace its cost, risk reduced and return.</div>'+prov;}
-function renderInitiatives(){
-  var host=document.getElementById('initiatives-panel');if(!host)return;
+/* Build the funded-initiative register and the portfolio totals. Split out from
+   the panel renderer so ROI_STATE is computed on EVERY render (the overviews on
+   other seats read eff_return before the initiatives panel exists in the DOM). */
+function computeRoiState(){
   var list=allDecisions();var imp=importedInits();
-  if(!list.length&&!imp.length){host.innerHTML='<div class="card"><div class="cn">No cyber initiatives yet. Import your in-flight projects at onboarding (upload or pull from Jira/ServiceNow), and every decision an executive commits is added here — each mapped to the business outcome it buys and the risk it removes.</div></div>';return;}
   var items=[];
   list.forEach(function(d){var committed=(Date.now()-(d.ts||0))>=EDIT_WINDOW_MS;var cost=extractCost(d.osum),roi=extractROI(d.osum);
     items.push({name:d.title,sub:'Decision · '+(d.by||'')+(d.seat?(' ('+(SEAT_LABEL[d.seat]||d.seat)+')'):''),cost:cost==='—'?'':cost,costUsd:parseUsdNum(cost),roi:roi==='—'?0:parseFloat(roi),riskDirect:parseUsdNum(extractRiskReduced(d.osum+' '+(d.title||''))),status:d.ticket?statusStep(d.status).t:(committed?'Committed':'In 24h review'),ticket:d.ticket,url:d.url,system:d.system});});
@@ -1176,10 +1177,16 @@ function renderInitiatives(){
   var invested=items.reduce(function(s,it){return s+it.costUsd;},0);
   var riskRemoved=items.reduce(function(s,it){return s+it.riskRemoved;},0);
   var ret=invested>0?(riskRemoved/invested):0,rosiNet=invested>0?((riskRemoved-invested)/invested):0;
+  ROI_STATE={invested:invested,riskRemoved:riskRemoved,ret:ret,rosiNet:rosiNet,n:items.length,fromTicketing:imp.length,fromDecisions:list.length};
+  return {items:items,list:list,imp:imp,invested:invested,riskRemoved:riskRemoved,ret:ret};
+}
+function renderInitiatives(){
+  var st=computeRoiState();var items=st.items,invested=st.invested,riskRemoved=st.riskRemoved,ret=st.ret,imp=st.imp,list=st.list;
+  var host=document.getElementById('initiatives-panel');if(!host)return;
+  if(!list.length&&!imp.length){host.innerHTML='<div class="card"><div class="cn">No cyber initiatives yet. Import your in-flight projects at onboarding (upload or pull from Jira/ServiceNow), and every decision an executive commits is added here — each mapped to the business outcome it buys and the risk it removes.</div></div>';return;}
   var OBJS=[{k:'Enable growth',cls:'good'},{k:'Meet obligations',cls:'blue'},{k:'Protect the business',cls:'warn'}];
   var byObj={};items.forEach(function(it){byObj[it.biz.obj]=(byObj[it.biz.obj]||0)+it.riskRemoved;});
   var split=OBJS.map(function(o){var v=byObj[o.k]||0;var pc=riskRemoved>0?Math.round(v/riskRemoved*100):0;return '<div style="flex:1;min-width:150px"><div style="display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:4px"><span>'+objBadge(o.cls,o.k)+'</span><span style="font-weight:700">'+(v>0?usd(v):'—')+'</span></div><div style="height:6px;background:var(--surface-2);border-radius:4px;overflow:hidden"><i style="display:block;height:100%;width:'+pc+'%;background:'+objColor(o.cls)+'"></i></div><div class="cn" style="margin-top:3px">'+pc+'% of risk removed</div></div>';}).join('');
-  ROI_STATE={invested:invested,riskRemoved:riskRemoved,ret:ret,rosiNet:rosiNet,n:items.length,fromTicketing:imp.length,fromDecisions:list.length};
   var summary='<div class="grid4" style="margin-top:2px">'+
     '<div class="card optile" data-idrill="invested"><div class="ck">Invested</div><div class="cv" style="font-size:22px">'+(invested>0?usd(invested):'—')+'</div><div class="cn">committed across the portfolio <span class="drill-cta">details ▸</span></div></div>'+
     '<div class="card optile" data-idrill="risk"><div class="ck">Risk reduced</div><div class="cv" style="font-size:22px;color:var(--good)">'+(riskRemoved>0?usd(riskRemoved):'—')+'</div><div class="cn">annual loss exposure the portfolio buys down <span class="drill-cta">details ▸</span></div></div>'+
@@ -2896,7 +2903,60 @@ function renderSignals(){
 }
 function loadSignals(){applyDemoSignals();var base=apiBase(),o=orgId();if(!base||!o)return;
   try{fetch(base+'/api/integrations/signals?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.signals&&d.signals.length){SIGNALS={};d.signals.forEach(function(s){SIGNALS[s.key]=s;});renderSignals();if(typeof renderCisoOps==='function'){renderCisoOps();renderUnderAttack();}}else{applyDemoSignals();}}).catch(function(){applyDemoSignals();});}catch(_){}}
-function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);if(!base||!o)return;
+/* Offline demo sample — a realistic, self-consistent workspace so every figure and every
+   answer reads fully populated without a backend. Used ONLY in demo/trial mode and only when
+   the backend returns nothing; a real backend always overrides it. Cyber is deliberately OVER
+   appetite (the identity story), so the narrative is coherent across every seat. */
+var DEMO_TOOLS={crowdstrike:{on:true,vendor:'CrowdStrike',demo:true},okta:{on:true,vendor:'Okta',demo:true},cyberark:{on:true,vendor:'CyberArk',demo:true},qualys:{on:true,vendor:'Qualys',demo:true},knowbe4:{on:true,vendor:'KnowBe4',demo:true},proofpoint:{on:true,vendor:'Proofpoint',demo:true},splunk:{on:true,vendor:'Splunk',demo:true},aws:{on:true,vendor:'AWS',demo:true},sap:{on:true,vendor:'SAP',demo:true},onetrust:{on:true,vendor:'OneTrust',demo:true},recordedfuture:{on:true,vendor:'Recorded Future',demo:true},cisa:{on:true,vendor:'CISA KEV',demo:true},salesforce:{on:true,vendor:'Salesforce',demo:true},whistic:{on:true,vendor:'Whistic',demo:true},rubrik:{on:true,vendor:'Rubrik',demo:true},github:{on:true,vendor:'GitHub',demo:true},servicenow_grc:{on:true,vendor:'ServiceNow GRC',demo:true}};
+function demoLive(){
+  return {
+    org_name:(typeof orgName==='function'&&orgName())||'Acme Corp',
+    counts:{crown_jewels:6,assets:240},
+    economics:{
+      ale:817e6, tail:1.6e9, var:1.6e9, revenue:63e9,
+      appetite:{appetite:500e6},
+      insurance:{limit:1.2e9, premium:25e6, gap:400e6, retention:10e6},
+      materiality:{value:53e6},
+      ratios:{pct_of_revenue:817e6/63e9}
+    },
+    crown_jewels:[
+      {name:'Customer billing platform', tier:'Critical'},
+      {name:'Customer identity & access', tier:'Critical'},
+      {name:'Order-to-cash', tier:'Critical'},
+      {name:'Global supply chain', tier:'High'},
+      {name:'Payments (PCI)', tier:'High'},
+      {name:'Financials / ERP', tier:'High'}
+    ],
+    initiatives:[
+      {name:'Customer-platform identity & access re-architecture', cost:'$18M', exposureRemoved:'$95M', owner:'CISO / CIO', status:'Funded', source:'decisions'},
+      {name:'Phishing-resistant MFA rollout', cost:'$6M', exposureRemoved:'$40M', owner:'CISO', status:'In flight', source:'ticketing'},
+      {name:'Immutable backup & cloud-host failover', cost:'$9M', exposureRemoved:'$55M', owner:'COO / CIO', status:'In flight', source:'ticketing'},
+      {name:'Third-party & SBOM continuous monitoring', cost:'$4M', exposureRemoved:'$20M', owner:'AppSec', status:'Funded', source:'ticketing'}
+    ],
+    resilience:{worst_recovery_service:'Customer billing platform', worst_recovery_hours:24, top_downtime_per_hr:12e6, top_vendor_blast:'Cloud hosting provider', tech_debt:{exposure:180e6}},
+    portfolio:{creditMarket:640e6, operational:420e6, thirdParty:310e6, compliance:280e6},
+    aiRisk:{governance:{framework:'NIST AI RMF', systems:4, policy:'Acceptable-use policy published', euAiAct:'No high-risk uses'}},
+    governance:{committee:'Audit Committee', cadence:'Quarterly', ermIntegrated:'Yes', ir:{tested:'Yes — tabletop within 12 months', retainer:'Yes', ransomwarePolicy:'Board-approved policy'}},
+    legal:{binding:{jurisdiction:'US-SEC'}, obligations:[
+      {flag:'🇺🇸', jurisdiction:'US-SEC', obligation:'Material cybersecurity incident (8-K Item 1.05)', clock:'4 business days'},
+      {flag:'🇪🇺', jurisdiction:'EU-GDPR', obligation:'Personal-data breach notification', clock:'72 hours'},
+      {flag:'🇪🇺', jurisdiction:'EU-DORA', obligation:'ICT major-incident reporting', clock:'≤4h initial'},
+      {flag:'🇪🇺', jurisdiction:'EU-AI-Act', obligation:'High-risk AI serious-incident reporting', clock:'≤15 days'},
+      {flag:'🇪🇺', jurisdiction:'EU-CRA', obligation:'Actively-exploited vulnerability early warning', clock:'24 hours'}
+    ]}
+  };
+}
+function ensureDemoLive(){
+  if(!(typeof demoActive==='function'&&demoActive()))return false;
+  try{var t=connectedTools();if(!t||!Object.keys(t).some(function(k){return t[k]&&t[k].on;})){localStorage.setItem('cyberrx_tools',JSON.stringify(DEMO_TOOLS));}}catch(_){}
+  try{SIGNALS=null;applyDemoSignals();}catch(_){}
+  LIVE=demoLive();try{badge(true);setBar(true);}catch(_){}
+  try{render(typeof CUR!=='undefined'&&CUR?CUR:'ciso');}catch(_){}
+  return true;
+}
+function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);
+  ensureDemoLive();
+  if(!base||!o)return;
   try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=sanNames(d);badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderCisoDecisions();try{if(typeof c5SeatViews==='function')c5SeatViews();}catch(_){}c5Health();c5Exposure();c5Effect();c5Threats();c5Peers();c5Frameworks();c5AiSupply();try{if(typeof c5DecProj==='function')c5DecProj();}catch(_){}c5cfExposure();c5cfRoi();c5cfInsurance();c5cfCost();c5cfDecisions();c5ceOverview();c5cfOverview();c5coOverview();c5ctOverview();c5crOverview();c5clOverview();c5ceValue();c5ceCrown();c5ceHealth();c5ceStrategic();c5ceFinancial();c5ceTrust();c5ceDecisions();c5crScale();c5crAppetite();c5crAssurance();c5crTrend();c5crDecisions();c5coResilience();c5coProcesses();c5coSupply();c5coRecovery();c5coDecisions();c5clRegulatory();c5clNotification();c5clContracts();c5clPrivacy();c5clDecisions();c5ctTech();c5ctReliability();c5ctAi();c5ctSupply();c5ctDecisions();c5iaCoverage();c5iaTesting();c5iaFindings();c5iaEvidence();c5iaAttention();c5bdHealth();c5bdMaterial();c5bdTrend();c5bdInvestment();c5bdGovernance();c5bdDecisions();c5cpSecurity();c5cpTrust();c5cpVelocity();c5cpBacklog();c5cpDecisions();renderCfoDecision();renderCroDecision();renderCioDecision();renderCooDecision();renderCloDecision();renderCpoDecision();renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderPeerCompare();renderCisoVendors();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderCpoVelocity();renderCioWorkforce();renderCpoLaunch();renderCpoSbd();renderCooSupply();renderCpoSupply();renderCloContract();renderAuditRepeat();renderAuditCoverage();renderAuditReadiness();renderAuditFailed();renderAuditDecisions();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoRiskScore();renderCeoTopThreats();renderCeoTopIssues();renderCeoStrategyRisks();renderCeoCustomerProtect();renderCeoBoardKpis();renderCeoExecDecisions();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
   try{fetch(base+'/api/crown-jewels/graph?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.nodes&&d.nodes.length){GRAPH=d;renderChain();}}).catch(function(){});}catch(_){}}
 
