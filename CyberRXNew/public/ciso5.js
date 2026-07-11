@@ -6514,6 +6514,31 @@ function neuronFrameworkProjection(fwKey){
   var evidenced=ids.filter(function(id){return map[id].some(function(m){return m.evidence!=='none';});}).length;
   return {controls:map,total:ids.length,evidenced:evidenced};
 }
+/* Risk-driver breakdown of a framework: how many of its controls each risk driver
+   addresses — the adversarial lens (ATT&CK) AND the five non-adversarial lanes —
+   with how many are actually evidenced by deployed telemetry. A framework control
+   inherits the drivers of the capabilities that evidence it: every technical control
+   defends against an adversary, and some ALSO cover a non-adversarial lane (a backup
+   control covers outage/DR + data corruption, a DLP control covers privacy, …). This
+   is what folds the non-adversarial lanes into framework reporting — the same
+   measurement, split by WHY it matters. Rows with no mapped controls are dropped. */
+function neuronFrameworkLanes(fwKey){
+  var nc=neuronControls();
+  var drivers={adversarial:{all:{},ev:{}}};
+  NEURON_LANES.forEach(function(L){drivers[L.id]={all:{},ev:{}};});
+  nc.forEach(function(n){
+    var ids=n.crosswalk[fwKey]||[];if(!ids.length)return;
+    var isAdv=(n.role==='prevent'||n.role==='detect'||n.role==='both');
+    ids.forEach(function(id){
+      if(isAdv){drivers.adversarial.all[id]=1;if(n.deployed)drivers.adversarial.ev[id]=1;}
+      n.lanes.forEach(function(l){if(drivers[l]){drivers[l].all[id]=1;if(n.deployed)drivers[l].ev[id]=1;}});
+    });
+  });
+  var rows=[{id:'adversarial',label:'Adversarial (ATT&CK)'}].concat(NEURON_LANES.map(function(L){return {id:L.id,label:L.label};}));
+  return rows.map(function(r){var d=drivers[r.id];
+    return {id:r.id,label:r.label,controls:Object.keys(d.all).length,evidenced:Object.keys(d.ev).length};})
+    .filter(function(r){return r.controls>0;});
+}
 /* The Neuron Controls lens — capability × (adversarial + 5 non-adversarial lanes)
    × framework projection, in one view. Read-only; renders into the panel passed in. */
 function c5NeuronControls(host){
@@ -6573,6 +6598,20 @@ function c5NeuronControls(host){
       +'<div style="font-size:19px;font-weight:800;color:var(--ink)">'+pj.evidenced+'<span style="font-size:12px;font-weight:600;color:var(--muted)"> controls</span></div>'
       +'<div style="font-size:10.5px;color:var(--ink-2)">projected from telemetry</div></div>';
   }).join('');
+  // ── risk-driver matrix: framework × (adversarial + 5 non-adversarial lanes) ──
+  var DRV_SHORT={adversarial:'ATT&CK',outage_dr:'Outage/DR',data_corruption:'Data integ.',insider:'Insider',third_party_supply_chain:'Supply-chain',privacy_regulatory:'Privacy'};
+  var DRV=[{id:'adversarial'}].concat(NEURON_LANES.map(function(L){return {id:L.id};}));
+  var laneByFw={};FW.forEach(function(f){var m={};neuronFrameworkLanes(f.k).forEach(function(r){m[r.id]=r;});laneByFw[f.k]=m;});
+  var drvHead=DRV.map(function(d){return '<th style="text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);padding:6px 9px;white-space:nowrap">'+esc(DRV_SHORT[d.id]||d.id)+'</th>';}).join('');
+  var drvBody=FW.map(function(f){var m=laneByFw[f.k];
+    var cells=DRV.map(function(d){var r=m[d.id];
+      if(!r)return '<td style="text-align:center;color:var(--line);padding:6px 9px">—</td>';
+      var col=r.evidenced>0?(d.id==='adversarial'?'ink':'good'):'muted';
+      return '<td style="text-align:center;padding:6px 9px;font-size:12px" title="'+r.evidenced+' of '+r.controls+' mapped '+esc(f.l)+' controls evidenced by deployed telemetry"><b style="color:var(--'+col+')">'+r.evidenced+'</b><span style="color:var(--muted);font-size:10.5px">/'+r.controls+'</span></td>';
+    }).join('');
+    return '<tr><td style="padding:6px 12px 6px 0;font-size:12px;font-weight:700;color:var(--ink);white-space:nowrap">'+esc(f.l)+'</td>'+cells+'</tr>';
+  }).join('');
+  var driverMatrix='<div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;min-width:660px"><thead><tr><th style="text-align:left;padding:6px 12px 6px 0"></th>'+drvHead+'</tr></thead><tbody>'+drvBody+'</tbody></table></div>';
   host.innerHTML=
     '<div style="max-width:1080px">'
     +'<div style="font-size:15px;font-weight:800;color:var(--ink)">Neuron Controls</div>'
@@ -6585,6 +6624,9 @@ function c5NeuronControls(host){
     +'<div style="margin-top:24px"><div style="font-size:12.5px;font-weight:800;color:var(--ink);margin-bottom:4px">Framework projection</div>'
     +'<div style="font-size:11.5px;color:var(--muted);margin-bottom:10px">The same measurements, reported into each framework by control ID. One control model, six frameworks.</div>'
     +'<div style="display:flex;flex-wrap:wrap;gap:10px">'+fwStrip+'</div></div>'
+    +'<div style="margin-top:24px"><div style="font-size:12.5px;font-weight:800;color:var(--ink);margin-bottom:4px">Risk-driver coverage by framework</div>'
+    +'<div style="font-size:11.5px;color:var(--muted);margin-bottom:10px">Every framework, split by <b>why</b> each control matters — the adversarial lens (ATT&amp;CK) and the five non-adversarial lanes. Cells show controls <b>evidenced by deployed telemetry</b> / controls mapped. The dual-lens view: compliance is not only about stopping attackers — it is also uptime, integrity, insider, supply-chain and privacy.</div>'
+    +driverMatrix+'</div>'
     +'</div>';
 }
 /* Program Health dispatcher — renders the tab strip, then the active panel.

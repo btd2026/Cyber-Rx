@@ -32,10 +32,28 @@ describe('Neuron Controls — registry & risk lenses', () => {
     expect(ciso).toContain('csf:(fw&&fw.csf)||[],r53:(fw&&fw.r53)||[]');
   });
 
-  it('exposes the three model functions', () => {
+  it('exposes the model functions', () => {
     expect(ciso).toContain('function neuronControls()');
     expect(ciso).toContain('function neuronLaneRollup()');
     expect(ciso).toContain('function neuronFrameworkProjection(fwKey)');
+    expect(ciso).toContain('function neuronFrameworkLanes(fwKey)');
+  });
+});
+
+describe('Neuron Controls — risk-driver breakdown per framework (dual lens)', () => {
+  it('neuronFrameworkLanes splits a framework by adversarial + the five lanes', () => {
+    expect(ciso).toContain("var drivers={adversarial:{all:{},ev:{}}};");
+    expect(ciso).toContain('NEURON_LANES.forEach(function(L){drivers[L.id]={all:{},ev:{}};});');
+    // a control inherits the drivers of the capabilities that evidence it
+    expect(ciso).toContain('n.lanes.forEach(function(l){if(drivers[l]){drivers[l].all[id]=1;if(n.deployed)drivers[l].ev[id]=1;}});');
+    // drops drivers with no mapped controls
+    expect(ciso).toContain('.filter(function(r){return r.controls>0;});');
+  });
+
+  it('the view renders the framework × risk-driver matrix', () => {
+    expect(ciso).toContain('Risk-driver coverage by framework');
+    expect(ciso).toContain('var driverMatrix=');
+    expect(ciso).toContain('evidenced by deployed telemetry'); // cells are honest: evidenced / mapped
   });
 });
 
