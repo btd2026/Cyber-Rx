@@ -80,6 +80,12 @@
   .node.org .fairline b{font-family:'Inter',system-ui,sans-serif;font-size:14px;color:var(--ink)}
   .node.org .fairline .fairk{font-size:9.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#fff;background:var(--accent);border-radius:5px;padding:2px 7px}
   .node.org .fairline .fairbadge{font-size:9.5px;color:var(--muted);letter-spacing:.02em;margin-left:auto}
+  /* FAIR expected-annual-loss chip carried down the tree (function → risk → control) */
+  .fairchip{display:inline-flex;align-items:baseline;gap:5px;font-size:10.5px;color:var(--muted);margin-top:6px;white-space:nowrap}
+  .fairchip .fk{font-size:8.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--accent);border:1px solid var(--accent);border-radius:4px;padding:1px 4px;opacity:.85}
+  .fairchip b{font-family:'Inter',system-ui,sans-serif;font-size:11.5px;color:var(--text);font-weight:700}
+  .node.ct .fairchip{margin-top:5px;font-size:9.5px}
+  .node.ct .fairchip b{font-size:10.5px}
   .node .val{font-family:'Inter',system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px}
   .node .rk{font-family:'Inter',system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;color:var(--risk)}
   .node .mf{color:#3f8a4f;font-size:.82em;font-family:'Inter',system-ui,-apple-system,"Segoe UI",sans-serif}
@@ -176,7 +182,7 @@
   </div>
   <div class="scroll"><div class="tree" id="tree"></div></div>
   <div class="scope" id="scope"></div>
-  <footer>Illustrative sample data (an insurance carrier, to match the “Claims Processing” example); the risks (R1, R2, …) are an illustrative stand-in for the risk register you upload at onboarding. Crown jewels are applications and key infrastructure (firewalls, identity) — data is protected as a risk to the application or system that holds it, not as a separate crown jewel. <b>Dollars are shown at the critical function and at each risk.</b> A function carries a business value, split into <b>mitigated + residual at risk</b>. Processes and crown jewels are the structural path (no dollars). Each <b>risk’s</b> figure is the slice of the function’s value it leaves exposed, set by its controls: a control at <b>maturity 3 or higher</b> mitigates its slice (struck through); residual $ at risk sums only the slices guarded by controls below 3. Hover any control for its NIST CSF 2.0 name and description.</footer>
+  <footer>Illustrative sample data (an insurance carrier, to match the “Claims Processing” example); the risks (R1, R2, …) are an illustrative stand-in for the risk register you upload at onboarding. Crown jewels are applications and key infrastructure (firewalls, identity) — data is protected as a risk to the application or system that holds it, not as a separate crown jewel. <b>Dollars are shown at the critical function and at each risk.</b> A function carries a business value, split into <b>mitigated + residual at risk</b>. Processes and crown jewels are the structural path (no dollars). Each <b>risk’s</b> figure is the slice of the function’s value it leaves exposed, set by its controls: a control at <b>maturity 3 or higher</b> mitigates its slice (struck through); residual $ at risk sums only the slices guarded by controls below 3. The <b>FAIR</b> line on each node is a second, loss-based lens: the <b>expected annual loss</b> (and 1-in-20-year worst case) computed by the shared FAIR engine from threat frequency, vulnerability and each control’s effectiveness — it rolls up additively, so each control’s residual loss sums to its risk, and every risk sums to the enterprise total at the top. Hover any control for its NIST CSF 2.0 name and description.</footer>
 </div>
 <div class="tip" id="tip"></div>
 
@@ -290,8 +296,31 @@ function computeFair(){
       });
     });
   });
-  try{const tree=FairEngine.computeTree(nodes,{seed:1337,iters:4000});const ent=tree.byId['ENT'];
-    return {eal:ent.EAL,tail:ent.tail,ver:FairEngine.VERSION,conf:ent.confidence};}catch(e){return null;}
+  try{const tree=FairEngine.computeTree(nodes,{seed:1337,iters:4000,attribution:'normalize'});const ent=tree.byId['ENT'];
+    return {byId:tree.byId,eal:ent.EAL,tail:ent.tail,inh:ent.inherentEAL,ver:FairEngine.VERSION,conf:ent.confidence};}catch(e){return null;}
+}
+/* Push the FAIR figures onto the tree so they carry all the way down to the controls.
+   Every rollup node gets its residual Expected Annual Loss (additive: a node's EAL is the sum of
+   its children's, so functions sum to the enterprise total shown at the top). Each risk gets its
+   residual + inherent EAL and worst-year tail; each control gets the slice of the risk's residual
+   EAL it leaves open — weighted by how far below full effectiveness it is — so the controls under a
+   risk sum back to the risk's EAL, and therefore every control on the tree sums to the top number. */
+function attachFair(){
+  const f=(function(){try{return computeFair();}catch(_){return null;}})();
+  if(!f||!f.byId)return null;const byId=f.byId;
+  DATA.forEach((fn,fi)=>{const F=byId['F'+fi]; if(F){fn.fairEAL=F.EAL;fn.fairInh=F.inherentEAL;fn.fairTail=F.tail;}
+    (fn.procs||[]).forEach((p,pi)=>{const P=byId['F'+fi+'P'+pi]; if(P){p.fairEAL=P.EAL;p.fairTail=P.tail;}
+      (p.jewels||[]).forEach((j,ji)=>{const J=byId['F'+fi+'P'+pi+'J'+ji]; if(J){j.fairEAL=J.EAL;j.fairTail=J.tail;}
+        (j.risks||[]).forEach((r,ri)=>{const R=byId['F'+fi+'P'+pi+'J'+ji+'R'+ri]; if(!R)return;
+          r.fairEAL=R.EAL;r.fairInh=R.inherentEAL;r.fairTail=R.tail;
+          // attribute the risk's residual EAL to its controls by weakness (1 − maturity/5)
+          const ws=(r.ctrls||[]).map(c=>Math.max(0.0001,1-((c[1]||0)/5)));const sw=ws.reduce((a,b)=>a+b,0)||1;
+          (r.ctrls||[]).forEach((c,ci)=>{c.fairEAL=R.EAL*ws[ci]/sw;});
+        });
+      });
+    });
+  });
+  return f;
 }
 function build(){
 document.getElementById('brandName').textContent=ORG;
@@ -309,6 +338,8 @@ DATA.forEach(f=>{f.value=0;f.risk=0;f.mit=0;
     p.exposure=p.risk/p.value;f.value+=p.value;f.risk+=p.risk;f.mit+=p.mit;});
   f.exposure=f.risk/f.value;TOTV+=f.value;TOTR+=f.risk;TOTM+=f.mit;});
 const inScope=scope.size;
+const FAIR=attachFair();
+const $F=v=>{if(v==null)return'';if(v>=1)return '$'+v.toFixed(1)+'B';var m=v*1000;if(m>=1)return '$'+(m>=10?m.toFixed(0):m.toFixed(1))+'M';return '$'+(v*1000000).toFixed(0)+'K';};
 
 document.getElementById("rl").innerHTML=Object.entries(RISKS).map(([k,v])=>`<div class="rlitem"><span class="rid">${k}</span><span>${v}</span></div>`).join("");
 const mini=e=>`<div class="minibar"><i style="width:${Math.min(100,e*100)}%;background:${expColor(e)}"></i></div>`;
@@ -332,13 +363,15 @@ function ctrlNode(c){const info=C[c[0]];
     <div class="code">${c[0]}</div><div class="cname">${info.name}</div>
     <div class="score" style="background:${matColor(c[1])}">${c[1]}</div>
     <div class="cmoney">${c.mit?'<s>'+$B(c.share)+'</s><span class="mtag">mitigated</span>':'<span class="atag">'+$B(c.share)+' at risk</span>'}</div>
+    ${c.fairEAL!=null?`<div class="fairchip"><span class="fk">FAIR</span>leaves <b>${$F(c.fairEAL)}</b>/yr</div>`:''}
     <div><span class="cfunc" style="background:${FUNCCOL[info.f]}">${FUNCNAME[info.f]}</span></div></div></div></li>`;}
 function riskNode(r){const rexp=r.pot?r.live/r.pot:0; const col=r.mitigated?'#4E9A51':expColor(rexp);
   return `<li><div class="node risk haschild" data-risk="${r.id}" data-live="${r.live}" data-pot="${r.pot}" data-n="${r.n}" data-nx="${r.nx}"><div class="accent" style="background:${col}"></div>
    <div class="pad"><span class="rid" style="background:${col}">${r.id}</span>
      <div class="rname">${RISKS[r.id].split(" — ")[0]}</div>
      <div class="rrisk">${riskCell(r.live, r.pot-r.live)}</div>
-     <div class="nlab" style="text-align:center">${r.mitigated?'mitigated':'at risk'}</div></div>
+     <div class="nlab" style="text-align:center">${r.mitigated?'mitigated':'at risk'}</div>
+     ${r.fairEAL!=null?`<div class="fairchip"><span class="fk">FAIR</span>EAL <b>${$F(r.fairEAL)}</b> · worst-year <b>${$F(r.fairTail)}</b></div>`:''}</div>
    <div class="expander">−</div></div><ul>${r.ctrls.map(ctrlNode).join("")}</ul></li>`;}
 function jewelNode(j){
   return `<li class="collapsed"><div class="node jewel haschild"><span class="crown">👑</span><div class="accent"></div>
@@ -352,7 +385,8 @@ function procNode(p){return `<li><div class="node proc haschild"><div class="acc
    <div class="expander">−</div></div><ul>${p.jewels.map(jewelNode).join("")}</ul></li>`;}
 function fnNode(f){return `<li><div class="node fn haschild"><div class="accent" style="background:${expColor(f.exposure)}"></div>
    <div class="pad"><div class="ttl">${f.name}</div><div class="sub">${f.crit} function</div>
-     ${moneyTriplet({value:f.value,mit:f.mit,live:f.risk,mtype:'rollup',label:'Function'})}${mini(f.exposure)}</div>
+     ${moneyTriplet({value:f.value,mit:f.mit,live:f.risk,mtype:'rollup',label:'Function'})}${mini(f.exposure)}
+     ${f.fairEAL!=null?`<div class="fairchip"><span class="fk">FAIR</span>EAL <b>${$F(f.fairEAL)}</b> · worst-year <b>${$F(f.fairTail)}</b></div>`:''}</div>
    <div class="expander">−</div></div><ul>${f.procs.map(procNode).join("")}</ul></li>`;}
 
 document.getElementById("tree").innerHTML=`<ul><li><div class="node org"><div class="accent"></div><div class="pad">
@@ -363,7 +397,7 @@ document.getElementById("tree").innerHTML=`<ul><li><div class="node org"><div cl
      <div class="eqop">=</div>
      <div><span class="big mathhover" style="color:var(--risk)" data-mtype="rollup" data-label="Enterprise" data-live="${TOTR}" data-mit="${TOTM}">${$B(TOTR)}</span><span class="nlab">residual at risk</span></div></div>
    <div class="eqcaption">Total value − mitigated by controls = residual at risk · rolls up from every crown jewel below, so each level’s children sum back to its value.</div>
-   ${(function(){var f=null;try{f=computeFair();}catch(_){}return f?('<div class="fairline"><span class="fairk">FAIR loss model</span><span>Expected annual loss <b>'+$B(f.eal)+'</b></span><span>1-in-20-year loss <b>'+$B(f.tail)+'</b></span><span class="fairbadge">computed live · FAIR engine v'+f.ver+' · seeded &amp; reproducible</span></div>'):'';})()}
+   ${FAIR?('<div class="fairline"><span class="fairk">FAIR loss model</span><span>Expected annual loss <b>'+$F(FAIR.eal)+'</b></span><span>1-in-20-year loss <b>'+$F(FAIR.tail)+'</b></span><span class="fairbadge">rolls up from every control below · FAIR engine v'+FAIR.ver+' · seeded &amp; reproducible</span></div>'):''}
  </div></div><ul>${DATA.map(fnNode).join("")}</ul></li></ul>`;
 
 document.getElementById("scope").innerHTML=`<div class="big">${inScope}<small>of ${CATALOG}</small></div>
@@ -422,7 +456,7 @@ window.addEventListener('message',function(e){var d=(e&&e.data)||{};if(d.type!==
   LIVEMODE=true; // real inventory posted → no longer illustrative
   try{build();
     var ft=document.querySelector('footer');
-    if(ft)ft.innerHTML="Live from your Nerion onboarding — business functions, key processes, and crown-jewel applications & infrastructure come from your inventory, and the risks (R1, R2, …) come from the risk register you uploaded at onboarding; control maturity comes from your assessments and connected tools. <b>Dollars are shown at the critical function and at each risk.</b> A function carries a business value, split into <b>mitigated + residual at risk</b>. Processes and crown jewels are the structural path (no dollars). Each <b>risk's</b> figure is the slice of the function's value it leaves exposed, set by its controls: a control at <b>maturity 3 or higher</b> mitigates its slice (struck through); residual $ at risk sums only the slices behind controls below 3. Hover any control for its NIST CSF 2.0 name and description.";
+    if(ft)ft.innerHTML="Live from your Nerion onboarding — business functions, key processes, and crown-jewel applications & infrastructure come from your inventory, and the risks (R1, R2, …) come from the risk register you uploaded at onboarding; control maturity comes from your assessments and connected tools. <b>Dollars are shown at the critical function and at each risk.</b> A function carries a business value, split into <b>mitigated + residual at risk</b>. Processes and crown jewels are the structural path (no dollars). Each <b>risk's</b> figure is the slice of the function's value it leaves exposed, set by its controls: a control at <b>maturity 3 or higher</b> mitigates its slice (struck through); residual $ at risk sums only the slices behind controls below 3. The <b>FAIR</b> line on each node is a second, loss-based lens: the <b>expected annual loss</b> (and 1-in-20-year worst case) from the shared FAIR engine — it rolls up additively, so each control's residual loss sums to its risk, and every risk sums to the enterprise total at the top. Hover any control for its NIST CSF 2.0 name and description.";
   }catch(err){try{console.error(err);}catch(_){}}});
 try{parent.postMessage({type:'crowntree-ready'},'*');}catch(_){}
 build();  // render the built-in sample immediately; a host may post real data to override
