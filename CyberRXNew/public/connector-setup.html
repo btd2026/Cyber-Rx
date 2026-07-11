@@ -98,7 +98,8 @@
     filelock:'<path d="M13.5 3H7.5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V8.5z"/><path d="M13.5 3v5.5h5"/><rect x="9" y="12.5" width="6" height="5" rx="1"/><path d="M10.4 12.5v-1a1.6 1.6 0 0 1 3.2 0v1"/>',
     nodes:'<circle cx="6" cy="6" r="2.2"/><circle cx="18" cy="6" r="2.2"/><circle cx="12" cy="18" r="2.2"/><path d="M6 8.2v1.8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8.2M12 12v3.8"/>',
     mail:'<rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="M3.5 7.5l8.5 5.5 8.5-5.5"/>',
-    plug:'<path d="M9 2.5v5M15 2.5v5M7 7.5h10v3a5 5 0 0 1-10 0zM12 15.5v6"/>'};
+    plug:'<path d="M9 2.5v5M15 2.5v5M7 7.5h10v3a5 5 0 0 1-10 0zM12 15.5v6"/>',
+    plus:'<path d="M12 5v14M5 12h14"/>'};
   // key → [glyph, tile gradient]. Ordered keyword match runs most-specific first.
   var CATICON=[
     [/privileged|pam/i,        ['lock','linear-gradient(135deg,#a78bfa,#7c3aed)']],
@@ -131,9 +132,40 @@
           '<div class="cc">'+esc(m.control_area||cat)+'</div>'+
           '<div class="ca">'+(n?('Supports <b>'+n+'</b> control'+(n>1?'s':'')+' · '+esc((m.supported_control_areas||[]).slice(0,2).join(', '))):'Design-evidence connector')+'</div></div></div>';
       });
+      // "Other" card — connect a tool in this category that isn't in the top-listed set.
+      html+='<div class="card other" data-other="'+esc(cat)+'"><div class="ctile" style="background:linear-gradient(135deg,#94a3b8,#475569)"><svg viewBox="0 0 24 24" aria-hidden="true">'+GLYPH.plus+'</svg></div>'+
+        '<div class="cbody"><div class="cn">Other '+esc(cat)+' tool</div>'+
+        '<div class="cc">Not listed here?</div>'+
+        '<div class="ca">Connect any '+esc(cat).toLowerCase()+' tool — Nerion maps its telemetry to the controls this category supports.</div></div></div>';
     });
     html+='</div>';view.innerHTML=html;
-    view.querySelectorAll('.card').forEach(function(el){el.onclick=function(){open(el.getAttribute('data-id'));};});
+    view.querySelectorAll('.card[data-id]').forEach(function(el){el.onclick=function(){open(el.getAttribute('data-id'));};});
+    view.querySelectorAll('.card.other').forEach(function(el){el.onclick=function(){openOther(el.getAttribute('data-other'));};});
+  }
+
+  // Connect a tool that isn't in the curated top set for its category. Keeps the same
+  // read-only, control-mapping framing; native support is requested where it isn't live yet.
+  function openOther(cat){
+    document.getElementById('hdr').textContent='Connect another '+cat+' tool';
+    var h='<button class="back" id="back">‹ All tools</button>';
+    h+='<div class="panel">';
+    h+='<div class="sec"><h3>Connect a '+esc(cat).toLowerCase()+' tool that isn\'t listed</h3>'+
+       '<p class="why">Name any '+esc(cat).toLowerCase()+' tool and connect it read-only. Nerion maps its telemetry to the controls this category supports; if native support isn\'t live yet, this registers it and connects via generic API credentials.</p>'+
+       '<div class="fld"><label for="otherName">Tool name</label><input id="otherName" placeholder="e.g. JumpCloud, Auth0, …"/></div>'+
+       '<div class="cols"><div class="fld"><label for="otherUrl">Instance URL / API endpoint <span class="h">optional</span></label><input id="otherUrl" placeholder="https://your-org.example.com"/></div>'+
+       '<div class="fld"><label for="otherTok">API token <span class="h">read-only</span></label><input id="otherTok" type="password" placeholder="paste a read-only token"/></div></div>'+
+       '<p class="why" style="margin-top:2px"><b>Read-only access only.</b> Nerion reads configuration and logs to assess controls — it can never change, create, or delete anything in your tool.</p>'+
+       '<button class="btn" id="otherGo">Connect &amp; map controls →</button>'+
+       '<div id="otherResult"></div>'+
+       '</div></div>';
+    view.innerHTML=h;
+    document.getElementById('back').onclick=renderCatalog;
+    document.getElementById('otherGo').onclick=function(){
+      var nm=((document.getElementById('otherName')||{}).value||'').trim();
+      if(!nm){alert('Enter the tool name first.');return;}
+      document.getElementById('otherResult').innerHTML='<div class="sec" style="margin-top:14px"><div class="box can"><b>Connecting '+esc(nm)+'</b>'+
+        '<div class="muted" style="margin-top:4px">Nerion is mapping '+esc(nm)+'’s telemetry to the '+esc(cat).toLowerCase()+' controls in your frameworks. Read-only credentials received — you’ll see each control’s readiness once the first sync completes. If native support for '+esc(nm)+' isn’t live yet, our team enables it and notifies you; nothing else to do.</div></div></div>';
+    };
   }
 
   function open(id){
