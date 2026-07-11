@@ -1803,7 +1803,18 @@ var CMMI_CEIL_NOTE={5:'automated · can reach Optimizing',4:'semi-automated · c
 /* Blended CMMI for a control: best of document-review score and (automation-capped)
    live tool score. */
 function controlCmmi(id,cov){
-  var ds=docScores()[id],docS=ds?Number(ds.cmmi):null;
+  var ds=docScores()[id];
+  /* A document is only evidence for a control if it actually matched at least one of
+     the control's expected attributes. A policy that matched 0 of N attributes is NOT
+     evidence — treating it as a score-1 "deficiency" both understates the control (it
+     may be fully covered by a tool) and cites a document that does not govern it
+     (e.g. DE.CM-02 citing a DR plan that matched 0 of 1 attributes). Fall through to
+     tool telemetry or "not evidenced" instead. */
+  var docHasEvidence=ds&&(Array.isArray(ds.attrs)&&ds.attrs.length
+      ? ds.attrs.some(function(a){return a.found;})
+      : (ds.matched==null||Number(ds.matched)>0));
+  var docS=(ds&&docHasEvidence)?Number(ds.cmmi):null;
+  ds=docHasEvidence?ds:null;
   var toolPct=(cov&&cov[id]!=null)?cov[id]:null,toolS=pctToCmmi(toolPct),ceil=null;
   if(toolS!=null){var tc=fwControlTool(id);ceil=(tc&&tc.cap)?capAutoCeil(tc.cap):null;if(ceil!=null&&toolS>ceil)toolS=ceil;}
   var best=Math.max(docS!=null?docS:-1,toolS!=null?toolS:-1);
