@@ -57,10 +57,11 @@ describe('Board provenance drawer (c5bdInspect)', () => {
     expect(d).toContain('c5bdProvBadge(s.type)');
     expect(d).toContain('Source &amp; confidence');
   });
-  it('shows confidence, owner + a link to the owner tab, and an as-of', () => {
+  it('shows confidence, owner and an as-of in a compact footer (no separate Owned-by panel)', () => {
     expect(d).toContain('Confidence');
-    expect(d).toContain('data-c5goseat="');
-    expect(d).toContain('As of ');
+    expect(d).toContain("'Owner: '");
+    expect(d).toContain('as of ');
+    expect(d).not.toContain('Owned by');
   });
   it('honestly reports an unwired figure instead of fabricating a source', () => {
     expect(d).toContain('Source not yet connected');

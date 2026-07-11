@@ -58,7 +58,7 @@ describe('CISO Decisions — the old bespoke projection tool is gone', () => {
 
 describe('CISO Decisions — renamed section', () => {
   it('the seat section is titled just "Decisions" (not "Decisions & projections")', () => {
-    expect(seats).toContain("sec('04','Decisions','','<div id=\"c5-decproj\"></div>')");
+    expect(seats).toContain("sec('06','Decisions','','<div id=\"c5-decproj\"></div>')");
     expect(seats).not.toContain('Decisions &amp; projections');
   });
 });

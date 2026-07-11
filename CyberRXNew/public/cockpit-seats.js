@@ -86,9 +86,11 @@ var SEATS = {
   brief:'Here’s where the business is most exposed, priced and ranked. Your highest-risk crown jewel needs hardening before it becomes an incident — and your identity and access model is the common thread through your capability exposure, your likeliest attack scenarios, and your control gaps. The upside: the fix is scoped and funded, and it returns more risk-removed per dollar than anything else on the table. One decision closes your largest single exposure; it is worth your sign-off today.',
   body:function(){return (
    sec('01','Program health','','<div id="c5-frameworks"></div>')
-   +sec('02','Exposure &amp; controls','','<div id="c5-health"></div><div id="c5-exposure"></div><div id="c5-exposure2"></div>')
-   +sec('03','Operations &amp; threats','','<div id="c5-effect"></div><div id="c5-threats"></div><div id="c5-aisupply"></div>')
-   +sec('04','Decisions','','<div id="c5-decproj"></div>')
+   +sec('02','Exposure','','<div id="c5-health"></div>')
+   +sec('03','Controls','','<div id="c5-exposure2"></div>')
+   +sec('04','Operations','','<div id="c5-effect"></div>')
+   +sec('05','Threats &amp; AI','','<div id="c5-threats"></div><div id="c5-aisupply"></div>')
+   +sec('06','Decisions','','<div id="c5-decproj"></div>')
   );}
  }
 };
