@@ -2448,7 +2448,7 @@ function c5Brief(seat){
     var objs=O.total?(O.protected+' of '+O.total+' strategic objectives are cyber-safe'):'your strategic objectives are mapped to their cyber dependencies';
     var attack=(oi!=null)?(oi>0?('there '+(oi===1?'is 1 active incident':('are '+oi+' active incidents'))):'no active compromise this morning'):'connect your SIEM for a live attack read';
     switch(seat){
-      case 'ciso': return 'CISO read. '+cap(attack)+'. Your largest exposure is '+driver+', of a '+total+' modeled total.'+trend+' Every figure traces to its source.';
+      case 'ciso': return 'CISO read. '+cap(attack)+'. Your largest exposure is '+driver+', of a '+total+' modeled total.'+trend+'';
       case 'ceo': return 'CEO read. Cyber is a managed risk this quarter — '+objs+'; the exception is '+driver+'. Modeled exposure is '+total+', within the board’s appetite where you have set one.'+trend;
       case 'cfo': var ap=c5get('cf_appetite'),hr=c5get('cf_headroom'); return 'CFO read. Modeled exposure is '+total+(ap.connected?(', against a '+ap.displayValue+' appetite'+(hr.connected?(' with '+hr.displayValue+' of headroom'):'')):'')+'. The largest single driver is '+driver+'.'+trend;
       case 'cro': var rk=c5get('cr_rank'); return 'CRO read. '+(rk.connected?('Cyber ranks '+rk.displayValue+' among your principal risks'):'Cyber sits on one scale beside your other principal risks')+'; the driver to treat is '+driver+'.'+trend;
@@ -2581,7 +2581,7 @@ function c5Health(){
   var TDa=c5TopDriver();
   var ans=topCj?('Exposure is concentrated in your highest-risk crown jewel; one decision can reduce the top exposure.'):ec.connected?('Exposure is concentrated in '+c5esc(TDa.phrase)+'; one decision can reduce the top exposure.'):'Connect your identity, asset and control sources to rank where the business is most exposed.';
   host.innerHTML=c5header()+
-    c5shell('Cyber exposure · where is the business most exposed?',ans,anyRisk?'warn':null,'The enterprise’s material cyber exposure, ranked across the four dimensions that move it. Every figure traces to its source — drill any tile to defend it to the board.')+
+    c5shell('Cyber exposure · where is the business most exposed?',ans,anyRisk?'warn':null,'The enterprise’s material cyber exposure, ranked across the four dimensions that move it.')+
     tiles+
     c5ExposureEvidencePanel()+
     c5bl('Bottom line',blHead,null,blPara,{mid:blMid,txt:blBtn})+
@@ -3551,7 +3551,7 @@ function c5ceHealth(){
   var atPill=O.atRisk>0?'a':'g';var atTxt=O.atRisk>0?(O.atRisk+' at risk'):'All protected';
   var hr=c5get('cf_headroom');var T=c5T();
   host.innerHTML=c5header()+
-    c5shell('Enterprise cyber health · is cyber a tailwind or a risk?','Cyber is protecting growth, not slowing it.',null,'The enterprise is secure'+(T.improving?' and improving':'')+'. '+O.protected+' of your '+O.total+' strategic objectives are cyber-safe; the exception carries a single, funded exposure. Cyber isn’t a blocker this quarter. Every figure traces to its source.')+
+    c5shell('Enterprise cyber health · is cyber a tailwind or a risk?','Cyber is protecting growth, not slowing it.',null,'The enterprise is secure'+(T.improving?' and improving':'')+'. '+O.protected+' of your '+O.total+' strategic objectives are cyber-safe; the exception carries a single, funded exposure. Cyber isn’t a blocker this quarter.')+
     '<div class="c5cards">'+c5card('ceo_health')+c5card('ceo_objectives')+c5card('direction')+'</div>'+
     '<div class="c5tiles">'+
       c5tile('ceo_biz_health','g','Secure','No active compromise, program improving')+
@@ -3838,7 +3838,7 @@ function c5ceCrown(){
   var Scr=(typeof c5Services==='function')?c5Services():{list:[],total:0,atRisk:0};var IDF=c5IdFix();
   var total=Scr.total||0,atR=Scr.atRisk||0;var top=(Scr.list&&Scr.list[0])||null;
   var head=(atR>0)?('Your crown-jewel revenue engines are protected — except the customer platform, whose exposure traces to the '+IDF.short+' gap.'):(total>0?'Every crown-jewel revenue engine is protected this quarter.':'Map your crown jewels in onboarding to see the revenue engines and their exposure.');
-  var support='The systems that run the revenue — each crown jewel, its status, and its dependency on the shared '+IDF.short+' controls. Concentration is the good news: fixing the one at-risk engine moves the most value. Each traces to its register.';
+  var support='The systems that run the revenue — each crown jewel, its status, and its dependency on the shared '+IDF.short+' controls. Concentration is the good news: fixing the one at-risk engine moves the most value.';
   var rows=(Scr.list||[]).map(function(x){var risk=(x.status==='At risk');var mid=risk?IDF.mid:'er_crown';
     return '<div class="c5prow" data-c5m="'+mid+'" style="cursor:pointer"><div style="flex:1;min-width:0"><div class="c5row-t">'+c5esc(x.name)+(x.tier?(' <span class="c5tag">'+c5esc(x.tier)+'</span>'):'')+'</div><div class="c5row-s">'+c5esc(x.sub||(risk?('depends on the '+IDF.short+' controls'):'protected'))+'</div></div><span class="c5pill '+(risk?'a':'g')+'" style="flex:none">'+c5esc(x.status||'Secure')+'</span></div>';
   }).join('')||'<div class="c5prow"><div style="flex:1"><div class="c5row-s">Map your crown-jewel register to list the revenue engines here.</div></div></div>';
@@ -3867,7 +3867,7 @@ function c5ceStrategic(){
   }).join('');
   var atN=O.atRisk||0,safeN=(O.protected!=null?O.protected:(O.total-atN));
   host.innerHTML=c5header()+
-    c5shell('Strategic risk · which objectives are exposed?',(atN>0?(safeN+' of your '+O.total+' objectives are cyber-safe — '+atN+' need'+(atN===1?'s':'')+' attention.'):'All '+O.total+' of your objectives are cyber-safe.'),null,'Cyber risk mapped to your strategic objectives. The at-risk objective is exposed by '+TD.phrase+', which threatens its uptime and the trust it runs on. Each objective traces to its drivers.')+
+    c5shell('Strategic risk · which objectives are exposed?',(atN>0?(safeN+' of your '+O.total+' objectives are cyber-safe — '+atN+' need'+(atN===1?'s':'')+' attention.'):'All '+O.total+' of your objectives are cyber-safe.'),null,'Cyber risk mapped to your strategic objectives. The at-risk objective is exposed by '+TD.phrase+', which threatens its uptime and the trust it runs on.')+
     '<div class="c5rank" style="padding:4px 15px"><div class="c5rank-h" style="border:0;background:transparent;padding:11px 0">Strategic objectives · cyber status</div>'+rows+'</div>'+
     c5bl('Bottom line','Protect the objective that drives growth.',null,'Your at-risk objective is exposed by '+TD.phrase+', which threatens its uptime and the trust it runs on. The fix is funded.',{mid:TD.mid,txt:'Back the '+c5esc(TD.short)+' fix — protects growth'})+
     '<div class="c5foot">Objectives are mapped from your strategy inputs; cyber exposure traces to source.</div>';
@@ -3915,7 +3915,7 @@ function c5ceFinancial(){
   var ec=c5get('exp_identity'),hr=c5get('cf_headroom'),ap=c5get('cf_appetite');
   var TD=c5TopDriver(),dm=c5get(TD.mid); // data-ranked top driver, not hard-coded identity
   host.innerHTML=c5header()+
-    c5shell('Financial exposure · what could this cost us?','Cyber could cost real money — comfortably within tolerance.',null,'The headline: your modeled annual cyber loss against the board’s appetite, with the severe-year tail. The single largest driver already has a funded fix. Every figure traces to its model and inputs.')+
+    c5shell('Financial exposure · what could this cost us?','Cyber could cost real money — comfortably within tolerance.',null,'The headline: your modeled annual cyber loss against the board’s appetite, with the severe-year tail. The single largest driver already has a funded fix.')+
     '<div class="c5cards">'+c5card('exp_total')+c5card('cf_appetite')+c5card('cf_tail')+'</div>'+
     // Exposure drivers behind the total — distinct from the three summary cards
     // above (no repeat of exp_total / cf_tail), so nothing is shown twice.
@@ -3943,7 +3943,7 @@ function c5ceTrust(){
     '<span style="font-size:12px;color:var(--muted)">SEC material-incident 8-K clock: 4 business days</span>'+sep+
     '<span style="font-size:12px;color:var(--muted)">peer posture: on par</span><span class="c5pill n" style="font-size:9px">Live + illustrative</span></div>';
   host.innerHTML=c5header()+
-    c5shell('Trust & disclosure · are we protecting trust, and ready to disclose?',ans,null,'The one question: are customers protected, can we prove it, and could we disclose on the clock? Below — whether customers were affected, whether anyone had to be notified, trust posture, the exposure under watch, SEC disclosure readiness, and how complete the evidence is. Every figure traces to its source.')+
+    c5shell('Trust & disclosure · are we protecting trust, and ready to disclose?',ans,null,'The one question: are customers protected, can we prove it, and could we disclose on the clock? Below — whether customers were affected, whether anyone had to be notified, trust posture, the exposure under watch, SEC disclosure readiness, and how complete the evidence is.')+
     (demo?'<div class="c5foot" style="color:var(--warn);margin:2px 0 6px">Demo data — some signals are sample values until your tools are connected.</div>':'')+
     '<div class="c5cards">'+c5card('ceo_cust_incidents')+c5card('ceo_disclosures')+c5card('ceo_trust_signal')+'</div>'+
     '<div class="c5tiles">'+
@@ -4050,7 +4050,7 @@ function c5crScale(){
     :(rank<=Math.ceil(total/3))?'Cyber is among your top principal risks — watch its direction.'
     :(rank<=Math.ceil(total*2/3))?'Cyber sits mid-pack among your principal risks — watch its direction.'
     :'Cyber sits in the lower half of your principal risks — watch its direction.';
-  var support='On one enterprise scale, cyber'+(P.cyberV>0?(' ('+usd(P.cyberV)+' residual)'):'')+' sits against market, credit, operational and compliance risk. Its direction — not just its size — is what the risk committee tracks; a single '+IDF.short+' gap drives most of it. Each risk traces to its basis.';
+  var support='On one enterprise scale, cyber'+(P.cyberV>0?(' ('+usd(P.cyberV)+' residual)'):'')+' sits against market, credit, operational and compliance risk. Its direction — not just its size — is what the risk committee tracks; a single '+IDF.short+' gap drives most of it.';
   // ── principal-risks matrix (centerpiece) — cyber highlighted, sorted by residual. Replaces
   //    the old bar list (whose stray track element was the orphan artifact on the tab). ──
   var mRows=P.rows.map(function(r){var share=totalRes>0?Math.round(r.v/totalRes*100):0;
@@ -4125,7 +4125,7 @@ function c5crAssurance(){
     return '<div class="c5prow" data-c5m="cr_families"><span class="c5sq '+(pill==='g'?'g':pill==='a'?'a':pill==='r'?'r':'n')+'" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">'+f.l+'</div><div class="c5row-s">'+f.sub+'</div></div><span class="c5pill '+pill+'">'+f.status+'</span></div>';
   }).join('');
   host.innerHTML=c5header()+
-    c5shell('Control assurance · are the controls working?','Controls are largely assured — with gaps where it matters.',null,'Assurance across your control families — evidenced from tests and telemetry, not self-attestation. Most are assured; identity and third-party carry a partial-assurance gap. Each family traces to its evidence and last test.')+
+    c5shell('Control assurance · are the controls working?','Controls are largely assured — with gaps where it matters.',null,'Assurance across your control families — evidenced from tests and telemetry, not self-attestation. Most are assured; identity and third-party carry a partial-assurance gap.')+
     '<div class="c5cards">'+c5card('cr_families')+c5card('cr_gaps')+c5card('cr_evidence')+'</div>'+
     '<div class="c5rank" style="padding:4px 15px"><div class="c5rank-h" style="border:0;background:transparent;padding:11px 0">Control families · evidence-based assurance</div>'+rows+'</div>'+
     c5bl('Bottom line','Close the assurance gap where it matters most.',null,cap(TD.short)+' controls are only partially assured — and they drive your largest residual risk. The funded fix closes the control gap and the assurance gap together.',{mid:TD.mid,txt:'Close the '+c5esc(TD.short)+' control gap'})+
@@ -4207,7 +4207,7 @@ function c5coResilience(){
   // ── honest headline — DERIVED from continuity, never a self-graded "Strong" over a 6× miss ──
   var head=(offN===0)?'Every critical service can recover within its continuity target.'
     :(worstSvc?(onN+' of '+total+' critical services stay within target — but '+worstSvc.n.toLowerCase()+' can’t recover in time ('+durH(worstSvc.rto)+' vs a '+worstSvc.tgt+'h target) and has no failover.'):(offN+' critical services are over their continuity target.'));
-  var support='Per-service continuity — can each critical service keep running, or recover in time, through a cyber disruption? '+(worstSvc?('The '+worstSvc.n.toLowerCase()+' is the single point of failure; its recovery depends on the same '+IDF.short+' gap.'):'')+' Each service traces to its recovery evidence.';
+  var support='Per-service continuity — can each critical service keep running, or recover in time, through a cyber disruption? '+(worstSvc?('The '+worstSvc.n.toLowerCase()+' is the single point of failure; its recovery depends on the same '+IDF.short+' gap.'):'')+'';
   // ── three metric cards (custom, reconciled to the matrix) ──
   function rcard(mid,title,val,pill,pillCls,valCol,sub){return '<div class="c5card" data-c5m="'+mid+'"><div class="c5card-top"><span class="c5card-l">'+c5esc(title)+'</span><span class="c5pill '+pillCls+'" style="font-size:9px">'+c5esc(pill)+'</span></div><div class="c5card-v" style="color:var(--'+(valCol||'ink')+')">'+c5esc(String(val))+'</div><div class="c5esub" style="font-size:11px;color:var(--muted);margin-top:2px">'+c5esc(sub)+'</div></div>';}
   var cards='<div class="c5cards">'+
@@ -4252,7 +4252,7 @@ function c5coProcesses(){
   }).join('')+'</div>';}
   var TD=c5TopDriver(),dm=c5get(TD.mid);
   host.innerHTML=c5header()+
-    c5shell('Critical process health · which processes are exposed?','Most critical processes are cyber-safe — one needs attention.',null,'Cyber risk mapped to your critical operational processes. Only the customer platform carries real exposure; a payments process is on watch through a vendor. Each process traces to its drivers and dependencies.')+
+    c5shell('Critical process health · which processes are exposed?','Most critical processes are cyber-safe — one needs attention.',null,'Cyber risk mapped to your critical operational processes. Only the customer platform carries real exposure; a payments process is on watch through a vendor.')+
     body+
     c5bl('Bottom line','Protect the process customers touch.',null,(dm.connected?('The customer platform is your only at-risk critical process — the '+TD.short+' gap threatens its uptime. The fix is funded.'):'Connect your controls and the at-risk process — the customer platform — surfaces here with its funded fix.'),{mid:TD.mid,txt:'Fund the '+c5esc(TD.short)+' fix — protects the platform'})+
     '<div class="c5foot">Processes and dependencies mapped from your operations model; exposure traces to source.</div>';
@@ -4316,7 +4316,7 @@ function c5coSupply(){
   var head=spofN>0
     ?('Your supply chain is steady — but one Tier-1 vendor is a single point of failure for '+(sp0?sp0.proc.toLowerCase():'a critical service')+', with no failover.')
     :'Your supply chain is steady — no single vendor is an unmitigated point of failure.';
-  var support='Of '+tier1+' Tier-1 vendors, '+criticalTouch+' touch a critical service and '+spofN+(spofN===1?' has':' have')+' no alternative. Completing identity controls limits how far any compromised vendor can reach. Each vendor traces to its rating and the process it touches.';
+  var support='Of '+tier1+' Tier-1 vendors, '+criticalTouch+' touch a critical service and '+spofN+(spofN===1?' has':' have')+' no alternative. Completing identity controls limits how far any compromised vendor can reach.';
   host.innerHTML=c5header()+
     c5shell('Supply chain & third parties · which vendors could stop us?',head,(spofN>0)?'warn':null,support)+
     cards+
@@ -4409,17 +4409,17 @@ function c5coRecovery(){
   var head,intro,decHead,decBody,decBtn;
   if(!testConn){
     head='Not enough evidence to confirm recovery readiness.';
-    intro='Connect your recovery-test results to size RTO/RPO against target and map the critical recovery path. Every figure traces to its last test.';
+    intro='Connect your recovery-test results to size RTO/RPO against target and map the critical recovery path.';
     decHead='Connect recovery evidence.';decBody='Connect or upload your recovery-test results, RTO/RPO and backup verification to confirm whether critical services recover within target.';decBtn={mid:'coo_last_test',txt:'Connect recovery evidence'};
   } else if(rtoMiss){
     head='Recovery is tested and data loss is within target — but one critical path, '+cpName+', misses its RTO target by '+durH(rtoGapH)+'.';
-    intro=svcOn+' of '+svcTotal+' critical services restore within target. '+cap(cpName)+' (GreenLake billing) takes '+durH(worst)+' against a '+rtoTgt+'-hour target — and identity access restoration is the reason. Every figure traces to its last test.';
+    intro=svcOn+' of '+svcTotal+' critical services restore within target. '+cap(cpName)+' (GreenLake billing) takes '+durH(worst)+' against a '+rtoTgt+'-hour target — and identity access restoration is the reason.';
     decHead='Close the RTO gap — finish deploying identity recovery ('+idPct+'% → 100%).';
     decBody='Identity access restoration is the critical path delaying recovery of '+cpName+' — the same exposure flagged on the Resilience tab. Completing deployment moves its RTO from '+durH(worst)+' to within the '+rtoTgt+'-hour target; then a live failover retest proves it. Owned '+c5IdFix().owner+'.';
     decBtn={mid:'coo_rto',txt:'Close the RTO gap'};
   } else {
     head='Recovery is tested and within target across your critical services.';
-    intro='All '+svcTotal+' critical services restore within target on the latest test. Every figure traces to its last test.';
+    intro='All '+svcTotal+' critical services restore within target on the latest test.';
     decHead='Recovery is within target — keep it proven.';decBody='Critical services recover within target on the latest test. Keep evidence fresh and retest on schedule.';decBtn={mid:'coo_last_test',txt:'View recovery evidence'};
   }
   host.innerHTML=c5header()+
@@ -4465,7 +4465,7 @@ function c5clRegulatory(){
     return '<div class="c5prow" data-c5m="cl_obligations"><span class="c5sq '+(r.binding?'a':'b')+'" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">'+r.name+'</div><div class="c5row-s">'+r.obl+' · '+r.clock+'</div></div><span class="c5pill '+pill+'">'+pt+'</span></div>';
   }).join('')+'</div>'):'<div class="c5note">◐ Set your operating regions in onboarding to load the obligations register (regime · obligation · clock · penalty), each traceable to its ruleset.</div>';
   host.innerHTML=c5header()+
-    c5shell('Regulatory exposure · where are we exposed by jurisdiction?','Your obligations, by jurisdiction — with the exposure most likely to trigger a filing.',null,'Your cyber-regulatory obligations, by jurisdiction, each with its clock and penalty — surfaced, not judged (the compliance call is yours). The customer-platform '+TD.short+' gap is the exposure most likely to trigger a reportable event. Each regime traces to its obligation and evidence.')+
+    c5shell('Regulatory exposure · where are we exposed by jurisdiction?','Your obligations, by jurisdiction — with the exposure most likely to trigger a filing.',null,'Your cyber-regulatory obligations, by jurisdiction, each with its clock and penalty — surfaced, not judged (the compliance call is yours). The customer-platform '+TD.short+' gap is the exposure most likely to trigger a reportable event.')+
     '<div class="c5cards">'+c5card('cl_jurisdictions')+c5card('cl_obligations')+c5card('cl_binding_clock')+'</div>'+
     body+
     c5bl('The decision','Close the exposure most likely to trigger a filing.',null,(dm.connected?('The customer-platform '+TD.short+' gap is the exposure most likely to cause a reportable breach — starting notification clocks across jurisdictions (SEC 8-K, GDPR/UK 72h, DORA, and the rest). Closing it ('+dm.displayValue+') reduces your most probable disclosure trigger.'):'Connect your controls and the exposure most likely to trigger a filing — the '+TD.short+' gap — surfaces here with its funded fix.'),{mid:TD.mid,txt:'Close the top disclosure trigger — '+c5esc(TD.short)})+
@@ -4515,7 +4515,7 @@ function c5clPrivacy(){
   var host=document.getElementById('cl-privacy');if(!host)return;
   var ap=c5get('cl_access_pd'),TD=c5TopDriver(),dm=c5get(TD.mid);
   host.innerHTML=c5header()+
-    c5shell('Privacy & DSAR · are we handling requests on time?','Privacy operations are running — access hygiene is the soft spot.',null,'Your privacy posture: data-subject requests against SLA, records of processing, consent. The one soft spot is access hygiene — over-permissioned or stale identities near personal data, part of the '+TD.short+' gap. Every figure traces to its source.')+
+    c5shell('Privacy & DSAR · are we handling requests on time?','Privacy operations are running — access hygiene is the soft spot.',null,'Your privacy posture: data-subject requests against SLA, records of processing, consent. The one soft spot is access hygiene — over-permissioned or stale identities near personal data, part of the '+TD.short+' gap.')+
     '<div class="c5cards">'+c5card('cl_dsar_sla')+c5card('cl_ropa')+c5card('cl_access_pd')+'</div>'+
     '<div class="c5tiles">'+
       c5tile('cl_litigation','g','Holds','Active cyber-related litigation holds')+
@@ -4612,7 +4612,7 @@ function c5ctTech(){
   var connN=evSrcs.filter(function(s){return s.connected;}).length;
   // ── headline + supporting line (data-driven from the matrix) ──
   var head='Your estate is modernizing and mostly secure — but the '+c5sysLabel('customer').toLowerCase()+'’s identity architecture is the biggest gap, and it’s where your open criticals concentrate.';
-  var support=cleanN+' of '+platforms.length+' core platforms are clean. The '+c5sysLabel('customer').toLowerCase()+' carries the identity architecture gap and '+concVulns+' of '+totalVulns+' open critical vulns; legacy tech debt is mapped with a roadmap in place. Every figure traces to its source.';
+  var support=cleanN+' of '+platforms.length+' core platforms are clean. The '+c5sysLabel('customer').toLowerCase()+' carries the identity architecture gap and '+concVulns+' of '+totalVulns+' open critical vulns; legacy tech debt is mapped with a roadmap in place.';
   host.innerHTML=c5header()+
     c5shell('Technology risk · is our stack secure and modern?',head,'warn',support)+
     cards+
@@ -4629,7 +4629,7 @@ function c5ctReliability(){
     return '<div class="c5prow" data-c5m="'+(s.status==='At risk'?TD.mid:'ct_sec_incidents')+'"><span class="c5sq '+(s.c==='warn'?'a':'g')+'" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">'+s.name+'</div><div class="c5row-s">'+s.sub+'</div></div><span class="c5pill '+pill+'">'+s.status+'</span></div>';
   }).join('')+'</div>'):'<div class="c5note">◐ Map your crown-jewel / customer-facing services in onboarding to see reliability + security posture per service.</div>';
   host.innerHTML=c5header()+
-    c5shell('Digital-service reliability · are our services safe and available?','Services are reliable and secure — the platform’s access path is the risk.',null,'Your customer-facing services: available, performant, secure. The one reliability risk is the '+TD.short+'/access path to the customer platform — both a security and an availability concern. Availability and SLOs light up when your observability stack connects. Each service traces to its posture.')+
+    c5shell('Digital-service reliability · are our services safe and available?','Services are reliable and secure — the platform’s access path is the risk.',null,'Your customer-facing services: available, performant, secure. The one reliability risk is the '+TD.short+'/access path to the customer platform — both a security and an availability concern. Availability and SLOs light up when your observability stack connects.')+
     '<div class="c5cards">'+c5card('ct_availability')+c5card('ct_services_slo')+c5card('ct_sec_incidents')+'</div>'+
     body+
     c5bl('Bottom line','Harden the access path to your top service.',null,(dm.connected?('The customer platform is your most-used service; its '+TD.short+'/access path is the one reliability-and-security risk. The '+TD.short+' fix hardens it — resilient access, fewer failure modes.'):'Connect your controls and the one reliability-and-security risk — the platform’s access path — surfaces here with its funded fix.'),{mid:TD.mid,txt:'Fund the '+c5esc(TD.short)+' fix — hardens the platform'})+
@@ -4692,7 +4692,7 @@ function c5ctAi(){
   var connN=evSrcs.filter(function(s){return s.connected;}).length;
   // ── data-driven headline + supporting line ──
   var head='AI is inventoried and guardrailed in practice — but a formal governance framework isn’t in place yet, and the '+(highN===1?'one high-risk use':(highN+' high-risk uses'))+' lean'+(highN===1?'s':'')+' on the same '+IDF.short+' gap.';
-  var support='Two watch items: stand up the governance framework (policy, EU AI Act mapping, inventory verification), and secure the customer-facing AI that reads customer data through the identity fix. Every figure traces to its source.';
+  var support='Two watch items: stand up the governance framework (policy, EU AI Act mapping, inventory verification), and secure the customer-facing AI that reads customer data through the identity fix.';
   host.innerHTML=c5header()+
     c5shell('AI &amp; innovation risk · are we shipping safely?',head,'warn',support)+
     cards+
@@ -5024,7 +5024,7 @@ function c5bdMaterial(){
     return '<div class="c5prow" data-c5m="bd_mat_process"><span class="c5sq '+(r.ready?'g':'a')+'" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">'+c5esc(r.n)+'</div><div class="c5row-s">'+c5esc(r.ob)+' · '+c5esc(r.r)+'</div></div><div class="c5prow-v" style="width:auto">'+c5esc(r.clock)+'</div><span class="c5pill '+pill+'" style="flex:none">'+pt+'</span></div>';
   }).join('');
   host.innerHTML=c5header()+
-    c5shell('Regulatory & disclosure · what must we disclose, and are we ready?','Nothing is currently material — the clocks and process are ready; two newer regimes are still being wired.',null,'Whether any cyber matter is material for disclosure, and whether the board could meet the notification clocks if it were. The SEC 8-K clock is the tightest (4 business days from a materiality call); GDPR/DORA readiness follows your tested runbooks; the EU AI Act and CRA mappings are still being wired. The board confirms the process; the disclosure call is management’s and counsel’s. Each regime traces to its ruleset and basis.')+
+    c5shell('Regulatory & disclosure · what must we disclose, and are we ready?','Nothing is currently material — the clocks and process are ready; two newer regimes are still being wired.',null,'Whether any cyber matter is material for disclosure, and whether the board could meet the notification clocks if it were. The SEC 8-K clock is the tightest (4 business days from a materiality call); GDPR/DORA readiness follows your tested runbooks; the EU AI Act and CRA mappings are still being wired. The board confirms the process; the disclosure call is management’s and counsel’s.')+
     '<div class="c5cards">'+c5card('bd_material')+c5card('bd_reportable')+c5card('bd_threshold_basis')+'</div>'+
     '<div class="c5rank" style="padding:4px 15px;margin-top:14px"><div class="c5rank-h" style="border:0;background:transparent;padding:11px 0">Disclosure regimes in scope · obligation · clock · readiness</div>'+regRows+
       '<div class="c5prow" style="cursor:default;background:var(--surface-2)"><div style="flex:1;min-width:0"><div class="c5row-s">Materiality: an incident modeled above '+(m.value!=null?usd(m.value):'the board threshold')+' is presumptively material → starts the 4-business-day SEC clock. Nothing crosses it this quarter; the '+IDF.short+' gap sits '+(below?'below threshold':'as the most likely trigger')+', monitored and funded.</div></div></div>'+
@@ -5044,7 +5044,7 @@ function c5bdTrend(){
     '<div class="c5prow" data-c5m="'+TD.mid+'"><span class="c5sq a" style="flex:0 0 auto"></span><div style="flex:1;min-width:0"><div class="c5row-t">'+cap(TD.short)+' — still elevated</div><div class="c5row-s">The one remaining driver · funded, being addressed</div></div><span class="c5pill a">Addressing</span></div>'+
     '</div>';
   host.innerHTML=c5header()+
-    c5shell('Trend over time · are we improving?','Cyber risk is falling — and ahead of peers.',null,'The board’s favorite question, answered over time. Cyber residual risk is falling quarter over quarter, and you sit in the top third of peers. Each point traces to its drivers.')+
+    c5shell('Trend over time · are we improving?','Cyber risk is falling — and ahead of peers.',null,'The board’s favorite question, answered over time. Cyber residual risk is falling quarter over quarter, and you sit in the top third of peers.')+
     '<div class="c5cards">'+c5card('direction')+c5card('cr_consec')+c5card('peer_position')+'</div>'+
     '<div class="c5rank" style="padding:12px 15px;margin-top:14px"><div class="c5rank-h" style="border:0;background:transparent;padding:0 0 8px">Residual cyber risk · last 6 quarters</div>'+bars+'</div>'+
     drivers+
@@ -5056,7 +5056,7 @@ function c5bdInvestment(){
   var host=document.getElementById('bd-investment');if(!host)return;
   var er=c5get('eff_return'),TD=c5TopDriver(),dm=c5get(TD.mid);
   host.innerHTML=c5header()+
-    c5shell('Investment & resilience · are we investing wisely?','The program pays for itself — one funded investment sustains it.',null,'Whether cyber investment is proportionate and effective. The program returns risk reduced per dollar, spend is benchmarked against peers, and one funded investment — '+TD.short+' — sustains the improvement. Every figure traces to its basis.')+
+    c5shell('Investment & resilience · are we investing wisely?','The program pays for itself — one funded investment sustains it.',null,'Whether cyber investment is proportionate and effective. The program returns risk reduced per dollar, spend is benchmarked against peers, and one funded investment — '+TD.short+' — sustains the improvement.')+
     '<div class="c5cards">'+c5card('eff_return')+c5card('bd_spend_peers')+c5card('bd_funded')+'</div>'+
     '<div class="c5tiles">'+
       c5tile('bd_resilience_inv','g','On track','Recovery tested · within RTO/RPO targets')+
@@ -5175,7 +5175,7 @@ function c5cpSecurity(){
   var host=document.getElementById('cp-security');if(!host)return;
   var TD=c5TopDriver(),dm=c5get(TD.mid),adv=c5get('ct_advisories');
   host.innerHTML=c5header()+
-    c5shell('Product security posture · is the product secure by design?','The product is secure by design — one part of the platform carries the risk.',null,'Security across your product surface. Every customer-facing product is listed below with how it is evaluated. New features ship secure-by-design and most of the platform is healthy; the one real exposure is the customer platform’s '+TD.short+'/access model. Every figure traces to its source.')+
+    c5shell('Product security posture · is the product secure by design?','The product is secure by design — one part of the platform carries the risk.',null,'Security across your product surface. Every customer-facing product is listed below with how it is evaluated. New features ship secure-by-design and most of the platform is healthy; the one real exposure is the customer platform’s '+TD.short+'/access model.')+
     '<div class="c5cards">'+c5card('cp_product_security')+c5card('cp_sbd_coverage')+c5card('cp_open_risks')+'</div>'+
     c5cpInventoryHtml()+
     '<div class="c5tiles">'+
@@ -5190,7 +5190,7 @@ function c5cpTrust(){
   var host=document.getElementById('cp-trust');if(!host)return;
   var TD=c5TopDriver(),dm=c5get(TD.mid);
   host.innerHTML=c5header()+
-    c5shell('Customer trust in the product · are users safe and confident?','Users trust the product — the access experience is the one soft spot.',null,'How secure and confident your users are. No customer-impacting incidents, strong security-feature adoption, trust signals steady. The one soft spot is the '+TD.short+'/access experience — friction and risk in the same place. Every figure traces to its source.')+
+    c5shell('Customer trust in the product · are users safe and confident?','Users trust the product — the access experience is the one soft spot.',null,'How secure and confident your users are. No customer-impacting incidents, strong security-feature adoption, trust signals steady. The one soft spot is the '+TD.short+'/access experience — friction and risk in the same place.')+
     '<div class="c5cards">'+c5card('ceo_cust_incidents')+c5card('cp_mfa')+c5card('ceo_trust_signal')+'</div>'+
     '<div class="c5tiles">'+
       c5tile('ceo_customer_data','a','Evidence-gated','Confirmed only with SIEM + DLP connected')+
@@ -5204,7 +5204,7 @@ function c5cpVelocity(){
   var host=document.getElementById('cp-velocity');if(!host)return;
   var TD=c5TopDriver(),dm=c5get(TD.mid);
   host.innerHTML=c5header()+
-    c5shell('Ship velocity vs. security · is security a tax or an enabler?','Security isn’t slowing you down — it’s clearing your path.',null,'Whether security helps or hinders delivery. The one recurring blocker is — again — the '+TD.short+'/access model; tech debt is roadmapped. Gate pass-rate and cycle-time light up when your CI/CD security-gate records connect. Every figure traces to its basis.')+
+    c5shell('Ship velocity vs. security · is security a tax or an enabler?','Security isn’t slowing you down — it’s clearing your path.',null,'Whether security helps or hinders delivery. The one recurring blocker is — again — the '+TD.short+'/access model; tech debt is roadmapped. Gate pass-rate and cycle-time light up when your CI/CD security-gate records connect.')+
     '<div class="c5cards">'+c5card('cp_pass_rate')+c5card('cp_cycle_time')+c5card('cp_blocker')+'</div>'+
     '<div class="c5tiles">'+
       c5tile('ct_techdebt','b','Managed','Legacy access debt mapped · roadmapped')+
@@ -5480,7 +5480,7 @@ function c5fwGaps(T){
 /* Left panel — auditor finding for the selected node. Public-standard text is fine
    for CSF/800-53/HIPAA; CIS/SOC2 render numbers/titles/mappings only (no proprietary text). */
 function c5fwFinding(sel,node){
-  if(!node)return '<div class="c5fw-detail"><div class="c5kick">Finding &amp; recommendation</div><div class="c5intro" style="margin-top:8px">Select a control on the right to open its auditor finding — the score roll-up, what was tested, why it scored below target, the recommendation with a target uplift, and the cross-framework mappings. Every number traces to its evidence.</div></div>';
+  if(!node)return '<div class="c5fw-detail"><div class="c5kick">Finding &amp; recommendation</div><div class="c5intro" style="margin-top:8px">Select a control on the right to open its auditor finding — the score roll-up, what was tested, why it scored below target, the recommendation with a target uplift, and the cross-framework mappings.</div></div>';
   var st=c5fwStatus(node.score),col=c5fwCol(node.score);
   var h='<div class="c5fw-detail"><div class="c5fw-dtop"><div><div class="c5kick">Finding &amp; recommendation</div><div style="font-size:15px;font-weight:500;margin-top:4px"><b>'+node.id+'</b> — '+node.name+'</div></div><span class="c5pill '+(st.cls==='good'?'g':st.cls==='warn'?'a':'r')+'">'+st.t+'</span></div>';
   h+='<div style="display:flex;align-items:baseline;gap:8px;margin-top:10px"><div style="font-size:26px;font-weight:500;font-family:var(--serif);color:var(--'+col+')">'+node.score.toFixed(1)+'<span style="font-size:14px;color:var(--muted)"> / 5</span></div><div class="c5intro" style="margin:0">'+c5fwLvl(node.score)+' · target '+C5FW_TARGET.toFixed(1)+'</div></div>';
@@ -5944,7 +5944,7 @@ function c5DecProj(){
   host.innerHTML=c5header()+
     c5shell('Decisions · what needs your sign-off?',(levers.length?(levers.length+' funding decision'+(levers.length>1?'s':'')+' waiting — commit or defer each.'):'Connect your tools and the funded decisions that move your posture appear here.'),null,'Each decision funds a control that improves your posture and reduces modeled exposure. Choosing one stamps it with your name and time, keeps it editable for 24 hours, and opens a tracked project.')+
     (list.length?c5decisions(list):'<div class="c5note">◐ Connect your security tools and upload your policies, and the funded decisions that move your posture appear here — each with the exact controls it improves.</div>')+
-    '<div class="c5foot">Each decision is priced from your control model. Every figure traces to its source.</div>';
+    '<div class="c5foot">Each decision is priced from your control model.</div>';
 }
 function c5dpMeterRow(p){
   var cap=(p.ceil!=null&&p.to>=p.ceil&&p.ceil<5)?('<span class="c5dp-cap">'+(p.auto==='manual'?'manual · caps at 3':'semi-automated · caps at 4')+'</span>'):'';
