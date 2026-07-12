@@ -6560,7 +6560,10 @@ function c5NeuronControls(host){
   var hyb=nc.filter(function(n){return n.evidence==='hybrid';}).length;
   var off=nc.filter(function(n){return n.evidence==='none';}).length;
   var effN=nc.filter(function(n){return n.effectiveness&&n.effectiveness.measured;}).length;
-  var FW=[{k:'csf',l:'NIST CSF 2.0'},{k:'r53',l:'NIST SP 800-53'},{k:'cis',l:'CIS v8'},{k:'iso',l:'ISO 27001'},{k:'soc2',l:'SOC 2'},{k:'pci',l:'PCI DSS'}];
+  // Client-facing projection focused on CSF 2.0 + ISO 27001. The full six-framework
+  // crosswalk stays in NEURON_XWALK and the internal Nerion Map — this just curates
+  // what the client sees.
+  var FW=[{k:'csf',l:'NIST CSF 2.0'},{k:'iso',l:'ISO 27001'}];
   function evPill(ev){
     var m={live:['🟢 live telemetry','good'],hybrid:['🔌 hybrid · human-validated','blue'],none:['— not deployed','muted']}[ev]||['—','muted'];
     return '<span style="font-size:10px;font-weight:700;color:var(--'+m[1]+');background:color-mix(in srgb,var(--'+m[1]+') 12%,transparent);border:1px solid color-mix(in srgb,var(--'+m[1]+') 30%,transparent);border-radius:20px;padding:2px 8px;white-space:nowrap">'+m[0]+'</span>';
@@ -6723,6 +6726,8 @@ function c5FrameworksClassic(host){
   if(typeof seedDemoDocScores==='function'){try{seedDemoDocScores();}catch(_){}}
   try{c5SetSnapshot();}catch(_){} // populate FW_SNAPSHOT for the community benchmark
   if(typeof FW_SEL==='undefined'){window.FW_SEL='csf';}
+  // Focused on CSF 2.0 + ISO 27001 — coerce any stale selection back to CSF.
+  if(FW_SEL!=='csf'&&FW_SEL!=='iso'){window.FW_SEL='csf';}
   var sel=FW_SEL,cov=(typeof fwDeployedIds==='function')?fwDeployedIds():{};
   // CIS / SOC 2 / HIPAA are scored by the framework-native engine — fetch once.
   if(sel==='cis'||sel==='soc2'||sel==='hipaa'||sel==='iso'){try{caFetch();}catch(_){}}
@@ -6767,7 +6772,10 @@ function c5FrameworksClassic(host){
     trendCard+
     '<div class="c5card" data-c5fwcard="failing"><div class="c5card-top"><span class="c5card-l">Controls failing</span><span class="c5chip c5-computed">computed</span></div><div class="c5card-v" style="color:var(--'+(T.failing>0?'crit':'good')+')">'+T.failing+'</div><div class="cn">deficiencies (below CMMI '+C5FW_FLOOR+')</div></div>'+
     '</div>';
-  var pills='<div class="c5fw-pills">'+[['csf','NIST CSF 2.0'],['r53','NIST 800-53'],['soc2','SOC 2'],['hipaa','HIPAA'],['cis','CIS v8'],['iso','ISO 27001']].map(function(o){return '<button class="c5fw-pill'+(sel===o[0]?' on':'')+'" data-c5fwsel="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div>';
+  // Focused on NIST CSF 2.0 + ISO 27001. The 800-53 / CIS / SOC 2 / HIPAA / PCI
+  // crosswalks stay in the data model (and the internal Nerion Map) but are not offered
+  // in the client selector for now.
+  var pills='<div class="c5fw-pills">'+[['csf','NIST CSF 2.0'],['iso','ISO 27001']].map(function(o){return '<button class="c5fw-pill'+(sel===o[0]?' on':'')+'" data-c5fwsel="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div>';
   // Reassess cadence toggle — its own row (reference layout).
   var reassessRow='<div class="c5fw-cad"><span style="font-size:11px;color:var(--muted);margin-right:2px">Reassess:</span>'+[['weekly','Weekly'],['monthly','Monthly'],['quarterly','Quarterly']].map(function(o){return '<button class="c5fw-cadb'+(cad===o[0]?' on':'')+'" data-c5fwcad="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div>';
   // Export buttons — draft (watermarked) pack, upload-the-reviewed-final, and the XLSX
