@@ -1433,7 +1433,8 @@ var CAP_FRAMEWORK={
   backup:{csf:['PR.DS-11','RC.RP-01','RC.RP-02','RC.RP-03','RC.RP-05'],r53:['CP-9','CP-10'],weight:1.0},
   seg:{csf:['PR.IR-01'],r53:['SC-7'],weight:1.0},
   dlp:{csf:['ID.AM-07','PR.DS-01','PR.DS-02'],r53:['SC-7','MP-6'],weight:0.9},
-  aware:{csf:['PR.AT-01','PR.AT-02'],r53:['AT-2'],weight:0.9}
+  aware:{csf:['PR.AT-01','PR.AT-02'],r53:['AT-2'],weight:0.9},
+  sspm:{csf:['PR.PS-01','PR.AA-05','DE.CM-09'],r53:['CM-6','AC-6','AU-6'],weight:1.0}
 };
 function capRiskRemoved(){
   var total=controlsEffUsd(),eff={},sum=0;
@@ -2899,6 +2900,7 @@ function demoSignals(){
   if(has(['cisa','recordedfuture','mandiant','otx']))set('exploited_cves',18);
   if(has(['salesforce','hubspot'])){set('pipeline_in_review_usd',500000000);set('deals_gated_qtr',10);}
   if(has(['whistic','safebase','conveyor'])){set('reviews_cleared_qtr',12);set('review_cycle_wks',2);}
+  if(has(['appomni','adaptiveshield','obsidian','netskope','salesforce_shield']))set('sspm_pct',76);
   if(has(['rubrik','veeam','cohesity','commvault'])){set('backup_immutable_pct',100);set('dr_test_days',48);set('rpo_minutes',15);}
   if(has(['github','snyk','gitlab'])){set('code_scanning_open',7);set('dependabot_critical',2);set('changes_merged_wk',42);set('changes_in_review',11);}
   if(has(['servicenow_grc','auditboard'])){set('audit_findings_open',14);set('audit_findings_repeat',3);}
@@ -3013,7 +3015,7 @@ function selectScope(id){try{applyScope(id);}catch(_){}renderScopeBar();try{rend
    answer reads fully populated without a backend. Used ONLY in demo/trial mode and only when
    the backend returns nothing; a real backend always overrides it. Cyber is deliberately OVER
    appetite (the identity story), so the narrative is coherent across every seat. */
-var DEMO_TOOLS={crowdstrike:{on:true,vendor:'CrowdStrike',demo:true},okta:{on:true,vendor:'Okta',demo:true},cyberark:{on:true,vendor:'CyberArk',demo:true},qualys:{on:true,vendor:'Qualys',demo:true},firewall:{on:true,vendor:'Palo Alto Networks',demo:true},knowbe4:{on:true,vendor:'KnowBe4',demo:true},proofpoint:{on:true,vendor:'Proofpoint',demo:true},splunk:{on:true,vendor:'Splunk',demo:true},aws:{on:true,vendor:'AWS',demo:true},sap:{on:true,vendor:'SAP',demo:true},onetrust:{on:true,vendor:'OneTrust',demo:true},recordedfuture:{on:true,vendor:'Recorded Future',demo:true},cisa:{on:true,vendor:'CISA KEV',demo:true},salesforce:{on:true,vendor:'Salesforce',demo:true},whistic:{on:true,vendor:'Whistic',demo:true},rubrik:{on:true,vendor:'Rubrik',demo:true},github:{on:true,vendor:'GitHub',demo:true},servicenow_grc:{on:true,vendor:'ServiceNow GRC',demo:true}};
+var DEMO_TOOLS={crowdstrike:{on:true,vendor:'CrowdStrike',demo:true},okta:{on:true,vendor:'Okta',demo:true},cyberark:{on:true,vendor:'CyberArk',demo:true},qualys:{on:true,vendor:'Qualys',demo:true},firewall:{on:true,vendor:'Palo Alto Networks',demo:true},knowbe4:{on:true,vendor:'KnowBe4',demo:true},proofpoint:{on:true,vendor:'Proofpoint',demo:true},splunk:{on:true,vendor:'Splunk',demo:true},aws:{on:true,vendor:'AWS',demo:true},sap:{on:true,vendor:'SAP',demo:true},onetrust:{on:true,vendor:'OneTrust',demo:true},recordedfuture:{on:true,vendor:'Recorded Future',demo:true},cisa:{on:true,vendor:'CISA KEV',demo:true},salesforce:{on:true,vendor:'Salesforce',demo:true},whistic:{on:true,vendor:'Whistic',demo:true},rubrik:{on:true,vendor:'Rubrik',demo:true},appomni:{on:true,vendor:'AppOmni',demo:true},github:{on:true,vendor:'GitHub',demo:true},servicenow_grc:{on:true,vendor:'ServiceNow GRC',demo:true}};
 function demoLive(){
   return {
     org_name:(typeof orgName==='function'&&orgName())||'Acme Corp',
@@ -4149,7 +4151,8 @@ var CAPS=[
   {k:'dlp',auto:'semi',name:'Data Loss Prevention (DLP)',tool:'Purview / Forcepoint',proj:/\bdlp\b|data loss|data protection|purview|forcepoint|egress/i,need:'deploy DLP across email, web and endpoint egress channels.',connect:'connect a DLP tool to measure coverage.'},
   {k:'seg',auto:'semi',name:'Network Segmentation / Zero-Trust',tool:'Illumio / firewall',proj:/segment|micro-?segment|zero.?trust|illumio|isolation|east-?west/i,need:'segment crown-jewel systems and enforce east-west controls.',connect:'connect your segmentation / NAC tooling.'},
   {k:'backup',auto:'auto',name:'Backup & Recovery Resilience',tool:'Rubrik / Veeam',proj:/backup|recover|immutable|rubrik|veeam|disaster|resilien|\bdr\b/i,need:'verify immutable backups and test restore for every crown jewel.',connect:'connect your backup platform (Rubrik, Veeam).'},
-  {k:'cspm',auto:'auto',name:'Cloud Security Posture (CSPM)',tool:'Wiz / Prisma',proj:/cspm|cloud security|posture|misconfig|\bwiz\b|prisma|\borca\b/i,need:'baseline cloud misconfigurations and remediate public exposure.',connect:'connect a CSPM tool (Wiz, Prisma, Orca).'}
+  {k:'cspm',auto:'auto',name:'Cloud Security Posture (CSPM)',tool:'Wiz / Prisma',proj:/cspm|cloud security|posture|misconfig|\bwiz\b|prisma|\borca\b/i,need:'baseline cloud misconfigurations and remediate public exposure.',connect:'connect a CSPM tool (Wiz, Prisma, Orca).'},
+  {k:'sspm',auto:'semi',name:'SaaS Security Posture (SSPM / CASB)',tool:'AppOmni / Adaptive Shield',proj:/sspm|saas security|casb|appomni|adaptive ?shield|obsidian|netskope|salesforce shield/i,need:'baseline SaaS misconfigurations and over-privileged access across your business apps.',connect:'connect an SSPM / CASB (AppOmni, Adaptive Shield, Netskope) or the app’s native security (Salesforce Shield).'}
 ];
 var CAP_BY_KEY={};CAPS.forEach(function(c){CAP_BY_KEY[c.k]=c;});
 /* ---- Asset-class applicability (telemetry provenance). A tool can only EVIDENCE an
@@ -4168,12 +4171,13 @@ var CAP_ASSET_APPLIES={
   backup:['server','iaas','saas','data'],
   seg:['server','iaas','network'],
   dlp:['saas','data','endpoint'],
-  aware:[] // organization-level human control — not scoped to an asset class
+  aware:[], // organization-level human control — not scoped to an asset class
+  sspm:['saas'] // SaaS Security Posture / CASB — the RIGHT evidence for a SaaS app
 };
 function capAppliesTo(k,cls){var a=CAP_ASSET_APPLIES[k];return !!(a&&a.indexOf(cls)>=0);}
 /* The live signal that scores each capability + the connector keys that produce it —
    so the CISO detail can name the exact source of every number (no hardcoding). */
-var CAP_SIGKEY={edr:'edr_pct',mfa:'mfa_pct',pam:'pam_pct',vuln:'patch_pct',aware:'training_pct',siem:'siem_coverage_pct',cspm:'cspm_pct',backup:'backup_immutable_pct',dlp:'dlp_pct',seg:'seg_pct'};
+var CAP_SIGKEY={edr:'edr_pct',mfa:'mfa_pct',pam:'pam_pct',vuln:'patch_pct',aware:'training_pct',siem:'siem_coverage_pct',cspm:'cspm_pct',backup:'backup_immutable_pct',dlp:'dlp_pct',seg:'seg_pct',sspm:'sspm_pct'};
 var CAP_TOOLKEYS={
   edr:['defender','crowdstrike','sentinelone','cortexxdr','trendmicro'],
   mfa:['okta','entra','ping','duo','onelogin'],
@@ -4184,7 +4188,8 @@ var CAP_TOOLKEYS={
   cspm:['wiz','prisma','aws','azure','gcp','orca'],
   backup:['rubrik','veeam','cohesity','commvault','dell_powerprotect'],
   dlp:['purview','forcepoint','symantec_dlp','zscaler_dlp','netskope'],
-  seg:['illumio','zscaler_zpa','paloalto_seg','cisco_workload','guardicore']
+  seg:['illumio','zscaler_zpa','paloalto_seg','cisco_workload','guardicore'],
+  sspm:['appomni','adaptiveshield','obsidian','netskope','salesforce_shield']
 };
 /* Where a capability's number comes from: the connected tool (real vendor name if
    connected), whether it's live or demo telemetry, and the signal key it reads. */
@@ -4237,6 +4242,7 @@ function capDeploy(c){
   if(c.k==='backup')return sig('backup_immutable_pct');
   if(c.k==='dlp')return sig('dlp_pct'); // enforced DLP coverage % across channels/endpoints
   if(c.k==='seg')return sig('seg_pct'); // workloads/segments in enforced segmentation
+  if(c.k==='sspm')return sig('sspm_pct'); // SaaS apps under SSPM/CASB posture management
   return null;
 }
 /* User's color scale: green ≥90, blue ≥75, yellow ≥50, red <50, grey = not connected. */

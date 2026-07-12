@@ -43,9 +43,13 @@ describe('Per-asset provenance — "prove it"', () => {
     expect(ciso).toContain('else inapplicable.push({k:c.k,name:c.name,tool:c.tool});');
   });
 
-  it('a SaaS asset without SSPM/CASB reads as a gap, not coverage', () => {
-    expect(ciso).toContain("cls==='saas'&&!applicable.some(function(a){return a.k==='cspm';})");
+  it('a SaaS asset without an SSPM/CASB reads as a gap; with one it is evidenced', () => {
+    // the gap is keyed on the SaaS-appropriate tool (SSPM), not CSPM
+    expect(ciso).toContain("cls==='saas'&&!applicable.some(function(a){return a.k==='sspm';})");
     expect(ciso).toContain('SaaS security posture (SSPM / CASB) is not connected');
+    // SSPM/CASB is a real capability that applies to SaaS
+    expect(cockpit).toContain("sspm:['saas']");
+    expect(ciso).toContain("sspm:  {domain:'SaaS Posture'");
   });
 
   it('the Neuron Controls view renders the provenance panel that refuses Defender-for-Salesforce', () => {
