@@ -6469,7 +6469,9 @@ var NEURON_XWALK={
   dlp:   {domain:'Data Protection',role:'prevent',lanes:['privacy_regulatory','insider','third_party_supply_chain'],
           cis:['3.3','3.13'],iso:['A.8.12','A.8.10'],soc2:['CC6.7'],pci:['3.4','4.2']},
   aware: {domain:'Human Risk',role:'prevent',lanes:['insider','privacy_regulatory'],
-          cis:['14.1','14.2','14.9'],iso:['A.6.3'],soc2:['CC1.4','CC2.2'],pci:['12.6']}
+          cis:['14.1','14.2','14.9'],iso:['A.6.3'],soc2:['CC1.4','CC2.2'],pci:['12.6']},
+  sspm:  {domain:'SaaS Posture',role:'both',lanes:['privacy_regulatory','third_party_supply_chain','insider'],
+          cis:['4.1','4.8','6.8'],iso:['A.5.23','A.8.9'],soc2:['CC6.6','CC7.1'],pci:['2.2','6.4']}
 };
 /* Effectiveness readings (BAS / purple-team), keyed by capability. Fed by a connected
    BAS platform or a purple-team exercise; empty until one is wired. This is the hook
@@ -6566,7 +6568,7 @@ function assetProvenance(cj){
     else inapplicable.push({k:c.k,name:c.name,tool:c.tool}); // deployed, but NOT valid evidence for this class
   });
   var gap='';
-  if(cls==='saas'&&!applicable.some(function(a){return a.k==='cspm';}))gap='SaaS security posture (SSPM / CASB) is not connected — endpoint & cloud tools cannot evidence a SaaS app. Connect an SSPM (AppOmni, Adaptive Shield) or the app’s native security (e.g. Salesforce Shield).';
+  if(cls==='saas'&&!applicable.some(function(a){return a.k==='sspm';}))gap='SaaS security posture (SSPM / CASB) is not connected — endpoint & cloud tools cannot evidence a SaaS app. Connect an SSPM (AppOmni, Adaptive Shield) or the app’s native security (e.g. Salesforce Shield).';
   else if(cls==='iaas'&&!applicable.some(function(a){return a.k==='cspm';}))gap='Cloud posture (CSPM) is not connected for this cloud asset.';
   else if(!applicable.length)gap='No connected tool applies to a '+((typeof ASSET_CLASS_LABEL!=='undefined'&&ASSET_CLASS_LABEL[cls])||cls)+' — this asset is not evidenced.';
   return {class:cls,label:(typeof ASSET_CLASS_LABEL!=='undefined'&&ASSET_CLASS_LABEL[cls])||cls,applicable:applicable,inapplicable:inapplicable,gap:gap};
