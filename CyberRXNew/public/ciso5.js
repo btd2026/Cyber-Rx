@@ -6550,6 +6550,27 @@ function neuronFrameworkLanes(fwKey){
     return {id:r.id,label:r.label,controls:Object.keys(d.all).length,evidenced:Object.keys(d.ev).length};})
     .filter(function(r){return r.controls>0;});
 }
+/* Telemetry provenance for one asset: which connected tools can ACTUALLY evidence it,
+   given its class, and which deployed tools do NOT apply (so are not credited). This is
+   the answer to "prove the telemetry is accurate" — and what stops EDR being shown as a
+   source for a SaaS app. Returns {class,label,applicable[],inapplicable[],gap}. */
+function assetProvenance(cj){
+  var cls=(cj&&cj.class)||'server';
+  var caps=(typeof CAPS!=='undefined')?CAPS:[];
+  var applicable=[],inapplicable=[];
+  caps.forEach(function(c){
+    var applies=(typeof capAppliesTo==='function')?capAppliesTo(c.k,cls):true;
+    var p=(typeof capDeploy==='function')?capDeploy(c):null;
+    if(p==null)return;                       // not deployed → not a source either way
+    if(applies)applicable.push({k:c.k,name:c.name,tool:c.tool,pct:p});
+    else inapplicable.push({k:c.k,name:c.name,tool:c.tool}); // deployed, but NOT valid evidence for this class
+  });
+  var gap='';
+  if(cls==='saas'&&!applicable.some(function(a){return a.k==='cspm';}))gap='SaaS security posture (SSPM / CASB) is not connected — endpoint & cloud tools cannot evidence a SaaS app. Connect an SSPM (AppOmni, Adaptive Shield) or the app’s native security (e.g. Salesforce Shield).';
+  else if(cls==='iaas'&&!applicable.some(function(a){return a.k==='cspm';}))gap='Cloud posture (CSPM) is not connected for this cloud asset.';
+  else if(!applicable.length)gap='No connected tool applies to a '+((typeof ASSET_CLASS_LABEL!=='undefined'&&ASSET_CLASS_LABEL[cls])||cls)+' — this asset is not evidenced.';
+  return {class:cls,label:(typeof ASSET_CLASS_LABEL!=='undefined'&&ASSET_CLASS_LABEL[cls])||cls,applicable:applicable,inapplicable:inapplicable,gap:gap};
+}
 /* The Neuron Controls lens — capability × (adversarial + 5 non-adversarial lanes)
    × framework projection, in one view. Read-only; renders into the panel passed in. */
 function c5NeuronControls(host){
@@ -6640,6 +6661,22 @@ function c5NeuronControls(host){
     return '<tr><td style="padding:6px 12px 6px 0;font-size:12px;font-weight:700;color:var(--ink);white-space:nowrap">'+esc(f.l)+'</td>'+cells+'</tr>';
   }).join('');
   var driverMatrix='<div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;min-width:660px"><thead><tr><th style="text-align:left;padding:6px 12px 6px 0"></th>'+drvHead+'</tr></thead><tbody>'+drvBody+'</tbody></table></div>';
+  // ── telemetry provenance by asset: which tools can ACTUALLY evidence each asset ──
+  var cjs=(typeof LIVE!=='undefined'&&LIVE&&LIVE.crown_jewels)||[];
+  function shortCap(n){return String(n).replace(/ *\(.*/,'').replace(/ ?[/&].*/,'').trim();}
+  function okChip(a){return '<span title="'+esc((a.tool||'')+' — valid evidence for this asset class')+'" style="font-size:10.5px;color:var(--good);background:color-mix(in srgb,var(--good) 12%,transparent);border:1px solid color-mix(in srgb,var(--good) 30%,transparent);border-radius:6px;padding:2px 7px;white-space:nowrap">'+esc(shortCap(a.name))+' '+a.pct+'%</span>';}
+  function noChip(a){return '<span title="'+esc((a.tool||a.name)+' does not cover this asset class — not credited as evidence')+'" style="font-size:10.5px;color:var(--crit);background:color-mix(in srgb,var(--crit) 10%,transparent);border:1px solid color-mix(in srgb,var(--crit) 28%,transparent);border-radius:6px;padding:2px 7px;white-space:nowrap;text-decoration:line-through">'+esc(shortCap(a.name))+' ✕</span>';}
+  var provRows=cjs.map(function(cj){var pr=assetProvenance(cj);
+    return '<div style="border:1px solid var(--line);border-radius:10px;padding:11px 13px;margin-bottom:9px;background:var(--surface)">'
+      +'<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap"><b style="font-size:12.5px;color:var(--ink)">'+esc(cj.name)+(cj.tool?(' <span style="color:var(--muted);font-weight:600">· '+esc(cj.tool)+'</span>'):'')+'</b>'
+      +'<span style="font-size:10px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--blue)">'+esc(pr.label)+'</span></div>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;align-items:center"><span style="font-size:10.5px;color:var(--muted);margin-right:2px">Evidenced by</span>'+(pr.applicable.length?pr.applicable.map(okChip).join(''):'<span style="font-size:10.5px;color:var(--muted)">— nothing applicable connected</span>')+'</div>'
+      +(pr.inapplicable.length?('<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;align-items:center"><span style="font-size:10.5px;color:var(--muted);margin-right:2px">Not valid here</span>'+pr.inapplicable.map(noChip).join('')+'</div>'):'')
+      +(pr.gap?('<div style="font-size:11px;color:var(--crit);margin-top:8px;line-height:1.5">⚠ '+esc(pr.gap)+'</div>'):'')
+      +'</div>';
+  }).join('');
+  var provPanel=cjs.length?('<div style="margin-top:24px"><div style="font-size:12.5px;font-weight:800;color:var(--ink);margin-bottom:4px">Telemetry provenance by asset <span style="color:var(--muted);font-weight:600">— "prove it"</span></div>'
+    +'<div style="font-size:11.5px;color:var(--muted);margin-bottom:10px">Each asset is only evidenced by tools that actually cover its <b>class</b>. A tool that can’t see the asset (EDR on a SaaS app, CSPM on SaaS) is shown <span style="color:var(--crit)">struck through</span> and <b>not credited</b> — this is how Nerion refuses to claim Defender covers Salesforce.</div>'+provRows+'</div>'):'';
   host.innerHTML=
     '<div style="max-width:1080px">'
     +'<div style="font-size:15px;font-weight:800;color:var(--ink)">Neuron Controls</div>'
@@ -6655,6 +6692,7 @@ function c5NeuronControls(host){
     +'<div style="margin-top:24px"><div style="font-size:12.5px;font-weight:800;color:var(--ink);margin-bottom:4px">Risk-driver coverage by framework</div>'
     +'<div style="font-size:11.5px;color:var(--muted);margin-bottom:10px">Every framework, split by <b>why</b> each control matters — the adversarial lens (ATT&amp;CK) and the five non-adversarial lanes. Cells show controls <b>evidenced by deployed telemetry</b> / controls mapped. The dual-lens view: compliance is not only about stopping attackers — it is also uptime, integrity, insider, supply-chain and privacy.</div>'
     +driverMatrix+'</div>'
+    +provPanel
     +'</div>';
 }
 /* Program Health dispatcher — renders the tab strip, then the active panel.

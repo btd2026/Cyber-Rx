@@ -3031,12 +3031,12 @@ function demoLive(){
       materiality:{value:53e6} // board-set disclosure threshold (factual), NOT a modeled loss
     },
     crown_jewels:[
-      {name:'Customer billing platform', tier:'Critical', provisional:false, region:'americas'},
-      {name:'Customer identity & access', tier:'Critical', provisional:false, region:'americas'},
-      {name:'Order-to-cash', tier:'Critical', provisional:false, region:'emea'},
-      {name:'Global supply chain', tier:'High', provisional:false, region:'apac'},
-      {name:'Payments (PCI)', tier:'High', provisional:false, region:'emea'},
-      {name:'Financials / ERP', tier:'High', provisional:true, region:'apac'}
+      {name:'Customer billing platform', tier:'Critical', provisional:false, region:'americas', class:'saas', tool:'Salesforce'},
+      {name:'Customer identity & access', tier:'Critical', provisional:false, region:'americas', class:'identity', tool:'Okta / Entra ID'},
+      {name:'Order-to-cash', tier:'Critical', provisional:false, region:'emea', class:'server'},
+      {name:'Global supply chain', tier:'High', provisional:false, region:'apac', class:'iaas', tool:'AWS'},
+      {name:'Payments (PCI)', tier:'High', provisional:false, region:'emea', class:'saas'},
+      {name:'Financials / ERP', tier:'High', provisional:true, region:'apac', class:'saas', tool:'SAP'}
     ],
     // Phase B/D — assisted revenue-confirmation state (drives which jewels are promoted).
     revenue_confirmation:{ processes:8, confirmed:7, brings_money:5, unconfirmed:1, provisional_jewels:1,
@@ -4152,6 +4152,25 @@ var CAPS=[
   {k:'cspm',auto:'auto',name:'Cloud Security Posture (CSPM)',tool:'Wiz / Prisma',proj:/cspm|cloud security|posture|misconfig|\bwiz\b|prisma|\borca\b/i,need:'baseline cloud misconfigurations and remediate public exposure.',connect:'connect a CSPM tool (Wiz, Prisma, Orca).'}
 ];
 var CAP_BY_KEY={};CAPS.forEach(function(c){CAP_BY_KEY[c.k]=c;});
+/* ---- Asset-class applicability (telemetry provenance). A tool can only EVIDENCE an
+   asset whose class it actually covers: EDR sees endpoints/servers, NOT a SaaS app;
+   CSPM sees cloud infra, NOT SaaS; a SaaS app is evidenced by the IdP (SSO), SaaS DLP,
+   SaaS backup, and — the real answer — an SSPM / CASB (which Nerion flags as a gap when
+   absent). This is what stops the cockpit crediting "Defender" for Salesforce. ---- */
+var ASSET_CLASS_LABEL={saas:'SaaS application',iaas:'Cloud infrastructure (IaaS/PaaS)',endpoint:'Endpoint',server:'Server / on-prem',identity:'Identity & access',data:'Data store',network:'Network'};
+var CAP_ASSET_APPLIES={
+  edr:['endpoint','server'],
+  mfa:['identity','saas','server','endpoint'],
+  pam:['identity','server'],
+  vuln:['server','endpoint','iaas'],
+  siem:['server','endpoint','iaas','saas','identity'],
+  cspm:['iaas'],
+  backup:['server','iaas','saas','data'],
+  seg:['server','iaas','network'],
+  dlp:['saas','data','endpoint'],
+  aware:[] // organization-level human control — not scoped to an asset class
+};
+function capAppliesTo(k,cls){var a=CAP_ASSET_APPLIES[k];return !!(a&&a.indexOf(cls)>=0);}
 /* The live signal that scores each capability + the connector keys that produce it —
    so the CISO detail can name the exact source of every number (no hardcoding). */
 var CAP_SIGKEY={edr:'edr_pct',mfa:'mfa_pct',pam:'pam_pct',vuln:'patch_pct',aware:'training_pct',siem:'siem_coverage_pct',cspm:'cspm_pct',backup:'backup_immutable_pct',dlp:'dlp_pct',seg:'seg_pct'};
