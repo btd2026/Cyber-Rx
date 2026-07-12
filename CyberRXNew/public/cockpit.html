@@ -3018,12 +3018,17 @@ function demoLive(){
   return {
     org_name:(typeof orgName==='function'&&orgName())||'Acme Corp',
     counts:{crown_jewels:6,assets:240},
+    // FAIR loss modeling (ALE / tail / VaR) is intentionally DROPPED — a single modeled
+    // dollar (the CISO's "$2B estimated vs $20M actual") misleads and no serious CISO
+    // reports on it. What remains is FACTUAL: revenue, the board's appetite and
+    // disclosure-materiality thresholds, and the real insurance policy. "What's at
+    // stake" is told through crown-jewel business value ($/day, factual) + control
+    // coverage/effectiveness + qualitative residual bands — never a modeled ALE.
     economics:{
-      ale:817e6, tail:1.6e9, var:1.6e9, revenue:63e9,
+      revenue:63e9,
       appetite:{appetite:500e6},
-      insurance:{limit:1.2e9, premium:25e6, gap:400e6, retention:10e6},
-      materiality:{value:53e6},
-      ratios:{pct_of_revenue:817e6/63e9}
+      insurance:{limit:1.2e9, premium:25e6, retention:10e6},
+      materiality:{value:53e6} // board-set disclosure threshold (factual), NOT a modeled loss
     },
     crown_jewels:[
       {name:'Customer billing platform', tier:'Critical', provisional:false, region:'americas'},

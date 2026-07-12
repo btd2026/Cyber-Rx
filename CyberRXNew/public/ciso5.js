@@ -2914,7 +2914,7 @@ function c5Exposure(){
         '<div style="min-width:0;flex:1">'+
           '<div class="c5aic-t">'+c5esc(nm(c))+'</div>'+
           '<div class="c5aic-v" style="color:var(--'+st.c+')">'+c5esc(st.t)+'</div>'+
-          '<div class="c5aic-s"><b style="color:var(--good)">'+usd(o.usd)+'</b> modeled reduction · '+c5esc(desc)+'</div>'+
+          '<div class="c5aic-s"><b style="color:var(--good)">'+((o.p!=null)?(o.p+'% coverage'):'—')+'</b> · '+c5esc(desc)+'</div>'+
           '<div class="c5esub" style="font-size:11px;color:var(--muted);margin-top:3px">'+c5esc(meta)+'</div>'+
           '<div class="c5esub" style="margin-top:3px;color:var(--ink-2)"><b>Next action:</b> '+c5esc(next)+'</div>'+
           '<div class="c5esub" style="color:var(--blue);font-size:11px;margin-top:2px;cursor:pointer">Click for the record ›</div>'+
@@ -2929,12 +2929,12 @@ function c5Exposure(){
   // not duplicated below), then the two area reads when the capability map is
   // connected, or a highest-value control + a connect prompt when it isn't. No empty
   // "—" boxes, no box that just repeats the controls list.
-  var summary='<div class="c5statgrid">'+statc('coin','Modeled exposure reduced by controls',haveCtrls?usd(rr.total):'—','Modeled expected loss your controls buy down','good');
+  var summary='<div class="c5statgrid">'+statc('shieldcheck','Controls with live coverage',haveCtrls?String(ctrlConn.length):'—','Control capabilities evidenced by your connected tools — coverage, not a modeled dollar','good');
   if(haveAreas){
     summary+=scard('shieldcheck','Areas meeting protection threshold',String(well.length),'Evidence supports current protection level',well.length?'good':'muted','well','The business areas clearing their protection threshold with no open control gaps. Click for the list.')+
       scard('target','Areas requiring remediation',String(weak.length),'Carrying residual exposure',weak.length?'warn':'muted','weak','The business areas below the threshold or carrying open control gaps. Click for the list.');
   } else {
-    summary+=statc('cpu','Highest-value control',topCtrl?nm(topCtrl.c):'—',topCtrl?(usd(topCtrl.usd)+' modeled exposure reduction · '+topCtrl.p+'% coverage'):'connect your security tools','good','17px')+
+    summary+=statc('cpu','Best-covered control',topCtrl?nm(topCtrl.c):'—',topCtrl?(topCtrl.p+'% coverage from connected tools'):'connect your security tools','good','17px')+
       '<div class="c5opc" data-c5onb="business capability map" style="--ac:var(--blue)"><span class="c5opc-go">connect ›</span><div class="c5opc-h"><span class="c5opc-ic">'+c5icon('store')+'</span><span class="c5opc-t">Protection by business area</span></div><div class="c5opc-v" style="color:var(--blue);font-size:15px">Connect capability map →</div><div class="c5opc-s">Rank protection by business function once your Business Capability Map is added.</div></div>';
   }
   summary+='</div>';
@@ -2974,26 +2974,26 @@ function c5Exposure(){
   bodyA+='<div class="c5foot">Every figure traces to its source'+(anyDerived?'; figures marked “illustrative” are not yet fully evidenced':'')+'.</div>';
   // TAB B — control value (which controls reduce the most business exposure?)
   var cvVerdict=haveCtrls
-    ?('Your controls reduce '+usd(rr.total)+' of modeled exposure, ranked by value delivered'+((topCtrl&&topGap&&topGap.c.k!==topCtrl.c.k)?(' — '+nm(topCtrl.c)+' delivers the most; '+nm(topGap.c)+' is the biggest remaining gap.'):'.'))
-    :'Connect your security tools to rank each control by the business exposure it reduces.';
+    ?('Your controls, ranked by coverage from your connected tools'+((topCtrl&&topGap&&topGap.c.k!==topCtrl.c.k)?(' — '+nm(topCtrl.c)+' is best covered; '+nm(topGap.c)+' is the biggest remaining gap.'):'.'))
+    :'Connect your security tools to rank each control by the coverage it provides.';
   var bodyB=c5header()+
-    c5shell('Control value · which controls reduce the most business exposure?',
+    c5shell('Control value · which controls are best covered, and where are the gaps?',
       cvVerdict,
       (haveCtrls?'warn':null),
-      'Modeled exposure reduction estimates the business exposure reduced by covered controls across protected assets and business services'+(demoCV?' (demo values).':' — coverage × asset exposure × business-service criticality.'));
+      'Ranked by measured control coverage from your connected tools'+(demoCV?' (demo values).':' — with proven effectiveness shown where a BAS / purple-team result exists. No modeled-loss dollar.'));
   if(haveCtrls){
     bodyB+=c5ControlValueEvidencePanel(ctrlConn,rr,demoCV)+
-      '<div class="c5seclab">Controls delivering the most business value · '+ctrlConn.length+' control'+(ctrlConn.length>1?'s':'')+' · '+usd(rr.total)+' modeled exposure reduction</div><div class="c5aigrid">'+w3+'</div>';
+      '<div class="c5seclab">Controls ranked by coverage · '+ctrlConn.length+' control'+(ctrlConn.length>1?'s':'')+' evidenced by connected tools</div><div class="c5aigrid">'+w3+'</div>';
     if(topCtrl){
       var gapLine=(topGap&&topGap.c.k!==topCtrl.c.k)?(' '+nm(topGap.c)+' has the largest remaining coverage gap ('+topGap.p+'%) and should be evaluated as the next investment priority.'):'';
       var TDcv=c5TopDriver(); // remaining priority = the data-ranked top driver, not a literal
       bodyB+=c5bl('Bottom line',
-        nm(topCtrl.c)+' delivers the highest modeled exposure reduction: '+usd(topCtrl.usd)+' at '+topCtrl.p+'% coverage.',
+        nm(topCtrl.c)+' is your best-covered control at '+topCtrl.p+'% coverage from connected tools.',
         null,
-        'It delivers the highest modeled exposure reduction among your current controls. The remaining priority is to reduce your largest exposure driver — '+TDcv.phrase+'.'+gapLine,
+        'It has the strongest measured coverage among your current controls.'+gapLine,
         {mid:TDcv.mid,txt:'Close the '+c5esc(TDcv.short)+' gap'});
     }
-    bodyB+='<div class="c5foot">Ranked by modeled exposure reduction. Click any control for source traceability and calculation basis.</div>';
+    bodyB+='<div class="c5foot">Ranked by measured control coverage. Click any control for source traceability and calculation basis.</div>';
   } else {
     bodyB+='<div class="c5foot" style="padding:16px 4px">No controls connected yet — connect EDR, MFA, PAM, SIEM and the rest so Nerion can rank each by the business exposure it reduces.</div>';
   }
@@ -6183,15 +6183,15 @@ function c5DecProj(){
   var list=levers.slice(0,4).map(function(l,i){
     var n=l.proj.length;
     var moves=n?(n+' mapped control'+(n>1?'s':'')+' toward target maturity'):'your posture in this area';
-    var rec={on:'Commit & fund',osum:'Unlocks modeled exposure reduction · improves '+moves,
-      pros:['Improves '+moves+'.','Reduces modeled exposure in this area.','Opens a tracked funding project.'],
+    var rec={on:'Commit & fund',osum:'Raises control coverage · improves '+moves,
+      pros:['Improves '+moves+'.','Raises measured control coverage in this area.','Opens a tracked funding project.'],
       cons:['Requires capital this cycle (scoped with your team).'],
       consequence:'Opens a tracked funding project and begins control-improvement tracking.'};
-    var alt=[{on:'Defer to next cycle',osum:'Records the deferral; the gap stays open',pros:['No spend now.'],cons:['The exposure stays open until it is funded.'],req:true,consequence:'Records the decision as deferred; the exposure remains open until the next cycle.'}];
+    var alt=[{on:'Defer to next cycle',osum:'Records the deferral; the gap stays open',pros:['No spend now.'],cons:['The coverage gap stays open until it is funded.'],req:true,consequence:'Records the decision as deferred; the gap remains open until the next cycle.'}];
     return c5dec('cs',i+1,'Fund '+l.name+'?',l.need,rec,alt);
   });
   host.innerHTML=c5header()+
-    c5shell('Decisions · what needs your sign-off?',(levers.length?(levers.length+' funding decision'+(levers.length>1?'s':'')+' waiting — commit or defer each.'):'Connect your tools and the funded decisions that move your posture appear here.'),null,'Each decision funds a control that improves your posture and reduces modeled exposure. Choosing one stamps it with your name and time, keeps it editable for 24 hours, and opens a tracked project.')+
+    c5shell('Decisions · what needs your sign-off?',(levers.length?(levers.length+' funding decision'+(levers.length>1?'s':'')+' waiting — commit or defer each.'):'Connect your tools and the funded decisions that move your posture appear here.'),null,'Each decision funds a control that improves your posture and raises measured coverage. Choosing one stamps it with your name and time, keeps it editable for 24 hours, and opens a tracked project.')+
     (list.length?c5decisions(list):'<div class="c5note">◐ Connect your security tools and upload your policies, and the funded decisions that move your posture appear here — each with the exact controls it improves.</div>')+
     '<div class="c5foot">Each decision is priced from your control model.</div>';
 }
