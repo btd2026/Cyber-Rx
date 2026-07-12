@@ -2942,7 +2942,7 @@ function loadSignals(){applyDemoSignals();var base=apiBase(),o=orgId();if(!base|
 var SCOPE='enterprise', SIGNALS_BASE=null, LIVE_MASTER=null;
 var REGIONS=[
   {id:'enterprise',label:'Enterprise',kind:'rollup',note:'Consolidated across all regions'},
-  {id:'amer',label:'Americas',kind:'region',countries:'US · Canada · Brazil · Mexico',regime:'SEC · CCPA · LGPD',entities:[{id:'amer_us',label:'US HQ & East'},{id:'amer_latam',label:'LATAM'}]},
+  {id:'americas',label:'Americas',kind:'region',countries:'US · Canada · Brazil · Mexico',regime:'SEC · CCPA · LGPD',entities:[{id:'americas_us',label:'US HQ & East'},{id:'americas_latam',label:'LATAM'}]},
   {id:'emea',label:'EMEA',kind:'region',countries:'UK · Germany · UAE · South Africa',regime:'GDPR · DORA · NIS2',entities:[{id:'emea_uk',label:'UK & Ireland'},{id:'emea_dach',label:'DACH'}]},
   {id:'apac',label:'APAC',kind:'region',countries:'Japan · Singapore · Australia · India',regime:'APPI · PDPA · Privacy Act',entities:[{id:'apac_jp',label:'Japan'},{id:'apac_sea',label:'SE Asia & ANZ'}]}
 ];
@@ -2950,12 +2950,26 @@ var REGIONS=[
 // scoring. Enterprise = the demo baseline (no override); regions/entities override it.
 var REGION_SIG={
   enterprise:{},
-  amer:{edr_pct:99,mfa_pct:98,pam_pct:72,patch_pct:91,training_pct:96,phishing_pct:2,siem_coverage_pct:95,cspm_pct:88,backup_immutable_pct:100,dlp_pct:70,seg_pct:64},
+  americas:{edr_pct:99,mfa_pct:98,pam_pct:72,patch_pct:91,training_pct:96,phishing_pct:2,siem_coverage_pct:95,cspm_pct:88,backup_immutable_pct:100,dlp_pct:70,seg_pct:64},
   emea:{edr_pct:96,mfa_pct:95,pam_pct:66,patch_pct:88,training_pct:93,phishing_pct:3,siem_coverage_pct:92,cspm_pct:83,backup_immutable_pct:100,dlp_pct:78,seg_pct:60},
   apac:{edr_pct:82,mfa_pct:76,pam_pct:48,patch_pct:74,training_pct:85,phishing_pct:7,siem_coverage_pct:80,cspm_pct:70,backup_immutable_pct:90,dlp_pct:52,seg_pct:44},
   apac_jp:{edr_pct:90,mfa_pct:85,pam_pct:58,patch_pct:82,siem_coverage_pct:88,seg_pct:52},
   apac_sea:{edr_pct:74,mfa_pct:68,pam_pct:40,patch_pct:66,siem_coverage_pct:72,dlp_pct:44,seg_pct:36}
 };
+/* If the customer defined their org structure at onboarding, that IS the hierarchy —
+   Enterprise + their regions + entities. Falls back to the demo REGIONS otherwise, so
+   a trial without onboarding still shows the regional story. Per-region telemetry for a
+   customer-defined structure comes from their connected tools per entity (backend);
+   the demo regions carry illustrative REGION_SIG so the story is visible offline. */
+function loadOrgStructure(){
+  try{var raw=localStorage.getItem('cyberrx_org_structure');if(!raw)return;var o=JSON.parse(raw);
+    if(Array.isArray(o)&&o.length){
+      REGIONS=[{id:'enterprise',label:'Enterprise',kind:'rollup',note:'Consolidated across all regions'}].concat(o.map(function(r){
+        return {id:r.id,label:r.label,kind:'region',countries:r.countries||'',regime:r.regime||'',entities:(r.entities||[]).map(function(e){return {id:e.id,label:e.label};})};
+      }));
+    }
+  }catch(_){}
+}
 function scopeParent(id){return (id&&id.indexOf('_')>0)?id.split('_')[0]:null;}
 function scopeRegion(id){return id==='enterprise'?null:(scopeParent(id)||id);}
 function scopeMeta(id){var reg=scopeRegion(id);for(var i=0;i<REGIONS.length;i++){if(REGIONS[i].id===reg)return REGIONS[i];}return REGIONS[0];}
@@ -3012,8 +3026,8 @@ function demoLive(){
       ratios:{pct_of_revenue:817e6/63e9}
     },
     crown_jewels:[
-      {name:'Customer billing platform', tier:'Critical', provisional:false, region:'amer'},
-      {name:'Customer identity & access', tier:'Critical', provisional:false, region:'amer'},
+      {name:'Customer billing platform', tier:'Critical', provisional:false, region:'americas'},
+      {name:'Customer identity & access', tier:'Critical', provisional:false, region:'americas'},
       {name:'Order-to-cash', tier:'Critical', provisional:false, region:'emea'},
       {name:'Global supply chain', tier:'High', provisional:false, region:'apac'},
       {name:'Payments (PCI)', tier:'High', provisional:false, region:'emea'},
@@ -5439,7 +5453,7 @@ function selectSeat(seat){document.querySelectorAll('.seat').forEach(function(x)
 document.querySelectorAll('.seat').forEach(function(b){b.addEventListener('click',function(){selectSeat(b.dataset.seat);});});
 // Boot: the cockpit opens at Enterprise scope on the CISO engine (the seat personas
 // are retired in favour of regional representation). Scope is applied once data loads.
-CUR='ciso';try{applyScope('enterprise');}catch(_){}try{renderScopeBar();}catch(_){}render('ciso');loadLive();loadSignals();fetchReadiness();
+CUR='ciso';try{loadOrgStructure();}catch(_){}try{applyScope('enterprise');}catch(_){}try{renderScopeBar();}catch(_){}render('ciso');loadLive();loadSignals();fetchReadiness();
 /* Auto-poll live signals so the "Are we under attack?" tile surfaces a new SIEM
    incident on its own (~every 60s) — no manual refresh needed. The War Room's own
    incidents flip it instantly via triggerIncident/containIncident. */

@@ -234,6 +234,16 @@
     </div>
   </div>
 
+  <!-- 1a · Organizational structure (regions & entities) -->
+  <div class="sec">
+    <div class="sh"><div class="sn">✦</div><div><div class="st">Organizational structure <span style="color:var(--muted)">(regions &amp; entities)</span></div><div class="sd">Your global footprint — the regions and the legal entities / branches under each. Nerion scopes the whole cockpit to any level you pick (<b>Enterprise → Region → Entity</b>): the group CISO sees the consolidated roll-up, each regional CISO sees their own posture, and privacy/regulatory obligations attach per region. Leave it empty and Nerion runs single-entity.</div></div><div class="badge" id="borg">optional</div></div>
+    <div id="orgRegions"></div>
+    <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap">
+      <button class="conn-go" id="addRegion" type="button">+ Add region</button>
+      <button class="conn-go" id="orgQuickFill" type="button" style="background:transparent;border:1px solid var(--line);color:var(--muted)">Load a typical global structure</button>
+    </div>
+  </div>
+
   <!-- 1b · Board governance & incident readiness -->
   <div class="sec">
     <div class="sh"><div class="sn">✦</div><div><div class="st">Board governance &amp; incident readiness</div><div class="sd">The board’s own oversight structure — what the SEC (Reg S-K Item 106) requires you to disclose, plus your response-and-recover readiness. Powers the CEO/Board governance panel.</div></div><div class="badge" id="bgov">recommended</div></div>
@@ -948,6 +958,59 @@
   function updateObjBadge(){var n=collectObjectives().length,b=document.getElementById('bobj');if(b){if(n){b.textContent='✓ '+n+' objective'+(n>1?'s':'');b.classList.add('done');}else{b.textContent='optional';b.classList.remove('done');}}obRowCollapse('objRows','obj-row','objective');}
   (function(){var a=document.getElementById('addObj');if(a)a.addEventListener('click',function(){addObjRow();});})();
 
+  // ---- Organizational structure: regions → entities. Drives the cockpit scope switcher
+  // (Enterprise → Region → Entity). Persisted to cyberrx_org_structure, which the cockpit reads.
+  function orgSlug(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'')||'x';}
+  function addOrgEntity(entWrap,v){v=v||{};var row=document.createElement('div');row.className='ent-row';row.style.cssText='display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:6px';
+    row.innerHTML='<input class="e-name" placeholder="Entity / branch — e.g. UK &amp; Ireland" style="padding:7px 9px;border:1px solid var(--line);border-radius:8px">'+
+      '<button class="e-del" type="button" title="Remove" style="border:1px solid var(--line);background:#fff;border-radius:8px;cursor:pointer;color:var(--muted);width:34px">✕</button>';
+    entWrap.appendChild(row);
+    if(v.label)row.querySelector('.e-name').value=v.label;
+    row.querySelector('.e-del').addEventListener('click',function(){row.remove();updateOrgBadge();});
+    ['input','change'].forEach(function(ev){row.addEventListener(ev,updateOrgBadge);});
+  }
+  function addOrgRegion(v){v=v||{};var wrap=document.getElementById('orgRegions');if(!wrap)return;
+    var card=document.createElement('div');card.className='reg-card';card.style.cssText='border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px';
+    card.innerHTML='<div style="display:grid;grid-template-columns:1.3fr 1.7fr 1.3fr auto;gap:10px;align-items:end">'+
+        '<div class="field"><label>Region</label><input class="r-name" placeholder="e.g. EMEA"></div>'+
+        '<div class="field"><label>Countries</label><input class="r-countries" placeholder="UK · Germany · UAE"></div>'+
+        '<div class="field"><label>Primary regulator</label><input class="r-regime" placeholder="GDPR · DORA"></div>'+
+        '<button class="r-del" type="button" title="Remove region" style="height:38px;border:1px solid var(--line);background:#fff;border-radius:8px;cursor:pointer;color:var(--muted)">✕</button>'+
+      '</div>'+
+      '<div class="ent-wrap" style="margin-top:8px"></div>'+
+      '<button class="r-addent conn-go" type="button" style="margin-top:6px;font-size:12px;padding:5px 10px">+ Add entity / branch</button>';
+    wrap.appendChild(card);
+    if(v.label)card.querySelector('.r-name').value=v.label;
+    if(v.countries)card.querySelector('.r-countries').value=v.countries;
+    if(v.regime)card.querySelector('.r-regime').value=v.regime;
+    var entWrap=card.querySelector('.ent-wrap');(v.entities||[]).forEach(function(e){addOrgEntity(entWrap,e);});
+    card.querySelector('.r-addent').addEventListener('click',function(){addOrgEntity(entWrap,{});updateOrgBadge();});
+    card.querySelector('.r-del').addEventListener('click',function(){card.remove();updateOrgBadge();});
+    ['input','change'].forEach(function(ev){card.addEventListener(ev,updateOrgBadge);});
+    updateOrgBadge();
+  }
+  function collectOrgStructure(){
+    return Array.prototype.slice.call(document.querySelectorAll('#orgRegions .reg-card')).map(function(c){
+      var label=(c.querySelector('.r-name').value||'').trim();if(!label)return null;var id=orgSlug(label);
+      var ents=Array.prototype.slice.call(c.querySelectorAll('.ent-row')).map(function(r){
+        var el=(r.querySelector('.e-name').value||'').trim();if(!el)return null;return {id:id+'_'+orgSlug(el),label:el};}).filter(Boolean);
+      return {id:id,label:label,countries:(c.querySelector('.r-countries').value||'').trim(),regime:(c.querySelector('.r-regime').value||'').trim(),entities:ents};
+    }).filter(Boolean);
+  }
+  function updateOrgBadge(){var o=collectOrgStructure(),b=document.getElementById('borg');var n=o.length,e=o.reduce(function(a,r){return a+r.entities.length;},0);
+    if(b){if(n){b.textContent='✓ '+n+' region'+(n>1?'s':'')+(e?(' · '+e+' entit'+(e>1?'ies':'y')):'');b.classList.add('done');}else{b.textContent='optional';b.classList.remove('done');}}
+    try{localStorage.setItem('cyberrx_org_structure',JSON.stringify(o));}catch(_){}
+    try{if(typeof obSaveState==='function')obSaveState();}catch(_){}
+  }
+  (function(){var a=document.getElementById('addRegion');if(a)a.addEventListener('click',function(){addOrgRegion({});});
+    var q=document.getElementById('orgQuickFill');if(q)q.addEventListener('click',function(){var wrap=document.getElementById('orgRegions');if(wrap)wrap.innerHTML='';
+      [{label:'Americas',countries:'US · Canada · Brazil · Mexico',regime:'SEC · CCPA · LGPD',entities:[{label:'US HQ & East'},{label:'LATAM'}]},
+       {label:'EMEA',countries:'UK · Germany · UAE · South Africa',regime:'GDPR · DORA · NIS2',entities:[{label:'UK & Ireland'},{label:'DACH'}]},
+       {label:'APAC',countries:'Japan · Singapore · Australia · India',regime:'APPI · PDPA · Privacy Act',entities:[{label:'Japan'},{label:'SE Asia & ANZ'}]}].forEach(addOrgRegion);updateOrgBadge();});
+    // restore a previously-defined structure
+    try{var raw=localStorage.getItem('cyberrx_org_structure');if(raw){var o=JSON.parse(raw);if(Array.isArray(o)&&o.length)o.forEach(addOrgRegion);}}catch(_){}
+  })();
+
   // ---- business capability map (CISO Enterprise-Risk: capabilities with highest exposure) ----
   var CAP_GRC=['Adequate','Watch','Gap'];
   // Registry of every repeatable-row list so onboarding can save & restore the
@@ -1626,7 +1689,7 @@
     var seatNames={};document.querySelectorAll('.seatname').forEach(function(i){if(i.value.trim())seatNames[i.dataset.seat]=i.value.trim();});
     var seatEmails={};document.querySelectorAll('.seatemail').forEach(function(i){var e=i.value.trim();if(e&&/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e))seatEmails[i.dataset.seat]=e;});
     var payload={
-      org_name:org,org_id:orgId,industry:v('industry'),regions:REGIONS,currency:CUR_CODE,
+      org_name:org,org_id:orgId,industry:v('industry'),regions:REGIONS,org_structure:collectOrgStructure(),currency:CUR_CODE,
       financials:{revenue:mval('finRevenue'),operatingIncome:mval('finOpInc'),netIncome:mval('finNetInc'),enterpriseValue:mval('finEV'),sharesOutstanding:mval('finShares')},
       appetite:mval('finAppetite'),budget:mval('finBudget'),dataRecords:mval('finRecords'),
       principalRisks:{creditMarket:mval('ermCredit'),operational:mval('ermOps'),thirdParty:mval('ermTP'),compliance:mval('ermComp')},

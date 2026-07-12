@@ -16,8 +16,8 @@ const cockpit = fs.readFileSync(path.resolve(__dirname, '../../../CyberRXNew/pub
 describe('Regional scope — model & switcher', () => {
   it('defines the Enterprise → Region → Entity hierarchy', () => {
     expect(cockpit).toContain('var REGIONS=[');
-    ['enterprise', 'amer', 'emea', 'apac'].forEach((id) => expect(cockpit).toContain("id:'" + id + "'"));
-    expect(cockpit).toContain('entities:[{id:\'amer_us\'');
+    ['enterprise', 'americas', 'emea', 'apac'].forEach((id) => expect(cockpit).toContain("id:'" + id + "'"));
+    expect(cockpit).toContain('entities:[{id:\'americas_us\'');
   });
 
   it('carries per-scope telemetry so posture varies by region (APAC is the laggard)', () => {
@@ -37,15 +37,44 @@ describe('Regional scope — model & switcher', () => {
     expect(cockpit).toContain('id="scopeBar"');
     expect(cockpit).toContain('function renderScopeBar()');
     expect(cockpit).toContain('function selectScope(id)');
-    expect(cockpit).toContain("CUR='ciso';try{applyScope('enterprise');}");
+    expect(cockpit).toContain("try{applyScope('enterprise');}catch(_){}try{renderScopeBar();}");
     // the old "Speaking to" persona seat bar is gone
     expect(cockpit).not.toContain('Speaking to');
     expect(cockpit).not.toContain('data-seat="ceo"');
   });
 
-  it('demo crown jewels are region-tagged for scoping', () => {
-    expect(cockpit).toContain("region:'amer'");
+  it('demo crown jewels are region-tagged for scoping (ids align with onboarding slugs)', () => {
+    expect(cockpit).toContain("region:'americas'");
     expect(cockpit).toContain("region:'emea'");
     expect(cockpit).toContain("region:'apac'");
+  });
+
+  it('the cockpit reads the customer-defined structure from onboarding, else demo', () => {
+    expect(cockpit).toContain('function loadOrgStructure()');
+    expect(cockpit).toContain("localStorage.getItem('cyberrx_org_structure')");
+    expect(cockpit).toContain("CUR='ciso';try{loadOrgStructure();}");
+  });
+});
+
+describe('Onboarding — Organizational structure capture', () => {
+  const onboarding = fs.readFileSync(path.resolve(__dirname, '../../../CyberRXNew/public/onboarding.html'), 'utf8');
+
+  it('adds a regions → entities section with a repeater', () => {
+    expect(onboarding).toContain('Organizational structure');
+    expect(onboarding).toContain('id="orgRegions"');
+    expect(onboarding).toContain('function addOrgRegion(v)');
+    expect(onboarding).toContain('function addOrgEntity(entWrap,v)');
+  });
+
+  it('persists the hierarchy to cyberrx_org_structure (the key the cockpit reads)', () => {
+    expect(onboarding).toContain('function collectOrgStructure()');
+    expect(onboarding).toContain("localStorage.setItem('cyberrx_org_structure',JSON.stringify(o));");
+    // slugged ids so region ids match across onboarding + cockpit
+    expect(onboarding).toContain('function orgSlug(s)');
+  });
+
+  it('includes org_structure in the finish payload and offers a quick-fill', () => {
+    expect(onboarding).toContain('org_structure:collectOrgStructure()');
+    expect(onboarding).toContain('id="orgQuickFill"');
   });
 });
