@@ -17,7 +17,10 @@ ok('the redundant brief paragraph is dropped from the tabs', !/c5briefHead\(this
 const bodies = seats.split(/\b(\w+):\{/).filter((s) => /body:function/.test(s));
 const seatBlocks = [...seats.matchAll(/(\w+):\{[\s\S]*?body:function\(\)\{return \(([\s\S]*?)\);\}/g)];
 const nonCiso = seatBlocks.filter((m) => m[1] !== 'ciso');
-ok('found the executive seats', nonCiso.length >= 8);
+// The executive-persona seats (board/ceo/cfo/clo/cro/cio/coo/cpo/audit) have been
+// retired from the cockpit — only the CISO seat renders now.
+ok('CISO seat is present', seatBlocks.some((m) => m[1] === 'ciso'));
+ok('executive-persona seats are removed (CISO-only cockpit)', nonCiso.length === 0);
 nonCiso.forEach((m) => {
   const seat = m[1], body = m[2];
   const secs = [...body.matchAll(/sec\('(\d+)','([^']*\?[^']*|[^']*)'/g)];
@@ -32,7 +35,7 @@ const uniqTitles = [...new Set(titles)];
 const missing = uniqTitles.filter((t) => !cockpit.includes("'" + t + "':"));
 ok('every question title has a TAB_LABELS chip', missing.length === 0);
 if (missing.length) console.error('  no chip for: ' + missing.join(' | '));
-console.log(`seats — ${nonCiso.length} exec seats split into question tabs · ${uniqTitles.length} distinct questions, all chip-labelled`);
+console.log(`seats — CISO-only cockpit (${nonCiso.length} exec persona seats) · ${uniqTitles.length} distinct question tabs, all chip-labelled`);
 
 if (fail) { console.error(`\nseat-tabs-smoke: ${pass} passed, ${fail} FAILED`); process.exit(1); }
 console.log(`seat-tabs-smoke OK — ${pass} checks pass (each seat is one question per tab; clean chips; no fluff tab).`);
