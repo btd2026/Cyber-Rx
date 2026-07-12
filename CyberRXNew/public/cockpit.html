@@ -736,10 +736,7 @@
     <span id="orgLive"><span class="dot" style="background:var(--muted)"></span>Sample workspace</span>
   </div>
 </div></div>
-<div class="seats"><div class="wrap seats-in">
-  <span class="seatlbl">Speaking to</span>
-  <button class="seat on" data-seat="ciso" title="Chief Information Security Officer">CISO</button><button class="seat" data-seat="ceo" title="Chief Executive Officer">CEO</button><button class="seat" data-seat="cfo" title="Chief Financial Officer">CFO</button><button class="seat" data-seat="coo" title="Chief Operating Officer">COO</button><button class="seat" data-seat="cio" title="Chief Information Officer">CIO</button><button class="seat" data-seat="cro" title="Chief Risk Officer">CRO</button><button class="seat" data-seat="clo" title="Chief Legal Officer (General Counsel)">CLO</button><button class="seat" data-seat="board" title="Board of Directors">Board</button>
-</div></div>
+<div class="seats"><div class="wrap seats-in" id="scopeBar"><span class="seatlbl">Scope</span><button class="seat on" data-scope="enterprise">Enterprise</button></div></div>
 <div id="dataModeBar"><div class="wrap" id="dataModeInner" style="padding:8px 0;font-size:12px;font-weight:600"></div></div>
 <div class="wrap" id="app"></div>
 <div class="foot"><b>Nerion</b> — every figure traces to your data or is clearly labeled modeled · build 2026-07-10a · economics · jurisdictions · resilience all compute from your data; sections labeled illustrative fill in as their intake sources connect.</div>
@@ -2907,7 +2904,7 @@ function demoSignals(){
   if(has(['servicenow_grc','auditboard'])){set('audit_findings_open',14);set('audit_findings_repeat',3);}
   return any?s:null;
 }
-function applyDemoSignals(){if(!demoActive()||SIGNALS)return;var s=demoSignals();if(s){SIGNALS=s;renderSignals();}}
+function applyDemoSignals(){if(!demoActive()||SIGNALS)return;var s=demoSignals();if(s){SIGNALS=s;try{SIGNALS_BASE=JSON.parse(JSON.stringify(s));if(typeof SCOPE!=='undefined'&&SCOPE!=='enterprise')applyScope(SCOPE);}catch(_){}renderSignals();}}
 function signalsAreDemo(){try{return !!(SIGNALS&&Object.keys(SIGNALS).some(function(k){return SIGNALS[k]&&SIGNALS[k].demo;}));}catch(_){return false;}}
 function liveTag(){return signalsAreDemo()?'<span class="pill warn" style="font-size:9px">demo</span>':'<span class="pill good" style="font-size:9px">live</span>';}
 /* The full-width "Demo data" banner is retired — every card already carries its own
@@ -2933,7 +2930,71 @@ function renderSignals(){
   renderAiRisk();renderCisoOps();renderUnderAttack();renderThreatMap();renderControls();renderCisoDecisions();try{if(typeof c5SeatViews==='function')c5SeatViews();}catch(_){}c5Health();c5Exposure();c5Effect();c5Threats();c5Peers();c5Frameworks();c5AiSupply();try{if(typeof c5DecProj==='function')c5DecProj();}catch(_){}c5cfExposure();c5cfRoi();c5cfInsurance();c5cfCost();c5cfDecisions();c5ceOverview();c5cfOverview();c5coOverview();c5ctOverview();c5crOverview();c5clOverview();c5ceValue();c5ceCrown();c5ceHealth();c5ceStrategic();c5ceFinancial();c5ceTrust();c5ceDecisions();c5crScale();c5crAppetite();c5crAssurance();c5crTrend();c5crDecisions();c5coResilience();c5coProcesses();c5coSupply();c5coRecovery();c5coDecisions();c5clRegulatory();c5clNotification();c5clContracts();c5clPrivacy();c5clDecisions();c5ctTech();c5ctReliability();c5ctAi();c5ctSupply();c5ctDecisions();c5iaCoverage();c5iaTesting();c5iaFindings();c5iaEvidence();c5iaAttention();c5bdHealth();c5bdMaterial();c5bdTrend();c5bdInvestment();c5bdGovernance();c5bdDecisions();c5cpSecurity();c5cpTrust();c5cpVelocity();c5cpBacklog();c5cpDecisions();renderCfoDecision();renderCroDecision();renderCioDecision();renderCooDecision();renderCloDecision();renderCpoDecision();renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderPeerCompare();renderCisoVendors();renderCooStatus();renderCfoFraud();renderCroKri();renderCloOps();renderThreatIntel();renderDrReadiness();renderPeerBench();
 }
 function loadSignals(){applyDemoSignals();var base=apiBase(),o=orgId();if(!base||!o)return;
-  try{fetch(base+'/api/integrations/signals?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.signals&&d.signals.length){SIGNALS={};d.signals.forEach(function(s){SIGNALS[s.key]=s;});renderSignals();if(typeof renderCisoOps==='function'){renderCisoOps();renderUnderAttack();}}else{applyDemoSignals();}}).catch(function(){applyDemoSignals();});}catch(_){}}
+  try{fetch(base+'/api/integrations/signals?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.signals&&d.signals.length){SIGNALS={};d.signals.forEach(function(s){SIGNALS[s.key]=s;});if(typeof SCOPE!=='undefined'&&SCOPE!=='enterprise'){try{SIGNALS_BASE=JSON.parse(JSON.stringify(SIGNALS));applyScope(SCOPE);}catch(_){}}renderSignals();if(typeof renderCisoOps==='function'){renderCisoOps();renderUnderAttack();}}else{applyDemoSignals();}}).catch(function(){applyDemoSignals();});}catch(_){}}
+/* ======================= REGIONAL SCOPE (multi-entity) =======================
+   Nerion is scoped by organizational ENTITY, not by executive persona. The nav
+   selects a SCOPE — Enterprise (consolidated roll-up) or a Region → Entity — and
+   the whole cockpit (telemetry, crown jewels, and therefore Neuron Controls +
+   framework posture) is filtered to that scope. Enterprise is the roll-up; each
+   region carries its own connected-tool telemetry, so posture legitimately differs
+   by region (APAC is the laggard here). This is how one platform answers a global
+   firm with 20+ branches across 100s of countries. ========================== */
+var SCOPE='enterprise', SIGNALS_BASE=null, LIVE_MASTER=null;
+var REGIONS=[
+  {id:'enterprise',label:'Enterprise',kind:'rollup',note:'Consolidated across all regions'},
+  {id:'amer',label:'Americas',kind:'region',countries:'US · Canada · Brazil · Mexico',regime:'SEC · CCPA · LGPD',entities:[{id:'amer_us',label:'US HQ & East'},{id:'amer_latam',label:'LATAM'}]},
+  {id:'emea',label:'EMEA',kind:'region',countries:'UK · Germany · UAE · South Africa',regime:'GDPR · DORA · NIS2',entities:[{id:'emea_uk',label:'UK & Ireland'},{id:'emea_dach',label:'DACH'}]},
+  {id:'apac',label:'APAC',kind:'region',countries:'Japan · Singapore · Australia · India',regime:'APPI · PDPA · Privacy Act',entities:[{id:'apac_jp',label:'Japan'},{id:'apac_sea',label:'SE Asia & ANZ'}]}
+];
+// Coverage telemetry per scope — the signals that drive Neuron Controls + framework
+// scoring. Enterprise = the demo baseline (no override); regions/entities override it.
+var REGION_SIG={
+  enterprise:{},
+  amer:{edr_pct:99,mfa_pct:98,pam_pct:72,patch_pct:91,training_pct:96,phishing_pct:2,siem_coverage_pct:95,cspm_pct:88,backup_immutable_pct:100,dlp_pct:70,seg_pct:64},
+  emea:{edr_pct:96,mfa_pct:95,pam_pct:66,patch_pct:88,training_pct:93,phishing_pct:3,siem_coverage_pct:92,cspm_pct:83,backup_immutable_pct:100,dlp_pct:78,seg_pct:60},
+  apac:{edr_pct:82,mfa_pct:76,pam_pct:48,patch_pct:74,training_pct:85,phishing_pct:7,siem_coverage_pct:80,cspm_pct:70,backup_immutable_pct:90,dlp_pct:52,seg_pct:44},
+  apac_jp:{edr_pct:90,mfa_pct:85,pam_pct:58,patch_pct:82,siem_coverage_pct:88,seg_pct:52},
+  apac_sea:{edr_pct:74,mfa_pct:68,pam_pct:40,patch_pct:66,siem_coverage_pct:72,dlp_pct:44,seg_pct:36}
+};
+function scopeParent(id){return (id&&id.indexOf('_')>0)?id.split('_')[0]:null;}
+function scopeRegion(id){return id==='enterprise'?null:(scopeParent(id)||id);}
+function scopeMeta(id){var reg=scopeRegion(id);for(var i=0;i<REGIONS.length;i++){if(REGIONS[i].id===reg)return REGIONS[i];}return REGIONS[0];}
+function scopeLabel(id){if(id==='enterprise')return 'Enterprise';var reg=scopeMeta(id);if(reg&&reg.entities){for(var i=0;i<reg.entities.length;i++){if(reg.entities[i].id===id)return reg.label+' · '+reg.entities[i].label;}}return (reg&&reg.label)||id;}
+function scopeCapture(){try{if(!SIGNALS_BASE&&SIGNALS)SIGNALS_BASE=JSON.parse(JSON.stringify(SIGNALS));if(!LIVE_MASTER&&LIVE)LIVE_MASTER=JSON.parse(JSON.stringify(LIVE));}catch(_){}}
+function applyScope(id){
+  SCOPE=id;scopeCapture();
+  // 1) telemetry: baseline, then region then entity overrides
+  if(SIGNALS_BASE){var s=JSON.parse(JSON.stringify(SIGNALS_BASE));var layers=[];var p=scopeParent(id);if(p)layers.push(p);layers.push(id);
+    // Only override telemetry the enterprise actually has connected — a region can vary a
+    // tool's COVERAGE, never invent a capability the roll-up lacks (keeps Enterprise ≥ regions).
+    layers.forEach(function(L){var ov=REGION_SIG[L]||{};Object.keys(ov).forEach(function(k){if(SIGNALS_BASE[k]!=null)s[k]={key:k,value:ov[k],demo:true};});});SIGNALS=s;}
+  // 2) crown jewels: filter the master set to the region (enterprise = all)
+  if(LIVE&&LIVE_MASTER&&Array.isArray(LIVE_MASTER.crown_jewels)){
+    var region=scopeRegion(id);
+    LIVE.crown_jewels=region?LIVE_MASTER.crown_jewels.filter(function(c){return c.region===region;}):LIVE_MASTER.crown_jewels.slice();
+    if(Array.isArray(LIVE_MASTER.crown_jewel_residual)){var nm={};LIVE.crown_jewels.forEach(function(c){nm[c.name]=1;});
+      LIVE.crown_jewel_residual=region?LIVE_MASTER.crown_jewel_residual.filter(function(c){return nm[c.name];}):LIVE_MASTER.crown_jewel_residual.slice();}
+    LIVE.counts=Object.assign({},LIVE_MASTER.counts||{},{crown_jewels:LIVE.crown_jewels.filter(function(c){return !c.provisional;}).length});
+  }
+}
+function renderScopeBar(){
+  var host=document.getElementById('scopeBar');if(!host)return;
+  var activeRegion=scopeRegion(SCOPE);
+  var top=REGIONS.map(function(r){var on=(r.id===SCOPE)||(r.id!=='enterprise'&&r.id===activeRegion);
+    return '<button class="seat'+(on?' on':'')+'" data-scope="'+r.id+'"'+(r.countries?(' title="'+r.countries+(r.regime?(' · '+r.regime):'')+'"'):(' title="'+(r.note||'')+'"'))+'>'+r.label+'</button>';}).join('');
+  var reg=null;REGIONS.forEach(function(r){if(r.id===activeRegion)reg=r;});
+  var sub='';
+  if(reg&&reg.entities&&reg.entities.length){
+    sub='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;padding-left:2px">'
+      +'<span style="font-size:10.5px;color:var(--muted);align-self:center;margin-right:2px">'+esc(reg.label)+' ·</span>'
+      +'<button class="subtab'+(SCOPE===reg.id?' on':'')+'" data-scope="'+reg.id+'">All '+esc(reg.label)+'</button>'
+      +reg.entities.map(function(e){return '<button class="subtab'+(SCOPE===e.id?' on':'')+'" data-scope="'+e.id+'">'+esc(e.label)+'</button>';}).join('')
+      +'<span style="font-size:10.5px;color:var(--muted);align-self:center;margin-left:4px">'+esc(reg.regime||'')+'</span></div>';
+  }
+  host.innerHTML='<span class="seatlbl">Scope</span>'+top+sub;
+  host.querySelectorAll('[data-scope]').forEach(function(b){b.onclick=function(){selectScope(b.getAttribute('data-scope'));};});
+}
+function selectScope(id){try{applyScope(id);}catch(_){}renderScopeBar();try{render('ciso');}catch(_){}}
 /* Offline demo sample — a realistic, self-consistent workspace so every figure and every
    answer reads fully populated without a backend. Used ONLY in demo/trial mode and only when
    the backend returns nothing; a real backend always overrides it. Cyber is deliberately OVER
@@ -2951,12 +3012,12 @@ function demoLive(){
       ratios:{pct_of_revenue:817e6/63e9}
     },
     crown_jewels:[
-      {name:'Customer billing platform', tier:'Critical', provisional:false},
-      {name:'Customer identity & access', tier:'Critical', provisional:false},
-      {name:'Order-to-cash', tier:'Critical', provisional:false},
-      {name:'Global supply chain', tier:'High', provisional:false},
-      {name:'Payments (PCI)', tier:'High', provisional:false},
-      {name:'Financials / ERP', tier:'High', provisional:true}
+      {name:'Customer billing platform', tier:'Critical', provisional:false, region:'amer'},
+      {name:'Customer identity & access', tier:'Critical', provisional:false, region:'amer'},
+      {name:'Order-to-cash', tier:'Critical', provisional:false, region:'emea'},
+      {name:'Global supply chain', tier:'High', provisional:false, region:'apac'},
+      {name:'Payments (PCI)', tier:'High', provisional:false, region:'emea'},
+      {name:'Financials / ERP', tier:'High', provisional:true, region:'apac'}
     ],
     // Phase B/D — assisted revenue-confirmation state (drives which jewels are promoted).
     revenue_confirmation:{ processes:8, confirmed:7, brings_money:5, unconfirmed:1, provisional_jewels:1,
@@ -3007,8 +3068,10 @@ function demoLive(){
 function ensureDemoLive(){
   if(!(typeof demoActive==='function'&&demoActive()))return false;
   try{var t=connectedTools();if(!t||!Object.keys(t).some(function(k){return t[k]&&t[k].on;})){localStorage.setItem('cyberrx_tools',JSON.stringify(DEMO_TOOLS));}}catch(_){}
-  try{SIGNALS=null;applyDemoSignals();}catch(_){}
-  LIVE=demoLive();try{badge(true);setBar(true);}catch(_){}
+  try{SIGNALS=null;SIGNALS_BASE=null;applyDemoSignals();}catch(_){}
+  LIVE=demoLive();try{LIVE_MASTER=JSON.parse(JSON.stringify(LIVE));if(typeof SCOPE!=='undefined'&&SCOPE!=='enterprise')applyScope(SCOPE);}catch(_){}
+  try{badge(true);setBar(true);}catch(_){}
+  try{if(typeof renderScopeBar==='function')renderScopeBar();}catch(_){}
   try{render(typeof CUR!=='undefined'&&CUR?CUR:'ciso');}catch(_){}
   return true;
 }
@@ -5374,7 +5437,9 @@ function pushUiState(partial,immediate){try{if(!orgId())return;var send=function
 function fetchUiState(cb){try{if(!orgId()){cb&&cb(null);return;}fetch(_uiUrl(),{headers:{'X-Org-Id':orgId()}}).then(function(r){return r.ok?r.json():null;}).then(function(s){cb&&cb(s&&typeof s==='object'?s:null);}).catch(function(){cb&&cb(null);});}catch(_){cb&&cb(null);}}
 function selectSeat(seat){document.querySelectorAll('.seat').forEach(function(x){x.classList.toggle('on',x.dataset.seat===seat);});saveLastSeat(seat);pushUiState({seat:seat});render(seat);}
 document.querySelectorAll('.seat').forEach(function(b){b.addEventListener('click',function(){selectSeat(b.dataset.seat);});});
-var _bootSeat=(typeof loadLastSeat==='function'&&loadLastSeat())||'ciso';document.querySelectorAll('.seat').forEach(function(x){x.classList.toggle('on',x.dataset.seat===_bootSeat);});render(_bootSeat);loadLive();loadSignals();fetchReadiness();
+// Boot: the cockpit opens at Enterprise scope on the CISO engine (the seat personas
+// are retired in favour of regional representation). Scope is applied once data loads.
+CUR='ciso';try{applyScope('enterprise');}catch(_){}try{renderScopeBar();}catch(_){}render('ciso');loadLive();loadSignals();fetchReadiness();
 /* Auto-poll live signals so the "Are we under attack?" tile surfaces a new SIEM
    incident on its own (~every 60s) — no manual refresh needed. The War Room's own
    incidents flip it instantly via triggerIncident/containIncident. */
