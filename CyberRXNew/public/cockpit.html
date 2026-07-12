@@ -797,7 +797,7 @@ function render(seat){
   h+='<div id="secTabs" class="sectabs"></div><div id="secWrap">'+s.body()+'</div>';
   document.getElementById('app').innerHTML=localizeInd(h);
   buildTabs();
-  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderCisoDecisions();try{if(typeof c5SeatViews==='function')c5SeatViews();}catch(_){}c5Health();c5Exposure();c5Effect();c5Threats();c5Peers();c5Frameworks();c5AiSupply();try{if(typeof c5DecProj==='function')c5DecProj();}catch(_){}c5cfExposure();c5cfRoi();c5cfInsurance();c5cfCost();c5cfDecisions();c5ceOverview();c5cfOverview();c5coOverview();c5ctOverview();c5crOverview();c5clOverview();c5ceValue();c5ceCrown();c5ceHealth();c5ceStrategic();c5ceFinancial();c5ceTrust();c5ceDecisions();c5crScale();c5crAppetite();c5crAssurance();c5crTrend();c5crDecisions();c5coResilience();c5coProcesses();c5coSupply();c5coRecovery();c5coDecisions();c5clRegulatory();c5clNotification();c5clContracts();c5clPrivacy();c5clDecisions();c5ctTech();c5ctReliability();c5ctAi();c5ctSupply();c5ctDecisions();c5iaCoverage();c5iaTesting();c5iaFindings();c5iaEvidence();c5iaAttention();c5bdHealth();c5bdMaterial();c5bdTrend();c5bdInvestment();c5bdGovernance();c5bdDecisions();c5cpSecurity();c5cpTrust();c5cpVelocity();c5cpBacklog();c5cpDecisions();renderCfoDecision();renderCroDecision();renderCioDecision();renderCooDecision();renderCloDecision();renderCpoDecision();renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderPeerCompare();renderCisoVendors();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderCpoVelocity();renderCioWorkforce();renderCpoLaunch();renderCpoSbd();renderCooSupply();renderCpoSupply();renderCloContract();renderAuditRepeat();renderAuditCoverage();renderAuditReadiness();renderAuditFailed();renderAuditDecisions();renderOversight();renderTrend();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoRiskScore();renderCeoTopThreats();renderCeoTopIssues();renderCeoStrategyRisks();renderCeoCustomerProtect();renderCeoBoardKpis();renderCeoExecDecisions();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();try{if(typeof renderDelta==='function')renderDelta();}catch(_){}window.scrollTo({top:0});
+  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderCisoDecisions();try{if(typeof c5SeatViews==='function')c5SeatViews();}catch(_){}c5Health();c5Exposure();c5Effect();c5Threats();c5Peers();c5Frameworks();c5AiSupply();try{if(typeof c5DecProj==='function')c5DecProj();}catch(_){}renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderPeerCompare();renderCisoVendors();renderProcBars();renderOversight();renderTrend();renderEarnings();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();try{if(typeof renderDelta==='function')renderDelta();}catch(_){}window.scrollTo({top:0});
 }
 /* Turn the seat's stacked sections into tabs — one tab per section, only the
    active section shown. Short tab labels come from a lookup (falls back to a
@@ -1550,56 +1550,8 @@ function removableGaps(){var rr=capRiskRemoved();
 
 /* CFO — how much cyber-risk reduction to fund this year, sized on the removable
    expected loss in the control-value ledger and the live portfolio's blended return. */
-function renderCfoDecision(){
-  var host=document.getElementById('cfoDecision');if(!host)return;
-  var g=removableGaps(),ev=econVals(),dec;
-  if(g.anyLive&&g.total>0){
-    var top=g.gaps[0],topName=top.c.name.replace(/ *\(.*\)/,''),rest=g.total-(top.usd||0);
-    var over=(ev.tail>0&&ev.appetite>0&&ev.tail>ev.appetite);
-    var pf=(typeof ROI_STATE!=='undefined'&&ROI_STATE&&ROI_STATE.invested>0)?(' Your funded portfolio to date returns <b>'+Math.round(ROI_STATE.ret)+'×</b> — '+usd(ROI_STATE.invested)+' invested buys down '+usd(ROI_STATE.riskRemoved)+' of expected loss.'):'';
-    var bCons=['Leaves <b>'+usd(rest)+'</b> of other removable loss open this cycle'];if(over)bCons.push('Worst-case tail stays above the '+usd(ev.appetite)+' appetite');
-    dec={n:1,q:'How should we fund cyber-risk reduction this year?',
-      sit:'Your open control gaps carry <b>'+usd(g.total)+'</b> of removable expected loss, ranked by the dollars each closes '+liveTag()+'.'+pf+(over?(' The worst-case tail ('+usd(ev.tail)+') sits above the board’s appetite ('+usd(ev.appetite)+') — funding this down is what brings it within.'):'')+' How much do we commit?',
-      opts:[
-        {rec:true,tag:'A · Fund the gap program',on:'Option A · Fund the program',osum:usd(g.total)+' loss removed',
-          pros:['Removes <b>'+usd(g.total)+'</b> of expected loss across '+g.gaps.length+' control gap'+(g.gaps.length>1?'s':'')+' — from your control-value ledger',(over?'Brings the '+usd(ev.tail)+' tail toward the '+usd(ev.appetite)+' appetite':'Strengthens the insurance-renewal position'),'Every funded dollar becomes a tracked initiative with a live return on <b>Cyber investment ROI</b>'],
-          cons:['Requires capital this year — scoped with your team; Nerion does not invent a cost','Delivery spans more than one quarter']},
-        {tag:'B · Fund the highest-return gap only',on:'Option B · Top driver only',osum:usd(top.usd||0)+' removed · '+topName,
-          pros:['Closes the single largest driver — <b>'+topName+'</b>, '+usd(top.usd||0)+' of expected loss','Smallest capital commitment this year'],
-          cons:bCons},
-        {tag:'C · Hold flat',on:'Option C · Hold',osum:'$0 new',
-          pros:['No new capital this year'],
-          cons:['Carries the full <b>'+usd(g.total)+'</b> as open exposure','Likely 15–18% premium increase at the next renewal','Known drivers stay unfunded']}]};
-  } else {
-    dec={n:1,q:'How should we fund cyber-risk reduction this year?',sit:'<span class="pill mod" style="font-size:9px">illustrative</span> Connect your security tools and Nerion builds this from your <b>real</b> control gaps and the dollars each closes. Example scenarios below.',opts:[
-      {rec:true,tag:'A · Fund both drivers',on:'Option A · Fund both',osum:'removes the top two drivers',pros:['Removes the largest modeled exposure once your risk register + tools are connected','Brings the worst-case tail toward appetite','Stronger insurance-renewal position'],cons:['Requires capital — scoped with your team','Illustrative until your data is connected']},
-      {tag:'B · Highest-ROI only',on:'Option B · Top driver only',osum:'top driver',pros:['Highest modeled risk-reduction per dollar','Smallest capital this year'],cons:['Leaves the recovery tail over appetite','Renewal position improves only partially']},
-      {tag:'C · Hold flat',on:'Option C · Hold',osum:'$0 new',pros:['No new spend this year'],cons:['Carries the full modeled exposure open','Likely premium increase at renewal']}]};
-  }
-  host.innerHTML=decisions([dec]);wireChoose();
-}
 /* CRO — bring the worst-case tail within the board-approved appetite: reduce (fund
    controls), transfer (raise the limit) or accept, each priced from live figures. */
-function renderCroDecision(){
-  var host=document.getElementById('croDecision');if(!host)return;
-  var ev=econVals(),g=removableGaps();
-  if(ev.tail>0&&ev.appetite>0){
-    var over=ev.tail>ev.appetite,gap=ev.tail-ev.appetite,removable=(g.anyLive&&g.total>0)?g.total:0,prem=ev.premium;
-    var proA=['Cuts likelihood and impact at the source'+(removable>0?(' — removes '+usd(removable)+' of expected loss from the control-value ledger'):''),(over?'Moves the '+usd(ev.tail)+' tail toward the '+usd(ev.appetite)+' appetite':'Keeps the tail within appetite with headroom'),'De-correlates the concentrated risk path'];
-    var premUp=prem>0?Math.round(prem*0.25):0;
-    var dec={n:1,q:'How do we bring the tail within appetite?',
-      sit:'Cyber’s worst-case tail is <b>'+usd(ev.tail)+'</b> against the board-approved appetite of <b>'+usd(ev.appetite)+'</b> '+liveTag()+(over?(' — <b class="warn">'+usd(gap)+' over</b>.'):' — within tolerance.')+' Three levers to keep it there:',
-      opts:[
-        {rec:true,tag:'A · Reduce (fund controls)',on:'Option A · Reduce',osum:(removable>0?usd(removable)+' removed':'exposure removed'),pros:proA,cons:['Requires capital — scoped with your team','Delivery spans one or more quarters']},
-        {tag:'B · Transfer (raise the insurance limit)',on:'Option B · Transfer',osum:(premUp>0?'~'+usd(premUp)+' more premium':'higher premium'),pros:['Caps the financial tail via a higher policy limit','Fast to execute at renewal'],cons:[(premUp>0?'~'+usd(premUp)+' higher annual premium (on '+usd(prem)+' today)':'Higher annual premium'),'Does not reduce likelihood or de-correlate the path','Coverage still excludes some tail scenarios']},
-        {tag:'C · Accept the tail',on:'Option C · Accept',osum:'$0',pros:['No capital spend'],cons:[(over?'Tail stays '+usd(ev.tail)+' — above the '+usd(ev.appetite)+' limit':'Tail remains at '+usd(ev.tail)),'Requires a documented board risk-acceptance']}]};
-    host.innerHTML=decisions([dec]);wireChoose();return;
-  }
-  host.innerHTML=decisions([{n:1,q:'How do we bring the correlated tail within appetite?',sit:'<span class="pill mod" style="font-size:9px">illustrative</span> Enter your risk register and the board’s appetite at onboarding and Nerion computes this from your real tail vs appetite. Example levers:',opts:[
-    {rec:true,tag:'A · Reduce (fund controls)',on:'Option A · Reduce',osum:'removes exposure',pros:['Cuts likelihood and impact','De-correlates the concentrated path','Tail returns within appetite'],cons:['Requires capital — scoped with your team']},
-    {tag:'B · Transfer (raise the limit)',on:'Option B · Transfer',osum:'higher premium',pros:['Caps the financial tail via a higher limit','Fast to execute at renewal'],cons:['Higher annual premium','Does not reduce likelihood']},
-    {tag:'C · Accept the tail',on:'Option C · Accept',osum:'$0',pros:['No capital spend'],cons:['Tail stays above the enterprise limit','Requires a documented board risk-acceptance']}]}]);wireChoose();
-}
 /* Shared resilience decision (CIO / COO) — funded from live recovery times, the
    single-vendor blast radius and end-of-life exposure. */
 function resilienceDecision(q,intro){
@@ -1641,39 +1593,10 @@ function aiGovernanceDecision(){
     {tag:'B · Guardrails only, formalize later',on:'Option B · Guardrails only',osum:'no framework yet',pros:['No governance-program cost today','Operational guardrails already reduce day-to-day risk'],cons:['“Under governance” stays unprovable','EU AI Act obligations on the high-risk use go unmet','Shadow AI stays unverified']},
     {tag:'C · Restrict high-risk AI until governed',on:'Option C · Restrict',osum:'pause the high-risk use',pros:['Removes the unmanaged high-risk exposure immediately'],cons:['Cuts a customer-facing capability','Doesn’t build the durable governance the rest of the estate needs']}]};
 }
-function renderCioDecision(){var host=document.getElementById('cioDecision');if(!host)return;
-  host.innerHTML=decisions([identityFixDecision(),aiGovernanceDecision()]);wireChoose();}
-function renderCooDecision(){var host=document.getElementById('cooDecision');if(!host)return;
-  host.innerHTML=decisions([resilienceDecision('How do we keep operations running through a disruption?','Continuity turns on how fast critical services recover and whether a single vendor is a point of failure.')]);wireChoose();}
 /* CLO — how to run disclosure & notification, framed on the live materiality
    threshold, the binding jurisdiction clock and whether an incident is open now. */
-function renderCloDecision(){
-  var host=document.getElementById('cloDecision');if(!host)return;
-  var ev=econVals(),oi=sig('open_incidents'),lg=(LIVE&&LIVE.legal)||{},clock=(lg.binding&&lg.binding.clock)||'72-hour';
-  var sit='If an incident is material we face a 4-business-day SEC clock and a binding '+clock+' clock in your fastest jurisdiction. '+(ev.mat>0?('An event modeled above <b>'+usd(ev.mat)+'</b> is presumptively material. '):'')+(oi!=null?(oi>0?('<b class="warn">'+oi+' incident'+(oi>1?'s':'')+' open now</b> — readiness is not hypothetical. '):'No incident is open right now — which is exactly when to prepare. '):'')+'How do we prepare?';
-  host.innerHTML=decisions([{n:1,q:'How do we run the disclosure &amp; notification process?',sit:sit,opts:[
-    {rec:true,tag:'A · Standing disclosure committee',on:'Option A · Pre-authorize',osum:'committee + pre-drafted filings',pros:['Meets the 4-business-day SEC and '+clock+' clocks','Defensible, documented materiality determination','Protects directors under D&amp;O'],cons:['Requires setup effort this quarter (charter + templates)']},
-    {tag:'B · Ad-hoc at incident time',on:'Option B · Ad-hoc',osum:'no upfront work',pros:['No setup cost today'],cons:['High risk of missing the 4-day / '+clock+' clock','Weaker legal defense on the materiality call','Filings drafted under time pressure']},
-    {tag:'C · External breach counsel on retainer',on:'Option C · Retainer',osum:'counsel on call',pros:['Specialist breach counsel on demand','Privilege established before an incident'],cons:['Annual retainer cost','Slower first hours vs a standing internal committee']}]}]);wireChoose();
-}
 /* CPO — where the next product-security dollar goes, sized on the live pipeline
    findings (SAST code-scanning + critical dependency alerts) reaching customers. */
-function renderCpoDecision(){
-  var host=document.getElementById('cpoDecision');if(!host)return;
-  var sast=sig('code_scanning_open'),dep=sig('dependabot_critical');
-  if(sast!=null||dep!=null){
-    var bits=[];if(sast!=null)bits.push('<b>'+sast+'</b> open code-scanning finding'+(sast===1?'':'s'));if(dep!=null)bits.push('<b>'+dep+'</b> critical dependency alert'+(dep===1?'':'s'));
-    var tot=(sast||0)+(dep||0);
-    host.innerHTML=decisions([{n:1,q:'Where do we invest to ship secure-by-design?',sit:'Your pipeline shows '+bits.join(' and ')+' reaching the product '+liveTag()+'. Where does the next product-security dollar go?',opts:[
-      {rec:true,tag:'A · AppSec in the pipeline',on:'Option A · AppSec tooling',osum:'shift-left coverage',pros:['Catches vulnerabilities before release, not after ship','SAST + SCA + secrets scanning on every change'+(tot>0?(' — works the '+tot+' open finding'+(tot===1?'':'s')+' down at the source'):''),'Lowers the critical-finding backlog that reaches customers'],cons:['Tooling + integration cost — scoped with your team','Engineering time to triage and tune findings']},
-      {tag:'B · Release gating',on:'Option B · Gate releases',osum:'blocks known-critical ships',pros:['No release ships with an open critical finding'+(dep!=null&&dep>0?(' — stops the '+dep+' critical dependency alert'+(dep===1?'':'s')+' from shipping'):''),'Fast to enforce in CI/CD'],cons:['Can slow delivery while the backlog is large','Needs a documented exception process']},
-      {tag:'C · Secure-by-design training + threat modeling',on:'Option C · Shift-left culture',osum:'fewer defects at the source',pros:['Reduces defects at design time','Builds durable engineering capability'],cons:['Slower to show measurable results','Preventive, not an immediate backlog reduction']}]}]);wireChoose();return;
-  }
-  host.innerHTML=decisions([{n:1,q:'Where do we invest to ship secure-by-design?',sit:'<span class="pill mod" style="font-size:9px">illustrative</span> Connect your CI/CD and application-security tooling (SAST / SCA) and Nerion builds this from your real pipeline findings. Example levers:',opts:[
-    {rec:true,tag:'A · AppSec in the pipeline',on:'Option A · AppSec tooling',osum:'shift-left coverage',pros:['Catches vulnerabilities before release, not after ship','SAST + SCA + secrets scanning on every change','Lowers the critical-finding backlog that reaches customers'],cons:['Tooling + integration cost — scoped with your team','Engineering time to triage and tune findings']},
-    {tag:'B · Release gating',on:'Option B · Gate releases',osum:'blocks known-critical ships',pros:['No release ships with an open critical finding','Fast to enforce in CI/CD'],cons:['Can slow delivery while the backlog is large','Needs a documented exception process']},
-    {tag:'C · Secure-by-design training + threat modeling',on:'Option C · Shift-left culture',osum:'fewer defects at the source',pros:['Reduces defects at design time','Builds durable engineering capability'],cons:['Slower to show measurable results','Preventive, not an immediate backlog reduction']}]}]);wireChoose();
-}
 function controlGapsCard(){
   if(!SIGNALS)return '<div class="card" style="margin-top:14px"><div class="ck">Control gaps that carry risk — and the funded fix</div><div class="cn" style="margin-top:6px">◐ <b style="color:var(--warn)">Connect your security tools</b> (EDR, MFA, PAM, SIEM…) and this shows your live control coverage, the gaps that leave the most risk open, and the project closing each — every number from the tool, none hardcoded.</div></div>';
   var gaps=CAPS.map(function(c){return {c:c,p:capDeploy(c)};}).filter(function(o){return o.p!=null&&o.p<90;}).sort(function(a,b){return a.p-b.p;});
@@ -2929,7 +2852,7 @@ function renderSignals(){
     var pcts=['edr_pct','mfa_pct','pam_pct'].map(sig).filter(function(x){return x!=null;});
     if(pcts.length){var avg=Math.round(pcts.reduce(function(s,x){return s+x;},0)/pcts.length);setTxt('lvCovTile',avg+'%');var tn=document.getElementById('lvCovTileNote');if(tn)tn.innerHTML='<span class="pill good">live</span> from '+pcts.length+' connected tool'+(pcts.length>1?'s':'');}
   }
-  renderAiRisk();renderCisoOps();renderUnderAttack();renderThreatMap();renderControls();renderCisoDecisions();try{if(typeof c5SeatViews==='function')c5SeatViews();}catch(_){}c5Health();c5Exposure();c5Effect();c5Threats();c5Peers();c5Frameworks();c5AiSupply();try{if(typeof c5DecProj==='function')c5DecProj();}catch(_){}c5cfExposure();c5cfRoi();c5cfInsurance();c5cfCost();c5cfDecisions();c5ceOverview();c5cfOverview();c5coOverview();c5ctOverview();c5crOverview();c5clOverview();c5ceValue();c5ceCrown();c5ceHealth();c5ceStrategic();c5ceFinancial();c5ceTrust();c5ceDecisions();c5crScale();c5crAppetite();c5crAssurance();c5crTrend();c5crDecisions();c5coResilience();c5coProcesses();c5coSupply();c5coRecovery();c5coDecisions();c5clRegulatory();c5clNotification();c5clContracts();c5clPrivacy();c5clDecisions();c5ctTech();c5ctReliability();c5ctAi();c5ctSupply();c5ctDecisions();c5iaCoverage();c5iaTesting();c5iaFindings();c5iaEvidence();c5iaAttention();c5bdHealth();c5bdMaterial();c5bdTrend();c5bdInvestment();c5bdGovernance();c5bdDecisions();c5cpSecurity();c5cpTrust();c5cpVelocity();c5cpBacklog();c5cpDecisions();renderCfoDecision();renderCroDecision();renderCioDecision();renderCooDecision();renderCloDecision();renderCpoDecision();renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderPeerCompare();renderCisoVendors();renderCooStatus();renderCfoFraud();renderCroKri();renderCloOps();renderThreatIntel();renderDrReadiness();renderPeerBench();
+  renderAiRisk();renderCisoOps();renderUnderAttack();renderThreatMap();renderControls();renderCisoDecisions();try{if(typeof c5SeatViews==='function')c5SeatViews();}catch(_){}c5Health();c5Exposure();c5Effect();c5Threats();c5Peers();c5Frameworks();c5AiSupply();try{if(typeof c5DecProj==='function')c5DecProj();}catch(_){}renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderPeerCompare();renderCisoVendors();renderThreatIntel();renderDrReadiness();renderPeerBench();
 }
 function loadSignals(){applyDemoSignals();var base=apiBase(),o=orgId();if(!base||!o)return;
   try{fetch(base+'/api/integrations/signals?org_id='+encodeURIComponent(o),{headers:{'X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&d.signals&&d.signals.length){SIGNALS={};d.signals.forEach(function(s){SIGNALS[s.key]=s;});if(typeof SCOPE!=='undefined'&&SCOPE!=='enterprise'){try{SIGNALS_BASE=JSON.parse(JSON.stringify(SIGNALS));applyScope(SCOPE);}catch(_){}}renderSignals();if(typeof renderCisoOps==='function'){renderCisoOps();renderUnderAttack();}}else{applyDemoSignals();}}).catch(function(){applyDemoSignals();});}catch(_){}}
@@ -3099,7 +3022,7 @@ function ensureDemoLive(){
 function loadLive(){var base=apiBase(),o=orgId();badge(false);setBar(false);
   ensureDemoLive();
   if(!base||!o)return;
-  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=sanNames(d);badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderCisoDecisions();try{if(typeof c5SeatViews==='function')c5SeatViews();}catch(_){}c5Health();c5Exposure();c5Effect();c5Threats();c5Peers();c5Frameworks();c5AiSupply();try{if(typeof c5DecProj==='function')c5DecProj();}catch(_){}c5cfExposure();c5cfRoi();c5cfInsurance();c5cfCost();c5cfDecisions();c5ceOverview();c5cfOverview();c5coOverview();c5ctOverview();c5crOverview();c5clOverview();c5ceValue();c5ceCrown();c5ceHealth();c5ceStrategic();c5ceFinancial();c5ceTrust();c5ceDecisions();c5crScale();c5crAppetite();c5crAssurance();c5crTrend();c5crDecisions();c5coResilience();c5coProcesses();c5coSupply();c5coRecovery();c5coDecisions();c5clRegulatory();c5clNotification();c5clContracts();c5clPrivacy();c5clDecisions();c5ctTech();c5ctReliability();c5ctAi();c5ctSupply();c5ctDecisions();c5iaCoverage();c5iaTesting();c5iaFindings();c5iaEvidence();c5iaAttention();c5bdHealth();c5bdMaterial();c5bdTrend();c5bdInvestment();c5bdGovernance();c5bdDecisions();c5cpSecurity();c5cpTrust();c5cpVelocity();c5cpBacklog();c5cpDecisions();renderCfoDecision();renderCroDecision();renderCioDecision();renderCooDecision();renderCloDecision();renderCpoDecision();renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderPeerCompare();renderCisoVendors();renderCooStatus();renderCooContinuity();renderCooSector();renderCooGaps();renderProcBars();renderCioSystems();renderCioDigital();renderCioAi();renderCioModern();renderCpoQuality();renderCpoVelocity();renderCioWorkforce();renderCpoLaunch();renderCpoSbd();renderCooSupply();renderCpoSupply();renderCloContract();renderAuditRepeat();renderAuditCoverage();renderAuditReadiness();renderAuditFailed();renderAuditDecisions();renderBoard();renderCeoGoNoGo();renderCeoDecisionBrief();renderBoardBrief();renderBoardDecisions();renderBoardIncidents();renderCeoHealth();renderCeoRiskScore();renderCeoTopThreats();renderCeoTopIssues();renderCeoStrategyRisks();renderCeoCustomerProtect();renderCeoBoardKpis();renderCeoExecDecisions();renderCeoTrust();renderCeoMode();renderCeoEmerging();renderEarnings();renderCfoBI();renderCfoFraud();renderCroKri();renderCroPortfolio();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
+  try{fetch(base+'/api/crown-jewels/summary?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.economics&&(Number(d.economics.ale)>0||(d.counts&&d.counts.crown_jewels>0))){LIVE=sanNames(d);badge(true);setBar(true);applyLive();renderChain();renderGrowth();renderControls();renderCisoDecisions();try{if(typeof c5SeatViews==='function')c5SeatViews();}catch(_){}c5Health();c5Exposure();c5Effect();c5Threats();c5Peers();c5Frameworks();c5AiSupply();try{if(typeof c5DecProj==='function')c5DecProj();}catch(_){}renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderPeerCompare();renderCisoVendors();renderProcBars();renderEarnings();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();}else{LIVE=null;badge(false);setBar(false);}}).catch(function(){badge(false);setBar(false);});}catch(_){}
   try{fetch(base+'/api/crown-jewels/graph?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json'}}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(d&&!d.empty&&d.nodes&&d.nodes.length){GRAPH=d;renderChain();}}).catch(function(){});}catch(_){}}
 
 /* ---- crown-jewel determination chain: process → application → risk → control ----
@@ -3194,200 +3117,27 @@ function boardRow(k,v){return '<div style="display:flex;gap:14px;padding:9px 0;b
 /* The board brief — the one screen a Fortune-100 director opens to. Answers the
    board's questions in this sector's language, from live economics + appetite +
    trend + the sector board frame. Illustrative (labelled) until go-live. */
-function renderBoardBrief(){
-  var host=document.getElementById('ceoBoardBrief');if(!host)return;
-  var b=indBoard(),ec=(LIVE&&LIVE.economics)||{},ap=ec.appetite||{},tr=trajInfo();
-  var ale=Number(ec.ale)||null,tail=Number(ec.tail)||null,mat=ec.materiality||{};
-  var within=ap.appetite?(ap.within!==false):null,tailOk=ap.appetite?(ap.tail_within!==false):null;
-  var verdict,vc;
-  if(ale!=null&&ap.appetite){if(within&&tailOk){verdict='Cyber risk is within the board’s approved appetite';vc='good';}else if(within){verdict='Within appetite on expected loss — worst-case tail is above the limit';vc='warn';}else{verdict='Cyber risk is over the board’s approved appetite';vc='crit';}}
-  else{verdict='Complete go-live to state cyber exposure against your board appetite';vc='muted';}
-  var bench=IND_BENCH[indKey()];
-  var trendLine=tr.two?(tr.down?'<span style="color:var(--good)">Improving</span> — removing more risk than the business is adding':'<span style="color:var(--crit)">Rising</span> — exposure trending up; drivers in the controls view'):'Baseline — this is your first analysis; the trend builds from here';
-  var decs=allDecisions(),decN=decs.length;
-  var expLine=ale!=null?('Expected annual loss <b style="color:var(--ink)">'+usd(ale)+'</b>'+(tail!=null?(' · worst realistic year <b style="color:var(--warn)">'+usd(tail)+'</b>'):'')+(ap.appetite?(' · board appetite <b>'+usd(ap.appetite)+'</b>'):'')):'<span class="pill mod">illustrative</span> figures populate from your data at go-live';
-  host.innerHTML='<div class="card"><div class="ck">Board brief — '+indLabel()+' '+liveTag()+'</div>'+
-    '<div class="cv" style="font-size:20px;margin-top:8px;line-height:1.3;color:var(--'+vc+')">'+verdict+'</div>'+
-    '<div class="cn" style="margin:6px 0 10px">'+expLine+'</div>'+
-    boardRow('The event that would hurt us most',b.scenario+'.')+
-    boardRow('What we are protecting',indProfile().systems.slice(0,2).join(' · ')+' — and '+b.trust)+
-    boardRow('Who regulates us',b.regulator+' — reportable at '+(mat.value?('<b>'+usd(mat.value)+'</b>'):'the materiality threshold')+' ('+b.material+')')+
-    boardRow('How we compare',bench?('The average '+indLabel()+' breach costs <b>$'+bench.toFixed(1)+'M</b> — IBM Cost of a Data Breach 2024'):'peer benchmark shown once a live signal is connected')+
-    boardRow('Direction of travel',trendLine)+
-    boardRow('What needs the board',decN?('<b>'+decN+'</b> funded decision'+(decN>1?'s':'')+' on record; risk-acceptance &amp; appetite reviews are the board’s to approve'):'no open board decisions this period')+
-    '<div class="cn" style="margin-top:10px">This is the board’s oversight lens for '+indLabel()+' — the six questions a director asks, in your sector’s terms. Everything below drills to the evidence.</div></div>';
-}
 /* CEO enterprise business-health — the one-glance read: within appetite? getting
    better? resilient? trusted? and how many decisions need you. From live
    economics + trend + resilience + incident signal. */
-function renderCeoHealth(){
-  var host=document.getElementById('ceoHealth');if(!host)return;
-  var ec=(LIVE&&LIVE.economics)||{},ap=ec.appetite||{},rs=(LIVE&&LIVE.resilience)||{},tr=trajInfo();
-  function c(label,s,t,note){return '<div class="card"><div class="ck">'+label+'</div><div class="cv" style="font-size:18px;margin-top:6px;color:var(--'+t+')">'+s+'</div><div class="cn" style="margin-top:4px">'+note+'</div></div>';}
-  var appt=ap.appetite?(ap.within!==false&&ap.tail_within!==false?{s:'Within appetite',t:'good'}:(ap.within!==false?{s:'Tail over appetite',t:'warn'}:{s:'Over appetite',t:'crit'})):{s:'Set appetite',t:'muted'};
-  var trend=tr.two?(tr.down?{s:'Improving',t:'good'}:{s:'Rising',t:'crit'}):{s:'Baseline',t:'muted'};
-  var worst=rs.worst_recovery_hours,resil=worst!=null?(worst<=24?{s:'Recoverable',t:'good'}:{s:'Slow to recover',t:'warn'}):{s:'Map recovery',t:'muted'};
-  if(rs.top_vendor_blast&&rs.top_vendor_blast.vendor&&resil.t==='good')resil={s:'Vendor single-point',t:'warn'};
-  var oi=sig('open_incidents'),trust=oi!=null?(oi>0?{s:'Incident active',t:'crit'}:{s:'Intact',t:'good'}):{s:'Connect SIEM',t:'muted'};
-  var decN=allDecisions().length;
-  host.innerHTML='<div class="grid4">'+
-    c('Cyber risk vs appetite',appt.s,appt.t,ec.ale?('expected '+usd(ec.ale)+' this year'):'against the board’s approved tolerance')+
-    c('Program trajectory',trend.s,trend.t,'removing vs adding risk over time')+
-    c('Operational resilience',resil.s,resil.t,worst!=null?('worst recovery '+hrsToStr(worst)):'can we keep operating &amp; recover')+
-    c('Customer trust',trust.s,trust.t,'no active reputational incident')+
-    '</div><div class="cn" style="margin-top:12px">'+(decN?('<b>'+decN+'</b> decision'+(decN>1?'s':'')+' need you — see the <b>Decisions</b> tab. '):'')+'Your one-glance business-health read; every item drills to the evidence, and the tabs above break it down.</div>';
-}
 /* ---- CEO seat, business-language panels (no jargon) — each computes from LIVE and
    degrades to an honest connect/illustrative state, never a fabricated number. ---- */
 function ceoRow(k,v,c,d){return '<div class="drow"><div class="drow-h"><span class="cap-dot" style="background:var(--'+c+')"></span><b>'+k+'</b><span class="drow-tool" style="color:var(--'+c+')">'+v+'</span></div><div class="drow-need">'+d+'</div></div>';}
 /* Overall cyber risk score · resilience · trend — the three headline reads. The score
    is a modeled 0-100 blend of appetite posture, control coverage, resilience and
    active incidents (higher = safer); labeled modeled, every part drills to evidence. */
-function renderCeoRiskScore(){
-  var host=document.getElementById('ceoRiskScore');if(!host)return;
-  var ec=(LIVE&&LIVE.economics)||{},ap=ec.appetite||{},rs=(LIVE&&LIVE.resilience)||{},oi=sig('open_incidents'),tr=trajInfo(),parts=[];
-  if(ap.appetite)parts.push(ap.within!==false&&ap.tail_within!==false?1:(ap.within!==false?0.6:0.3));
-  var cvs=(typeof CAPS!=='undefined')?CAPS.map(function(c){return capDeploy(c);}).filter(function(x){return x!=null;}):[];
-  if(cvs.length)parts.push(Math.min(1,cvs.reduce(function(s,x){return s+x;},0)/cvs.length/100));
-  if(rs.worst_recovery_hours!=null)parts.push(rs.worst_recovery_hours<=24?1:rs.worst_recovery_hours<=72?0.6:0.3);
-  if(oi!=null)parts.push(oi>0?0.3:1);
-  var score=parts.length?Math.round(parts.reduce(function(s,x){return s+x;},0)/parts.length*100):null;
-  var sc=score==null?'muted':score>=80?'good':score>=60?'blue':score>=40?'warn':'crit';
-  var slab=score==null?'—':score>=80?'Strong':score>=60?'Moderate':score>=40?'Elevated risk':'High risk';
-  var resil=rs.worst_recovery_hours!=null?(rs.worst_recovery_hours<=24?{s:'Strong',c:'good'}:{s:'Slow to recover',c:'warn'}):{s:'Map recovery',c:'muted'};
-  if(rs.top_vendor_blast&&rs.top_vendor_blast.vendor&&resil.c==='good')resil={s:'Vendor single-point',c:'warn'};
-  var trend=tr.two?(tr.down?{s:'Improving',c:'good'}:{s:'Declining',c:'crit'}):{s:'Baseline',c:'muted'};
-  function tile(k,big,sub,c){return '<div class="card"><div class="ck">'+k+'</div><div class="cv" style="font-size:26px;font-family:var(--serif);margin-top:4px;color:var(--'+c+')">'+big+'</div><div class="cn" style="margin-top:2px">'+sub+'</div></div>';}
-  host.innerHTML='<div class="grid3">'+
-    tile('Overall cyber risk score',(score!=null?score+'<span style="font-size:14px;color:var(--muted)"> / 100</span>':'—'),(score!=null?(slab+' <span class="pill mod" style="font-size:8px">modeled</span>'):'complete go-live to score'),sc)+
-    tile('Overall resilience',resil.s,rs.worst_recovery_hours!=null?('worst recovery '+hrsToStr(rs.worst_recovery_hours)):'can we keep operating &amp; recover',resil.c)+
-    tile('Trend',trend.s,tr.two?'expected loss over time':'builds as quarters record',trend.c)+
-    '</div><div class="cn" style="margin-top:8px">The score blends where we sit vs the board’s appetite, how much of our core defenses are deployed, how fast we recover, and whether any incident is active — higher is safer, and every part drills to its evidence.</div>';
-}
 /* Top cyber threats to the business — sector threat activity in business terms. */
-function renderCeoTopThreats(){
-  var host=document.getElementById('ceoTopThreats');if(!host)return;
-  var actors=(typeof IND_THREATS!=='undefined'&&(IND_THREATS[indKey()]||IND_THREATS.tech))||[];
-  if(!actors.length){host.innerHTML='';return;}
-  var feed=(typeof tmFeedOn==='function')&&tmFeedOn();
-  var rows=actors.slice(0,3).map(function(a){var caps=(typeof actorCaps==='function')?actorCaps(a):[];var cov=(typeof threatCoverage==='function')?threatCoverage(caps):null;var cls=cov==null?'muted':cov>=80?'good':cov>=50?'warn':'crit';
-    return '<div class="drow"><div class="drow-h"><span class="cap-dot" style="background:var(--crit)"></span><b>'+a.t+'</b><span class="drow-tool" style="color:var(--muted)">'+a.n+'</span></div><div class="drow-need">'+a.m+(cov!=null?(' <b style="color:var(--'+cls+')">'+cov+'% defended</b>'):'')+'</div></div>';}).join('');
-  host.innerHTML='<div class="card"><div class="ck">Top cyber threats to the business '+(feed?'<span class="pill good" style="font-size:9px">live feed</span>':'<span class="pill mod" style="font-size:9px">sector intelligence</span>')+'</div><div style="margin-top:8px">'+rows+'</div><div class="cn" style="margin-top:8px">The threats most active against '+indLabel()+' and what each would mean for us — '+(feed?'live from your threat-intelligence feed.':'from published sector reporting until a feed is connected.')+' How much we can stop is shown where measured.</div></div>';
-}
 /* The five cyber issues most worth the CEO's attention, ranked by business impact. */
-function renderCeoTopIssues(){
-  var host=document.getElementById('ceoTopIssues');if(!host)return;
-  var ec=(LIVE&&LIVE.economics)||{},ap=ec.appetite||{},ins=ec.insurance||{},rs=(LIVE&&LIVE.resilience)||{},pe=(LIVE&&LIVE.process_exposure)||[],oi=sig('open_incidents'),issues=[];
-  if(oi!=null&&oi>0)issues.push({s:0,t:'An incident is active',d:oi+' open security incident'+(oi>1?'s':'')+' affecting the business — see Customer &amp; Brand Protection.'});
-  if(ap.appetite&&ap.tail_within===false&&ec.tail)issues.push({s:1,t:'Worst-case loss exceeds the board’s appetite',d:'The severe-year loss ('+usd(ec.tail)+') is above the '+usd(ap.appetite)+' the board approved.'});
-  if(ins.gap>0)issues.push({s:1,t:'Part of the worst case is uninsured',d:usd(ins.gap)+' of the worst-case loss sits above the insurance limit.'});
-  if(pe[0]&&pe[0].exposure_usd)issues.push({s:2,t:pe[0].name+' carries the most exposure',d:'≈'+usd(pe[0].exposure_usd)+' of loss exposure concentrates in this business process.'});
-  if(rs.top_vendor_blast&&rs.top_vendor_blast.vendor)issues.push({s:2,t:'A single provider is a point of failure',d:rs.top_vendor_blast.vendor+' underpins '+((rs.top_vendor_blast.systems||[]).length)+' critical systems — one outage degrades all of them.'});
-  if(rs.worst_recovery_hours!=null&&rs.worst_recovery_hours>24)issues.push({s:3,t:'Slowest system recovers beyond a day',d:'Worst-case recovery is '+hrsToStr(rs.worst_recovery_hours)+' on a revenue-critical system.'});
-  issues.sort(function(a,b){return a.s-b.s;});
-  if(!issues.length){host.innerHTML='<div class="card"><div class="ck">Top cyber issues affecting the company</div><div class="cn" style="margin-top:6px"><span class="pill mod">illustrative</span> Complete go-live and connect your tools — Nerion then ranks the five issues most worth your attention, in plain English, from your own data.</div></div>';return;}
-  var rows=issues.slice(0,5).map(function(x,i){return '<div class="list-row"><div class="lic '+(x.s<=1?'c':'w')+'">'+(i+1)+'</div><div class="ltxt"><b>'+x.t+'</b><div class="cn">'+x.d+'</div></div></div>';}).join('');
-  host.innerHTML='<div class="card"><div class="ck">Top cyber issues affecting the company '+liveTag()+'</div><div style="margin-top:8px">'+rows+'</div><div class="cn" style="margin-top:8px">The issues most worth your attention, ranked by business impact.</div></div>';
-}
 /* Where cyber puts the strategy at risk — AI, product launches, supply chain, deps. */
-function renderCeoStrategyRisks(){
-  var host=document.getElementById('ceoStrategyRisks');if(!host)return;
-  var ai=(LIVE&&LIVE.aiRisk&&LIVE.aiRisk.governance)||null,rs=(LIVE&&LIVE.resilience)||{},rows='';
-  // 1 · Strategic initiatives at cyber risk
-  rows+=ceoRow('Strategic initiatives at cyber risk','See go / no-go below','blue','A cyber go / no-go on each major move — M&amp;A, market expansion, a new product — so cyber is weighed into the decision, not bolted on after. Detailed below.');
-  // 2 · AI initiatives at risk
-  if(ai){var ung=/none/i.test(ai.framework||'');rows+=ceoRow('AI initiatives at risk',ung?'Ungoverned':'Governed',ung?'crit':'good',ai.systems?(ai.systems+' AI system'+(ai.systems>1?'s':'')+' in production — '+(ung?'no governance framework adopted yet; the fastest-rising risk to get ahead of.':'operating under a recognized governance framework.')):'AI governance is in place.');}
-  else rows+=ceoRow('AI initiatives at risk','Not assessed','muted','Add your AI-governance answers in onboarding to see whether AI is governed before it scales.');
-  // 3 · Product launch risks
-  rows+=ceoRow('Product launch risks','Connect pipeline','muted','Connect your delivery pipeline (GitHub / Snyk) to flag any launch shipping with open critical security findings — so a release never ships known risk to customers.');
-  // 4 · Supply chain cyber risks
-  if(rs.top_vendor_blast&&rs.top_vendor_blast.vendor){var v=rs.top_vendor_blast;rows+=ceoRow('Supply chain cyber risks','Concentration','warn',v.vendor+' underpins '+((v.systems||[]).length)+' critical systems — a compromise or outage there reaches us.');}
-  else rows+=ceoRow('Supply chain cyber risks','Add vendors','muted','Add your tier-1/2 vendors in onboarding to rank supply-chain cyber risk.');
-  // 5 · Critical dependencies
-  var cjN=(typeof crownList==='function'&&crownList())?crownList().length:0;
-  if(rs.top_vendor_blast&&rs.top_vendor_blast.vendor){var v2=rs.top_vendor_blast;rows+=ceoRow('Critical dependencies','1 single point','warn',v2.vendor+' is a single point of failure for '+((v2.systems||[]).length)+' critical systems'+(v2.per_hr?(' · '+usd(v2.per_hr)+'/hr at risk if it fails'):'')+'.');}
-  else if(cjN)rows+=ceoRow('Critical dependencies',cjN+' crown jewels','blue',cjN+' systems the business depends on most — mapped, with their exposure detailed on the CIO seat.');
-  else rows+=ceoRow('Critical dependencies','Map systems','muted','Map your crown-jewel systems in onboarding to see the dependencies a failure of which would hurt most.');
-  host.innerHTML='<div class="card"><div class="ck">Where cyber puts the strategy at risk</div><div style="margin-top:8px">'+rows+'</div><div class="cn" style="margin-top:8px">Each of the five strategy risks, in plain terms — the detail (go / no-go, supply-chain blast radius, rising risks) is below.</div></div>';
-}
 /* Customer & brand protection status — incidents, breach, data-rights, notifications. */
-function renderCeoCustomerProtect(){
-  var host=document.getElementById('ceoCustomerProtect');if(!host)return;
-  var oi=sig('open_incidents'),lg=(LIVE&&LIVE.legal)||{},liab=lg.liability||{},dsarOpen=sig('dsar_open'),dsarOver=sig('dsar_overdue'),rows='';
-  rows+=ceoRow('Customer-impacting cyber incidents',oi!=null?(oi>0?(oi+' active'):'None'):'Connect SIEM',oi!=null?(oi>0?'crit':'good'):'muted',oi!=null?(oi>0?'An incident is currently affecting service — customer communications and regulatory clocks may apply.':'No incident is currently reaching customers.'):'Connect your SIEM to see customer-impacting incidents live.');
-  rows+=ceoRow('Data breach status',oi!=null?(oi>0?'Under review':'No reportable breach'):'Connect SIEM',oi!=null?(oi>0?'warn':'good'):'muted',oi!=null?(oi>0?'Materiality and notification are assessed on the Legal seat the moment an event qualifies.':'No breach currently meets a reporting threshold.'):'Breach status becomes live once your SIEM is connected.');
-  if(dsarOpen!=null){var over=dsarOver||0;rows+=ceoRow('Customer data protection health',over>0?'Behind on rights':'Healthy',over>0?'warn':'good',dsarOpen+' data-rights request'+(dsarOpen===1?'':'s')+' in flight'+(over>0?(', '+over+' past the statutory clock — a compliance exposure.'):', all within the statutory clock.'));}
-  else rows+=ceoRow('Customer data protection health','Connect privacy tool','muted','Connect your privacy platform (OneTrust / TrustArc) to show how well we honor customers’ data-rights requests on time.');
-  rows+=ceoRow('Brand reputation risks',liab.class_action_exposure?usd(liab.class_action_exposure)+' at stake':(liab.records?'exposure held':'Add records'),liab.class_action_exposure?'warn':'muted',liab.class_action_exposure?('A major breach would put ≈'+usd(liab.class_action_exposure)+' of liability and the customer trust behind it at risk'+(liab.records?(' ('+Number(liab.records).toLocaleString()+' records held)'):'')+'.'):'Add the customer records you hold in onboarding to size the reputational and liability exposure of a breach.');
-  var bind=lg.binding;rows+=ceoRow('Regulatory notifications',bind?(bind.clock||'mapped'):'Set regions',bind?'blue':'muted',bind?('If an event is material, the binding notification is '+(bind.jurisdiction?bind.jurisdiction+' — ':'')+(bind.obligation||'')+' within '+(bind.clock||'the statutory clock')+' — pre-staged and defensible.'):'Set your operating regions in onboarding to map the regulators you would notify.');
-  host.innerHTML='<div class="card"><div class="ck">Customer &amp; brand protection status '+((oi!=null||dsarOpen!=null)?liveTag():'')+'</div><div style="margin-top:8px">'+rows+'</div><div class="cn" style="margin-top:8px">What stands between a cyber event and our customers and reputation — incident status, breach standing, how well we honor data rights, and who we would notify.</div></div>';
-}
 /* Board cyber KPI scorecard — six board-level indicators, each from live data. */
-function renderCeoBoardKpis(){
-  var host=document.getElementById('ceoBoardKpis');if(!host)return;
-  var ec=(LIVE&&LIVE.economics)||{},ap=ec.appetite||{},rs=(LIVE&&LIVE.resilience)||{},oi=sig('open_incidents'),pe=(LIVE&&LIVE.process_exposure)||[];
-  var posture=ap.appetite?(ap.within!==false&&ap.tail_within!==false?{s:'Within appetite',c:'good'}:{s:'Over appetite',c:'crit'}):{s:'Set appetite',c:'muted'};
-  var resil=rs.worst_recovery_hours!=null?(rs.worst_recovery_hours<=24?{s:'Recoverable',c:'good'}:{s:hrsToStr(rs.worst_recovery_hours),c:'warn'}):{s:'Map recovery',c:'muted'};
-  var inc=oi!=null?(oi>0?{s:oi+' active',c:'crit'}:{s:'None active',c:'good'}):{s:'Connect SIEM',c:'muted'};
-  var fws=(typeof frameworksInScope==='function')?frameworksInScope().filter(function(f){return typeof GRC_FW!=='undefined'&&GRC_FW[f];}):[];
-  var compAvg=fws.length?Math.round(fws.reduce(function(s,f){return s+fwReadiness(f).pct;},0)/fws.length):null;
-  var comp=compAvg!=null?{s:compAvg+'% ready',c:compAvg>=90?'good':compAvg>=70?'blue':'warn'}:{s:'Select frameworks',c:'muted'};
-  var vp=(typeof VENDOR_PORT!=='undefined'&&VENDOR_PORT)?VENDOR_PORT:((typeof vendorLocalPortfolio==='function'&&typeof vendorSeed==='function')?vendorLocalPortfolio(vendorSeed(),vendorService()):null);
-  var tp=vp&&vp.count?{s:vp.at_risk+' of '+vp.count+' at risk',c:vp.critical?'crit':vp.at_risk?'warn':'good'}:{s:'Add vendors',c:'muted'};
-  var topRisks=pe.length?{s:pe.length+' tracked',c:'blue'}:{s:'Add register',c:'muted'};
-  function kpi(k,v,c){return '<div class="card"><div class="ck">'+k+'</div><div class="cv" style="font-size:16px;margin-top:6px;line-height:1.25;color:var(--'+c+')">'+v+'</div></div>';}
-  host.innerHTML='<div class="grid3">'+
-    kpi('Overall cyber posture',posture.s,posture.c)+kpi('Top enterprise cyber risks',topRisks.s,topRisks.c)+kpi('Critical incidents',inc.s,inc.c)+
-    kpi('Regulatory compliance status',comp.s,comp.c)+kpi('Third-party cyber risk',tp.s,tp.c)+kpi('Operational resilience score',resil.s,resil.c)+
-    '</div><div class="cn" style="margin-top:8px">The six indicators the board tracks — each from your live data. The peer benchmark, the trend and the SEC Item 106 governance you must disclose are below.</div>';
-}
 /* The five kinds of decision that reach a CEO — flagged when one actually needs them. */
-function renderCeoExecDecisions(){
-  var host=document.getElementById('ceoExecDecisions');if(!host)return;
-  var oi=sig('open_incidents'),ai=(LIVE&&LIVE.aiRisk&&LIVE.aiRisk.governance)||{},ap=(LIVE&&LIVE.economics&&LIVE.economics.appetite)||{},pending=allDecisions().filter(function(d){return !d.ticket;}).length;
-  var crisis=(oi!=null&&oi>0),policyGap=(/drafted/i.test(ai.policy||'')||/^none/i.test(ai.policy||'')),acceptNeeded=(ap.tail_within===false);
-  function cat(k,need,detail){return ceoRow(k,need?'needs you':'clear',need?'warn':'good',detail);}
-  var rows=
-    cat('Risks requiring acceptance',acceptNeeded,acceptNeeded?'The worst-case loss is above the board’s appetite — a residual risk to fund down or formally accept. See Financial Exposure.':'No residual risk is currently above the board’s approved tolerance.')+
-    cat('Investments requiring approval',pending>0,pending>0?(pending+' funded decision'+(pending>1?'s':'')+' recorded and awaiting approval — the recommendation is in the brief below.'):'No investment currently awaiting your approval.')+
-    cat('Policies requiring approval',policyGap,policyGap?'An AI acceptable-use policy is drafted but not board-approved — the highest-liability governance gap to close.':'No policy is currently awaiting board approval.')+
-    cat('Critical remediation decisions',false,'Funded remediation is tracked to closure on the CISO seat; anything needing a CEO-level call surfaces here.')+
-    (crisis
-      ? ceoRow('Crisis decisions requiring CEO involvement','active now','crit','An incident is live — the War Room holds the CEO calls (public disclosure, customer notification, ransom stance). Go to the Legal seat and the incident view.')
-      : cat('Crisis decisions requiring CEO involvement',false,'None active — the CEO crisis calls (public disclosure, customer notification, ransom stance) surface here the moment an incident is declared.'));
-  host.innerHTML='<div class="card"><div class="ck">Decisions that need the CEO</div><div style="margin-top:8px">'+rows+'</div><div class="cn" style="margin-top:8px">The five kinds of decision that reach you — flagged when one actually needs you, so nothing material waits unseen.</div></div>';
-}
 /* CEO brand & customer trust — the trust at stake in this sector (records held,
    liability if breached) plus the trust currency. Security as both a risk and a
    sales asset (the growth panel below). */
-function renderCeoTrust(){
-  var host=document.getElementById('ceoTrust');if(!host)return;
-  var b=indBoard(),lg=(LIVE&&LIVE.legal)||{},liab=lg.liability||{},oi=sig('open_incidents');
-  var recs=liab.records!=null?liab.records:null,exposure=liab.class_action_exposure!=null?liab.class_action_exposure:null;
-  var noun=({health:'member',fin:'customer',retail:'customer',gov:'citizen',mfg:'customer',energy:'customer',tech:'customer'}[indKey()]||'customer');
-  var head=oi!=null?(oi>0?'<span class="warn">A live incident is in progress — trust exposure is active</span>':'No active incident — '+b.trust+' intact'):b.trust+' is what a breach would put at risk';
-  host.innerHTML='<div class="card"><div class="ck">Trust at stake — '+indLabel()+' '+liveTag()+'</div>'+
-    '<div class="cv" style="font-size:18px;margin-top:6px;line-height:1.35">'+head+'</div>'+
-    '<div style="display:flex;gap:28px;margin-top:14px;flex-wrap:wrap">'+
-    '<div><div class="cv" style="font-size:20px">'+(recs!=null?recs.toLocaleString():'—')+'</div><div class="cn">sensitive '+noun+' records we hold</div></div>'+
-    '<div><div class="cv crit claim" data-ev="liability" style="font-size:20px">'+(exposure!=null?usd(exposure):'—')+(exposure!=null?' <span class="fx">ƒ</span>':'')+'</div><div class="cn">notification / class-action exposure if breached</div></div>'+
-    '</div><div class="cn" style="margin-top:12px"><b>'+b.trust.charAt(0).toUpperCase()+b.trust.slice(1)+'</b> is the currency of this business — a breach converts directly into churn, brand damage and the liability above. The flip side is security as a <b>sales asset</b>: the certifications and cleared deals below turn that trust into revenue.</div></div>';
-}
 /* CFO business-interruption cost — what an outage of a revenue-critical service
    costs per hour / per day / across worst-case recovery, plus days of operating
    income. From resilience (downtime $/hr, recovery) + earnings ratios. */
-function renderCfoBI(){
-  var host=document.getElementById('cfoBI');if(!host)return;
-  var rs=(LIVE&&LIVE.resilience)||{},r=(LIVE&&LIVE.economics&&LIVE.economics.ratios)||{};
-  var perHr=rs.top_downtime_per_hr,worst=rs.worst_recovery_hours;
-  var perDay=perHr!=null?perHr*24:null,worstCost=(perHr!=null&&worst!=null)?perHr*worst:null;
-  host.innerHTML='<div class="grid4">'+
-    '<div class="card"><div class="ck">Cost of downtime</div><div class="cv" style="font-size:19px;margin-top:6px;color:var(--warn)">'+(perHr!=null?usd(perHr)+' / hr':'—')+'</div><div class="cn">on the top revenue-critical service</div></div>'+
-    '<div class="card"><div class="ck">Per day of outage</div><div class="cv" style="font-size:19px;margin-top:6px">'+(perDay!=null?usd(perDay)+' / day':'—')+'</div><div class="cn">direct revenue at risk</div></div>'+
-    '<div class="card"><div class="ck">Worst-case interruption</div><div class="cv" style="font-size:19px;margin-top:6px;color:var(--crit)">'+(worstCost!=null?usd(worstCost):'—')+'</div><div class="cn">'+(worst!=null?('slowest service · '+hrsToStr(worst)+' to restore'):'recovery × downtime cost')+'</div></div>'+
-    '<div class="card"><div class="ck">A severe year = days of income</div><div class="cv" style="font-size:19px;margin-top:6px">'+(r.days_of_operating_income!=null?(Math.round(r.days_of_operating_income)+' days'):'—')+'</div><div class="cn">a bad cyber year in days the business runs on</div></div>'+
-    '</div><div class="cn" style="margin-top:10px">Business-interruption cost is what an outage of a revenue-critical service costs per hour and per day — the figure finance needs to size recovery investment and insurance. From your business-process revenue (BIA) and per-system recovery capability; earnings translation is below.</div>';
-}
 /* COO sector continuity — the services whose disruption stops THIS business,
    framed in the industry's terms (OT/plant for mfg & energy, care for health,
    storefront for retail…). From IND profile + live resilience. */
@@ -3401,81 +3151,18 @@ var IND_CONTINUITY={
   tech:{svc:'the production platform and customer APIs',w:'SLAs breach and customers churn',ot:false},
   telecom:{svc:'the mobile / 5G core, broadband access and signaling',w:'service drops for millions and emergency calling is at risk',ot:false}
 };
-function renderCooSector(){
-  var host=document.getElementById('cooSector');if(!host)return;
-  var c=IND_CONTINUITY[indKey()]||IND_CONTINUITY.tech,rs=(LIVE&&LIVE.resilience)||{},worst=rs.worst_recovery_hours,tv=rs.top_vendor_blast;
-  var otLine=c.ot?' <b>Operational-technology (OT) continuity</b> is the board-level concern here — a bridge from IT into plant / grid systems is the highest-impact path, and recovery of control systems is slower than IT.':'';
-  host.innerHTML='<div class="card"><div class="ck">'+(indKey()==='mfg'?'Manufacturing continuity':(indKey()==='energy'?'Service &amp; OT continuity':'Service continuity'))+' — '+indLabel()+' '+liveTag()+'</div>'+
-    '<div class="cn" style="margin-top:6px">The continuity that matters for '+indLabel()+' is <b>'+c.svc+'</b>. A cyber disruption here means <b>'+c.w+'</b>.'+otLine+'</div>'+
-    '<div class="cn" style="margin-top:8px">'+(worst!=null?('Your slowest critical service restores in <b>'+hrsToStr(worst)+'</b>'+(worst>24?' — beyond a same-day tolerance.':'.')):'Upload your systems &amp; recovery targets to see real continuity timing.')+(tv&&tv.vendor?(' A single provider (<b>'+tv.vendor+'</b>) underpins '+((tv.systems||[]).length)+' of these services.'):'')+'</div></div>';
-}
 /* COO business-continuity gaps — the specific gaps between today's posture and
    board tolerance, from live resilience + backup signals. */
-function renderCooGaps(){
-  var host=document.getElementById('cooGaps');if(!host)return;
-  var rs=(LIVE&&LIVE.resilience)||{},worst=rs.worst_recovery_hours,tv=rs.top_vendor_blast,gaps=[];
-  if(worst!=null&&worst>24)gaps.push({t:'Slowest critical service recovers in '+hrsToStr(worst),d:'beyond a same-day continuity tolerance — the top driver of the worst-case tail.',c:'crit'});
-  if(tv&&tv.vendor)gaps.push({t:'Single-vendor point of failure — '+tv.vendor,d:'underpins '+((tv.systems||[]).length)+' service'+((tv.systems||[]).length===1?'':'s')+(tv.per_hr?(' · '+usd(tv.per_hr)+'/hr at risk'):'')+'; no independent failover.',c:'warn'});
-  var imm=sig('backup_immutable_pct');if(imm!=null&&imm<95)gaps.push({t:'Backups not fully immutable ('+imm+'%)',d:'recovery may not survive a ransomware event that reaches the backup system.',c:'warn'});
-  host.innerHTML='<div class="card"><div class="ck">Business-continuity gaps '+liveTag()+'</div>'+(gaps.length?('<div style="margin-top:8px">'+gaps.map(function(g){return '<div class="drow"><div class="drow-h"><span class="cap-dot" style="background:var(--'+g.c+')"></span><b>'+g.t+'</b></div><div class="drow-need">'+g.d+'</div></div>';}).join('')+'</div>'):'<div class="cn" style="margin-top:6px">No continuity gaps flagged from your current data — upload systems &amp; recovery targets, and connect your backup platform, to surface them.</div>')+'<div class="cn" style="margin-top:8px">The specific gaps between where continuity is and where board tolerance requires it — each closed by the resilience decision below.</div></div>';
-}
 /* CIO digital-service reliability — cloud posture on customer-facing services +
    live disruptions + downtime cost. From CSPM + SIEM + resilience. */
-function renderCioDigital(){
-  var host=document.getElementById('cioDigital');if(!host)return;
-  var cspm=sig('cspm_pct'),oi=sig('open_incidents'),rs=(LIVE&&LIVE.resilience)||{},perHr=rs.top_downtime_per_hr;
-  host.innerHTML='<div class="grid4">'+
-    '<div class="card"><div class="ck">Digital service reliability</div><div class="cv" style="font-size:19px;margin-top:6px;color:'+(cspm!=null?(cspm>=85?'var(--good)':cspm>=60?'var(--warn)':'var(--crit)'):'var(--muted)')+'">'+(cspm!=null?cspm+'%':'Connect CSPM')+'</div><div class="cn">cloud posture on the services customers touch '+(cspm!=null?liveTag():'')+'</div></div>'+
-    '<div class="card"><div class="ck">Active disruptions</div><div class="cv" style="font-size:19px;margin-top:6px;color:'+(oi!=null?(oi>0?'var(--crit)':'var(--good)'):'var(--muted)')+'">'+(oi!=null?(oi>0?oi+' affecting service':'None'):'Connect SIEM')+'</div><div class="cn">incidents degrading a digital service now</div></div>'+
-    '<div class="card"><div class="ck">Cost if a service is down</div><div class="cv claim" data-ev="downtime" style="font-size:19px;margin-top:6px;color:var(--warn);cursor:pointer">'+(perHr!=null?usd(perHr)+'/hr':'—')+' <span class="drill-cta" style="font-size:11px">details ▸</span></div><div class="cn">on the top revenue-critical service</div></div>'+
-    '</div><div class="cn" style="margin-top:10px">Digital service reliability is the security posture of the cloud and applications your customers depend on — misconfiguration, public exposure and identity risk on those services. Connect your CSPM (<b>Wiz · Prisma · Defender for Cloud</b>) and SIEM to make this live.</div>';
-}
 /* CIO AI-adoption readiness — can we scale AI into products & operations securely?
    From the org's AI-governance answers (systems, framework, policy, inventory). */
-function renderCioAi(){
-  var host=document.getElementById('cioAi');if(!host)return;
-  var g=(LIVE&&LIVE.aiRisk&&LIVE.aiRisk.governance)||null;
-  if(!g||!(g.framework||g.policy||g.inventory||g.systems)){host.innerHTML='<div class="card"><div class="ck">AI adoption readiness</div><div class="cn" style="margin-top:6px">◐ Add your AI-governance answers in onboarding — AI systems in production, framework adopted (NIST AI RMF / ISO 42001), acceptable-use policy and inventory — to score whether we can adopt AI into products and operations securely and at speed.</div></div>';return;}
-  var m=(typeof aiMaturity==='function')?aiMaturity(g):null,sys=Number(g.systems)||0;
-  var rows=[
-    ['AI systems in production',sys>0?(sys+' live'):'none recorded',sys>0?'serious':'muted'],
-    ['Governance framework',/both/i.test(g.framework||'')?'NIST + ISO':(/nist|iso/i.test(g.framework||'')?g.framework:'none yet'),/both|nist|iso/i.test(g.framework||'')?'good':'crit'],
-    ['Acceptable-use policy',/board-approved/i.test(g.policy||'')?'board-approved':(/drafted/i.test(g.policy||'')?'drafted':'none'),/board-approved/i.test(g.policy||'')?'good':/drafted/i.test(g.policy||'')?'warn':'crit'],
-    ['AI inventory',/yes/i.test(g.inventory||'')?'inventoried':(/partial/i.test(g.inventory||'')?'partial':'none'),/yes/i.test(g.inventory||'')?'good':'warn']
-  ];
-  host.innerHTML='<div class="card"><div class="ck">AI adoption readiness'+(m&&m.pct!=null?(' <span class="tag '+(m.cls==='crit'?'warn':m.cls)+'" style="font-size:10px;margin-left:6px">'+m.label+' · '+m.pct+'%</span>'):'')+'</div>'+
-    '<div style="margin-top:8px">'+rows.map(function(r){return '<div class="drow"><div class="drow-h"><span class="cap-dot" style="background:var(--'+r[2]+')"></span><b>'+r[0]+'</b><span class="drow-tool" style="color:var(--'+r[2]+')">'+r[1]+'</span></div></div>';}).join('')+'</div>'+
-    '<div class="cn" style="margin-top:8px">Readiness is governance in place before AI scales into products and operations — the depth (frameworks, OWASP LLM/Agentic, EU AI Act) is in the CISO <b>AI risk</b> view.</div></div>';
-}
 /* CIO application-modernization risk — exposure carried by end-of-life systems. */
-function renderCioModern(){
-  var host=document.getElementById('cioModern');if(!host)return;
-  var rs=(LIVE&&LIVE.resilience)||{},td=rs.tech_debt||{},exp=td.exposure,worst=rs.worst_recovery_hours;
-  host.innerHTML='<div class="grid4">'+
-    '<div class="card"><div class="ck">Tech-debt exposure</div><div class="cv'+(exp!=null?' claim':'')+'" data-ev="techdebt" style="font-size:19px;margin-top:6px;color:'+(exp?'var(--warn)':'var(--muted)')+(exp!=null?';cursor:pointer':'')+'">'+(exp!=null?usd(exp):'—')+(exp!=null?' <span class="drill-cta" style="font-size:11px">details ▸</span>':'')+'</div><div class="cn">open risk on end-of-life systems on revenue paths</div></div>'+
-    '<div class="card"><div class="ck">Slowest legacy recovery</div><div class="cv" style="font-size:19px;margin-top:6px'+(worst!=null&&worst>24?';color:var(--warn)':'')+'">'+(worst!=null?hrsToStr(worst):'—')+'</div><div class="cn">older systems recover slowest, driving the tail</div></div>'+
-    '</div><div class="cn" style="margin-top:10px">Application-modernization risk is the exposure carried by end-of-life and unsupported systems still on revenue paths — they patch slower, recover slower, and drive the worst-case tail. Prioritize modernization by revenue protected per dollar. Upload your systems inventory (with EOL status) to quantify this.</div>';
-}
 /* CLO privacy risk — the exposure from sensitive data held + data-subject-rights
    timeliness. From privacy signals (DSAR) + legal liability + sector data classes. */
-function renderCloPrivacy(){
-  var host=document.getElementById('cloPrivacy');if(!host)return;
-  var open=sig('dsar_open'),over=sig('dsar_overdue'),lg=(LIVE&&LIVE.legal)||{},liab=lg.liability||{};
-  var dataClasses=(indProfile().data||[]).join(' · ');
-  host.innerHTML='<div class="grid4">'+
-    '<div class="card"><div class="ck">Data-subject requests open</div><div class="cv" style="font-size:19px;margin-top:6px">'+(open!=null?open:'—')+'</div><div class="cn">privacy requests in the response window '+(open!=null?liveTag():'connect OneTrust')+'</div></div>'+
-    '<div class="card"><div class="ck">Overdue (SLA breached)</div><div class="cv" style="font-size:19px;margin-top:6px;color:'+(over!=null?(over>0?'var(--crit)':'var(--good)'):'var(--muted)')+'">'+(over!=null?over:'—')+'</div><div class="cn">past the statutory clock — direct exposure</div></div>'+
-    '<div class="card"><div class="ck">Records we hold</div><div class="cv" style="font-size:19px;margin-top:6px">'+(liab.records!=null?liab.records.toLocaleString():'—')+'</div><div class="cn">sensitive records under privacy law</div></div>'+
-    '</div><div class="cn" style="margin-top:10px">Privacy risk is the exposure from the sensitive data you hold (<b>'+dataClasses+'</b>) and your ability to meet data-subject rights inside the statutory clock. Connect your privacy platform (<b>OneTrust · TrustArc</b>) to make DSAR timeliness live; the binding jurisdiction clocks are in <b>Regulatory exposure</b>.</div>';
-}
 /* Honest data-mode banner for the CEO $ tabs — the dollar figures are sector
    placeholders until go-live, then computed from the org's own data. Labels the
    illustrative state plainly so nothing reads as a fabricated claim. */
-function renderCeoMode(){
-  var live=!!(LIVE&&LIVE.economics&&Number(LIVE.economics.ale)>0);
-  var html=live?'':'<div class="cn" style="margin-bottom:14px;padding:11px 13px;background:var(--surface-2);border-radius:8px;line-height:1.5">◐ <b style="color:var(--warn)">Illustrative for '+indLabel()+'</b> — the dollar figures on this tab are sector placeholders until you complete go-live. After go-live every number is computed from <b>your own</b> financials and risk register, and each is clickable to its exact formula and inputs. Nothing here is a fixed or invented figure.</div>';
-  ['ceoModeA','ceoModeB','cfoModeA','cfoModeB','boardMode'].forEach(function(id){var h=document.getElementById(id);if(h)h.innerHTML=html;});
-}
 /* Industry-specific emerging risks — the moves a sector's board is warned about,
    replacing a generic note. Enriched with the org's own live concentration
    (single-vendor blast) and AI-in-production count when present. */
@@ -3489,44 +3176,11 @@ var IND_EMERGING={
   tech:[{n:'AI supply chain &amp; model risk',w:'poisoned dependencies, prompt injection and shadow AI in the product'},{n:'Customer-data concentration',w:'one platform holding many customers’ data raises the blast radius'}],
   telecom:[{n:'Nation-state pre-positioning in carrier networks',w:'long-dwell access to signaling and lawful-intercept exposes call records'},{n:'5G core &amp; network virtualization',w:'a cloud-native, software-defined core widens the attack surface across the network'}]
 };
-function renderCeoEmerging(){
-  var host=document.getElementById('ceoEmerging');if(!host)return;
-  var list=(IND_EMERGING[indKey()]||IND_EMERGING.tech);
-  var rows=list.map(function(e){return '<div class="drow"><div class="drow-h"><span class="cap-dot" style="background:var(--warn)"></span><b>'+e.n+'</b><span class="drow-tool" style="color:var(--muted)">sector</span></div><div class="drow-need">'+e.w+'.</div></div>';});
-  var aiSys=(LIVE&&LIVE.aiRisk&&LIVE.aiRisk.governance&&Number(LIVE.aiRisk.governance.systems))||0;
-  if(aiSys>0)rows.unshift('<div class="drow"><div class="drow-h"><span class="cap-dot" style="background:var(--serious)"></span><b>'+aiSys+' AI system'+(aiSys>1?'s':'')+' already in production</b><span class="drow-tool" style="color:var(--good)">live</span></div><div class="drow-need">AI is live in your environment — its governance is the fastest-moving new liability. Depth in the CISO AI-risk view.</div></div>');
-  var tv=LIVE&&LIVE.resilience&&LIVE.resilience.top_vendor_blast;
-  if(tv&&tv.vendor)rows.push('<div class="drow"><div class="drow-h"><span class="cap-dot" style="background:var(--crit)"></span><b>Third-party concentration — '+tv.vendor+'</b><span class="drow-tool" style="color:var(--crit)">live</span></div><div class="drow-need">Underpins '+((tv.systems||[]).length)+' revenue system'+((tv.systems||[]).length===1?'':'s')+(tv.per_hr?(' · '+usd(tv.per_hr)+'/hr at risk if it fails'):'')+' — a systemic single point of failure.</div></div>');
-  host.innerHTML='<div class="card"><div class="ck">What’s rising fastest — '+indLabel()+' '+liveTag()+'</div><div style="margin-top:8px">'+rows.join('')+'</div><div class="cn" style="margin-top:8px">The emerging risks specific to '+indLabel()+' (<b>sector</b>, from public reporting), plus any <b>live</b> concentration from your own environment. Not a generic list — it changes with your industry and your data.</div></div>';
-}
 /* Board major-incidents — the current state of any incident material enough for
    the board to be aware of, from the live SIEM signal. */
-function renderBoardIncidents(){
-  var host=document.getElementById('ceoIncidents');if(!host)return;
-  var oi=sig('open_incidents'),mttd=sig('mttd_hrs');
-  host.innerHTML='<div class="card"><div class="ck">Major incidents '+liveTag()+'</div>'+
-    '<div class="cv" style="font-size:20px;margin-top:6px;color:'+(oi!=null?(oi>0?'var(--crit)':'var(--good)'):'var(--muted)')+'">'+(oi!=null?(oi>0?(oi+' active incident'+(oi>1?'s':'')):'No active major incident'):'Connect SIEM to report')+'</div>'+
-    '<div class="cn" style="margin-top:6px">'+(oi!=null?('affecting a business process now'+(mttd!=null?(' · detection speed '+(mttd<24?(mttd+'h'):((mttd/24).toFixed(1)+'d'))):'')):'connect your SIEM / EDR to report major incidents live')+'</div>'+
-    '<div class="cn" style="margin-top:8px">The board is briefed on major incidents — those material enough to disclose or that disrupt operations. When one is confirmed, the War Room opens and the CLO materiality clock starts. This is the current state; the incident history and post-incident reviews live in the CISO seat.</div></div>';
-}
 /* Board decisions — the calls that are the board's to make: risk-acceptances
    above appetite, appetite reviews, and the funded decisions on the oversight
    record. Distinct from the operator decisions the CEO/CISO make. */
-function renderBoardDecisions(){
-  var host=document.getElementById('ceoBoardDecisions');if(!host)return;
-  var list=allDecisions(),ec=(LIVE&&LIVE.economics)||{},ap=ec.appetite||{},items=[];
-  if(ap.appetite&&ap.tail_within===false)items.push({t:'Accept — or fund reduction of — the tail above appetite',d:'The worst-case tail sits above the board-approved limit. The board must record a risk-acceptance or approve funding to bring it within appetite.',c:'crit',kind:'appetite'});
-  if(!ap.appetite)items.push({t:'Set / reconfirm the board’s cyber-risk appetite',d:'No appetite is on record — the board sets the tolerance every other figure is measured against.',c:'warn',kind:'appetite'});
-  items.push({t:'Confirm the quarterly cyber-risk report cadence',d:'Item 106 oversight expects a recurring, documented board briefing — confirm the cadence and that it is minuted.',c:'good',kind:'cadence'});
-  list.slice(0,6).forEach(function(d,i){items.push({t:d.title,d:'Decided by '+(d.by||'a leader')+(d.opt||d.option?(' · '+(d.option||d.opt)):'')+(d.ticket?(' · '+((d.system||'ticket')+' '+d.ticket)):'')+' — on the oversight record.',c:'good',kind:'recorded',idx:i});});
-  host.innerHTML='<div class="card"><div class="ck">Decisions for the board '+liveTag()+'</div>'+
-    '<div style="margin-top:8px">'+items.map(function(i){return '<div class="drow" data-bkind="'+i.kind+'"'+(i.idx!=null?(' data-bidx="'+i.idx+'"'):'')+' style="cursor:pointer"><div class="drow-h"><span class="cap-dot" style="background:var(--'+i.c+')"></span><b>'+i.t+'</b><span class="drow-tool"><span class="drill-cta">details ▸</span></span></div><div class="drow-need">'+i.d+'</div></div>';}).join('')+'</div>'+
-    '<div class="cn" style="margin-top:8px">These are the calls the board owns — risk-acceptances above appetite, appetite reviews and major funding — each recorded with the deciding leader, date and ticket as the D&amp;O / SEC-oversight defense. <b>Click any row</b> for the numbers behind it and the decision record.</div></div>';
-  host.querySelectorAll('.drow[data-bkind]').forEach(function(el){el.onclick=function(){var k=el.dataset.bkind;
-    if(k==='appetite')openDrill('Cyber-risk appetite — the board’s call',drillBoardAppetite());
-    else if(k==='cadence')openDrill('Board reporting cadence · SEC Item 106',drillBoardCadence());
-    else openDrill('Decision record',drillBoardRecorded(+el.dataset.bidx));};});
-}
 /* Real, sourced detail behind each board decision row — no fluff. */
 function drillBoardAppetite(){
   var ec=(LIVE&&LIVE.economics)||{},ap=ec.appetite||{},ale=Number(ec.ale)||0,tail=Number(ec.tail)||0,mat=(ec.materiality&&Number(ec.materiality.value))||0,app=Number(ap.appetite)||0,over=(app>0&&tail>app);
@@ -3882,46 +3536,10 @@ function initVerdict(gates){
   return {t:'CONNECT DATA',c:'muted'};
 }
 function initWeak(gates){return gates.filter(function(g){return g.ok===false||g.ok==null;});}
-function renderCeoGoNoGo(){
-  var host=document.getElementById('ceoGoNoGo');if(!host)return;
-  var inits=strategicInits();
-  if(!inits.length){
-    host.innerHTML='<div class="card"><div class="ck">New-initiative safety check '+liveTag()+'</div><div class="cn" style="margin-top:6px">◐ Add your <b>strategic initiatives</b> — the major moves in front of the board (an acquisition, a cloud platform, an AI product, a market or factory expansion) — in onboarding. Nerion then runs a <b>go / no-go per initiative</b>: for each move, the risks, exactly where it’s weak, and a clear Proceed / Conditions / Hold before the business commits. A single global verdict would be meaningless — each move carries different risk.</div></div>';
-    return;
-  }
-  var rows=inits.map(function(it){
-    var gates=initGates(it),v=initVerdict(gates),weak=initWeak(gates);
-    var gr=gates.map(function(g){var cls=g.ok===true?'good':g.ok===false?'crit':'muted';return '<div class="drow" style="padding:6px 0"><div class="drow-h"><span class="cap-dot" style="background:var(--'+cls+')"></span><span>'+g.n+'</span><span class="drow-tool" style="color:var(--'+cls+')">'+(g.ok===true?'✓':g.ok===false?'gap':'—')+'</span></div><div class="drow-need">'+g.d+'</div></div>';}).join('');
-    return '<div class="card" style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px"><div><b style="font-size:15px">'+esc(it.name)+'</b> '+(it.type?('<span class="pill mod" style="font-size:9px">'+esc(it.type)+'</span>'):'')+(it.valueUsd?(' <span class="cn">· '+usd(it.valueUsd)+' at stake'+(it.horizon?(' · '+esc(it.horizon)):'')+'</span>'):'')+'</div><span style="font-weight:800;font-size:15px;color:var(--'+v.c+');white-space:nowrap">'+v.t+'</span></div>'+
-      '<div style="margin-top:8px">'+gr+'</div>'+
-      (weak.length?('<div class="cn" style="margin-top:8px"><b>Where it’s weak:</b> '+weak.map(function(g){return g.n.toLowerCase();}).join(' · ')+'.</div>'):'<div class="cn" style="margin-top:8px;color:var(--good)">All safety gates green — safe to pursue.</div>')+'</div>';
-  }).join('');
-  host.innerHTML='<div class="cn" style="margin-bottom:10px">A <b>go / no-go for each strategic initiative</b> — every major move scored on the safety gates that matter for its type, so the verdicts differ by move. '+liveTag()+'</div>'+rows;
-}
 /* Decision Intelligence — a one-page decision brief PER strategic initiative:
    best / likely / worst outcome in dollars + a clear recommendation, tied to the
    move's value-at-stake and its live safety verdict. Not the CISO's control
    decisions — the strategic moves the CEO actually signs off. */
-function renderCeoDecisionBrief(){
-  var host=document.getElementById('ceoDecisionBrief');if(!host)return;
-  var inits=strategicInits();
-  if(!inits.length){host.innerHTML='<div class="card"><div class="ck">Decision brief</div><div class="cn" style="margin-top:6px">◐ Add your strategic initiatives in onboarding. Each gets a one-page decision brief — best / likely / worst outcome and the dollar impact, in business terms, with a clear recommendation.</div></div>';return;}
-  host.innerHTML=inits.map(function(it){
-    var gates=initGates(it),v=initVerdict(gates),weak=initWeak(gates),val=it.valueUsd||null;
-    var wf=v.c==='crit'?0.25:v.c==='warn'?0.12:0.04,lf=v.c==='crit'?0.08:v.c==='warn'?0.03:0.01;
-    var worst=val?Math.round(val*wf):null,likely=val?Math.round(val*lf):null;
-    var rec=v.c==='good'?'Proceed — the safety gates for this move are green.':v.c==='crit'?'Hold until the gap below is closed; the modeled downside is material against the value at stake.':'Proceed with conditions — close the open items in parallel; they gate the move rather than block it.';
-    return '<div class="card" style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;gap:12px;align-items:baseline"><b style="font-size:15px">'+esc(it.name)+'</b><span style="font-weight:800;color:var(--'+v.c+')">'+v.t+'</span></div>'+
-      (val?('<div class="cols" style="margin-top:10px;gap:14px">'+
-        '<div><div class="cv" style="font-size:17px;color:var(--good)">'+usd(val)+'</div><div class="cn">value at stake — best case, fully realised</div></div>'+
-        '<div><div class="cv" style="font-size:17px">−'+(likely!=null?usd(likely):'—')+'</div><div class="cn"><span class="pill mod">modeled</span> likely cyber cost proceeding as-is</div></div>'+
-        '<div><div class="cv" style="font-size:17px;color:var(--crit)">−'+(worst!=null?usd(worst):'—')+'</div><div class="cn"><span class="pill mod">modeled</span> worst case if the weak gate is exploited</div></div>'+
-        '</div>'):'<div class="cn" style="margin-top:8px">Add a value-at-stake for this initiative in onboarding to quantify the best / likely / worst outcome in dollars.</div>')+
-      '<div class="cn" style="margin-top:10px"><b>Recommendation:</b> '+rec+(weak.length?(' <b>Open items:</b> '+weak.map(function(g){return g.n.toLowerCase();}).join('; ')+'.'):'')+'</div>'+
-      (val?'<div class="cn" style="margin-top:6px"><span class="pill mod" style="font-size:8px">modeled</span> Downside = the share of value-at-stake exposed if this move’s weakest safety gate is exploited (Hold 25% · Conditions 12% · Proceed 4%) — an illustrative planning range, not a forecast. The verdict and gates come from your live posture.</div>':'')+
-      '</div>';
-  }).join('');
-}
 function renderOversight(){
   var host=document.getElementById('ceoOversight');if(!host)return;
   var list=allDecisions();var pushed=list.filter(function(d){return d.ticket;}).length;
@@ -3989,21 +3607,9 @@ function renderSupplyChain(hostId,lens){
     '<div class="cn" style="margin-top:4px">'+lens.intro+' '+provLine+'.</div>'+body+
     '<div class="cn" style="margin-top:10px">Higher is safer, on your color scale — '+scaleLegend()+'. The single-provider blast radius above is your asset→vendor concentration; this is the rated supplier list. Manage the full portfolio (connect · refresh · deep-link to the provider) on the CISO third-party view.</div></div>';
 }
-function renderCooSupply(){renderSupplyChain('cooSupply',{title:'Supplier operational-risk ranking',noun:'suppliers',word:'operational',risk:'each could disrupt the services they underpin',intro:'The suppliers whose security failure could disrupt service delivery, ranked worst-first.',why:'so the ones that could stop operations are on top.'});}
-function renderCpoSupply(){renderSupplyChain('cpoSupply',{title:'Software &amp; supplier dependency ranking',noun:'suppliers',word:'product',risk:'a compromise of each reaches your product and customers',intro:'The third-party suppliers and components the product ships on, ranked worst-first by live rating.',why:'so the supply-chain paths that reach customers are on top.'});}
 /* CLO contractual risk — the notification obligations statutory clocks miss.
    Grounded in the org's own binding statutory clock and record count; per-contract
    clause scanning needs the CLM connected (honest — not fabricated). */
-function renderCloContract(){
-  var host=document.getElementById('cloContract');if(!host)return;
-  var lg=(LIVE&&LIVE.legal)||{},clock=(lg.binding&&lg.binding.clock)||null,juris=(lg.binding&&lg.binding.jurisdiction)||null,recs=(lg.liability&&lg.liability.records);
-  var rows=iamGovRow('Your fastest statutory clock',clock?clock+(juris?(' · '+juris):''):'set your regions in onboarding',clock?null:null,clock?'The binding regulatory notification deadline for the regions you operate in — the floor a contractual clause is measured against.':'')+
-    iamGovRow('Typical customer-DPA clause','24–72 hours',false,'Enterprise customer data-processing agreements routinely require breach notice within 24–72h — <b>frequently tighter than the statutory clock above</b>, and the first obligation customer counsel invokes after an incident.')+
-    iamGovRow('Records under contractual duty',recs!=null?recs.toLocaleString():'connect data map',recs!=null?null:null,recs!=null?'Sensitive records you hold on behalf of customers — the population a notification clause is triggered over.':'');
-  host.innerHTML='<div class="card"><div class="ck">Customer contract / DPA obligations '+(clock?liveTag():'')+'</div>'+
-    '<div style="margin-top:8px">'+rows+'</div>'+
-    '<div class="cn" style="margin-top:8px">Contractual notification clauses are the exposure the statutory clocks do not capture — and they usually bind <b>first</b>. To quantify exactly how many customer contracts carry a clause and your single <b>tightest contractual deadline</b>, connect your contract-lifecycle system (<b>Ironclad · DocuSign CLM · Conga</b>) to auto-scan for security-clause compliance. Until then the tightest deadline to plan against is the 24–72h band above, ahead of your '+(clock||'statutory')+' statutory clock.</div></div>';
-}
 /* ---- Governance-maturity model ---------------------------------------------
    Each governance answer from onboarding is not just "answered / not answered":
    the *specific* choice carries a real maturity signal. This maps every option
@@ -4122,7 +3728,6 @@ function renderGov(){
       (ev>0?('<b style="color:var(--good)">'+ev+' of '+m.rows.length+'</b> are now <span class="srcpill conn">● source-connected</span> (auditable against the system of record); the rest are <span class="srcpill self">○ self-reported</span>. '):'All are <span class="srcpill self">○ self-reported</span> today — ')+
       'connect your board portal, HRIS and GRC to evidence every line and make this filing-ready and audit-defensible.</div></div>';})();
 }
-function renderBoard(){renderStress();renderReadiness();renderThirdParty();renderGov();renderMateriality();renderCloOps();renderCloPrivacy();renderAiRisk();renderCisoOps();renderUnderAttack();renderThreatMap();renderCisoWarRoom();}
 /* War Room, integrated into the CISO seat — shows current incident state with a
    one-click entry, so incident command lives inside the cockpit, not beside it. */
 function renderCisoWarRoom(){
@@ -4808,32 +4413,6 @@ function countdown(msLeft){if(msLeft<=0)return '<b style="color:var(--crit)">ela
    Hold + DSAR volumes come from a connected privacy-ops / e-discovery tool (OneTrust,
    Relativity); statutory clocks are law (fixed); IP exposure is derived from the crown-
    jewel inventory and clearly labeled. Everything provenance-tagged, nothing invented. */
-function renderCloOps(){
-  var host=document.getElementById('cloOps');if(!host)return;
-  var g=(LIVE&&LIVE.governance)||{},ir=g.ir||{},leg=(LIVE&&LIVE.legal)||{},cj=(LIVE&&LIVE.crown_jewels)||[];
-  var rs=(LIVE&&LIVE.resilience)||{},ai=(LIVE&&LIVE.aiRisk)||{};
-  var holds=sig('legal_holds'),dsar=sig('dsar_open'),over=sig('dsar_overdue');
-  var retainer=ir.retainer||null,onCall=retainer!=null&&/yes/i.test(retainer);
-  var preserve=!!rs.has_data;
-  // ── Litigation hold & evidence preservation
-  var holdRows=iamGovRow('Active legal holds',holds!=null?(holds+' open'):'—',holds!=null?true:null,holds!=null?'Custodians and systems under preservation — releasable once the matter closes.':'Connect your e-discovery / privacy-ops tool (Relativity, OneTrust) to track holds live.')+
-    iamGovRow('Evidence preservation capability',preserve?'In place':'—',preserve?true:null,preserve?'Immutable backups let you preserve forensic evidence without tipping off an attacker.':'Map your backup / resilience data to evidence forensic-preservation capability.')+
-    iamGovRow('Forensics & breach counsel on retainer',retainer||'—',retainer!=null?onCall:null,onCall?'A pre-established retainer establishes privilege and speeds the first 24 hours.':'A retainer establishes legal privilege before an incident and speeds response.');
-  // ── Data-subject rights (DSAR) — statutory clocks are law; volume/backlog from privacy ops
-  var dsarRows=iamGovRow('Open data-subject requests (DSAR)',dsar!=null?(dsar+' open'):'—',dsar!=null?true:null,dsar!=null?'Access, deletion and portability requests in flight across your privacy regimes.':'Connect privacy ops (OneTrust / TrustArc) for live DSAR volume and SLA tracking.')+
-    iamGovRow('Requests past statutory clock',over!=null?(over+' overdue'):'—',over!=null?(over===0):null,(over!=null&&over>0)?'Missed DSAR deadlines are a direct regulatory penalty and a class-action hook — clear these first.':'GDPR: 30 days · CCPA/CPRA: 45 days · statutory response clocks.')+
-    iamGovRow('Statutory response clocks','GDPR 30d · CCPA 45d',null,'Fixed by law wherever you process resident data — the clock starts on receipt, not triage.');
-  // ── Intellectual-property exposure — derived from crown-jewel inventory, labeled
-  var cjN=cj.length,cjIF=ai.crown_jewels_internet_facing;
-  var ipRows=iamGovRow('Crown-jewel systems holding your most sensitive data',cjN?(cjN+' systems'):'—',null,'Classify which hold IP, source code, trade secrets or M&amp;A material in inventory to quantify IP loss.')+
-    iamGovRow('Of those, internet-reachable',cjIF!=null?(cjIF+' exposed'):'—',cjIF!=null?(cjIF===0):null,(cjIF!=null&&cjIF>0)?'Internet-facing crown jewels are the theft path for trade secrets and source code — prioritize segmentation.':'')+
-    iamGovRow('Trade-secret / IP protection program',g.ermIntegrated?'Governed':'—',null,'Trade-secret status depends on demonstrable protection — access control, NDAs and monitoring are the legal test.');
-  host.innerHTML='<div class="cols" style="margin-bottom:14px">'+
-    '<div class="card"><div class="ck">Litigation hold & evidence preservation '+liveTag()+'</div><div style="margin-top:8px">'+holdRows+'</div><div class="cn" style="margin-top:8px">When litigation is reasonably anticipated, the duty to preserve attaches immediately — a defensible hold + immutable evidence is what protects the company from spoliation sanctions.</div></div>'+
-    '<div class="card"><div class="ck">Data-subject rights (DSAR) '+liveTag()+'</div><div style="margin-top:8px">'+dsarRows+'</div><div class="cn" style="margin-top:8px">Every jurisdiction you process resident data in grants access/deletion rights on a statutory clock. Missing one is a direct penalty — this is your live queue against the deadline.</div></div>'+
-    '</div>'+
-    '<div class="card"><div class="ck">Intellectual-property exposure '+liveTag()+'</div><div style="margin-top:8px">'+ipRows+'</div><div class="cn" style="margin-top:8px">IP theft — source code, trade secrets, deal material — is loss that never shows in a breach-notification count. Derived from your crown-jewel inventory; classify data types in inventory to put a dollar on it.</div></div>';
-}
 function renderMateriality(){
   var host=document.getElementById('cloMateriality');if(!host)return;var m=loadMat();
   // Drive the §01 "Materiality standing" tile from the actual determination (not a fixed claim).
@@ -4881,35 +4460,6 @@ var KRI_DEFS=[
   {sk:'open_incidents',cap:null,n:'Open security incidents',th:0,dir:'down',fmt:function(v){return String(v);},tol:'0 active'}
 ];
 function kriEval(){var out=[];KRI_DEFS.forEach(function(d){var v=sig(d.sk);if(v==null)return;var st=kriStatus(v,d.th,d.dir);out.push({d:d,v:v,st:st,breach:st!=='good'});});return out;}
-function renderCroKri(){
-  var host=document.getElementById('croKri');if(!host)return;
-  var live=kriEval();
-  live.forEach(function(r){var d=r.d,breach=r.breach;
-    var pr=d.cap?capProject(CAP_BY_KEY[d.cap]):null;
-    var mit=!breach?'<span style="color:var(--good)">Within tolerance</span>'
-      :pr?('<span class="tag'+(pr.done?' good':'')+'" style="font-size:10px">'+pr.status+'</span> '+pr.name+(pr.ticket?(' · '+pr.ticket):'')+' · '+pr.prog+'%')
-      :'<span style="color:var(--crit)">No mitigation funded — raise one</span>';
-    r.mit=mit;
-  });
-  if(!live.length){host.innerHTML='<div class="card"><div class="ck">Key Risk Indicators</div><div class="cn" style="margin-top:6px">◐ Connect your security tools (identity, EDR, vulnerability, cloud, SIEM) and this becomes your live KRI board — each indicator scored against a board-set threshold, breaches flagged, and the funded mitigation tracked to completion. The control panel you take to the risk committee.</div></div>';return;}
-  var breaches=live.filter(function(r){return r.breach;}).length;
-  var rows=live.map(function(r){var d=r.d,dot='var(--'+r.st+')';
-    return '<tr><td><span class="cap-dot" style="background:'+dot+'"></span> '+d.n+'</td><td style="font-weight:700;color:'+dot+'">'+d.fmt(r.v)+'</td><td style="color:var(--muted)">'+d.tol+'</td><td><span class="pill '+(r.st==='good'?'good':r.st==='warn'?'warn':'')+'" style="font-size:9px'+(r.st==='crit'?';background:var(--crit);color:#fff':'')+'">'+(r.st==='good'?'Within':r.st==='warn'?'Watch':'Breach')+'</span></td><td style="font-size:11.5px">'+r.mit+'</td></tr>';
-  }).join('');
-  var hdr=breaches===0?'<span style="color:var(--good)">All '+live.length+' KRIs within tolerance</span>':'<span style="color:var(--crit)">'+breaches+' of '+live.length+' KRIs breaching tolerance</span>';
-  host.innerHTML=demoBanner()+'<div class="card"><div class="ck">Key Risk Indicators '+liveTag()+' — '+hdr+'</div>'+
-    '<table class="tbl" style="margin-top:8px"><thead><tr><th>Indicator</th><th>Current</th><th>Tolerance</th><th>Status</th><th>Mitigation</th></tr></thead><tbody>'+rows+'</tbody></table>'+
-    '<div class="cn" style="margin-top:8px">Each indicator is measured live from a connected tool and scored against the board-set tolerance. A breach shows the funded project closing it — or flags that none exists yet. Thresholds are the ERM defaults; set your own in onboarding.</div></div>';
-}
-function renderCroPortfolio(){
-  var host=document.getElementById('croPortfolio');if(!host)return;var p=LIVE&&LIVE.portfolio;
-  if(!p||!p.has_data)return; // keep illustrative until ERM values are entered
-  var rows=[{l:'Credit / market',v:p.creditMarket},{l:'Operational',v:p.operational},{l:'Cyber',v:p.cyber,cyber:true},{l:'Third-party',v:p.thirdParty},{l:'Compliance',v:p.compliance}]
-    .filter(function(r){return r.v!=null&&r.v>0;}).sort(function(a,b){return b.v-a.v;});
-  if(!rows.length)return;var max=rows[0].v||1;
-  host.innerHTML='<div class="card">'+rows.map(function(r){var pct=Math.max(6,Math.round(r.v/max*100));return '<div class="bar-row"><div class="bar-lbl">'+r.l+' '+(r.cyber?'<span class="srcpill conn">● computed</span>':'<span class="srcpill self">○ self-reported</span>')+'</div><div class="bar-track"><div class="bar-fill '+(r.cyber?'hot':'')+'" style="width:'+pct+'%"></div></div><div class="bar-val">'+usd(r.v)+'</div></div>';}).join('')+
-    '<div class="cn" style="margin-top:10px">Your <b>cyber</b> figure is <span class="srcpill conn">● computed</span> live from your risk register. The other principal risks are <span class="srcpill self">○ self-reported</span> ERM inputs — connect your GRC / ERM system to evidence them on the same scale.</div></div>';
-}
 /* CFO: cyber loss translated into earnings / EPS / revenue-at-risk (from /summary
    earnings — net income, shares outstanding, downtime cost). */
 function renderEarnings(){
@@ -4945,128 +4495,27 @@ function renderRoi(){
    ERP GRC. Every row live/demo-tagged; nothing self-attested unless labeled. BEC and
    payment fraud are the fraud vectors that hit finance directly (FBI IC3: #1 dollar-
    loss crime), and SOX 404 ITGC is the control set the external auditor tests yearly. */
-function renderCfoFraud(){
-  var host=document.getElementById('cfoFraud'),soxHost=document.getElementById('cfoSox');if(!host&&!soxHost)return;
-  var bec=sig('bec_blocked'),pf=sig('payment_anomalies'),sod=sig('sod_conflicts'),chg=sig('change_pass_pct');
-  var mfa=sig('mfa_pct'),rev=sig('access_review_pct');
-  var g=(LIVE&&LIVE.governance)||{},dual=g.paymentDualAuth||null;
-  if(bec==null&&pf==null&&sod==null&&chg==null&&mfa==null){
-    var fraudEmpty='<div class="card"><div class="ck">Financial-crime &amp; payment-fraud posture</div><div class="cn" style="margin-top:6px">◐ Connect your email security (Proofpoint / Abnormal) and ERP (SAP / Oracle / Workday / NetSuite) to evidence your live defense against BEC, payment-redirect and wire fraud — the crimes that hit finance directly — instead of a policy statement.</div></div>';
-    var soxEmpty='<div class="card"><div class="ck">Financial-systems integrity — SOX IT general controls</div><div class="cn" style="margin-top:6px">◐ Connect your ERP, identity provider and change-management system to evidence the SOX IT general controls — access, change, segregation-of-duties — your external auditor tests every year, instead of self-attesting them in a spreadsheet.</div></div>';
-    if(host)host.innerHTML=fraudEmpty;if(soxHost)soxHost.innerHTML=(host?'':fraudEmpty)+soxEmpty;return;}
-  var fRows=iamGovRow('BEC / impersonation attempts blocked',bec!=null?(bec+' / 90d'):'—',bec!=null?true:null,bec!=null?'Business email compromise is the #1 dollar-loss cyber crime (FBI IC3) — payment-redirect and invoice fraud aimed straight at finance.':'')+
-    iamGovRow('Payment / vendor-master anomalies',pf!=null?(pf+' flagged'):'—',pf!=null?(pf<=3):null,(pf!=null&&pf>0)?'Duplicate payees, changed bank details or out-of-pattern payments — review before the payment run releases.':'')+
-    iamGovRow('Dual authorization on payments',dual||'—',dual!=null?(/yes/i.test(dual)):null,'Segregation on the payment run is the primary control against internal and BEC-driven wire fraud.');
-  function met(v,th,inv){return v==null?null:(inv?v<=th:v>=th);}
-  var domains=[
-    {label:'Access management (ITGC)',val:mfa!=null?(mfa+'% MFA'+(rev!=null?(' · '+rev+'% reviewed'):'')):'—',ok:mfa!=null?met(mfa,95):null,sub:'Provisioning, deprovisioning and periodic access review of financially-significant systems.'},
-    {label:'Change management (ITGC)',val:chg!=null?(chg+'% controlled'):'—',ok:chg!=null?met(chg,90):null,sub:'Changes to financial systems approved, tested and segregated from the developer who wrote them.'},
-    {label:'Segregation of duties (SoD)',val:sod!=null?(sod+' conflicts'):'—',ok:sod!=null?met(sod,0,true):null,sub:'A user who can both create and pay a vendor is a material-weakness risk — resolve or compensate.'}
-  ];
-  var sRows=domains.map(function(d){return iamGovRow(d.label,d.val,d.ok,d.sub);}).join('');
-  var scored=domains.filter(function(d){return d.ok!=null;});
-  var passN=scored.filter(function(d){return d.ok===true;}).length;
-  var fraudCard='<div class="card"><div class="ck">Financial-crime &amp; payment-fraud posture '+liveTag()+'</div><div style="margin-top:8px">'+fRows+'</div><div class="cn" style="margin-top:8px">Evidenced from your email security + ERP — the fraud vectors that hit finance directly. This is your live defense posture, not a policy statement.</div></div>';
-  var soxCard='<div class="card"><div class="ck">SOX IT general controls (ITGC) '+liveTag()+(scored.length?(' · '+passN+'/'+scored.length+' passing'):'')+'</div><div style="margin-top:8px">'+sRows+'</div><div class="cn" style="margin-top:8px">The IT controls your external auditor tests for the SOX 404 opinion — evidenced continuously from your identity, change-management and ERP systems, instead of a year-end evidence scramble.</div></div>';
-  // Split view: when a dedicated SOX host exists (CFO seat), the fraud posture and
-  // the SOX integrity controls render into their own Column-F panels; otherwise both
-  // render together in the single fraud host (older layouts / other seats).
-  if(host&&soxHost){host.innerHTML=fraudCard;soxHost.innerHTML=soxCard;}
-  else if(soxHost){soxHost.innerHTML='<div class="cols">'+fraudCard+soxCard+'</div>';}
-  else{host.innerHTML='<div class="cols">'+fraudCard+soxCard+'</div>';}
-}
 /* Chief Product · Product-quality risk — the security-quality of what the product
    ships, evidenced live from the delivery pipeline. code_scanning_open = open
    code-scanning / SAST alerts across the org; dependabot_critical = open CRITICAL
    Dependabot / dependency (SCA) alerts. From the GitHub connector (or Snyk / GitLab).
    No source connected → an honest connect card, never an invented number. */
-function renderCpoQuality(){
-  var host=document.getElementById('cpoQuality');if(!host)return;
-  var css=sig('code_scanning_open'),dep=sig('dependabot_critical');
-  if(css==null&&dep==null){
-    host.innerHTML='<div class="card"><div class="ck">Product security quality</div><div class="cn" style="margin-top:6px">◐ Connect your application-security and dependency scanners (<b>GitHub Advanced Security · Snyk · GitLab</b>) to show the vulnerabilities and critical dependency alerts open in the product right now — the security defects that ship to customers if a release goes out on top of them. <span class="pill mod" style="font-size:8px">planned</span></div></div>';
-    return;
-  }
-  var rows=iamGovRow('Open code-scanning (SAST) alerts',css!=null?(css+' open'):'—',css!=null?(css<=10):null,css!=null?'Static-analysis findings in first-party code across the org — injection, auth, crypto and unsafe-handling flaws that would ship in the product if released now. Drive to zero on release branches.':'')+
-    iamGovRow('Critical dependency (Dependabot / SCA) alerts',dep!=null?(dep+' critical'):'—',dep!=null?(dep===0):null,dep!=null?'Known-critical vulnerabilities in the open-source components the product ships on — the software-supply-chain path that reaches customers. Any open critical is a release blocker.':'');
-  var open=(css||0)+(dep||0);
-  var verdict=open===0?'<b style="color:var(--good)">No open critical product-security findings</b> — the current build carries no known-critical code or dependency vulnerabilities to customers.'
-    :('<b style="color:var(--'+(open<=5?'warn':'crit')+')">'+open+' open product-security finding'+(open===1?'':'s')+'</b> — resolve or risk-accept before the next release; these are the security defects that ship to customers.');
-  host.innerHTML='<div class="card"><div class="ck">Product security quality '+liveTag()+'</div><div style="margin-top:8px">'+rows+'</div><div class="cn" style="margin-top:8px">'+verdict+' Evidenced live from your code-scanning and dependency scanners — the security-quality of what you ship, not a policy statement.</div></div>';
-}
 /* Chief Product · Innovation velocity — DORA-style delivery throughput from the
    pipeline. changes_merged_wk = PRs merged org-wide in the last 7 days (deployment-
    frequency proxy); changes_in_review = open PRs (work-in-progress / review backlog).
    From the GitHub connector. No source connected → an honest connect card. True
    deployment lead-time needs per-repo deployment events and is flagged as deferred,
    not invented. */
-function renderCpoVelocity(){
-  var host=document.getElementById('cpoVelocity');if(!host)return;
-  var mg=sig('changes_merged_wk'),wip=sig('changes_in_review');
-  if(mg==null&&wip==null){
-    host.innerHTML='<div class="card"><div class="ck">Velocity vs security friction</div><div class="cn" style="margin-top:6px">◐ Connect your CI/CD (<b>GitHub · GitLab · Azure DevOps</b>) to show delivery throughput — changes shipped per week and the review backlog — so velocity and security are measured together, not traded off. <span class="pill mod" style="font-size:8px">planned</span></div></div>';
-    return;
-  }
-  var rows=iamGovRow('Changes shipped / week',mg!=null?(mg+' merged (7d)'):'—',mg!=null?(mg>0):null,mg!=null?'Pull requests merged org-wide in the last 7 days — a deployment-frequency proxy (DORA). High and steady is the signal of a healthy, secure-by-default pipeline where security keeps pace with delivery.':'')+
-    iamGovRow('Changes in review (WIP)',wip!=null?(wip+' open'):'—',wip!=null?(wip<=Math.max(20,(mg||0))):null,wip!=null?'Open pull requests awaiting review or merge — the work-in-progress backlog. A backlog far above weekly throughput signals review is the bottleneck, where security checks tend to get skipped under pressure.':'');
-  var ratio=(mg!=null&&mg>0&&wip!=null)?(wip/mg):null;
-  var verdict=mg==null?''
-    :(ratio!=null&&ratio>1.5?'<b style="color:var(--warn)">Review backlog exceeds weekly throughput</b> — WIP is piling up faster than it clears, the point where security review is most likely to be bypassed. Watch it.'
-    :'<b style="color:var(--good)">Delivery is flowing</b> — throughput is keeping ahead of the review backlog, so security checks can stay in the path without becoming the bottleneck.');
-  host.innerHTML='<div class="card"><div class="ck">Velocity vs security friction '+liveTag()+'</div><div style="margin-top:8px">'+rows+'</div><div class="cn" style="margin-top:8px">'+verdict+' Evidenced live from your pipeline. <span style="color:var(--ink-2)">True deployment lead-time (commit→production) needs per-repo deployment events and is on the roadmap — not estimated here.</span></div></div>';
-}
 /* CIO workforce productivity — how security affects the people who run the
    business, from live identity-hygiene signals + the hours the workforce loses
    when the top revenue system is down. Honest connect only for provisioning speed
    (needs ITSM) — never a fabricated number. */
-function renderCioWorkforce(){
-  var host=document.getElementById('cioWorkforce');if(!host)return;
-  var rev=sig('access_review_pct'),dorm=sig('dormant_accounts'),priv=sig('priv_sessions_flagged');
-  var rs=(LIVE&&LIVE.resilience)||{},worst=rs.worst_recovery_hours,perHr=rs.top_downtime_per_hr;
-  if(rev==null&&dorm==null&&priv==null&&worst==null){host.innerHTML='<div class="card"><div class="ck">Security’s effect on workforce productivity</div><div class="cn" style="margin-top:6px">◐ Connect your identity provider (<b>Okta · Entra</b>), PAM (<b>CyberArk</b>) and ITSM (<b>ServiceNow</b>) to measure how fast access is provisioned, the friction stale or over-privileged access adds, and the hours the workforce loses to downtime — so security is scored as an enabler of productivity, not only a cost.</div></div>';return;}
-  var rows='';
-  if(rev!=null)rows+=iamGovRow('Access reviews complete',rev+'%',rev>=90,rev>=90?'Joiner-mover-leaver access is certified on cadence — people get the access they need and lose what they don’t, with low friction.':'Access certification is behind — stale entitlements accumulate, adding both risk and the friction of over-broad or wrong access.');
-  if(dorm!=null)rows+=iamGovRow('Dormant / stale accounts',dorm+(dorm===1?' account':' accounts'),dorm<=25,'Unused accounts still carrying access — each is standing friction and attack surface. De-provisioning them cleans up access and cuts risk at once.');
-  if(priv!=null)rows+=iamGovRow('Privileged sessions flagged',priv+(priv===1?' session':' sessions'),priv===0,'Privileged sessions the PAM system flagged for review — the high-friction, high-risk access the workforce’s admins depend on. Keep it monitored, not blocked.');
-  if(worst!=null)rows+=iamGovRow('Workforce time lost to a worst-case outage',hrsToStr(worst),worst<=24,'When the top revenue system is down the workforce cannot work — '+(perHr!=null?('≈'+usd(perHr)+'/hr of lost output, '+usd(perHr*worst)+' across the worst-case recovery window'):'the full recovery window is lost productivity')+'. Faster recovery is productivity protected.');
-  host.innerHTML='<div class="card"><div class="ck">Security’s effect on workforce productivity '+liveTag()+'</div><div style="margin-top:8px">'+rows+'</div><div class="cn" style="margin-top:8px">Measured from your live identity and resilience data — access hygiene (friction and attack surface) and the hours lost when a revenue system is down. <span style="color:var(--ink-2)">Mean access-provisioning time (request→granted) needs your ITSM (ServiceNow) connected and is not estimated here.</span></div></div>';
-}
 /* CPO product-launch readiness — the secure-launch gate evidenced from the live
    pipeline: no open critical dependency alerts, code-scanning backlog under control,
    review backlog clear. Threat-model completeness needs the SDLC tool (honest). */
-function renderCpoLaunch(){
-  var host=document.getElementById('cpoLaunch');if(!host)return;
-  var dep=sig('dependabot_critical'),css=sig('code_scanning_open'),wip=sig('changes_in_review');
-  if(dep==null&&css==null){host.innerHTML='<div class="card"><div class="ck">Secure-launch gates</div><div class="cn" style="margin-top:6px">◐ Connect your CI/CD (<b>GitHub · GitLab · Azure DevOps</b>) and application-security scanners to evidence each release’s security-readiness gate — no unresolved critical findings, code-scanning clean, review backlog clear — so launch readiness is proven, not assumed.</div></div>';return;}
-  var rows='';
-  if(dep!=null)rows+=iamGovRow('No open critical dependency alerts',dep===0?'✓ clear':(dep+' critical open'),dep===0,dep===0?'No known-critical vulnerability in the components the release ships on.':'The release would ship on '+dep+' known-critical dependency vulnerabilit'+(dep===1?'y':'ies')+' — a hard release blocker.');
-  if(css!=null)rows+=iamGovRow('Code-scanning (SAST) backlog under control',css<=10?(css+' open · within threshold'):(css+' open'),css<=10,css<=10?'Static-analysis findings are within the release threshold.':css+' open static-analysis findings — clear the criticals before shipping.');
-  if(wip!=null)rows+=iamGovRow('Review backlog clear',wip+' in review',wip<=20,wip<=20?'Changes are clearing review — no security-review pile-up ahead of the release.':'A large review backlog ('+wip+') is where security review gets skipped under launch pressure.');
-  rows+=iamGovRow('Threat model complete','connect SDLC',null,'Threat-model completeness per release needs your SDLC / threat-modeling tool connected — not inferred from the pipeline.');
-  var blockers=((dep!=null&&dep>0)?1:0)+((css!=null&&css>10)?1:0);
-  var verdict=blockers===0?'<b style="color:var(--good)">Clear to ship on the evidenced gates</b> — no critical dependency or static-analysis blocker in the current build.':'<b style="color:var(--crit)">'+blockers+' gate'+(blockers>1?'s':'')+' failing</b> — resolve or risk-accept before the next release.';
-  host.innerHTML='<div class="card"><div class="ck">Secure-launch gates '+liveTag()+'</div><div style="margin-top:8px">'+rows+'</div><div class="cn" style="margin-top:8px">'+verdict+' Each gate is evidenced live from your pipeline — a release’s security readiness, not a checklist someone signed.</div></div>';
-}
 /* CPO secure-by-design adoption — which secure-SDLC practices are actually running
    in the pipeline (evidenced), vs the ones that still need a tool. No fabricated
    coverage %: a practice counts as in place only when its telemetry is present. */
-function renderCpoSbd(){
-  var host=document.getElementById('cpoSbd');if(!host)return;
-  var css=sig('code_scanning_open'),dep=sig('dependabot_critical'),mg=sig('changes_merged_wk');
-  var practices=[
-    ['Static analysis (SAST) in the pipeline',css!=null,'GitHub Advanced Security / Snyk Code'],
-    ['Dependency / SCA scanning',dep!=null,'Dependabot / Snyk Open Source'],
-    ['Change flowing through review',mg!=null,'CI/CD pull-request review'],
-    ['Secrets scanning / push protection',false,'secret-scanning'],
-    ['Threat modeling at design time',false,'a threat-modeling tool']
-  ];
-  var inPlace=practices.filter(function(p){return p[1];}).length,total=practices.length;
-  var rows=practices.map(function(p){return iamGovRow(p[0],p[1]?'evidenced':'not yet',p[1]?true:null,p[1]?'Running in your pipeline and producing telemetry — secure-by-design in practice, not on paper.':'Connect '+p[2]+' to evidence this practice; Nerion does not credit it on self-attestation.');}).join('');
-  host.innerHTML='<div class="card"><div class="ck">Secure-by-design coverage '+liveTag()+'</div>'+
-    '<div style="display:flex;align-items:baseline;gap:10px;margin-top:8px"><div class="cv" style="font-size:26px;font-family:var(--serif);color:var(--'+(inPlace>=4?'good':inPlace>=2?'warn':'crit')+')">'+inPlace+'/'+total+'</div><div class="cn">secure-SDLC practices evidenced live in your pipeline</div></div>'+
-    '<div style="margin-top:8px">'+rows+'</div>'+
-    '<div class="cn" style="margin-top:8px">Secure-by-design is measured by what is actually running, not aspired to — a practice counts only when its tool is connected and producing telemetry. Connect the remaining tools to raise coverage; the product-security investment decision is below.</div></div>';
-}
 /* Internal Audit · Repeat findings — the findings that recur audit-over-audit,
    the systemic gaps closed on paper but not in practice. audit_findings_open =
    open findings backlog; audit_findings_repeat = open findings flagged recurring.
@@ -5085,70 +4534,8 @@ function auditStats(){
   return {total:total,evid:evid,sys:sys,doc:doc,fail:fail,pct:total?Math.round(evid/total*100):0};
 }
 /* Audit Readiness — two headline reads: overall readiness + evidence completeness. */
-function renderAuditReadiness(){
-  var host=document.getElementById('auditReadiness');if(!host)return;
-  var s=auditStats(),pct=s.pct;
-  var ready=pct>=80?{s:'Audit-ready',c:'good'}:pct>=50?{s:'Partially ready',c:'warn'}:{s:'Gaps to close',c:'crit'};
-  var ec=pct>=90?'good':pct>=75?'blue':pct>=50?'warn':'crit';
-  function tile(k,big,sub,c){return '<div class="card"><div class="ck">'+k+'</div><div class="cv" style="font-size:24px;font-family:var(--serif);margin-top:4px;color:var(--'+c+')">'+big+'</div><div class="cn" style="margin-top:2px">'+sub+'</div></div>';}
-  host.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'+
-    tile('Audit readiness',ready.s,'controls evidenced, not self-attested '+liveTag(),ready.c)+
-    tile('Evidence completeness',pct+'%',s.evid+' of '+s.total+' controls have evidence on file',ec)+
-    '</div>';
-}
 /* Control Assurance — the controls currently failing (unevidenced or below CMMI 2). */
-function renderAuditFailed(){
-  var host=document.getElementById('auditFailed');if(!host)return;
-  var s=auditStats(),fail=s.fail.slice().sort(function(a,b){return a.score-b.score;});
-  if(!fail.length){host.innerHTML='<div class="card"><div class="ck">Failed controls</div><div class="cn" style="margin-top:6px;color:var(--good)">✓ No control is failing — every control in the universe is evidenced at CMMI 2 (Managed) or above.</div></div>';return;}
-  var rows=fail.slice(0,8).map(function(f){var cls=cmmiColor(f.score);return '<div class="drow" data-fid="'+f.id+'" data-fname="'+String(f.name).replace(/"/g,'&quot;')+'" style="cursor:pointer"><div class="drow-h"><span class="cap-dot" style="background:var(--'+cls+')"></span><b>'+f.id+'</b><span class="drow-tool" style="color:var(--'+cls+')">CMMI '+f.score+(f.score===0?' · not evidenced':' · failing')+' <span class="drill-cta">details ▸</span></span></div><div class="drow-need">'+f.name+'</div></div>';}).join('');
-  host.innerHTML='<div class="card"><div class="ck">Failed controls '+liveTag()+'</div><div class="cv" style="font-size:22px;margin-top:4px;color:var(--crit)">'+fail.length+'</div><div class="cn">controls failing — not evidenced or below a passing standard (CMMI ≤ 1)</div><div style="margin-top:10px">'+rows+'</div>'+(fail.length>8?('<div class="cn" style="margin-top:6px">+ '+(fail.length-8)+' more — see the full control-testing catalog below.</div>'):'')+'<div class="cn" style="margin-top:8px">Click any control for the auditor’s assessment — methodology, findings, recommendation — and a downloadable PDF workpaper.</div></div>';
-  host.querySelectorAll('.drow[data-fid]').forEach(function(el){el.onclick=function(){FW_SEL='csf';openDrill(el.dataset.fid+' — '+el.dataset.fname,drillFwControl(el.dataset.fid,el.dataset.fname));};});
-}
 /* Executive Decisions — audit priorities (where to test next) + escalations. */
-function renderAuditDecisions(){
-  var host=document.getElementById('auditDecisions');if(!host)return;
-  var s=auditStats(),fail=s.fail.slice().sort(function(a,b){return a.score-b.score;}),rep=sig('audit_findings_repeat'),crit=s.fail.filter(function(f){return f.score===0;}).length,top=fail[0];
-  var priV=fail.length?(fail.length+' to test'):'On cadence',priC=fail.length?'warn':'good';
-  var priD=top?('Point the next audit at the controls least able to give assurance today — starting with <b>'+top.id+' '+top.name+'</b>'+(fail.length>1?(' and '+(fail.length-1)+' other'+(fail.length-1>1?'s':'')):'')+'.'):'No failing control to prioritize — the audit plan can rotate on its normal cadence.';
-  var escN=(rep||0)+crit,escV=escN>0?(escN+' to escalate'):'None',escC=escN>0?'crit':'good';
-  var escD=escN>0?((rep>0?(rep+' repeat finding'+(rep>1?'s':'')+' recurring audit-over-audit — systemic gaps not truly closed'):'')+(rep>0&&crit>0?' · ':'')+(crit>0?(crit+' unevidenced control'+(crit>1?'s':'')+' that cannot give assurance until evidenced'):'')+' — escalate to the audit committee.'):'Nothing requires escalation right now.';
-  host.innerHTML='<div class="card"><div class="ck">Decisions internal audit brings to the committee</div><div style="margin-top:8px">'+
-    ceoRow('Audit priorities',priV,priC,priD)+
-    ceoRow('Escalations',escV,escC,escD)+
-    '</div><div class="cn" style="margin-top:8px">Where to point the next audit and what to escalate — ranked by the controls least able to give assurance today, evidenced live from the control universe.</div></div>';
-}
-function renderAuditCoverage(){
-  var host=document.getElementById('auditCoverage');if(!host)return;
-  var s=auditStats(),total=s.total,evid=s.evid,sys=s.sys,doc=s.doc;
-  var pct=s.pct,cls=pct>=75?'good':pct>=50?'blue':pct>=25?'serious':'crit';
-  host.innerHTML='<div class="card"><div class="ck">Coverage of the universe '+liveTag()+'</div>'+
-    '<div style="display:flex;align-items:baseline;gap:12px;margin-top:8px"><div class="cv" style="font-size:32px;font-family:var(--serif);color:var(--'+cls+')">'+pct+'%</div><div class="cn"><b>'+evid+' of '+total+'</b> controls evidenced — not self-attested</div></div>'+
-    capBar(pct)+
-    '<div class="ev-sec" style="margin-top:12px">How it is calculated</div><div class="formula">coverage = evidenced controls ÷ total control universe = '+evid+' ÷ '+total+' = '+pct+'%</div>'+
-    '<div class="ev-sec">Evidence breakdown</div>'+
-    gRow('🔌 Live tool telemetry',sys+' controls')+gRow('📄 Document review',doc+' controls')+gRow('— Not yet evidenced',(total-evid)+' controls')+
-    '<div class="cn" style="margin-top:8px">The universe is the NIST CSF 2.0 control catalog; a control counts as covered when a connected tool or an analyzed policy evidences it (see <b>Control testing status</b> for each control’s source). Connect more tools or upload more policies to raise coverage — nothing is credited on self-attestation.</div></div>';
-}
-function renderAuditRepeat(){
-  var host=document.getElementById('auditRepeat');if(!host)return;
-  var open=sig('audit_findings_open'),rep=sig('audit_findings_repeat');
-  if(open==null&&rep==null){
-    host.innerHTML='<div class="card"><div class="ck">Recurring findings</div><div class="cn" style="margin-top:6px">◐ Connect your audit / GRC platform (<b>ServiceNow GRC · AuditBoard · OneTrust</b>) to surface findings that recur across audit cycles — the systemic control gaps that were closed on paper but not in practice, and the highest-priority ones to escalate. <span class="pill mod" style="font-size:8px">planned</span></div></div>';
-    return;
-  }
-  var pct=(open!=null&&open>0&&rep!=null)?Math.round(rep/open*100):null;
-  function arow(kind,label,val,ok,sub){var c=ok===true?'good':ok===false?'crit':'muted',tc=ok===true?'good':ok===false?'crit':'ink-2';
-    return '<div class="drow" data-adrill="'+kind+'" style="cursor:pointer"><div class="drow-h"><span class="cap-dot" style="background:var(--'+c+')"></span><b>'+label+'</b><span class="drow-tool" style="color:var(--'+tc+')">'+val+' <span class="drill-cta">details ▸</span></span></div>'+(sub?'<div class="drow-need">'+sub+'</div>':'')+'</div>';}
-  var rows=arow('backlog','Open audit findings',open!=null?(open+' open'):'—',open!=null?(open<=10):null,open!=null?'The current control-gap backlog across the audit universe — the findings management has committed to remediate.':'')+
-    arow('recurring','Recurring (repeat) findings',rep!=null?(rep+(pct!=null?(' · '+pct+'% of open'):'')):'—',rep!=null?(rep===0):null,rep!=null?'Findings that reappeared in a later audit — the gap was reported closed but the underlying control did not hold. Each is a governance flag: escalate to the audit committee.':'');
-  var verdict=(rep!=null&&rep===0)?'<b style="color:var(--good)">No repeat findings</b> — every closed finding stayed closed, evidence that remediation is durable, not cosmetic.'
-    :(rep!=null?('<b style="color:var(--'+((pct==null||pct<=15)?'warn':'crit')+')">'+rep+' recurring finding'+(rep===1?'':'s')+'</b> — systemic gaps that were not truly closed. These are the ones to escalate to the audit committee.'):'');
-  host.innerHTML='<div class="card"><div class="ck">Recurring findings '+liveTag()+'</div><div style="margin-top:8px">'+rows+'</div><div class="cn" style="margin-top:8px">'+verdict+' Evidenced live from your audit / GRC system — the systemic control gaps, not a self-reported closure rate. <b>Click either row</b> for the specific controls behind it.</div></div>';
-  host.querySelectorAll('.drow[data-adrill]').forEach(function(el){el.onclick=function(){var k=el.dataset.adrill;
-    if(k==='backlog')openDrill('Open audit findings — the control-gap backlog',drillAuditBacklog());
-    else openDrill('Recurring findings — the systemic gaps',drillAuditRecurring());};});
-}
 /* Real, sourced detail behind the audit-finding rows — the specific failing/
    unevidenced controls, live from the control universe, not a summary sentence. */
 function drillAuditBacklog(){
@@ -5338,123 +4725,12 @@ function bpProvenance(){
 }
 function bpFinRow(label,val,note){return '<tr><td>'+label+(note?'<span class="bp-note">'+note+'</span>':'')+'</td><td>'+(val==null||val===''?'—':val)+'</td></tr>';}
 function bpKv(rows){return '<div class="bp-kv">'+rows.map(function(r){return '<div class="r"><span>'+r.k+'</span><span'+(r.cls?' style="color:var(--'+r.cls+')"':'')+'>'+(r.v||'—')+'</span></div>';}).join('')+'</div>';}
-function renderBoardPack(){
-  var doc=document.getElementById('bpDoc');if(!doc)return;
-  var org=orgName()||'Your organization',prov=bpProvenance();
-  var ec=(LIVE&&LIVE.economics)||{},r=ec.ratios||{},e=(LIVE&&LIVE.earnings)||{},g=(LIVE&&LIVE.governance)||{},ir=g.ir||{};
-  var ale=Number(ec.ale)||null,tail=Number(ec.tail)||null,ap=ec.appetite||{},ins=ec.insurance||{},mat=ec.materiality||{};
-  // 1 · Executive summary — cyber vs board appetite
-  var verdict;
-  if(ale!=null&&ap.appetite){var within=ap.within!==false,tailOk=ap.tail_within!==false;
-    verdict='Cyber loss exposure is <b>'+usd(ale)+'</b> expected against a board appetite of <b>'+usd(ap.appetite)+'</b> — '+(within?'<b style="color:var(--good)">within appetite</b>':'<b style="color:var(--crit)">over appetite</b>')+'. The tail (95% Value-at-Risk) is <b>'+(tail!=null?usd(tail):'—')+'</b>'+(tailOk?', within the enterprise tail limit.':' — <b style="color:var(--warn)">above the enterprise tail limit</b>, the open board item.');
-  } else if(ale!=null){verdict='Cyber loss exposure is quantified at <b>'+usd(ale)+'</b> expected, <b>'+(tail!=null?usd(tail):'—')+'</b> at the tail. Enter the board risk appetite in onboarding to state this against the limit.';
-  } else {verdict='Complete onboarding and go-live to quantify cyber loss exposure in dollars and state it against the board’s risk appetite. This report then fills in automatically.';}
-  // 2 · Financial statement of cyber risk
-  var worstDays=(r.days_of_operating_income!=null&&ale&&tail)?r.days_of_operating_income*(tail/ale):null;
-  var fin='<table class="bp-fin"><tbody>'+
-    bpFinRow('Expected annual loss (ALE)',ale!=null?usd(ale):null,'FAIR-aligned, from your risk register')+
-    bpFinRow('Value-at-Risk (95% / tail)',tail!=null?usd(tail):null,'the worst realistic year')+
-    bpFinRow('Share of annual revenue',r.pct_of_revenue!=null?pct(r.pct_of_revenue,r.pct_of_revenue<0.01?2:1):null)+
-    bpFinRow('Share of enterprise value',r.pct_of_enterprise_value!=null?pct(r.pct_of_enterprise_value,2):null)+
-    bpFinRow('A severe cyber year = days of operating income',worstDays!=null?((worstDays>=10?Math.round(worstDays):worstDays.toFixed(1))+' days'):null,'a bad year in the days the business runs on')+
-    bpFinRow('Worst-case EPS impact',e.eps_impact_worst!=null?('−$'+e.eps_impact_worst.toFixed(2)):null)+
-    bpFinRow('Materiality threshold (SEC reportable at)',mat.value!=null?usd(mat.value):null,mat.basis||'the 8-K disclosure trigger')+
-    bpFinRow('Insurance limit',ins.limit!=null?usd(ins.limit):null)+
-    bpFinRow('Uninsured tail (coverage gap)',ins.gap!=null?usd(ins.gap):null,'exposure above the policy limit')+
-    '</tbody></table>';
-  // 3 · Governance & disclosure readiness (SEC Item 106) — each answer colored by
-  // its maturity tier, with an overall governance-maturity headline.
-  var gm=govMaturity(g);
-  function govKvRow(k,field,val){var o=govLookup(field,val);return {k:k,v:val||null,cls:o?GOV_TIER[o.t].c:''};}
-  var govHead=(gm&&gm.pct!=null)?('<div style="font-size:12.5px;margin-bottom:8px">Governance maturity: <b style="color:var(--'+gm.cls+')">'+gm.label+' ('+gm.pct+'%)</b> — scored on the specific choices below, '+gm.answered+' of '+gm.total+' structures assessed.</div>'):'';
-  var gov=govHead+bpKv([
-    govKvRow('Board oversight committee','committee',g.committee),
-    govKvRow('Cadence','cadence',g.cadence),
-    govKvRow('Cyber expertise on the board','boardExpertise',g.boardExpertise),
-    govKvRow('CISO reports to','cisoReportsTo',g.cisoReportsTo),
-    govKvRow('Integrated with enterprise risk (ERM)','ermIntegrated',g.ermIntegrated),
-    govKvRow('Incident-response plan tested','ir_tested',ir.tested),
-    govKvRow('Breach counsel / forensics on retainer','retainer',ir.retainer),
-    govKvRow('Board-approved ransomware policy','ransomwarePolicy',ir.ransomwarePolicy)
-  ]);
-  // 4 · Key Risk Indicators
-  var kris=kriEval(),kriBlock;
-  if(kris.length){var br=kris.filter(function(x){return x.breach;});
-    var hd=br.length?('<b style="color:var(--crit)">'+br.length+' of '+kris.length+' breaching tolerance</b>'):('<b style="color:var(--good)">all '+kris.length+' within tolerance</b>');
-    kriBlock='<div style="font-size:12.5px;margin-bottom:8px">Status: '+hd+'</div>'+kris.map(function(x){var c=x.st==='good'?'var(--good)':x.st==='warn'?'var(--warn)':'var(--crit)';
-      return '<div class="bp-li"><span class="d" style="background:'+c+'"></span><div><b>'+x.d.n+'</b> — '+x.d.fmt(x.v)+' <span style="color:var(--muted)">(tolerance '+x.d.tol+')</span> <span class="bp-pill '+(x.st==='good'?'g':x.st==='warn'?'w':'c')+'">'+(x.st==='good'?'within':x.st==='warn'?'watch':'breach')+'</span></div></div>';}).join('');
-  } else {kriBlock='<div style="font-size:12.5px;color:var(--ink-2)">Connect your security tools (identity, EDR, vulnerability, cloud, SIEM) to populate the live KRI board.</div>';}
-  // 5 · Decisions on the table
-  var decs=allDecisions(),decBlock;
-  if(decs.length){decBlock=decs.slice(0,6).map(function(d){var opt=d.option||d.opt||'';var tk=d.ticket?(' · '+((d.system||'ticket')+' '+d.ticket)):'';
-    return '<div class="bp-li"><span class="d" style="background:var(--ink)"></span><div><b>'+d.title+'</b>'+(opt?(' — '+opt):'')+' <span class="bp-pill m">'+(d.status||'recorded')+'</span>'+tk+'</div></div>';}).join('');
-  } else {decBlock='<div style="font-size:12.5px;color:var(--ink-2)">No board decisions recorded this period. Decisions chosen in any seat appear here with their owner, cost and ticket.</div>';}
-  // 7 · How we compare (published benchmarks)
-  var bcost=IND_BENCH[indKey()],bench=['<div class="bp-li"><span class="d" style="background:var(--ink)"></span><div>Industry average cost of a single breach: <b>$'+bcost.toFixed(2)+'M</b> ('+indLabel()+') <span class="bp-pill m">IBM 2024</span></div></div>'];
-  var bm=sig('mttd_hrs');if(bm!=null){var ahead=bm<PEER_DWELL_HRS;bench.push('<div class="bp-li"><span class="d" style="background:var(--'+(ahead?'good':'warn')+')"></span><div>Detection speed: <b>'+(bm<24?(bm+'h'):((bm/24).toFixed(1)+'d'))+'</b> vs the <b>10-day</b> peer median '+(ahead?'— <b style="color:var(--good)">far ahead</b>':'— <b style="color:var(--warn)">behind</b>')+' <span class="bp-pill m">Mandiant M-Trends 2024</span></div></div>');}
-  var bp2=sig('phishing_pct');if(bp2!=null){var pb=bp2<PEER_PHISH_BASELINE;bench.push('<div class="bp-li"><span class="d" style="background:var(--'+(pb?'good':'warn')+')"></span><div>Phishing-prone rate: <b>'+bp2+'%</b> vs the <b>~34%</b> untrained baseline '+(pb?'— <b style="color:var(--good)">well below</b>':'')+' <span class="bp-pill m">KnowBe4</span></div></div>');}
-  var benchBlock=bench.join('');
-  // 6 · Trajectory
-  var tr=trajInfo(),trajBlock;
-  if(tr.two){trajBlock='Expected loss is <b style="color:var(--'+(tr.down?'good':'crit')+')">'+tr.val+'</b> across '+tr.vals.length+' recorded analyses — '+(tr.down?'the program is removing more risk than the business is adding.':'exposure is rising; the drivers are in the CISO controls view.');
-  } else {trajBlock='This is the baseline analysis. Each future analysis records a new point and this becomes your real quarter-over-quarter trajectory — nothing is back-filled.';}
-  doc.innerHTML=
-    '<h1>Cyber Risk — Board Report</h1>'+
-    '<div class="bp-meta">'+org+(industry()?(' · '+indLabel()):'')+' · prepared '+bpToday()+'</div>'+
-    '<div class="bp-provo"><span class="bp-pill '+prov.cls+'">'+({g:'live',w:'demo',m:'illustrative'}[prov.cls])+'</span> '+prov.t+'</div>'+
-    '<div class="bp-sec"><h2>1 · Executive summary</h2><div class="bp-verdict">'+verdict+'</div></div>'+
-    '<div class="bp-sec"><h2>2 · The financial statement of cyber risk</h2>'+fin+'</div>'+
-    '<div class="bp-sec"><h2>3 · Governance &amp; disclosure readiness — SEC Item 106</h2>'+gov+'</div>'+
-    '<div class="bp-sec"><h2>4 · Key Risk Indicators</h2>'+kriBlock+'</div>'+
-    '<div class="bp-sec"><h2>5 · Decisions on the table</h2>'+decBlock+'</div>'+
-    '<div class="bp-sec"><h2>6 · Trajectory</h2><div style="font-size:13px;line-height:1.5">'+trajBlock+'</div></div>'+
-    '<div class="bp-sec"><h2>7 · How we compare — published benchmarks</h2>'+benchBlock+'</div>'+
-    '<div class="bp-meta" style="margin-top:26px;border-top:1px solid var(--line);padding-top:12px">Nerion · every figure traces to your data or is labeled modeled / illustrative. This report is generated from the same live model as the executive cockpit — not a separate spreadsheet.</div>';
-}
 function bpToday(){try{return new Date().toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'});}catch(_){return '';}}
-function openBoardPack(){renderBoardPack();var s=document.getElementById('bpScrim'),m=document.getElementById('bpModal');if(s)s.classList.add('open');if(m){m.classList.add('open');m.scrollTop=0;}}
-function closeBoardPack(){var s=document.getElementById('bpScrim'),m=document.getElementById('bpModal');if(s)s.classList.remove('open');if(m)m.classList.remove('open');}
 /* CIO "which systems carry the business" — the crown-jewel systems, ranked by
    $/hr of downtime (from /summary resilience.systems). Illustrative until live. */
-function renderCioSystems(){
-  var host=document.getElementById('cioSystems');if(!host)return;
-  var sy=LIVE&&LIVE.resilience&&LIVE.resilience.systems;if(!sy||!sy.length){host.innerHTML=illuSysBars();return;}
-  renderCioSystemsBody(host,sy);
-}
 /* COO — operational continuity. Are operations running, can critical services keep
    delivering, and where is a single point of failure? From SIEM + resilience. */
-function renderCooStatus(){
-  var host=document.getElementById('cooStatus');if(!host)return;
-  var oi=sig('open_incidents'),rs=(LIVE&&LIVE.resilience)||{},worst=rs.worst_recovery_hours,vc=rs.top_vendor_blast,mttd=sig('mttd_hrs');
-  var disrupted=oi!=null&&oi>0;
-  host.innerHTML=demoBanner()+'<div class="grid4">'+
-    '<div class="card"><div class="ck">Operations status</div><div class="cv" style="font-size:19px;color:var(--'+(disrupted?'crit':(oi!=null?'good':'muted'))+')">'+(disrupted?(oi+' disrupting ops'):(oi!=null?'Running normally':'Connect SIEM'))+'</div><div class="cn">'+(disrupted?'an incident is affecting a business process':(oi!=null?'no incident affecting service delivery '+liveTag():'live from your SIEM once connected'))+'</div></div>'+
-    '<div class="card"><div class="ck">Slowest service to recover</div><div class="cv claim" data-ev="recovery" style="font-size:19px;cursor:pointer'+(worst!=null&&worst>=24?';color:var(--warn)':'')+'">'+(worst!=null?hrsToStr(worst):'—')+' <span class="drill-cta" style="font-size:11px">details ▸</span></div><div class="cn">worst-case restore on a revenue-critical service</div></div>'+
-    '<div class="card"><div class="ck">Single point of failure</div><div class="cv claim" data-ev="vendor" style="font-size:19px;cursor:pointer'+(vc&&vc.vendor?';color:var(--warn)':'')+'">'+(vc&&vc.vendor?('1 vendor · '+((vc.systems||[]).length)+' services'):'—')+' <span class="drill-cta" style="font-size:11px">details ▸</span></div><div class="cn">'+(vc&&vc.vendor?('if '+vc.vendor+' fails, all degrade'):'map vendor concentration in onboarding')+'</div></div>'+
-    '<div class="card"><div class="ck">Disruption detection</div><div class="cv" style="font-size:19px'+(mttd!=null?';color:var(--good)':'')+'">'+(mttd!=null?(mttd+'h '+liveTag()):'Connect SIEM')+'</div><div class="cn">how fast an operational disruption surfaces</div></div>'+
-    '</div>';
-}
 function continuityCard(rows,live){return '<div class="card"><table class="tbl"><thead><tr><th>Critical service</th><th>Cost / hour down</th><th>Recovery (RTO)</th><th>Continuity</th></tr></thead><tbody>'+rows+'</tbody></table>'+(live?'<div class="cn" style="margin-top:8px">Ranked by what an hour of downtime costs · "within tolerance" = recovers under 24h. From your inventory + resilience data.</div>':'<div class="cn" style="margin-top:8px">◐ <b style="color:var(--warn)">Illustrative</b> — upload your systems &amp; recovery targets to see real continuity status.</div>')+'</div>';}
-function renderCooContinuity(){
-  var host=document.getElementById('cooContinuity');if(!host)return;
-  var sy=(LIVE&&LIVE.resilience&&LIVE.resilience.systems)||null;
-  if(sy&&sy.length){var rows=sy.filter(function(s){return (s.per_hr>0)||(s.recovery_hours!=null);}).slice(0,8).map(function(s){var rto=s.recovery_hours,atrisk=rto!=null&&rto>24;
-    return '<tr><td><b>'+s.name+'</b>'+(s.crown_jewel?' <span class="cj-badge">crown jewel</span>':'')+'</td><td style="font-weight:700;color:var(--warn)">'+(s.per_hr>0?(usd(s.per_hr)+'/hr'):'—')+'</td><td>'+(rto!=null?hrsToStr(rto):'—')+'</td><td><span class="tag '+(rto==null?'':atrisk?'warn':'good')+'">'+(rto==null?'—':atrisk?'over tolerance':'within tolerance')+'</span></td></tr>';}).join('');
-    host.innerHTML=continuityCard(rows,true);return;}
-  var p=indProfile(),hrs=[2.3e6,0.9e6,0.6e6,0.04e6],rto=[74,28,40,8];
-  var rows=p.systems.map(function(n,i){var atrisk=rto[i]>24;return '<tr><td><b>'+n+'</b>'+(i===0?' <span class="cj-badge">crown jewel</span>':'')+'</td><td style="font-weight:700;color:var(--warn)">'+usd(hrs[i])+'/hr</td><td>'+hrsToStr(rto[i])+'</td><td><span class="tag '+(atrisk?'warn':'good')+'">'+(atrisk?'over tolerance':'within tolerance')+'</span></td></tr>';}).join('');
-  host.innerHTML=continuityCard(rows,false);
-}
-function renderCioSystemsBody(host,sy){
-  var withHr=sy.filter(function(s){return s.per_hr>0;});var list=withHr.length?withHr:sy;
-  var max=list[0].per_hr||list[0].exposure_usd||1;
-  host.innerHTML='<div class="card">'+list.map(function(s){
-    var basis=s.per_hr>0?s.per_hr:(s.exposure_usd||0);var pct=Math.max(8,Math.round(basis/max*100));
-    var rec=s.recovery_hours!=null?(s.recovery_hours>=24?(Math.round(s.recovery_hours/2.4)/10+' days'):(s.recovery_hours+' hrs')):'recovery n/a';
-    var lbl=s.name+(s.per_hr>0?(' ('+usd(s.per_hr)+'/hr)'):'')+(s.crown_jewel?' <span class="cj-badge" style="margin-left:6px">crown jewel</span>':'');
-    return '<div class="bar-row"><div class="bar-lbl claim" data-ev="recovery">'+lbl+' <span class="fx">ƒ</span></div><div class="bar-track"><div class="bar-fill '+(s.crown_jewel?'hot':'')+'" style="width:'+pct+'%"></div></div><div class="bar-val">'+rec+'</div></div>';
-  }).join('')+'</div>';
-}
 function renderChain(){
   var host=document.getElementById('cjchain');if(!host)return;
   var live=crownList();var list=(live&&live.length)?live:illuCJ();
@@ -5695,10 +4971,6 @@ function wrCloseFn(){document.getElementById('wrModal').classList.remove('open')
 document.getElementById('warBtn').addEventListener('click',wrOpen);
 document.getElementById('wrX').addEventListener('click',wrCloseFn);
 document.getElementById('wrScrim').addEventListener('click',wrCloseFn);
-(function(){var bb=document.getElementById('boardBtn');if(bb)bb.addEventListener('click',openBoardPack);
-  var bc=document.getElementById('bpClose');if(bc)bc.addEventListener('click',closeBoardPack);
-  var bs=document.getElementById('bpScrim');if(bs)bs.addEventListener('click',closeBoardPack);
-  var bp=document.getElementById('bpPrint');if(bp)bp.addEventListener('click',function(){try{window.print();}catch(_){}});})();
 document.getElementById('wrSim').addEventListener('click',function(){ensureAudio();if(incidentActive)containIncident();else triggerIncident();});
 document.getElementById('wrMute').addEventListener('click',function(){alarmMuted=!alarmMuted;this.textContent=alarmMuted?'🔇':'🔊';if(alarmMuted)stopAlarm();else if(incidentActive)startAlarm();});
 

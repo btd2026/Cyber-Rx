@@ -103,13 +103,14 @@ const SIGNALS = { edr_pct: { value: 98 }, mfa_pct: { value: 96 }, pam_pct: { val
 
 vm.runInContext('this.LIVE = arguments0; this.GRAPH = arguments1; this.SIGNALS = arguments2;'.replace('arguments0', JSON.stringify(LIVE)).replace('arguments1', JSON.stringify(GRAPH)).replace('arguments2', JSON.stringify(SIGNALS)), ctx);
 
-const seatIds = ['board', 'ceo', 'cfo', 'coo', 'clo', 'cro', 'cio', 'ciso', 'cpo', 'audit'];
+const seatIds = ['ciso'];
 for (const s of seatIds) {
   try { vm.runInContext(`render(${JSON.stringify(s)});`, ctx); }
   catch (e) { problems.push(`[render ${s}] ${e.message}`); }
 }
-// Exercise the live-only renderers directly too.
-for (const fn of ['applyLive', 'renderChain', 'renderProcBars', 'renderCioSystems', 'renderUnderAttack', 'renderThreatMap', 'renderCjFlow', 'renderCpoQuality', 'renderCpoVelocity', 'renderCioWorkforce', 'renderCpoLaunch', 'renderCpoSbd', 'renderCooSupply', 'renderCpoSupply', 'renderCloContract', 'renderAuditRepeat', 'renderValueChain', 'renderBoard', 'renderEarnings', 'renderCroPortfolio', 'renderRoi', 'renderSignals', 'renderAiRisk', 'renderTrend', 'renderInitiatives', 'renderOversight', 'renderMateriality', 'renderCfoFraud', 'renderCroKri', 'renderCloOps', 'renderThreatIntel', 'renderDrReadiness', 'renderPeerBench', 'renderPeerCompare', 'renderCisoVendors', 'renderCisoDecisions', 'c5Health', 'c5Exposure', 'c5Effect', 'c5Threats', 'c5Peers', 'c5Frameworks', 'c5cfExposure', 'c5cfRoi', 'c5cfInsurance', 'c5cfCost', 'c5cfDecisions', 'c5ceHealth', 'c5ceStrategic', 'c5ceFinancial', 'c5ceTrust', 'c5ceDecisions', 'c5crScale', 'c5crAppetite', 'c5crAssurance', 'c5crTrend', 'c5crDecisions', 'c5coResilience', 'c5coProcesses', 'c5coSupply', 'c5coRecovery', 'c5coDecisions', 'c5clRegulatory', 'c5clNotification', 'c5clContracts', 'c5clPrivacy', 'c5clDecisions', 'c5ctTech', 'c5ctReliability', 'c5ctAi', 'c5ctSupply', 'c5ctDecisions', 'c5iaCoverage', 'c5iaTesting', 'c5iaFindings', 'c5iaEvidence', 'c5iaAttention', 'c5bdHealth', 'c5bdMaterial', 'c5bdTrend', 'c5bdInvestment', 'c5bdGovernance', 'c5cpSecurity', 'c5cpTrust', 'c5cpVelocity', 'c5cpBacklog', 'c5cpDecisions', 'renderCfoDecision', 'renderCroDecision', 'renderCioDecision', 'renderCooDecision', 'renderCloDecision', 'renderCpoDecision', 'renderAuditCoverage', 'renderAuditReadiness', 'renderAuditFailed', 'renderAuditDecisions', 'renderCeoRiskScore', 'renderCeoTopThreats', 'renderCeoTopIssues', 'renderCeoStrategyRisks', 'renderCeoCustomerProtect', 'renderCeoBoardKpis', 'renderCeoExecDecisions', 'renderBoardPack', 'openBoardPack', 'closeBoardPack']) {
+// Exercise the live-only CISO/shared renderers directly too. (The executive-persona
+// renderers have been retired and deleted; only CISO + shared code remains.)
+for (const fn of ['applyLive', 'renderChain', 'renderProcBars', 'renderUnderAttack', 'renderThreatMap', 'renderCjFlow', 'renderValueChain', 'renderEarnings', 'renderRoi', 'renderSignals', 'renderAiRisk', 'renderTrend', 'renderInitiatives', 'renderOversight', 'renderMateriality', 'renderThreatIntel', 'renderDrReadiness', 'renderPeerBench', 'renderPeerCompare', 'renderCisoVendors', 'renderCisoDecisions', 'c5Health', 'c5Exposure', 'c5Effect', 'c5Threats', 'c5Peers', 'c5Frameworks']) {
   try { vm.runInContext(`typeof ${fn}==='function' && ${fn}();`, ctx); }
   catch (e) { problems.push(`[${fn}] ${e.message}`); }
 }
@@ -169,7 +170,7 @@ try {
   // No live exposure → a clearly-labelled sample ask must still appear.
   const sample = vm.runInContext("var _s=(typeof LIVE==='object'&&LIVE)?LIVE.crown_jewel_risk:null; if(LIVE)LIVE.crown_jewel_risk={items:[]}; var _a=c5AskModel('cio'); if(LIVE)LIVE.crown_jewel_risk=_s; JSON.stringify(_a.filter(function(x){return x.sample;}))", ctx);
   if (!/sample.:true/.test(sample) || sample.indexOf('Identity infrastructure') < 0) problems.push('[asks] sample ask missing when no live exposure');
-  vm.runInContext("['board','ceo','cfo','clo','cro','cio','coo','cpo','audit'].forEach(function(s){c5Asks(s);}); c5SeatViews();", ctx);
+  vm.runInContext("['ciso'].forEach(function(s){c5Asks(s);}); c5SeatViews();", ctx);
 } catch (e) { problems.push(`[asks] ${e.message}`); }
 
 // Crown-jewel tree adapter: build the island contract from a live value chain.
@@ -230,4 +231,4 @@ try {
 } catch (e) { problems.push(`[crosswalk] ${e.message}`); }
 
 if (problems.length) { console.log('SMOKE FAILURES (' + problems.length + '):'); problems.forEach((p) => console.log(' - ' + p)); process.exit(1); }
-else console.log('SMOKE OK — 6 seats + live renderers + evidence + onboarding + framework-crosswalk integrity all pass.');
+else console.log('SMOKE OK — CISO seat + shared live renderers + evidence + onboarding + framework-crosswalk integrity all pass.');
