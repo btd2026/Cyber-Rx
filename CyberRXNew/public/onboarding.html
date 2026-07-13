@@ -558,12 +558,6 @@
   <!-- (BIA removed — the Business processes step already captures per-process RTO,
        criticality and impact; the dashboards derive BIA from it, so we don't ask twice.) -->
 
-  <!-- 6a5 · SBOM (CISO third-party / supply-chain) -->
-  <div class="sec">
-    <div class="sh"><div class="sn">✦</div><div><div class="st">Software Bill of Materials (SBOM) <span style="color:var(--muted)">(for supply-chain exposure)</span></div><div class="sd">Key third-party software components and their known critical vulnerabilities. Feeds the third-party / supply-chain tile. Leave blank to keep that tile vendor-ratings-only.</div></div><div class="badge" id="bsbom">optional</div></div>
-    <div id="sbomRows"></div>
-    <button type="button" id="addSbom" class="conn-go" style="margin-top:4px">+ Add component</button>
-  </div>
 
   <!-- 6a6 · Risk Appetite Statements (Board / CRO) -->
   <div class="sec">
@@ -1360,10 +1354,6 @@
     OB_REGISTERS[wrapId.replace(/Rows$/,'')]=api;
     return api;
   }
-  var SBOM=makeRowList('sbomRows','sbom-row',[
-    {cls:'sbom-name',key:'component',label:'Component',ph:'e.g. openssl 3.0.1',w:'1.8fr'},
-    {cls:'sbom-ver',key:'version',label:'Version',ph:'3.0.1',w:'0.9fr'},
-    {cls:'sbom-vulns',key:'critical_vulns',label:'Critical vulns',type:'number',ph:'0',w:'1fr'}],'bsbom','component');
   // DELTA registers (Board / CLO / CRO)
   var RAP=makeRowList('rapRows','rap-row',[
     {cls:'rap-cat',key:'category',label:'Risk category',ph:'e.g. Identity & access',w:'1.6fr'},
@@ -1383,7 +1373,7 @@
     {cls:'ben-our',key:'our_value',label:'Our value',ph:'e.g. 9%',w:'1fr'},
     {cls:'ben-bmk',key:'benchmark',label:'Benchmark',ph:'e.g. 11%',w:'1fr'}],'bben','metric');
   (function(){
-    var m=[['addSbom',SBOM],['addRap',RAP],['addReg',REG],['addMat',MAT],['addBen',BEN]];
+    var m=[['addRap',RAP],['addReg',REG],['addMat',MAT],['addBen',BEN]];
     m.forEach(function(x){var b=document.getElementById(x[0]);if(b)b.addEventListener('click',function(){x[1].add();});});
   })();
 
@@ -1431,7 +1421,6 @@
     var STRAT_IO={add:function(v){addStratRow(v);}};
     enableRegisterIO('strat','addStrat',STRAT_IO,[{cls:'name',names:['initiative','name','project','move']},{cls:'type',names:['type','category','kind']},{cls:'value',names:['value','value_usd','value at stake','amount','stake'],money:true},{cls:'horizon',names:['horizon','timeline','when','timeframe']}],['Board portal / Diligent','Confluence / SharePoint','Jira / Portfolio (PPM)','Anaplan','Workday Adaptive'],'Strategy / portfolio source');
     // (the Business capability map already offers manual entry + a GRC connect)
-    enableRegisterIO('sbom','addSbom',SBOM,[{cls:'sbom-name',names:['component','name','package']},{cls:'sbom-ver',names:['version','ver']},{cls:'sbom-vulns',names:['critical_vulns','vulns','criticals']}],['Dependency-Track','Snyk','GitHub','Anchore'],'SBOM source');
     enableRegisterIO('rap','addRap',RAP,[{cls:'rap-cat',names:['category','risk_category','name']},{cls:'rap-app',names:['appetite','appetite_usd','threshold_usd'],money:true},{cls:'rap-thr',names:['threshold','level','tolerance']}],['ERM Platform','Archer','ServiceNow ERM'],'ERM source');
     enableRegisterIO('reg','addReg',REG,[{cls:'reg-name',names:['regulation','reg','name']},{cls:'reg-obl',names:['obligation','requirement','duty']},{cls:'reg-stat',names:['status','state','compliance']},{cls:'reg-exp',names:['exposure','fine','penalty','exposure_usd'],money:true}],['GRC','Archer','ServiceNow GRC'],'GRC / compliance source');
     enableRegisterIO('mat','addMat',MAT,[{cls:'mat-met',names:['metric','criterion','name']},{cls:'mat-thr',names:['threshold','threshold_usd','amount'],money:true},{cls:'mat-bas',names:['basis','reference','rule']}],['GRC','Disclosure controls'],'Materiality source');
@@ -1442,7 +1431,10 @@
   // Writes the same localStorage keys the cockpit Framework tab reads
   // (cyberrx_doc_scores + cyberrx_docs), so document review is captured here at
   // onboarding instead of inside the cockpit.
-  var OB_DOC_TYPES=[{k:'d1',l:'Information Security Policy'},{k:'d2',l:'Risk Assessment / Register'},{k:'d3',l:'Third-Party / Supply-Chain Policy'},{k:'d4',l:'Access Control Policy'},{k:'d5',l:'Identity & Authentication Policy'},{k:'d6',l:'Incident Response Plan'},{k:'d7',l:'Business Continuity / DR Plan'},{k:'d8',l:'Change Management Policy'},{k:'d9',l:'Configuration Management Policy'},{k:'d10',l:'Data Protection Policy'},{k:'d17',l:'AI Governance — NIST AI RMF'},{k:'d18',l:'AI Governance — ISO/IEC 42001'},{k:'d19',l:'AI Acceptable-Use Policy'}];
+  // Only NIST CSF 2.0 / ISO 27001 policy evidence — the documents the cockpit actually scores.
+  // AI-framework docs (NIST AI RMF, ISO/IEC 42001, AI acceptable-use) and other non-CSF/ISO
+  // artifacts are intentionally not offered here.
+  var OB_DOC_TYPES=[{k:'d1',l:'Information Security Policy'},{k:'d2',l:'Risk Assessment / Register'},{k:'d3',l:'Third-Party / Supply-Chain Policy'},{k:'d4',l:'Access Control Policy'},{k:'d5',l:'Identity & Authentication Policy'},{k:'d6',l:'Incident Response Plan'},{k:'d7',l:'Business Continuity / DR Plan'},{k:'d8',l:'Change Management Policy'},{k:'d9',l:'Configuration Management Policy'},{k:'d10',l:'Data Protection Policy'}];
   var CMMI_LBL={0:'None',1:'Initial',2:'Managed',3:'Defined',4:'Quant. Managed',5:'Optimizing'};
   function obDocScores(){try{return JSON.parse(localStorage.getItem('cyberrx_doc_scores')||'{}')||{};}catch(_){return {};}}
   function obSaveDocScore(id,o){var m=obDocScores();m[id]=o;try{localStorage.setItem('cyberrx_doc_scores',JSON.stringify(m));}catch(_){}}
@@ -1970,7 +1962,6 @@
       objectives:collectObjectives(),
       capabilities:collectCapabilities(),
       bia:PROC.map(function(p){return {name:p.name,rto_hours:p.rto,impact_usd:p.revenue};}),
-      sbom:SBOM.collect(),
       riskAppetite:RAP.collect(),
       regulatoryRegister:REG.collect(),
       materialityCriteria:MAT.collect(),

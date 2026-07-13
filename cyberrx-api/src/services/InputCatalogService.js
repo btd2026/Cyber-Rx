@@ -76,7 +76,6 @@ const DOCUMENT_FIELDS = {
   'Crown Jewel Register': 'crownJewelRegister',
   'BIA (Business Impact Analysis)': 'bia',
   'Business Capability Map': 'capabilities',
-  'SBOM': 'sbom',
   // --- DELTA registers ---
   'Risk Appetite Statements': 'riskAppetite',
   'Regulatory Register': 'regulatoryRegister',
@@ -97,7 +96,7 @@ const WIDGETS = {
     { id: 'er_crown', label: 'Crown jewels at greatest risk', requires: ['Crown Jewel Register', 'CMDB', 'Vulnerability Management', 'EDR'] },
     { id: 'er_capability', label: 'Business capabilities with highest exposure', requires: ['Business Capability Map'], optional: ['GRC'] },
     { id: 'er_scenarios', label: 'Most likely business disruption scenarios', requires: ['Threat Intelligence', 'BIA (Business Impact Analysis)'], optional: ['MITRE ATT&CK'] },
-    { id: 'er_thirdparty', label: 'Third-party / supply-chain cyber exposure', requires: ['Vendor Risk / TPRM'], optional: ['Third-party Security Ratings', 'SBOM'] },
+    { id: 'er_thirdparty', label: 'Third-party / supply-chain cyber exposure', requires: ['Vendor Risk / TPRM'], optional: ['Third-party Security Ratings'] },
     { id: 'protection_effectiveness', label: 'Business areas well protected', requires: ['GRC'] },
     { id: 'cyber_operations', label: 'Active business-impacting incidents', requires: ['SIEM', 'Incident Mgmt / ITSM'], optional: ['SOAR'] },
     { id: 'executive_actions', label: 'Highest-value remediation actions', requires: ['GRC'] },

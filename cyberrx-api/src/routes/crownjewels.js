@@ -236,11 +236,6 @@ router.post('/ingest', optionalJWT, async (req, res) => {
       impact_usd: money(p.impact_usd != null ? p.impact_usd : p.impact),
       criticality: p.criticality ? String(p.criticality).slice(0, 20) : null,
     }), 'bia');
-    const sbom = normReg(b.sbom, (c, i) => ({
-      component: String(c.component || c.name || ('component_' + i)).slice(0, 200),
-      version: c.version ? String(c.version).slice(0, 60) : null,
-      critical_vulns: Number(c.critical_vulns != null ? c.critical_vulns : c.criticals) || 0,
-    }), 'sbom');
     // DELTA registers (Board / CLO / CRO): Risk Appetite, Regulatory, Materiality, Benchmark.
     const riskAppetite = normReg(b.riskAppetite, (r, i) => ({
       category: String(r.category || r.name || ('Category ' + (i + 1))).slice(0, 120),
@@ -290,7 +285,7 @@ router.post('/ingest', optionalJWT, async (req, res) => {
        VALUES ($1,$2,$3,$4::jsonb,NOW())
        ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name,
          setup_json = COALESCE(orgs.setup_json,'{}'::jsonb) || EXCLUDED.setup_json`,
-      [mapped.org.id, mapped.org.name, '', JSON.stringify({ economics, resilience, initiatives, governance, aiGovernance, aiSupplyChain, growth, strategicInitiatives, objectives, capabilities, crownJewelRegister, bia, sbom, riskAppetite, regulatoryRegister, materialityCriteria, benchmarkData, document_validation: documentValidation, seatNames, seatEmails })]);
+      [mapped.org.id, mapped.org.name, '', JSON.stringify({ economics, resilience, initiatives, governance, aiGovernance, aiSupplyChain, growth, strategicInitiatives, objectives, capabilities, crownJewelRegister, bia, riskAppetite, regulatoryRegister, materialityCriteria, benchmarkData, document_validation: documentValidation, seatNames, seatEmails })]);
 
     // Idempotent replace: clear the org's prior inventory, then insert the mapped rows.
     step = 'clear_inventory';
