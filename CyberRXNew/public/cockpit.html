@@ -2936,15 +2936,43 @@ var ENTITY_SIG={
   apac_india:{edr_pct:66,mfa_pct:60,pam_pct:42,patch_pct:58,training_pct:82,phishing_pct:7,siem_coverage_pct:64,cspm_pct:60,backup_immutable_pct:84,dlp_pct:46,seg_pct:38,sspm_pct:54}
 };
 function meanSig(arr){arr=(arr||[]).filter(Boolean);if(!arr.length)return {};var keys={};arr.forEach(function(o){Object.keys(o).forEach(function(k){keys[k]=1;});});var out={};Object.keys(keys).forEach(function(k){var v=arr.map(function(o){return o[k];}).filter(function(x){return x!=null;});if(v.length)out[k]=Math.round(v.reduce(function(a,b){return a+b;},0)/v.length);});return out;}
-/* Telemetry for a scope: an entity is its own leaf; a region is the mean of its entities;
-   Enterprise is the mean of the regions. So aggregates are TRUE roll-ups, not hardcoded. */
-function scopeSignalValues(id){
+/* ===== COMMON-CONTROL INHERITANCE (NIST GSS / Major-Application model) =====
+   Some controls are COMMON — provided once by the corporate General Support System (a
+   global IdP, corporate SIEM/SOC, enterprise governance & awareness) and INHERITED by
+   every region. The rest are SYSTEM-SPECIFIC (federated) — each region runs its own.
+   A region therefore can't score below the corporate baseline on a common control; the
+   regional variance lives only in the system-specific controls. The operating model
+   (centralized / federated / hybrid) is just where that line sits, and onboarding
+   captures which capabilities are corporate-common vs region-federated. */
+function securityModel(){
+  try{var raw=localStorage.getItem('cyberrx_security_model');if(raw){var o=JSON.parse(raw);if(o&&Array.isArray(o.common))return o;}}catch(_){}
+  // Demo default: hybrid — corporate provides identity, privileged access, awareness,
+  // detection, cloud posture and backup; regions own endpoint, vuln, DLP, segmentation, SaaS.
+  return {model:'hybrid',common:['mfa','pam','aware','siem','cspm','backup']};
+}
+// The corporate common-control coverage (the GSS) — strong and uniform, inherited by all.
+var CORPORATE_SIG={mfa_pct:96,pam_pct:82,training_pct:96,phishing_pct:2,siem_coverage_pct:92,cspm_pct:90,backup_immutable_pct:100};
+function commonSigKeys(){return securityModel().common.map(function(k){return (typeof CAP_SIGKEY!=='undefined')?CAP_SIGKEY[k]:null;}).filter(Boolean);}
+/* Telemetry for a scope with inheritance: the region/entity's OWN (system-specific)
+   coverage, then the corporate COMMON controls layered on top (inherited). An entity is
+   its own leaf; a region is the mean of its entities; Enterprise is the mean of regions —
+   all for the system-specific side; the common side is the corporate baseline everywhere. */
+function scopeOwnSignals(id){
   if(ENTITY_SIG[id])return ENTITY_SIG[id];
   var reg=null;REGIONS.forEach(function(r){if(r.id===id)reg=r;});
   if(reg&&reg.entities&&reg.entities.length)return meanSig(reg.entities.map(function(e){return ENTITY_SIG[e.id];}));
-  if(id==='enterprise')return meanSig(REGIONS.filter(function(r){return r.kind==='region';}).map(function(r){return scopeSignalValues(r.id);}));
+  if(id==='enterprise')return meanSig(REGIONS.filter(function(r){return r.kind==='region';}).map(function(r){return scopeOwnSignals(r.id);}));
   return {};
 }
+function scopeSignalValues(id){
+  var own=Object.assign({},scopeOwnSignals(id));
+  // Inherit the corporate common controls — the region gets the GSS baseline on these,
+  // regardless of its local coverage.
+  commonSigKeys().forEach(function(sk){if(CORPORATE_SIG[sk]!=null)own[sk]=CORPORATE_SIG[sk];});
+  return own;
+}
+/* Is a capability a corporate common control (inherited) or region-specific (federated)? */
+function capProvider(capKey){return (securityModel().common.indexOf(capKey)>=0)?'common':'specific';}
 /* If the customer defined their org structure at onboarding, that IS the hierarchy —
    Enterprise + their regions + entities. Falls back to the demo REGIONS otherwise, so
    a trial without onboarding still shows the regional story. Per-region telemetry for a
