@@ -20,10 +20,18 @@ describe('Onboarding — system discovery & bulk import', () => {
     expect(onboarding).toContain('discover, don’t type');
   });
 
-  it('supports bulk import (name, class, region, owner, criticality) and totals the estate', () => {
+  it('bulk import owns each system by an entity, or Corporate (shared/GSS), and totals the estate', () => {
     expect(onboarding).toContain('id="sysBulk"');
     expect(onboarding).toContain('function discTotal()');
-    expect(onboarding).toContain('name:p[0],class:(p[1]||\'\').toLowerCase(),region:(p[2]||\'\').toLowerCase()');
+    // owner = entity id or 'corporate'; region derived from the entity
+    expect(onboarding).toContain("var scope=(p[2]||'').toLowerCase();var region=(scope==='corporate'||!scope)?'':(scope.indexOf('_')>0?scope.split('_')[0]:scope);");
+    expect(onboarding).toContain('name:p[0],class:(p[1]||\'\').toLowerCase(),owner:scope||\'\',region:region');
+  });
+
+  it('splits entity-owned vs corporate-shared (GSS) systems — the Entity->Systems edge + inheritance', () => {
+    expect(onboarding).toContain("var shared=IMPORTED.filter(function(r){return r.owner==='corporate';}).length;");
+    expect(onboarding).toContain('corporate-shared');
+    expect(onboarding).toContain('inherited by every entity when centralized');
   });
 
   it('persists the discovered + imported estate to cyberrx_systems', () => {
