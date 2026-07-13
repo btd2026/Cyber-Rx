@@ -28,3 +28,21 @@ describe('Entity-level connectors', () => {
     expect(onboarding).toContain('scope:connScope(k)');
   });
 });
+
+describe('Per-entity connector plan UI', () => {
+  it('renders a matrix where each entity connects only its FEDERATED tools', () => {
+    expect(onboarding).toContain('id="entConnMatrix"');
+    expect(onboarding).toContain('function renderEntConn()');
+    // federated = all caps minus the common (corporate) ones
+    expect(onboarding).toContain('var federated=ALL_CAPS.filter(function(c){return common.indexOf(c)<0;});');
+  });
+
+  it('shows common controls as inherited from Corporate (connected once, not per entity)', () => {
+    expect(onboarding).toContain('Corporate (common, inherited by all)');
+    expect(onboarding).toContain('connected once, not per entity');
+  });
+
+  it('persists each entity\'s connected federated tools', () => {
+    expect(onboarding).toContain("localStorage.setItem('cyberrx_entity_connectors',JSON.stringify(ENT_CONN));");
+  });
+});

@@ -274,6 +274,13 @@
     <div id="discResult" style="margin-top:14px"></div>
   </div>
 
+  <!-- 1a4 · Per-entity connectors -->
+  <div class="sec">
+    <div class="sh"><div class="sn">✦</div><div><div class="st">Per-entity connectors <span style="color:var(--muted)">(who connects what)</span></div><div class="sd">Common controls are <b>connected once by Corporate</b> and inherited by every entity — you don’t connect identity 20 times. Each entity connects only its <b>federated</b> tools (the ones it runs itself, per your operating model). Build the plan below and tick what each entity has connected.</div></div><div class="badge" id="bentc">optional</div></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="conn-go" id="entConnBuild" type="button">Build the per-entity connector plan</button></div>
+    <div id="entConnMatrix" style="margin-top:14px"></div>
+  </div>
+
   <!-- 1b · Board governance & incident readiness -->
   <div class="sec">
     <div class="sh"><div class="sn">✦</div><div><div class="st">Board governance &amp; incident readiness</div><div class="sd">The board’s own oversight structure — what the SEC (Reg S-K Item 106) requires you to disclose, plus your response-and-recover readiness. Powers the CEO/Board governance panel.</div></div><div class="badge" id="bgov">recommended</div></div>
@@ -1113,6 +1120,33 @@
     // restore
     try{var s=JSON.parse(localStorage.getItem('cyberrx_systems')||'null');if(s){DISCOVERED=s.discovered||{};IMPORTED=s.imported||[];
       Object.keys(DISCOVERED).forEach(function(k){document.querySelectorAll('#discSources .chip').forEach(function(c){if(c.getAttribute('data-l')===k)c.classList.add('on');});});renderDiscResult();}}catch(_){}
+  })();
+
+  // ---- Per-entity connectors. Common controls are inherited from Corporate (connected
+  // once); each entity connects only its FEDERATED tools. Persisted to cyberrx_entity_connectors.
+  var CAP_LABEL={mfa:'Identity',pam:'PAM',aware:'Awareness',siem:'SIEM',cspm:'Cloud',backup:'Backup',edr:'EDR',vuln:'Vuln',dlp:'DLP',seg:'Segmentation',sspm:'SaaS'};
+  var ALL_CAPS=['mfa','pam','aware','siem','cspm','backup','edr','vuln','dlp','seg','sspm'];
+  var ENT_CONN={};  // entityId -> [connected federated cap keys]
+  function entConnSave(){try{localStorage.setItem('cyberrx_entity_connectors',JSON.stringify(ENT_CONN));}catch(_){}var b=document.getElementById('bentc');if(b){var n=Object.keys(ENT_CONN).filter(function(k){return (ENT_CONN[k]||[]).length;}).length;if(n){b.textContent='✓ '+n+' entit'+(n>1?'ies':'y')+' wired';b.classList.add('done');}}try{if(typeof obSaveState==='function')obSaveState();}catch(_){}}
+  function renderEntConn(){
+    var host=document.getElementById('entConnMatrix');if(!host)return;
+    var struct=(typeof collectOrgStructure==='function')?collectOrgStructure():[];
+    var common=((typeof currentSecModel==='function')?currentSecModel():{common:[]}).common||[];
+    var federated=ALL_CAPS.filter(function(c){return common.indexOf(c)<0;});
+    var entities=[];struct.forEach(function(r){(r.entities||[]).forEach(function(e){entities.push(e);});});
+    if(!entities.length){host.innerHTML='<div style="font-size:12px;color:var(--muted)">Define your regions &amp; entities above first, then build the plan.</div>';return;}
+    var commonNote='<div style="font-size:11.5px;color:var(--ink-2);margin-bottom:12px;padding:8px 11px;border:1px solid var(--line);border-radius:8px">◆ <b>Corporate (common, inherited by all):</b> '+(common.length?common.map(function(c){return CAP_LABEL[c]||c;}).join(' · '):'none — everything is federated')+' <span style="color:var(--muted)">— connected once, not per entity.</span></div>';
+    var rows=entities.map(function(e){
+      var have=ENT_CONN[e.id]||[];
+      var chips=federated.map(function(c){var on=have.indexOf(c)>=0;
+        return '<button type="button" class="entcap'+(on?' on':'')+'" data-ent="'+e.id+'" data-cap="'+c+'" style="font-size:11px;padding:3px 9px;border-radius:14px;border:1px solid '+(on?'#2563eb':'var(--line)')+';background:'+(on?'#2563eb':'transparent')+';color:'+(on?'#fff':'var(--ink-2)')+';cursor:pointer">'+esc(CAP_LABEL[c]||c)+'</button>';}).join('');
+      return '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid var(--line)"><div style="min-width:150px;font-size:12.5px;font-weight:700;color:var(--ink)">'+esc(e.label)+'</div><div style="display:flex;gap:6px;flex-wrap:wrap">'+(federated.length?chips:'<span style="font-size:11px;color:var(--muted)">all controls are common — fully inherited</span>')+'</div></div>';
+    }).join('');
+    host.innerHTML=commonNote+rows;
+    host.querySelectorAll('.entcap').forEach(function(btn){btn.addEventListener('click',function(){var ent=btn.getAttribute('data-ent'),cap=btn.getAttribute('data-cap');ENT_CONN[ent]=ENT_CONN[ent]||[];var i=ENT_CONN[ent].indexOf(cap);if(i>=0)ENT_CONN[ent].splice(i,1);else ENT_CONN[ent].push(cap);entConnSave();renderEntConn();});});
+  }
+  (function(){var b=document.getElementById('entConnBuild');if(b)b.addEventListener('click',renderEntConn);
+    try{var s=JSON.parse(localStorage.getItem('cyberrx_entity_connectors')||'null');if(s){ENT_CONN=s;renderEntConn();}}catch(_){}
   })();
 
   // ---- business capability map (CISO Enterprise-Risk: capabilities with highest exposure) ----
