@@ -793,9 +793,10 @@ var CUR='ceo';
 function render(seat){
   CUR=seat;var s=SEATS[seat];
   if(!s){try{console.warn('render(): unknown seat',seat);}catch(_){}return;} // defensive: never crash on an unregistered seat (e.g. latent cpo/audit)
-  var h=(typeof c5seatHeader==='function')?c5seatHeader():('<div class="hero"><div class="eyebrow">'+s.eyebrow+'</div></div>');
+  var h=(typeof scopeBanner==='function'?scopeBanner():'')+((typeof c5seatHeader==='function')?c5seatHeader():('<div class="hero"><div class="eyebrow">'+s.eyebrow+'</div></div>'));
   h+='<div id="secTabs" class="sectabs"></div><div id="secWrap">'+s.body()+'</div>';
   document.getElementById('app').innerHTML=localizeInd(h);
+  try{if(typeof wireScopeBanner==='function')wireScopeBanner();}catch(_){}
   buildTabs();
   wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderCisoDecisions();try{if(typeof c5SeatViews==='function')c5SeatViews();}catch(_){}c5Health();c5Exposure();c5Effect();c5Threats();c5Peers();c5Frameworks();c5AiSupply();try{if(typeof c5DecProj==='function')c5DecProj();}catch(_){}renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderPeerCompare();renderCisoVendors();renderProcBars();renderOversight();renderTrend();renderEarnings();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();try{if(typeof renderDelta==='function')renderDelta();}catch(_){}window.scrollTo({top:0});
 }
@@ -2956,41 +2957,42 @@ function renderScopeBar(){
   var activeRegion=scopeRegion(SCOPE);
   var top=REGIONS.map(function(r){var on=(r.id===SCOPE)||(r.id!=='enterprise'&&r.id===activeRegion);
     return '<button class="seat'+(on?' on':'')+'" data-scope="'+r.id+'"'+(r.countries?(' title="'+r.countries+(r.regime?(' · '+r.regime):'')+'"'):(' title="'+(r.note||'')+'"'))+'>'+r.label+'</button>';}).join('');
-  var reg=null;REGIONS.forEach(function(r){if(r.id===activeRegion)reg=r;});
-  var sub='';
-  if(reg&&reg.entities&&reg.entities.length){
-    sub='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;padding-left:2px">'
-      +'<span style="font-size:10.5px;color:var(--muted);align-self:center;margin-right:2px">'+esc(reg.label)+' ·</span>'
-      +'<button class="subtab'+(SCOPE===reg.id?' on':'')+'" data-scope="'+reg.id+'">All '+esc(reg.label)+'</button>'
-      +reg.entities.map(function(e){return '<button class="subtab'+(SCOPE===e.id?' on':'')+'" data-scope="'+e.id+'">'+esc(e.label)+'</button>';}).join('')
-      +'<span style="font-size:10.5px;color:var(--muted);align-self:center;margin-left:4px">'+esc(reg.regime||'')+'</span></div>';
-  }
-  host.innerHTML='<span class="seatlbl">Scope</span>'+top+sub+scopeSummary();
+  host.innerHTML='<span class="seatlbl">Scope</span>'+top;
   host.querySelectorAll('[data-scope]').forEach(function(b){b.onclick=function(){selectScope(b.getAttribute('data-scope'));};});
 }
-/* A prominent "Now viewing" line right under the scope tabs that recomputes on every
-   click — the region's crown jewels, CSF maturity and key telemetry. This guarantees the
-   scope change is visible even on a tab (like Program Health) whose body barely moves. */
-function scopeSummary(){
+/* A prominent regional header at the TOP of the cockpit content — the selected scope's
+   name, regulator, entity drill, and its ACTUAL NIST CSF posture (overall + per-function)
+   plus crown jewels and key telemetry. Rendered inside #app so it has room to breathe and
+   updates on every scope change; clicking a region visibly changes the whole page here. */
+function scopeBanner(){
   try{
-    var svc=(typeof c5Services==='function')?c5Services():null;
-    if(!svc||svc.total==null)return '';
-    var edr=(typeof sig==='function')?sig('edr_pct'):null;
-    var mfa=(typeof sig==='function')?sig('mfa_pct'):null;
-    var csf=null;try{if(typeof c5fwTree==='function'&&typeof fwDeployedIds==='function')csf=c5fwTree('csf',fwDeployedIds()).overall;}catch(_){}
-    var meta=scopeMeta(SCOPE)||{};
-    var chip=function(t){return '<span style="font-weight:600;color:var(--ink)">'+t+'</span>';};
-    var parts=[chip(esc(scopeLabel(SCOPE)))];
-    parts.push(svc.total+' crown jewel'+(svc.total===1?'':'s'));
-    if(csf!=null)parts.push('CSF '+Number(csf).toFixed(2));
-    if(edr!=null)parts.push('EDR '+edr+'%');
-    if(mfa!=null)parts.push('MFA '+mfa+'%');
-    if(SCOPE!=='enterprise'&&meta.regime)parts.push('<span style="color:var(--muted)">'+esc(meta.regime)+'</span>');
-    return '<div style="flex-basis:100%;margin-top:8px;font-size:12px;color:var(--ink-2);display:flex;flex-wrap:wrap;gap:9px;align-items:center">'
-      +'<span style="font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--blue)">Now viewing</span>'
-      +parts.join('<span style="color:var(--line)">·</span>')+'</div>';
+    var svc=(typeof c5Services==='function')?c5Services():{total:0};
+    var meta=scopeMeta(SCOPE)||{};var activeRegion=scopeRegion(SCOPE);
+    var reg=null;REGIONS.forEach(function(r){if(r.id===activeRegion)reg=r;});
+    var drill='';
+    if(reg&&reg.entities&&reg.entities.length){
+      drill='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">'
+        +'<button class="subtab'+(SCOPE===reg.id?' on':'')+'" data-scope="'+reg.id+'">All '+esc(reg.label)+'</button>'
+        +reg.entities.map(function(e){return '<button class="subtab'+(SCOPE===e.id?' on':'')+'" data-scope="'+e.id+'">'+esc(e.label)+'</button>';}).join('')+'</div>';
+    }
+    var csf=null,fns=[];try{if(typeof c5fwTree==='function'&&typeof fwDeployedIds==='function'){var t=c5fwTree('csf',fwDeployedIds());csf=t.overall;fns=t.groups.map(function(g){return {n:(g.id||g.name).split(' ')[0],s:g.score};});}}catch(_){}
+    var edr=sig('edr_pct'),mfa=sig('mfa_pct');
+    var col=function(v){return v>=3.5?'good':v>=2?'blue':v>=1?'warn':'crit';};
+    var stat=function(v,lbl,c){return '<div style="text-align:center;min-width:58px"><div style="font-size:24px;font-weight:800;color:var(--'+(c||'ink')+');line-height:1">'+v+'</div><div style="font-size:9.5px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);margin-top:3px">'+lbl+'</div></div>';};
+    var fnBar=function(f){var w=Math.round(Math.max(0,Math.min(5,f.s))/5*100);return '<div style="min-width:78px"><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--ink-2);margin-bottom:3px"><span style="font-weight:700">'+esc(f.n)+'</span><span style="font-weight:700;color:var(--'+col(f.s)+')">'+f.s.toFixed(1)+'</span></div><div style="height:5px;background:var(--surface-2);border-radius:3px;overflow:hidden"><i style="display:block;height:100%;width:'+w+'%;background:var(--'+col(f.s)+')"></i></div></div>';};
+    var telem=[];if(edr!=null)telem.push('EDR '+edr+'%');if(mfa!=null)telem.push('MFA '+mfa+'%');
+    var left='<div style="min-width:200px"><div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--blue)">Now viewing</div>'
+      +'<div style="font-size:21px;font-weight:800;color:var(--ink);margin-top:2px">'+esc(scopeLabel(SCOPE))+'</div>'
+      +'<div style="font-size:11.5px;color:var(--muted);margin-top:2px">'+esc(meta.countries||(SCOPE==='enterprise'?'Consolidated across all regions':''))+(meta.regime&&SCOPE!=='enterprise'?(' · '+esc(meta.regime)):'')+'</div>'
+      +(telem.length?('<div style="font-size:11px;color:var(--ink-2);margin-top:6px">'+telem.join(' · ')+'</div>'):'')+drill+'</div>';
+    var stats='<div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap">'
+      +(csf!=null?stat(csf.toFixed(2),'NIST CSF',col(csf)):'')
+      +stat(svc.total,'Crown jewels',svc.total?'ink':'muted')
+      +(fns.length?('<div style="display:flex;gap:12px;flex-wrap:wrap;padding-left:6px;border-left:1px solid var(--line)">'+fns.map(fnBar).join('')+'</div>'):'')+'</div>';
+    return '<div id="scopeBanner" style="border:1px solid var(--line);border-radius:14px;padding:15px 18px;margin-bottom:16px;background:var(--surface);display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;align-items:center">'+left+stats+'</div>';
   }catch(_){return '';}
 }
+function wireScopeBanner(){try{var el=document.getElementById('scopeBanner');if(!el)return;el.querySelectorAll('[data-scope]').forEach(function(b){b.onclick=function(){selectScope(b.getAttribute('data-scope'));};});}catch(_){}}
 function selectScope(id){try{applyScope(id);}catch(_){}renderScopeBar();try{render('ciso');}catch(_){}}
 /* Offline demo sample — a realistic, self-consistent workspace so every figure and every
    answer reads fully populated without a backend. Used ONLY in demo/trial mode and only when
