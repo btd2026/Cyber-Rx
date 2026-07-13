@@ -1860,10 +1860,17 @@
     // Persist connected tools so the War Room streams from the systems you run.
     try{localStorage.setItem('cyberrx_tools',JSON.stringify(SELTOOLS));}catch(_){}
     // Connect the selected security tools now that the org exists (best-effort, real).
+    // Each connector carries a SCOPE from the operating model: a tool for a corporate
+    // COMMON control connects once at 'corporate' and is inherited by every entity; a tool
+    // for a federated control is the entity's own. So connectors live at the right level of
+    // Corporate → Region → Entity, not one flat org-wide bag.
+    var TOOL_CAP={crowdstrike:'edr',defender:'edr',sentinelone:'edr',cortexxdr:'edr',okta:'mfa',entra:'mfa',ping:'mfa',duo:'mfa',cyberark:'pam',beyondtrust:'pam',delinea:'pam',qualys:'vuln',tenable:'vuln',rapid7:'vuln',knowbe4:'aware',proofpoint:'aware',splunk:'siem',sentinel:'siem',elastic:'siem',qradar:'siem',wiz:'cspm',prisma:'cspm',aws:'cspm',azure:'cspm',rubrik:'backup',veeam:'backup',cohesity:'backup',purview:'dlp',forcepoint:'dlp',netskope:'sspm',illumio:'seg',zscaler_zpa:'seg',appomni:'sspm',adaptiveshield:'sspm'};
+    var _sm=(typeof currentSecModel==='function')?currentSecModel():{common:[]};
+    function connScope(k){var cap=TOOL_CAP[k];return (cap&&_sm.common.indexOf(cap)>=0)?'corporate':'org';}
     var toolKeys=Object.keys(SELTOOLS).filter(function(k){return SELTOOLS[k].key&&!SELTOOLS[k].itsm&&!SELTOOLS[k].vmon;});
     if(toolKeys.length){msg.textContent='Connecting your tools…';
       await Promise.all(toolKeys.map(function(k){
-        return fetch(apiBase()+'/api/integrations/'+encodeURIComponent(k)+'/connect?org_id='+encodeURIComponent(orgId),{method:'POST',headers:{'Content-Type':'application/json','X-Org-Id':orgId},body:JSON.stringify({apiToken:SELTOOLS[k].key,token:SELTOOLS[k].key,apiKey:SELTOOLS[k].key})}).catch(function(){});
+        return fetch(apiBase()+'/api/integrations/'+encodeURIComponent(k)+'/connect?org_id='+encodeURIComponent(orgId)+'&scope='+encodeURIComponent(connScope(k)),{method:'POST',headers:{'Content-Type':'application/json','X-Org-Id':orgId},body:JSON.stringify({apiToken:SELTOOLS[k].key,token:SELTOOLS[k].key,apiKey:SELTOOLS[k].key,scope:connScope(k)})}).catch(function(){});
       }));
     }
     try{window.parent.postMessage({type:'cyberrx-golive',org:org,orgId:orgId,industry:v('industry')},'*');}catch(_){}
