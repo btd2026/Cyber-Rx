@@ -3009,6 +3009,14 @@ function renderScopeBar(){
    name, regulator, entity drill, and its ACTUAL NIST CSF posture (overall + per-function)
    plus crown jewels and key telemetry. Rendered inside #app so it has room to breathe and
    updates on every scope change; clicking a region visibly changes the whole page here. */
+/* Compute one region's overall NIST CSF without disturbing the current view — swap the
+   scope + signals, build the tree, restore. Used for the enterprise "regions at a glance"
+   comparison so the group CISO sees which region to focus on. */
+function regionCsf(regionId){var savedS=SIGNALS,savedSC=SCOPE;try{
+  SCOPE=regionId;var vals=(typeof scopeSignalValues==='function')?scopeSignalValues(regionId):{};
+  var s=JSON.parse(JSON.stringify(SIGNALS_BASE||SIGNALS||{}));Object.keys(vals).forEach(function(k){s[k]={key:k,value:vals[k]};});SIGNALS=s;
+  return c5fwTree('csf',fwDeployedIds()).overall;
+}catch(_){return null;}finally{SIGNALS=savedS;SCOPE=savedSC;}}
 function scopeBanner(){
   try{
     var svc=(typeof c5Services==='function')?c5Services():{total:0};
@@ -3034,7 +3042,23 @@ function scopeBanner(){
       +(csf!=null?stat(csf.toFixed(2),'NIST CSF',col(csf)):'')
       +stat(svc.total,'Crown jewels',svc.total?'ink':'muted')
       +(fns.length?('<div style="display:flex;gap:12px;flex-wrap:wrap;padding-left:6px;border-left:1px solid var(--line)">'+fns.map(fnBar).join('')+'</div>'):'')+'</div>';
-    return '<div id="scopeBanner" style="border:1px solid var(--line);border-radius:14px;padding:15px 18px;margin-bottom:16px;background:var(--surface);display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;align-items:center">'+left+stats+'</div>';
+    // Enterprise-only: regions ranked by NIST CSF, weakest first — the group CISO's
+    // "where do I focus?" at a glance. Each card drills into that region.
+    var compare='';
+    if(SCOPE==='enterprise'){
+      var regs=REGIONS.filter(function(r){return r.kind==='region';}).map(function(r){return {r:r,csf:regionCsf(r.id)};}).filter(function(x){return x.csf!=null;});
+      regs.sort(function(a,b){return a.csf-b.csf;});
+      if(regs.length){
+        var cards=regs.map(function(x,i){var c=col(x.csf),weak=(i===0);
+          return '<button data-scope="'+x.r.id+'" style="text-align:left;border:1px solid '+(weak?'var(--crit)':'var(--line)')+';border-radius:10px;padding:9px 12px;background:var(--surface);cursor:pointer;min-width:158px">'
+            +'<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><b style="font-size:12.5px;color:var(--ink)">'+esc(x.r.label)+'</b><span style="font-size:17px;font-weight:800;color:var(--'+c+')">'+x.csf.toFixed(2)+'</span></div>'
+            +'<div style="font-size:10.5px;color:var(--muted);margin-top:2px">'+esc(x.r.regime||'')+'</div>'
+            +(weak?'<div style="font-size:10px;font-weight:700;color:var(--crit);margin-top:4px">◆ weakest — focus here</div>':'')+'</button>';
+        }).join('');
+        compare='<div style="flex-basis:100%;margin-top:14px;border-top:1px solid var(--line);padding-top:12px"><div style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Regions at a glance · NIST CSF, weakest first</div><div style="display:flex;gap:10px;flex-wrap:wrap">'+cards+'</div></div>';
+      }
+    }
+    return '<div id="scopeBanner" style="border:1px solid var(--line);border-radius:14px;padding:15px 18px;margin-bottom:16px;background:var(--surface);display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;align-items:center">'+left+stats+compare+'</div>';
   }catch(_){return '';}
 }
 function wireScopeBanner(){try{var el=document.getElementById('scopeBanner');if(!el)return;el.querySelectorAll('[data-scope]').forEach(function(b){b.onclick=function(){selectScope(b.getAttribute('data-scope'));};});}catch(_){}}
