@@ -46,7 +46,8 @@ describe('1 · missing-document gaps get an "upload now" deep-link', () => {
     expect(onb).toContain('function obHandleUploadDeepLink()');
     expect(onb).toContain('mu=/[#&]upload=([^&]+)/.exec(h)');
     expect(onb).toContain("var isAi=t?/^AI /.test(t.l):false,selId=isAi?'aiGovDocType':'obDocType';");
-    expect(onb).toContain("if(typeof obShow==='function')obShow('gov');");
+    // Doc-review + governance sections now live in the chain-driven "Controls & evidence" tab.
+    expect(onb).toContain("if(typeof obShow==='function')obShow('control');");
     expect(onb).toContain('.ob-uploadflash{animation:obUploadFlash');
     expect(onb).toContain('window.addEventListener(\'hashchange\',obHandleUploadDeepLink);');
   });
