@@ -29,6 +29,15 @@ describe('Onboarding — document uploads limited to CSF/ISO', () => {
     expect(onboarding).not.toContain("['addSbom',SBOM]");
     expect(onboarding).not.toContain('sbom:SBOM.collect()');
   });
+
+  it('removes the AI risk & governance and AI supply-chain document/inventory upload sections', () => {
+    expect(onboarding).not.toContain('AI risk &amp; governance');
+    expect(onboarding).not.toContain('id="secAiSupply"');
+    // the AI document + inventory file inputs are gone
+    expect(onboarding).not.toContain('id="aiGovDocFile"');
+    expect(onboarding).not.toContain('id="aiGovInvFile"');
+    expect(onboarding).not.toContain('type="file" id="aiInvFile"');
+  });
 });
 
 describe('Backend — SBOM no longer collected or catalogued', () => {
@@ -40,5 +49,11 @@ describe('Backend — SBOM no longer collected or catalogued', () => {
   it('the input catalog drops the SBOM input and its er_thirdparty optional', () => {
     expect(catalog).not.toContain("'SBOM': 'sbom'");
     expect(catalog).not.toContain("optional: ['Third-party Security Ratings', 'SBOM']");
+  });
+
+  it('the intake route no longer normalizes or stores AI governance / supply-chain', () => {
+    expect(crownjewels).not.toContain('const ai = b.aiGovernance');
+    expect(crownjewels).not.toContain('const asc = b.aiSupplyChain');
+    expect(crownjewels).not.toContain('governance, aiGovernance, aiSupplyChain, growth');
   });
 });

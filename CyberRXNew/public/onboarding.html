@@ -324,58 +324,7 @@
     </div></div></div>
   </div>
 
-  <!-- 1c · AI risk & governance (derived — no self-reporting) -->
-  <div class="sec">
-    <div class="sh"><div class="sn">✦</div><div><div class="st">AI risk &amp; governance</div><div class="sd">Two sides the board now asks about: our exposure to <b>AI-accelerated attacks</b> (frontier models like Anthropic’s Mythos can auto-discover and exploit vulnerabilities), and how we govern the <b>AI we run</b>. Powers the CEO &amp; CISO AI-risk panels. <b>Nothing to self-assess here</b> — Nerion derives every answer from your AI inventory, the governance documents you upload, and your operating regions.</div></div><div class="badge" id="bai">derived</div></div>
-    <div class="aiup"><div class="aiup-n">1</div><div style="flex:1">
-      <div class="aiup-t">Upload your AI inventory <span style="color:var(--muted);font-weight:400">— sets systems, decisioning &amp; inventory status</span></div>
-      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px">
-        <select id="aiGovInvSource" style="min-width:200px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:#fff">
-          <option value="">Inventory source…</option>
-          <option>ServiceNow CMDB</option><option>Device42</option><option>Axonius</option><option>AI asset inventory / model registry</option><option>CSV / Excel export</option>
-        </select>
-        <input type="file" id="aiGovInvFile" accept=".csv,.tsv,.txt">
-        <input id="aiGovInvCred" placeholder="https://yourorg.service-now.com · API token" style="display:none;flex:1;min-width:230px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:#fff">
-        <button class="conn-go" id="aiGovInvLoad" type="button">Load inventory</button>
-        <span id="aiGovInvMsg" class="sd" style="margin:0"></span>
-      </div>
-      <div class="sd" style="margin-top:6px">One row per asset. A <b>type</b> column classifies each (ai_system · genai_app · machine_identity · crypto_asset); optional <b>customer_facing</b> (yes/no) and <b>sensitivity</b> (high/medium/low) columns. Same file as the AI &amp; supply-chain section below — load it once.</div>
-    </div></div>
-    <div class="aiup"><div class="aiup-n">2</div><div style="flex:1">
-      <div class="aiup-t">Upload your AI governance documents <span style="color:var(--muted);font-weight:400">— sets framework &amp; acceptable-use policy</span></div>
-      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px">
-        <select id="aiGovDocType" style="min-width:230px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:#fff">
-          <option value="d17">AI Governance — NIST AI RMF</option>
-          <option value="d18">AI Governance — ISO/IEC 42001</option>
-          <option value="d19">AI Acceptable-Use Policy</option>
-        </select>
-        <input type="file" id="aiGovDocFile" accept=".pdf,.docx,.doc,.txt,.md">
-        <button class="conn-go" id="aiGovDocAnalyze" type="button">Analyze document</button>
-        <span id="aiGovDocMsg" class="sd" style="margin:0"></span>
-      </div>
-      <div class="sd" style="margin-top:6px">Nerion reads each document against the AI control catalog and records which framework and policy it evidences — the same <b>📄 document-review</b> engine used across onboarding. Upload all three below; each is analyzed and kept separately.</div>
-      <div id="aiGovDocList" style="margin-top:10px"></div>
-    </div></div>
-    <div class="sd" style="margin-top:12px">EU AI Act scope is derived from your <a href="#regions" class="aiGovJump" data-to="regions" style="color:#2563eb;font-weight:600;text-decoration:none">operating regions</a> plus the inventory above. Anything not yet provided stays blank in the cockpit until its source is connected — <b>no estimates</b>.</div>
-  </div>
 
-  <!-- 1c2 · AI & Software Supply-Chain Security (CISO tab) -->
-  <div class="sec" id="secAiSupply">
-    <div class="sh"><div class="sn">✦</div><div><div class="st">AI &amp; Software Supply-Chain Security <span style="color:var(--muted)">(for the CISO)</span></div><div class="sd">Powers the CISO <b>AI &amp; supply chain</b> tab. Nothing to self-assess — the counts come from your inventory and the posture comes from the security tools you connect below. Two automated inputs.</div></div><div class="badge" id="bas">automated</div></div>
-    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-      <select id="aiInvSource" style="min-width:210px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:#fff">
-        <option value="">Inventory source…</option>
-        <option>ServiceNow CMDB</option><option>Device42</option><option>Axonius</option><option>AI asset inventory / model registry</option><option>CSV / Excel export</option>
-      </select>
-      <input type="file" id="aiInvFile" accept=".csv,.tsv,.txt">
-      <input id="aiInvCred" placeholder="https://yourorg.service-now.com · API token" style="display:none;flex:1;min-width:230px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:#fff">
-      <button class="conn-go" id="aiInvParse" type="button">Load inventory</button>
-      <span id="aiInvMsg" class="sd" style="margin:0"></span>
-    </div>
-    <div class="sd" style="margin-top:6px">One row per asset. A <b>type</b> column classifies each as <b>ai_system</b>, <b>genai_app</b>, <b>machine_identity</b> or <b>crypto_asset</b> (optional <b>sensitivity</b> column: high / medium / low; optional <b>customer_facing</b> column: yes / no — drives the AI-decisioning read above). Export from your CMDB or model registry — Nerion counts them, so you never type “how many”.</div>
-    <div id="aiInvSummary" style="margin-top:12px"></div>
-    <div class="sd" style="margin-top:12px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface,#fafafa)">Posture — AI-SPM, shadow-AI (CASB/SSE), CI/CD scanning, machine-identity (NHI/ITDR) and cryptography discovery (CBOM) — reads live from the tools you connect in <b>Connect your systems</b>. <a href="#secTools" id="aiGotoConn" style="color:#2563eb;font-weight:600;text-decoration:none">Go to connectors →</a></div>
-  </div>
 
   <!-- 1d · Strategic initiatives (CEO per-initiative safety check) -->
   <div class="sec">
