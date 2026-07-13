@@ -2878,27 +2878,41 @@ function loadSignals(){applyDemoSignals();var base=apiBase(),o=orgId();if(!base|
 var SCOPE='enterprise', SIGNALS_BASE=null, LIVE_MASTER=null;
 var REGIONS=[
   {id:'enterprise',label:'Enterprise',kind:'rollup',note:'Consolidated across all regions'},
-  {id:'americas',label:'Americas',kind:'region',countries:'US · Canada · Brazil · Mexico',regime:'SEC · CCPA · LGPD',entities:[{id:'americas_us',label:'US HQ & East'},{id:'americas_latam',label:'LATAM'}]},
-  {id:'emea',label:'EMEA',kind:'region',countries:'UK · Germany · UAE · South Africa',regime:'GDPR · DORA · NIS2',entities:[{id:'emea_uk',label:'UK & Ireland'},{id:'emea_dach',label:'DACH'}]},
-  {id:'apac',label:'APAC',kind:'region',countries:'Japan · Singapore · Australia · India',regime:'APPI · PDPA · Privacy Act',entities:[{id:'apac_jp',label:'Japan'},{id:'apac_sea',label:'SE Asia & ANZ'}]}
+  {id:'americas',label:'Americas',kind:'region',countries:'US · Canada · Brazil · Mexico',regime:'SEC · CCPA · LGPD',entities:[
+    {id:'americas_us_east',label:'US East & HQ'},{id:'americas_us_west',label:'US West'},{id:'americas_latam',label:'LATAM'}]},
+  {id:'emea',label:'EMEA',kind:'region',countries:'UK · EU · DACH · Middle East & Africa',regime:'GDPR · DORA · NIS2',entities:[
+    {id:'emea_uk',label:'UK & Ireland'},{id:'emea_eu',label:'EU (Continental)'},{id:'emea_dach',label:'DACH'},{id:'emea_mea',label:'Middle East & Africa'}]},
+  {id:'apac',label:'APAC',kind:'region',countries:'Japan · ANZ · SE Asia · India',regime:'APPI · PDPA · Privacy Act',entities:[
+    {id:'apac_jp',label:'Japan'},{id:'apac_anz',label:'ANZ'},{id:'apac_sea',label:'SE Asia'},{id:'apac_india',label:'India'}]}
 ];
-// Coverage telemetry per scope — the signals that drive Neuron Controls + the NIST CSF
-// framework scoring, so each region has a GENUINELY DISTINCT posture (not a cosmetic
-// name change). The values deliberately span CMMI bands and different profiles, so the
-// per-function CSF (Govern/Identify/Protect/Detect/Respond/Recover) visibly differs by
-// region. Enterprise is the consolidated ROLL-UP — the blend of the regions — so it sits
-// below the strong regions and above the laggard, distinct from any single one.
-var REGION_SIG={
-  enterprise:{edr_pct:83,mfa_pct:82,pam_pct:63,patch_pct:76,training_pct:89,phishing_pct:4,siem_coverage_pct:78,cspm_pct:77,backup_immutable_pct:93,dlp_pct:71,seg_pct:57,sspm_pct:73},
-  // Americas — mature program, strong across the board.
-  americas:{edr_pct:96,mfa_pct:95,pam_pct:80,patch_pct:90,training_pct:96,phishing_pct:2,siem_coverage_pct:92,cspm_pct:90,backup_immutable_pct:100,dlp_pct:78,seg_pct:72,sspm_pct:84},
-  // EMEA — privacy/governance strong, detection only medium.
-  emea:{edr_pct:84,mfa_pct:90,pam_pct:68,patch_pct:80,training_pct:92,phishing_pct:3,siem_coverage_pct:78,cspm_pct:80,backup_immutable_pct:98,dlp_pct:88,seg_pct:62,sspm_pct:86},
-  // APAC — the laggard: weak identity and detection.
-  apac:{edr_pct:68,mfa_pct:60,pam_pct:40,patch_pct:58,training_pct:80,phishing_pct:8,siem_coverage_pct:64,cspm_pct:60,backup_immutable_pct:82,dlp_pct:46,seg_pct:38,sspm_pct:52},
-  apac_jp:{edr_pct:80,mfa_pct:72,pam_pct:52,patch_pct:70,siem_coverage_pct:76,cspm_pct:70,dlp_pct:56,seg_pct:48,sspm_pct:64},
-  apac_sea:{edr_pct:58,mfa_pct:50,pam_pct:32,patch_pct:48,siem_coverage_pct:56,cspm_pct:52,dlp_pct:38,seg_pct:30,sspm_pct:44}
+// Coverage telemetry lives at the ENTITY (leaf) level — every branch has its own posture.
+// A region is the AGGREGATE (mean) of its entities; Enterprise is the aggregate of the
+// regions. So clicking UK & Ireland, EU and DACH each shows a distinct NIST CSF, and
+// "All EMEA" is their genuine roll-up. Values span CMMI bands so the per-function CSF
+// (Govern/Identify/Protect/Detect/Respond/Recover) visibly differs by branch.
+var ENTITY_SIG={
+  americas_us_east:{edr_pct:98,mfa_pct:97,pam_pct:85,patch_pct:92,training_pct:97,phishing_pct:2,siem_coverage_pct:95,cspm_pct:92,backup_immutable_pct:100,dlp_pct:82,seg_pct:76,sspm_pct:88},
+  americas_us_west:{edr_pct:95,mfa_pct:94,pam_pct:78,patch_pct:88,training_pct:95,phishing_pct:2,siem_coverage_pct:90,cspm_pct:90,backup_immutable_pct:100,dlp_pct:76,seg_pct:70,sspm_pct:82},
+  americas_latam:{edr_pct:88,mfa_pct:86,pam_pct:68,patch_pct:80,training_pct:90,phishing_pct:4,siem_coverage_pct:82,cspm_pct:82,backup_immutable_pct:96,dlp_pct:66,seg_pct:58,sspm_pct:72},
+  emea_uk:{edr_pct:92,mfa_pct:88,pam_pct:66,patch_pct:84,training_pct:94,phishing_pct:2,siem_coverage_pct:90,cspm_pct:82,backup_immutable_pct:100,dlp_pct:78,seg_pct:62,sspm_pct:82},
+  emea_eu:{edr_pct:80,mfa_pct:90,pam_pct:68,patch_pct:78,training_pct:92,phishing_pct:4,siem_coverage_pct:72,cspm_pct:80,backup_immutable_pct:96,dlp_pct:92,seg_pct:60,sspm_pct:90},
+  emea_dach:{edr_pct:94,mfa_pct:96,pam_pct:82,patch_pct:92,training_pct:96,phishing_pct:1,siem_coverage_pct:92,cspm_pct:90,backup_immutable_pct:100,dlp_pct:94,seg_pct:76,sspm_pct:94},
+  emea_mea:{edr_pct:72,mfa_pct:78,pam_pct:54,patch_pct:66,training_pct:84,phishing_pct:6,siem_coverage_pct:66,cspm_pct:66,backup_immutable_pct:88,dlp_pct:70,seg_pct:48,sspm_pct:68},
+  apac_jp:{edr_pct:84,mfa_pct:78,pam_pct:58,patch_pct:76,training_pct:86,phishing_pct:4,siem_coverage_pct:80,cspm_pct:74,backup_immutable_pct:90,dlp_pct:60,seg_pct:52,sspm_pct:68},
+  apac_anz:{edr_pct:80,mfa_pct:74,pam_pct:52,patch_pct:72,training_pct:85,phishing_pct:5,siem_coverage_pct:76,cspm_pct:72,backup_immutable_pct:90,dlp_pct:56,seg_pct:48,sspm_pct:64},
+  apac_sea:{edr_pct:58,mfa_pct:50,pam_pct:32,patch_pct:48,training_pct:78,phishing_pct:9,siem_coverage_pct:56,cspm_pct:52,backup_immutable_pct:82,dlp_pct:38,seg_pct:30,sspm_pct:44},
+  apac_india:{edr_pct:66,mfa_pct:60,pam_pct:42,patch_pct:58,training_pct:82,phishing_pct:7,siem_coverage_pct:64,cspm_pct:60,backup_immutable_pct:84,dlp_pct:46,seg_pct:38,sspm_pct:54}
 };
+function meanSig(arr){arr=(arr||[]).filter(Boolean);if(!arr.length)return {};var keys={};arr.forEach(function(o){Object.keys(o).forEach(function(k){keys[k]=1;});});var out={};Object.keys(keys).forEach(function(k){var v=arr.map(function(o){return o[k];}).filter(function(x){return x!=null;});if(v.length)out[k]=Math.round(v.reduce(function(a,b){return a+b;},0)/v.length);});return out;}
+/* Telemetry for a scope: an entity is its own leaf; a region is the mean of its entities;
+   Enterprise is the mean of the regions. So aggregates are TRUE roll-ups, not hardcoded. */
+function scopeSignalValues(id){
+  if(ENTITY_SIG[id])return ENTITY_SIG[id];
+  var reg=null;REGIONS.forEach(function(r){if(r.id===id)reg=r;});
+  if(reg&&reg.entities&&reg.entities.length)return meanSig(reg.entities.map(function(e){return ENTITY_SIG[e.id];}));
+  if(id==='enterprise')return meanSig(REGIONS.filter(function(r){return r.kind==='region';}).map(function(r){return scopeSignalValues(r.id);}));
+  return {};
+}
 /* If the customer defined their org structure at onboarding, that IS the hierarchy —
    Enterprise + their regions + entities. Falls back to the demo REGIONS otherwise, so
    a trial without onboarding still shows the regional story. Per-region telemetry for a
@@ -2938,11 +2952,10 @@ function scopeCapture(){try{if(!SIGNALS_BASE&&SIGNALS)SIGNALS_BASE=JSON.parse(JS
 function applyScope(id){
   SCOPE=id;scopeCapture();
   // 1) telemetry: baseline, then region then entity overrides
-  if(SIGNALS_BASE){var s=JSON.parse(JSON.stringify(SIGNALS_BASE));var layers=[];var p=scopeParent(id);if(p)layers.push(p);layers.push(id);
-    // Apply the scope's telemetry (region then entity). Every scope — including Enterprise
-    // (the roll-up) — sets its coverage signals explicitly, so each region's CSF posture is
-    // genuinely its own.
-    layers.forEach(function(L){var ov=REGION_SIG[L]||{};Object.keys(ov).forEach(function(k){s[k]={key:k,value:ov[k],demo:true};});});SIGNALS=s;}
+  if(SIGNALS_BASE){var s=JSON.parse(JSON.stringify(SIGNALS_BASE));
+    // The scope's telemetry: entity leaf, region aggregate, or enterprise aggregate — so
+    // every branch has its own NIST CSF posture and each region is a true roll-up.
+    var ov=scopeSignalValues(id)||{};Object.keys(ov).forEach(function(k){s[k]={key:k,value:ov[k],demo:true};});SIGNALS=s;}
   // 2) crown jewels: filter the master set to the region (enterprise = all)
   if(LIVE&&LIVE_MASTER&&Array.isArray(LIVE_MASTER.crown_jewels)){
     var region=scopeRegion(id);
