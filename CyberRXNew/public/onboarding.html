@@ -258,6 +258,22 @@
       <div id="secCommon" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:6px 18px"></div></div>
   </div>
 
+  <!-- 1a3 · System discovery & bulk import (enterprise scale) -->
+  <div class="sec">
+    <div class="sh"><div class="sn">✦</div><div><div class="st">Systems <span style="color:var(--muted)">— discover, don’t type</span></div><div class="sd">A global estate is <b>thousands of systems</b> — you don’t enumerate them by hand. Connect a discovery source and Nerion pulls your inventory, or bulk-import a list. Each system is placed in its <b>region</b> and <b>asset class</b> so controls score per system and roll up to the region. <span style="color:var(--muted)">This is the discovery layer that fills the structure skeleton you defined above.</span></div></div><div class="badge" id="bdisc">optional</div></div>
+    <div style="margin-top:4px;font-size:12.5px;color:var(--ink)">Connect a discovery source</div>
+    <div class="chips" id="discSources" style="margin-top:8px">
+      <span class="chip" data-src="cmdb" data-n="1240" data-l="ServiceNow CMDB">ServiceNow CMDB</span>
+      <span class="chip" data-src="cloud" data-n="640" data-l="Cloud (AWS · Azure · GCP)">Cloud (AWS · Azure · GCP)</span>
+      <span class="chip" data-src="idp" data-n="180" data-l="Okta / Entra (SaaS apps)">Okta / Entra (SaaS apps)</span>
+      <span class="chip" data-src="edr" data-n="9800" data-l="EDR (endpoints/servers)">EDR (endpoints)</span>
+    </div>
+    <div style="margin-top:16px;font-size:12.5px;color:var(--ink)">…or bulk-import <span style="color:var(--muted)">(one system per line: <code>name, class, region, owner, criticality</code>)</span></div>
+    <textarea id="sysBulk" placeholder="Customer billing platform, saas, americas, VP Apps, Critical&#10;Order-to-cash, server, emea, Ops Lead, Critical&#10;Data lake, iaas, apac, Data Eng, High" style="width:100%;min-height:90px;margin-top:8px;padding:10px;border:1px solid var(--line);border-radius:8px;font-family:ui-monospace,monospace;font-size:12px"></textarea>
+    <div style="margin-top:8px"><button class="conn-go" id="sysImport" type="button">Import systems</button></div>
+    <div id="discResult" style="margin-top:14px"></div>
+  </div>
+
   <!-- 1b · Board governance & incident readiness -->
   <div class="sec">
     <div class="sh"><div class="sn">✦</div><div><div class="st">Board governance &amp; incident readiness</div><div class="sd">The board’s own oversight structure — what the SEC (Reg S-K Item 106) requires you to disclose, plus your response-and-recover readiness. Powers the CEO/Board governance panel.</div></div><div class="badge" id="bgov">recommended</div></div>
@@ -1046,6 +1062,36 @@
     var saved=null;try{saved=JSON.parse(localStorage.getItem('cyberrx_security_model')||'null');}catch(_){}
     if(saved&&saved.model){document.querySelectorAll('#secModel .chip').forEach(function(x){x.classList.toggle('on',x.getAttribute('data-m')===saved.model);});renderSecCommon(saved.common||[]);}
     else{renderSecCommon(SEC_DEFAULTS.hybrid);}
+  })();
+
+  // ---- System discovery & bulk import (enterprise scale). Connect a source → Nerion
+  // discovers the inventory (demo counts); or paste a list. Persisted to cyberrx_systems.
+  var DISCOVERED={};      // source -> count (from connected discovery sources)
+  var IMPORTED=[];        // bulk-imported system rows
+  function discTotal(){var s=0;Object.keys(DISCOVERED).forEach(function(k){s+=DISCOVERED[k];});return s+IMPORTED.length;}
+  function renderDiscResult(){
+    var host=document.getElementById('discResult');if(!host)return;
+    var srcLines=Object.keys(DISCOVERED).map(function(k){return '<div style="font-size:12px;color:var(--ink-2)">✓ <b>'+DISCOVERED[k].toLocaleString()+'</b> from '+esc(k)+'</div>';}).join('');
+    var imp=IMPORTED.length?('<div style="font-size:12px;color:var(--ink-2)">✓ <b>'+IMPORTED.length+'</b> bulk-imported</div>'+
+      '<div style="overflow-x:auto;margin-top:8px"><table style="border-collapse:collapse;font-size:11.5px"><thead><tr>'+['System','Class','Region','Criticality'].map(function(h){return '<th style="text-align:left;padding:4px 12px 4px 0;color:var(--muted);font-weight:700">'+h+'</th>';}).join('')+'</tr></thead><tbody>'+
+      IMPORTED.slice(0,6).map(function(r){return '<tr>'+[r.name,r.class||'—',r.region||'—',r.criticality||'—'].map(function(c){return '<td style="padding:3px 12px 3px 0;color:var(--ink-2)">'+esc(c)+'</td>';}).join('')+'</tr>';}).join('')+'</tbody></table>'+(IMPORTED.length>6?('<div style="font-size:11px;color:var(--muted);margin-top:4px">+ '+(IMPORTED.length-6)+' more</div>'):'')+'</div>'):'';
+    var t=discTotal();
+    host.innerHTML=t?('<div style="border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--surface,transparent)"><div style="font-size:20px;font-weight:800;color:var(--ink)">'+t.toLocaleString()+' <span style="font-size:12px;font-weight:600;color:var(--muted)">systems in scope</span></div>'+srcLines+imp+'<div style="font-size:11px;color:var(--muted);margin-top:8px">Each is scored per region and asset class; low-criticality systems are auto-classified so you triage the material ones first.</div></div>'):'';
+  }
+  function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function saveSystems(){try{localStorage.setItem('cyberrx_systems',JSON.stringify({discovered:DISCOVERED,imported:IMPORTED,total:discTotal()}));}catch(_){}var b=document.getElementById('bdisc');if(b){var t=discTotal();if(t){b.textContent='✓ '+t.toLocaleString()+' systems';b.classList.add('done');}}try{if(typeof obSaveState==='function')obSaveState();}catch(_){}}
+  (function(){
+    document.querySelectorAll('#discSources .chip').forEach(function(c){c.addEventListener('click',function(){
+      var src=c.getAttribute('data-l'),n=Number(c.getAttribute('data-n'))||0;
+      if(c.classList.toggle('on')){DISCOVERED[src]=n;}else{delete DISCOVERED[src];}
+      renderDiscResult();saveSystems();});});
+    var imp=document.getElementById('sysImport');if(imp)imp.addEventListener('click',function(){
+      var raw=(document.getElementById('sysBulk').value||'').split(/\r?\n/);
+      IMPORTED=raw.map(function(l){var p=l.split(',').map(function(x){return x.trim();});if(!p[0])return null;return {name:p[0],class:(p[1]||'').toLowerCase(),region:(p[2]||'').toLowerCase(),owner:p[3]||'',criticality:p[4]||''};}).filter(Boolean);
+      renderDiscResult();saveSystems();});
+    // restore
+    try{var s=JSON.parse(localStorage.getItem('cyberrx_systems')||'null');if(s){DISCOVERED=s.discovered||{};IMPORTED=s.imported||[];
+      Object.keys(DISCOVERED).forEach(function(k){document.querySelectorAll('#discSources .chip').forEach(function(c){if(c.getAttribute('data-l')===k)c.classList.add('on');});});renderDiscResult();}}catch(_){}
   })();
 
   // ---- business capability map (CISO Enterprise-Risk: capabilities with highest exposure) ----
