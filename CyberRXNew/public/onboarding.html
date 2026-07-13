@@ -208,6 +208,10 @@
     <div class="obtabs" id="obtabs"></div>
     <div class="obprog" id="obProg"><div class="obprog-bar"><i id="obProgFill"></i></div><span class="obprog-lbl" id="obProgLbl">Step 1</span></div>
   </div>
+  <!-- Entity context — everything past Regions & entities is configured PER ENTITY. This bar
+       lists every entity you defined (grouped by region) plus Corporate (shared, inherited by
+       all), and scopes the sections below to the one you pick. Shown only on the entity tabs. -->
+  <div id="entityCtx"></div>
 
   <!-- 1 · Organization -->
   <div class="sec">
@@ -2042,6 +2046,44 @@
         return node+(i<OB_SPINE.length-1?'<span style="color:var(--line);padding:0 1px">→</span>':'');
       }).join('')+'</div>';
   }
+  // ===== Entity context — the tabs after Regions & entities are configured PER ENTITY =====
+  // Everything below the region level (systems, connectors, risks, controls, executive context)
+  // belongs to a specific entity — or to Corporate, whose common controls every entity inherits.
+  var OB_ENTITY_TABS=['sys','connect','risk','control','exec'];
+  var OB_ACTIVE_ENTITY='corporate';
+  // The entities the user defined in Regions & entities (live cards, else the saved structure).
+  function obEntityList(){
+    var out=[];
+    try{if(typeof collectOrgStructure==='function'){collectOrgStructure().forEach(function(r){(r.entities||[]).forEach(function(e){out.push({id:e.id,label:e.label,region:r.label});});});}}catch(_){}
+    if(!out.length){try{var raw=localStorage.getItem('cyberrx_org_structure');if(raw){JSON.parse(raw).forEach(function(r){(r.entities||[]).forEach(function(e){out.push({id:e.id,label:e.label,region:r.label});});});}}catch(_){}}
+    return out;
+  }
+  function obEntityPath(id){
+    if(id==='corporate')return 'Corporate <span style="color:var(--muted)">· shared, inherited by all</span>';
+    var e=obEntityList().filter(function(x){return x.id===id;})[0];
+    return e?('Corporate → '+esc(e.region)+' → <b>'+esc(e.label)+'</b>'):'Corporate';
+  }
+  function renderEntityCtx(key){
+    var host=document.getElementById('entityCtx');if(!host)return;
+    if(OB_ENTITY_TABS.indexOf(key)<0){host.innerHTML='';return;}
+    var ents=obEntityList();
+    var opts='<option value="corporate">Corporate — shared (inherited by all)</option>'+
+      ents.map(function(e){return '<option value="'+esc(e.id)+'"'+(e.id===OB_ACTIVE_ENTITY?' selected':'')+'>'+esc(e.region)+' › '+esc(e.label)+'</option>';}).join('');
+    var hint=ents.length
+      ?('You defined <b>'+ents.length+'</b> '+(ents.length===1?'entity':'entities')+'. Everything on this tab is captured for the selected one; pick <b>Corporate</b> for common controls every entity inherits.')
+      :('No entities yet — add them under <b>Regions & entities</b> and each will appear here to configure on its own. Configuring at <b>Corporate</b> for now (applies to all).');
+    host.innerHTML='<div style="border:1px solid #2563eb;border-radius:12px;padding:12px 15px;margin:0 0 16px;background:color-mix(in srgb,#2563eb 6%,transparent)">'
+      +'<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">'
+      +'<span style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#2563eb;white-space:nowrap">Configuring for</span>'
+      +'<select id="entityCtxSel" style="padding:8px 12px;border:1px solid var(--line);border-radius:8px;font-size:13px;font-weight:600;background:#fff;min-width:230px">'+opts+'</select>'
+      +'<span style="font-size:12.5px;color:var(--ink)">'+obEntityPath(OB_ACTIVE_ENTITY)+'</span></div>'
+      +'<div style="font-size:11.5px;color:var(--muted);margin-top:8px;line-height:1.5">'+hint+'</div></div>';
+    var sel=document.getElementById('entityCtxSel');
+    if(sel)sel.addEventListener('change',function(){OB_ACTIVE_ENTITY=sel.value;renderEntityCtx(key);
+      // Pre-fill the systems import owner with the active entity so discovered systems are entity-scoped.
+      var sb=document.getElementById('sysBulk');if(sb&&sel.value!=='corporate'&&!sb.value.trim())sb.placeholder=sb.placeholder;
+      try{if(typeof obSaveState==='function')obSaveState();}catch(_){}});
+  }
   function obPresentTabs(){var present={};obSecs().forEach(function(sec){var k=obTabOf(sec);if(k)present[k]=1;});return OB_TABS.filter(function(t){return present[t.k];});}
   // A tab counts as COMPLETE when the user has actually put data into it — i.e. any
   // of its sections' badges has flipped to ".done" (badges go done on input/upload).
@@ -2063,7 +2105,7 @@
     if(pw)pw.classList.toggle('done',pct>=100);
     document.querySelectorAll('.obtab').forEach(function(b){b.classList.toggle('done',obTabDone(b.dataset.k));});
   }
-  function obShow(key){OB_ACTIVE=key;renderSpine(key);
+  function obShow(key){OB_ACTIVE=key;renderSpine(key);renderEntityCtx(key);
     obSecs().forEach(function(sec){var tk=obTabOf(sec);var vis=(tk===key);
       if(sec.id==='mapSec')vis=vis&&PROC.length&&APP.length; // map only when built
       if(sec.id==='revSec')vis=vis&&PROC.length;             // revenue confirm only when processes exist
