@@ -2881,15 +2881,22 @@ var REGIONS=[
   {id:'emea',label:'EMEA',kind:'region',countries:'UK · Germany · UAE · South Africa',regime:'GDPR · DORA · NIS2',entities:[{id:'emea_uk',label:'UK & Ireland'},{id:'emea_dach',label:'DACH'}]},
   {id:'apac',label:'APAC',kind:'region',countries:'Japan · Singapore · Australia · India',regime:'APPI · PDPA · Privacy Act',entities:[{id:'apac_jp',label:'Japan'},{id:'apac_sea',label:'SE Asia & ANZ'}]}
 ];
-// Coverage telemetry per scope — the signals that drive Neuron Controls + framework
-// scoring. Enterprise = the demo baseline (no override); regions/entities override it.
+// Coverage telemetry per scope — the signals that drive Neuron Controls + the NIST CSF
+// framework scoring, so each region has a GENUINELY DISTINCT posture (not a cosmetic
+// name change). The values deliberately span CMMI bands and different profiles, so the
+// per-function CSF (Govern/Identify/Protect/Detect/Respond/Recover) visibly differs by
+// region. Enterprise is the consolidated ROLL-UP — the blend of the regions — so it sits
+// below the strong regions and above the laggard, distinct from any single one.
 var REGION_SIG={
-  enterprise:{},
-  americas:{edr_pct:99,mfa_pct:98,pam_pct:72,patch_pct:91,training_pct:96,phishing_pct:2,siem_coverage_pct:95,cspm_pct:88,backup_immutable_pct:100,dlp_pct:70,seg_pct:64},
-  emea:{edr_pct:96,mfa_pct:95,pam_pct:66,patch_pct:88,training_pct:93,phishing_pct:3,siem_coverage_pct:92,cspm_pct:83,backup_immutable_pct:100,dlp_pct:78,seg_pct:60},
-  apac:{edr_pct:82,mfa_pct:76,pam_pct:48,patch_pct:74,training_pct:85,phishing_pct:7,siem_coverage_pct:80,cspm_pct:70,backup_immutable_pct:90,dlp_pct:52,seg_pct:44},
-  apac_jp:{edr_pct:90,mfa_pct:85,pam_pct:58,patch_pct:82,siem_coverage_pct:88,seg_pct:52},
-  apac_sea:{edr_pct:74,mfa_pct:68,pam_pct:40,patch_pct:66,siem_coverage_pct:72,dlp_pct:44,seg_pct:36}
+  enterprise:{edr_pct:83,mfa_pct:82,pam_pct:63,patch_pct:76,training_pct:89,phishing_pct:4,siem_coverage_pct:78,cspm_pct:77,backup_immutable_pct:93,dlp_pct:71,seg_pct:57,sspm_pct:73},
+  // Americas — mature program, strong across the board.
+  americas:{edr_pct:96,mfa_pct:95,pam_pct:80,patch_pct:90,training_pct:96,phishing_pct:2,siem_coverage_pct:92,cspm_pct:90,backup_immutable_pct:100,dlp_pct:78,seg_pct:72,sspm_pct:84},
+  // EMEA — privacy/governance strong, detection only medium.
+  emea:{edr_pct:84,mfa_pct:90,pam_pct:68,patch_pct:80,training_pct:92,phishing_pct:3,siem_coverage_pct:78,cspm_pct:80,backup_immutable_pct:98,dlp_pct:88,seg_pct:62,sspm_pct:86},
+  // APAC — the laggard: weak identity and detection.
+  apac:{edr_pct:68,mfa_pct:60,pam_pct:40,patch_pct:58,training_pct:80,phishing_pct:8,siem_coverage_pct:64,cspm_pct:60,backup_immutable_pct:82,dlp_pct:46,seg_pct:38,sspm_pct:52},
+  apac_jp:{edr_pct:80,mfa_pct:72,pam_pct:52,patch_pct:70,siem_coverage_pct:76,cspm_pct:70,dlp_pct:56,seg_pct:48,sspm_pct:64},
+  apac_sea:{edr_pct:58,mfa_pct:50,pam_pct:32,patch_pct:48,siem_coverage_pct:56,cspm_pct:52,dlp_pct:38,seg_pct:30,sspm_pct:44}
 };
 /* If the customer defined their org structure at onboarding, that IS the hierarchy —
    Enterprise + their regions + entities. Falls back to the demo REGIONS otherwise, so
@@ -2931,9 +2938,10 @@ function applyScope(id){
   SCOPE=id;scopeCapture();
   // 1) telemetry: baseline, then region then entity overrides
   if(SIGNALS_BASE){var s=JSON.parse(JSON.stringify(SIGNALS_BASE));var layers=[];var p=scopeParent(id);if(p)layers.push(p);layers.push(id);
-    // Only override telemetry the enterprise actually has connected — a region can vary a
-    // tool's COVERAGE, never invent a capability the roll-up lacks (keeps Enterprise ≥ regions).
-    layers.forEach(function(L){var ov=REGION_SIG[L]||{};Object.keys(ov).forEach(function(k){if(SIGNALS_BASE[k]!=null)s[k]={key:k,value:ov[k],demo:true};});});SIGNALS=s;}
+    // Apply the scope's telemetry (region then entity). Every scope — including Enterprise
+    // (the roll-up) — sets its coverage signals explicitly, so each region's CSF posture is
+    // genuinely its own.
+    layers.forEach(function(L){var ov=REGION_SIG[L]||{};Object.keys(ov).forEach(function(k){s[k]={key:k,value:ov[k],demo:true};});});SIGNALS=s;}
   // 2) crown jewels: filter the master set to the region (enterprise = all)
   if(LIVE&&LIVE_MASTER&&Array.isArray(LIVE_MASTER.crown_jewels)){
     var region=scopeRegion(id);
