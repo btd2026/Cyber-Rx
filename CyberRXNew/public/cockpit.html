@@ -2804,7 +2804,17 @@ function sig(k){if(!SIGNALS)return null;var s=SIGNALS[k];return (s&&s.value!=nul
    connecting real tools (for trials). Demo tools carry no API key so no live
    telemetry flows; here we synthesise realistic signals for the tool categories
    the user demo-connected, clearly flagged demo so nothing reads as live. */
-function demoActive(){try{return localStorage.getItem('cyberrx_demo_mode')==='1';}catch(_){return false;}}
+/* Demo/trial cockpit: a fresh visitor should see a POPULATED, interactive cockpit — not
+   an empty shell where the regional scope switcher and every tile read "—". So:
+     · explicit '1' → demo;  explicit '0' → real workspace that opted out;
+     · otherwise → demo UNLESS a real org is configured (window.CYBERRX_ORG_ID or a saved
+       cyberrx_org_id). Real deployments set an org, so they still show their own data;
+       an unconfigured / incognito visitor gets the demo so nothing is dead on click. */
+function demoActive(){try{
+  var m=localStorage.getItem('cyberrx_demo_mode');
+  if(m==='1')return true; if(m==='0')return false;
+  return !orgId();
+}catch(_){return false;}}
 function demoSignals(){
   var t=connectedTools(),s={},any=false;
   function set(k,v){s[k]={key:k,value:v,demo:true};any=true;}
