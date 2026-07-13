@@ -27,7 +27,7 @@ describe('Onboarding — per-entity context', () => {
 
   it('offers Corporate (shared/inherited) plus every entity, grouped by region', () => {
     expect(onboarding).toContain('function renderEntityCtx(key){');
-    expect(onboarding).toContain("'<option value=\"corporate\">Corporate — shared (inherited by all)</option>'");
+    expect(onboarding).toContain('<option value="corporate">Corporate — the shared baseline (inherited by all)</option>');
     expect(onboarding).toContain("esc(e.region)+' › '+esc(e.label)");
     // shows the full path for the selected entity
     expect(onboarding).toContain("function obEntityPath(id)");

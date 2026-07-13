@@ -3071,11 +3071,20 @@ function securityModel(){
 }
 // The corporate common-control coverage (the GSS) — strong and uniform, inherited by all.
 var CORPORATE_SIG={mfa_pct:96,pam_pct:82,training_pct:96,phishing_pct:2,siem_coverage_pct:92,cspm_pct:90,backup_immutable_pct:100};
-function commonSigKeys(){return securityModel().common.map(function(k){return (typeof CAP_SIGKEY!=='undefined')?CAP_SIGKEY[k]:null;}).filter(Boolean);}
+/* PER-ENTITY operating model. Each entity independently inherits the Corporate baseline
+   (centralized / hybrid) or runs entirely its own (federated → inherits nothing). Set at
+   onboarding per entity and carried on the org structure (entity.model) or cyberrx_entity_models.
+   Regions/Enterprise are never federated, so they use the baseline. */
+var ENTITY_MODELS={};
+function loadEntityModels(){try{var raw=localStorage.getItem('cyberrx_entity_models');if(raw){var o=JSON.parse(raw);if(o&&typeof o==='object')Object.keys(o).forEach(function(k){ENTITY_MODELS[k]=o[k];});}}catch(_){}}
+function entityMode(scope){return ENTITY_MODELS[scope]||'centralized';}
+// The common (inherited-from-Corporate) capability set FOR THIS SCOPE. A federated entity
+// inherits nothing; everyone else inherits the Corporate baseline.
+function scopeCommon(scope){scope=scope||(typeof SCOPE!=='undefined'?SCOPE:'enterprise');return entityMode(scope)==='federated'?[]:securityModel().common;}
+function commonSigKeys(scope){return scopeCommon(scope).map(function(k){return (typeof CAP_SIGKEY!=='undefined')?CAP_SIGKEY[k]:null;}).filter(Boolean);}
 /* Telemetry for a scope with inheritance: the region/entity's OWN (system-specific)
-   coverage, then the corporate COMMON controls layered on top (inherited). An entity is
-   its own leaf; a region is the mean of its entities; Enterprise is the mean of regions —
-   all for the system-specific side; the common side is the corporate baseline everywhere. */
+   coverage, then the corporate COMMON controls layered on top — but ONLY for scopes that
+   inherit (centralized/hybrid). A federated entity shows just its own coverage. */
 function scopeOwnSignals(id){
   if(ENTITY_SIG[id])return ENTITY_SIG[id];
   var reg=null;REGIONS.forEach(function(r){if(r.id===id)reg=r;});
@@ -3085,23 +3094,23 @@ function scopeOwnSignals(id){
 }
 function scopeSignalValues(id){
   var own=Object.assign({},scopeOwnSignals(id));
-  // Inherit the corporate common controls — the region gets the GSS baseline on these,
-  // regardless of its local coverage.
-  commonSigKeys().forEach(function(sk){if(CORPORATE_SIG[sk]!=null)own[sk]=CORPORATE_SIG[sk];});
+  // Inherit the corporate common controls for this scope's operating model (none if federated).
+  commonSigKeys(id).forEach(function(sk){if(CORPORATE_SIG[sk]!=null)own[sk]=CORPORATE_SIG[sk];});
   return own;
 }
-/* Is a capability a corporate common control (inherited) or region-specific (federated)? */
-function capProvider(capKey){return (securityModel().common.indexOf(capKey)>=0)?'common':'specific';}
+/* Is a capability inherited from Corporate (common) or run by this scope itself (federated)? */
+function capProvider(capKey,scope){return (scopeCommon(scope).indexOf(capKey)>=0)?'common':'specific';}
 /* If the customer defined their org structure at onboarding, that IS the hierarchy —
    Enterprise + their regions + entities. Falls back to the demo REGIONS otherwise, so
    a trial without onboarding still shows the regional story. Per-region telemetry for a
    customer-defined structure comes from their connected tools per entity (backend);
    the demo regions carry illustrative REGION_SIG so the story is visible offline. */
 function loadOrgStructure(){
+  loadEntityModels();
   try{var raw=localStorage.getItem('cyberrx_org_structure');if(!raw)return;var o=JSON.parse(raw);
     if(Array.isArray(o)&&o.length){
       REGIONS=[{id:'enterprise',label:'Enterprise',kind:'rollup',note:'Consolidated across all regions'}].concat(o.map(function(r){
-        return {id:r.id,label:r.label,kind:'region',countries:r.countries||'',regime:r.regime||'',entities:(r.entities||[]).map(function(e){return {id:e.id,label:e.label};})};
+        return {id:r.id,label:r.label,kind:'region',countries:r.countries||'',regime:r.regime||'',entities:(r.entities||[]).map(function(e){if(e.model)ENTITY_MODELS[e.id]=e.model;return {id:e.id,label:e.label};})};
       }));
     }
   }catch(_){}
