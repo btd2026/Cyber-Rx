@@ -190,14 +190,18 @@
 
 <div class="wrap">
   <div class="head">
-    <div class="eyebrow">Model your enterprise security program</div>
-    <h1>Map your global program — regions, systems, and inherited controls — for continuous NIST CSF assessment.</h1>
-    <div class="lede"><b>This isn’t a compliance checklist.</b> Nerion builds a living model of your enterprise: your <b>regions &amp; business units</b>, the controls <b>corporate provides once</b> vs the ones each unit runs (the NIST common-control / GSS model), and the telemetry that <b>continuously assesses all 106 NIST CSF controls</b> — not a point-in-time audit. Start with your <b>structure</b> and <b>operating model</b> below; connect your sources; Nerion discovers and scores the rest. Everything is optional and editable later.</div>
+    <div class="eyebrow">Model your enterprise — not a compliance checklist</div>
+    <h1>One living model of your enterprise, from Corporate down to every control.</h1>
+    <div class="lede">Nerion assesses a global program along a single chain — <b>Corporate → Region → Entity → Process → System → Risk → Control</b>. You define the <b>structure</b> and the <b>operating model</b> (which controls corporate provides once and every unit <b>inherits</b> — the NIST General Support System / common-control model); Nerion <b>discovers</b> your systems, derives the <b>risks</b> each one carries, and <b>continuously assesses all 106 NIST CSF controls</b> from live telemetry — not a point-in-time audit. This setup walks that chain top to bottom. Everything is optional and editable later.</div>
   </div>
 
+  <!-- The platform's spine — the chain every assessment follows. Highlights the stage the
+       active tab sits on, so onboarding never loses the thread of the model. -->
+  <div id="chainSpine" style="margin:4px 0 16px"></div>
+
   <div style="border:1px solid var(--line);border-radius:12px;padding:13px 16px;margin:6px 0 18px;background:var(--surface,transparent);display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start">
-    <div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#2563eb;white-space:nowrap;padding-top:2px">Why this isn’t a checklist</div>
-    <div style="font-size:12.5px;color:var(--muted);line-height:1.6;flex:1;min-width:260px">A compliance-automation tool collects <b>point-in-time</b> evidence for one framework at one entity. Nerion is built for a <b>global enterprise</b>: multi-region / business-unit scope, <b>control inheritance</b> (corporate common controls vs what each unit runs), <b>continuous telemetry-driven</b> scoring of all 106 NIST CSF controls, and <b>materiality-first triage</b> across 1000s of systems. You define the structure once; the rest is discovered and scored continuously.</div>
+    <div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#2563eb;white-space:nowrap;padding-top:2px">Not another Vanta</div>
+    <div style="font-size:12.5px;color:var(--muted);line-height:1.6;flex:1;min-width:260px">A compliance-automation tool collects <b>point-in-time</b> evidence for one framework at one entity. Nerion is built for a <b>global enterprise</b>: multi-region scope with <b>10+ entities per region</b>, <b>control inheritance</b> (corporate common controls vs what each unit runs), <b>continuous telemetry-driven</b> scoring of all 106 NIST CSF controls, and <b>materiality-first triage</b> across 1000s of systems. You define the structure once; the rest is discovered, risk-mapped and scored continuously.</div>
   </div>
 
   <div class="obhead">
@@ -1558,7 +1562,7 @@
   function renderRevConfirm(){
     var sec=document.getElementById('revSec');if(!sec)return;
     if(!PROC.length){sec.style.display='none';return;}
-    sec.style.display=(typeof OB_ACTIVE==='undefined'||OB_ACTIVE==='inv')?'':'none';
+    sec.style.display=(typeof OB_ACTIVE==='undefined'||OB_ACTIVE==='sys')?'':'none';
     var ranked=revRank();
     var confN=PROC.filter(function(p){return p.criticalityConfirmed;}).length;
     var moneyN=PROC.filter(function(p){return p.criticalityConfirmed&&p.bringsMoney;}).length;
@@ -1594,7 +1598,7 @@
   function renderMap(){
     var sec=document.getElementById('mapSec');
     if(!PROC.length||!APP.length){sec.style.display='none';return;}
-    sec.style.display=(typeof OB_ACTIVE==='undefined'||OB_ACTIVE==='inv')?'':'none';
+    sec.style.display=(typeof OB_ACTIVE==='undefined'||OB_ACTIVE==='sys')?'':'none';
     var G=buildGraph();
     var cjs=G.apps.filter(function(a){return a.cj;}).sort(function(x,y){return y.score-x.score;});
     // 3-column visual graph
@@ -1820,8 +1824,8 @@
   document.getElementById('goLive').addEventListener('click',async function(){
     var btn=this,msg=document.getElementById('glmsg');
     var org=v('orgName');
-    if(!org){msg.textContent='Enter an organization name.';msg.style.color='var(--warn)';try{obShow('org');}catch(_){}return;}
-    if(!PROC.length&&!APP.length){msg.textContent='Upload your processes or systems first.';msg.style.color='var(--warn)';try{obShow('inv');}catch(_){}return;}
+    if(!org){msg.textContent='Enter an organization name.';msg.style.color='var(--warn)';try{obShow('corp');}catch(_){}return;}
+    if(!PROC.length&&!APP.length){msg.textContent='Upload your processes or systems first.';msg.style.color='var(--warn)';try{obShow('sys');}catch(_){}return;}
     var orgId='org_'+slug(org);
     var frameworksInScope=Array.prototype.slice.call(document.querySelectorAll('#scopeFrameworks input:checked')).map(function(c){return c.value;});
     var seatNames={};document.querySelectorAll('.seatname').forEach(function(i){if(i.value.trim())seatNames[i.dataset.seat]=i.value.trim();});
@@ -1914,24 +1918,51 @@
   /* ---- Section tabs — one section at a time instead of a long scroll. Every
      section stays in the DOM (hidden, not removed) so go-live still reads every
      field; we only toggle visibility. Sections are grouped by their title. ---- */
+  // Tabs follow the platform chain: Corporate → Region/Entity → Process/System → Connect →
+  // Risk → Control → Executive context. Display order + label only.
   var OB_TABS=[
-    {k:'org',l:'Organization',m:['organization']},
-    {k:'gov',l:'Governance & AI',m:['board governance','ai risk','strategic initiatives','policy & document']},
-    {k:'fin',l:'Financials',m:['financials','enterprise risk','growth engine','insurance']},
-    {k:'inv',l:'Inventory',m:['business processes','systems','map applications','brings money']},
-    {k:'risk',l:'Risks & projects',m:['risk register','business capability map','crown jewel register','business impact analysis','software bill of materials','risk appetite statements','regulatory register','materiality criteria','benchmark data','cyber projects','initiatives']},
-    {k:'tools',l:'Connect tools',m:['connect your tools']}
+    {k:'corp',l:'Corporate'},
+    {k:'struct',l:'Regions & entities'},
+    {k:'sys',l:'Processes & systems'},
+    {k:'connect',l:'Connect'},
+    {k:'risk',l:'Risks'},
+    {k:'control',l:'Controls & evidence'},
+    {k:'exec',l:'Executive context'}
   ];
-  var OB_ACTIVE='org';
+  // Explicit, MOST-SPECIFIC-FIRST rules map each section title to a tab. Decoupled from the
+  // display order above so a title like "Organizational structure" lands in Regions &
+  // entities while "Organization" stays in Corporate — the old keyword scheme collided on
+  // these and silently orphaned whole sections (operating model, per-entity connectors)
+  // from every tab. First matching rule wins.
+  var OB_TABRULES=[
+    {t:'struct',m:'organizational structure'},{t:'struct',m:'security operating model'},
+    {t:'corp',m:'organization'},
+    {t:'sys',m:'business processes'},{t:'sys',m:'systems & applications'},{t:'sys',m:'map applications'},{t:'sys',m:'brings money'},{t:'sys',m:'systems'},
+    {t:'connect',m:'per-entity connectors'},{t:'connect',m:'connect your tools'},
+    {t:'control',m:'policy & document'},{t:'control',m:'board governance'},{t:'control',m:'ai risk'},{t:'control',m:'software supply-chain'},
+    {t:'exec',m:'enterprise risk portfolio'},{t:'exec',m:'financials'},{t:'exec',m:'growth engine'},{t:'exec',m:'insurance'},{t:'exec',m:'strategic initiatives'},{t:'exec',m:'strategic objectives'},
+    {t:'risk',m:'risk register'},{t:'risk',m:'business capability map'},{t:'risk',m:'software bill of materials'},{t:'risk',m:'risk appetite'},{t:'risk',m:'regulatory register'},{t:'risk',m:'materiality criteria'},{t:'risk',m:'benchmark data'},{t:'risk',m:'third-party vendors'},{t:'risk',m:'cyber projects'}
+  ];
+  var OB_ACTIVE='corp';
   function obSecs(){return Array.prototype.slice.call(document.querySelectorAll('.wrap > .sec'));}
   function obTabOf(sec){var st=sec.querySelector('.st');var h=(st?st.textContent:'').toLowerCase();
-    for(var i=0;i<OB_TABS.length;i++){for(var j=0;j<OB_TABS[i].m.length;j++){if(h.indexOf(OB_TABS[i].m[j])>=0)return OB_TABS[i].k;}}return null;}
+    for(var i=0;i<OB_TABRULES.length;i++){if(h.indexOf(OB_TABRULES[i].m)>=0)return OB_TABRULES[i].t;}return null;}
+  // The chain spine — 7 nodes; each tab lights the stage(s) it sits on.
+  var OB_SPINE=[{k:'Corporate',t:['corp']},{k:'Region',t:['struct']},{k:'Entity',t:['struct']},{k:'Process',t:['sys']},{k:'System',t:['sys','connect']},{k:'Risk',t:['risk']},{k:'Control',t:['control']}];
+  function renderSpine(active){
+    var host=document.getElementById('chainSpine');if(!host)return;
+    host.innerHTML='<div style="display:flex;align-items:center;gap:2px;flex-wrap:wrap;font-size:11.5px;font-weight:700">'
+      +OB_SPINE.map(function(n,i){var on=n.t.indexOf(active)>=0;
+        var node='<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:20px;white-space:nowrap;border:1px solid '+(on?'#2563eb':'var(--line)')+';background:'+(on?'color-mix(in srgb,#2563eb 12%,transparent)':'transparent')+';color:'+(on?'#2563eb':'var(--muted)')+'">'+(on?'<span style="width:6px;height:6px;border-radius:50%;background:#2563eb"></span>':'')+n.k+'</span>';
+        return node+(i<OB_SPINE.length-1?'<span style="color:var(--line);padding:0 1px">→</span>':'');
+      }).join('')+'</div>';
+  }
   function obPresentTabs(){var present={};obSecs().forEach(function(sec){var k=obTabOf(sec);if(k)present[k]=1;});return OB_TABS.filter(function(t){return present[t.k];});}
   // A tab counts as COMPLETE when the user has actually put data into it — i.e. any
   // of its sections' badges has flipped to ".done" (badges go done on input/upload).
   // The Organization tab is complete once its required name is filled.
   function obTabDone(k){
-    if(k==='org'){var on=document.getElementById('orgName');if(on&&on.value.trim())return true;}
+    if(k==='corp'){var on=document.getElementById('orgName');if(on&&on.value.trim())return true;}
     var secs=obSecs().filter(function(s){return obTabOf(s)===k;});
     return secs.some(function(s){var b=s.querySelector('.badge');return b&&b.classList.contains('done');});
   }
@@ -1947,12 +1978,12 @@
     if(pw)pw.classList.toggle('done',pct>=100);
     document.querySelectorAll('.obtab').forEach(function(b){b.classList.toggle('done',obTabDone(b.dataset.k));});
   }
-  function obShow(key){OB_ACTIVE=key;
+  function obShow(key){OB_ACTIVE=key;renderSpine(key);
     obSecs().forEach(function(sec){var tk=obTabOf(sec);var vis=(tk===key);
       if(sec.id==='mapSec')vis=vis&&PROC.length&&APP.length; // map only when built
       if(sec.id==='revSec')vis=vis&&PROC.length;             // revenue confirm only when processes exist
       sec.style.display=vis?'':'none';});
-    if(key==='inv'){try{renderRevConfirm();}catch(_){}}
+    if(key==='sys'){try{renderRevConfirm();}catch(_){}}
     document.querySelectorAll('.obtab').forEach(function(b){b.classList.toggle('on',b.dataset.k===key);});
     // Per-page "Next" button — advances to the next tab, hidden on the last tab.
     var tabs=obPresentTabs(),idx=-1;for(var i=0;i<tabs.length;i++){if(tabs[i].k===key)idx=i;}
@@ -1975,7 +2006,7 @@
     // Keep the completion bar live as the user fills fields / uploads / picks options —
     // badges flip on these same events, so we recompute right after they bubble up.
     ['input','change','click'].forEach(function(ev){document.addEventListener(ev,function(){try{obUpdateProgress();}catch(_){}},false);});
-    obShow('org');
+    obShow('corp');
   })();
 
   /* ================= persist onboarding · no re-entry =================
@@ -2066,7 +2097,7 @@
       var t=types.filter(function(d){return d.k===target;})[0];
       if(!t){var tl=String(target).toLowerCase();t=types.filter(function(d){var l=d.l.toLowerCase();return l===tl||l.indexOf(tl)>=0||tl.indexOf(l)>=0;})[0];}
       var isAi=t?/^AI /.test(t.l):false,selId=isAi?'aiGovDocType':'obDocType';
-      try{if(typeof obShow==='function')obShow('gov');}catch(_){}
+      try{if(typeof obShow==='function')obShow('control');}catch(_){}
       setTimeout(function(){
         var sel=document.getElementById(selId);
         if(sel&&t){sel.value=t.k;try{sel.dispatchEvent(new Event('change'));}catch(_){}}
