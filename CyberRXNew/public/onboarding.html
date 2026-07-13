@@ -1742,6 +1742,9 @@
       var body=await r.json().catch(function(){return{};});
       if(r.ok&&body&&body.org_id)orgId=body.org_id;
       else if(!r.ok){msg.textContent='Setup error: '+(body.error||('HTTP '+r.status));msg.style.color='var(--warn)';btn.disabled=false;return;}
+      // Persist the org hierarchy to the backend so the cockpit can scope by entity from
+      // real data (best-effort — the structure is also in localStorage as a fallback).
+      try{if(orgId)fetch(apiBase()+'/api/intake/save-org-structure?org_id='+encodeURIComponent(orgId),{method:'POST',headers:{'Content-Type':'application/json','X-Org-Id':orgId},body:JSON.stringify({org_structure:collectOrgStructure()})}).catch(function(){});}catch(_){}
     }catch(e){/* offline: still hand off; cockpit shows illustrative */}
     try{localStorage.setItem('cyberrx_org_id',orgId);localStorage.setItem('cyberrx_org_name',org);localStorage.setItem('cyberrx_seat_names',JSON.stringify(seatNames));localStorage.setItem('cyberrx_seat_emails',JSON.stringify(seatEmails));localStorage.setItem('cyberrx_industry',v('industry')||'');localStorage.setItem('cyberrx_frameworks',JSON.stringify(frameworksInScope));localStorage.setItem('cyberrx_currency',CUR_SYM+'|'+CUR_CODE);localStorage.setItem('cyberrx_objectives',JSON.stringify(collectObjectives()));}catch(_){}
     // Persist the chosen ticketing system so cockpit decisions open projects there.

@@ -2895,6 +2895,23 @@ function loadOrgStructure(){
     }
   }catch(_){}
 }
+/* Backend parity: in a real (non-demo) workspace, pull the org structure the customer
+   saved at onboarding from the API and drive the scope switcher from it. Best-effort and
+   non-blocking — localStorage/demo regions are the immediate fallback, so a failure or a
+   backend-less trial never breaks the cockpit. */
+function fetchOrgStructure(){
+  try{
+    if(typeof demoActive==='function'&&demoActive())return;
+    var base=(typeof apiBase==='function')?apiBase():'',o=(typeof orgId==='function')?orgId():'';
+    if(!base||!o)return;
+    fetch(base+'/api/intake/org-structure?org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json','X-Org-Id':o}})
+      .then(function(r){return r&&r.ok?r.json():null;})
+      .then(function(d){if(d&&Array.isArray(d.structure)&&d.structure.length){
+        try{localStorage.setItem('cyberrx_org_structure',JSON.stringify(d.structure));}catch(_){}
+        loadOrgStructure();try{applyScope('enterprise');}catch(_){}renderScopeBar();render('ciso');}})
+      .catch(function(){});
+  }catch(_){}
+}
 function scopeParent(id){return (id&&id.indexOf('_')>0)?id.split('_')[0]:null;}
 function scopeRegion(id){return id==='enterprise'?null:(scopeParent(id)||id);}
 function scopeMeta(id){var reg=scopeRegion(id);for(var i=0;i<REGIONS.length;i++){if(REGIONS[i].id===reg)return REGIONS[i];}return REGIONS[0];}
@@ -4759,7 +4776,7 @@ function selectSeat(seat){document.querySelectorAll('.seat').forEach(function(x)
 document.querySelectorAll('.seat').forEach(function(b){b.addEventListener('click',function(){selectSeat(b.dataset.seat);});});
 // Boot: the cockpit opens at Enterprise scope on the CISO engine (the seat personas
 // are retired in favour of regional representation). Scope is applied once data loads.
-CUR='ciso';try{loadOrgStructure();}catch(_){}try{applyScope('enterprise');}catch(_){}try{renderScopeBar();}catch(_){}render('ciso');loadLive();loadSignals();fetchReadiness();
+CUR='ciso';try{loadOrgStructure();}catch(_){}try{applyScope('enterprise');}catch(_){}try{renderScopeBar();}catch(_){}render('ciso');try{fetchOrgStructure();}catch(_){}loadLive();loadSignals();fetchReadiness();
 /* Auto-poll live signals so the "Are we under attack?" tile surfaces a new SIEM
    incident on its own (~every 60s) — no manual refresh needed. The War Room's own
    incidents flip it instantly via triggerIncident/containIncident. */
