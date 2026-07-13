@@ -4893,7 +4893,10 @@ function neuronControls(){
     var effectiveness=(ef&&ef.tested)
       ? {measured:true,blocked:(ef.blocked!=null?ef.blocked:null),detected:(ef.detected!=null?ef.detected:null),source:ef.source||'BAS / purple-team',last:ef.last||null,scenarios:ef.scenarios||null}
       : {measured:false};
-    out.push({k:c.k,name:c.name,tool:c.tool,domain:x.domain,role:x.role,
+    // Provider (NIST common-control model): a common control is provided once by corporate
+    // and inherited by every region; a system-specific control is the region's own.
+    var provider=(typeof capProvider==='function')?capProvider(c.k):'specific';
+    out.push({k:c.k,name:c.name,tool:c.tool,domain:x.domain,role:x.role,provider:provider,
       telemetry:p,deployed:deployed,evidence:evidence,maturityCeil:ceil,
       attack:{prevent:prevent,detect:detect},effectiveness:effectiveness,lanes:x.lanes||[],
       crosswalk:{csf:(fw&&fw.csf)||[],r53:(fw&&fw.r53)||[],cis:x.cis||[],iso:x.iso||[],soc2:x.soc2||[],pci:x.pci||[]}});
@@ -4986,6 +4989,14 @@ function c5NeuronControls(host){
     var m={live:['🟢 live telemetry','good'],hybrid:['🔌 hybrid · human-validated','blue'],none:['— not deployed','muted']}[ev]||['—','muted'];
     return '<span style="font-size:10px;font-weight:700;color:var(--'+m[1]+');background:color-mix(in srgb,var(--'+m[1]+') 12%,transparent);border:1px solid color-mix(in srgb,var(--'+m[1]+') 30%,transparent);border-radius:20px;padding:2px 8px;white-space:nowrap">'+m[0]+'</span>';
   }
+  // Provider (NIST common-control model): common = provided by corporate and inherited by
+  // every region; region-specific = the region runs its own. The auditor's inheritance trace.
+  function provBadge(pv){
+    var common=(pv==='common');
+    var lbl=common?'◆ Common control · inherited from Corporate':'◇ Region-specific control';
+    var c=common?'blue':'muted';
+    return '<span title="'+(common?'Provided once by the corporate General Support System and inherited by every region — a region cannot fall below this baseline.':'Assessed on this region alone (federated).')+'" style="font-size:10px;font-weight:700;color:var(--'+c+');background:color-mix(in srgb,var(--'+c+') 10%,transparent);border:1px solid color-mix(in srgb,var(--'+c+') 28%,transparent);border-radius:6px;padding:2px 8px;white-space:nowrap">'+lbl+'</span>';
+  }
   function axisBar(label,frac,col){
     var w=Math.round(Math.max(0,Math.min(1,frac))*100);
     return '<div style="display:flex;align-items:center;gap:7px;font-size:11px;color:var(--ink-2)"><span style="width:118px;flex:none">'+label+'</span>'
@@ -5015,7 +5026,8 @@ function c5NeuronControls(host){
         : axisBar('Detect · coverage',n.attack.detect,'good');
       return '<div style="border:1px solid var(--line);border-radius:12px;padding:14px 15px;background:var(--surface)">'
         +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:3px"><b style="font-size:13.5px;color:var(--ink)">'+esc(n.name)+'</b><div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end">'+evPill(n.evidence)+effPill+'</div></div>'
-        +'<div style="font-size:11px;color:var(--muted);margin-bottom:10px">'+esc(n.tool||'')+'</div>'
+        +'<div style="font-size:11px;color:var(--muted);margin-bottom:8px">'+esc(n.tool||'')+'</div>'
+        +'<div style="margin-bottom:10px">'+provBadge(n.provider)+'</div>'
         +(typeof capBar==='function'?('<div style="margin-bottom:10px">'+capBar(n.telemetry)+'</div>'):'')
         +preventBlock
         +'<div style="height:5px"></div>'

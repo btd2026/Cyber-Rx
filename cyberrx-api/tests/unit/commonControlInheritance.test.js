@@ -12,6 +12,7 @@ const path = require('path');
 
 const cockpit = fs.readFileSync(path.resolve(__dirname, '../../../CyberRXNew/public/cockpit.html'), 'utf8');
 const onboarding = fs.readFileSync(path.resolve(__dirname, '../../../CyberRXNew/public/onboarding.html'), 'utf8');
+const ciso = fs.readFileSync(path.resolve(__dirname, '../../../CyberRXNew/public/ciso5.js'), 'utf8');
 
 describe('Cockpit — common-control inheritance in the CSF assessment', () => {
   it('reads the operating model (common vs system-specific) with a hybrid default', () => {
@@ -28,6 +29,12 @@ describe('Cockpit — common-control inheritance in the CSF assessment', () => {
 
   it('exposes each capability\'s provider (common inherited vs region-specific)', () => {
     expect(cockpit).toContain("function capProvider(capKey){return (securityModel().common.indexOf(capKey)>=0)?'common':'specific';}");
+  });
+
+  it('surfaces the provider on each Neuron Control with an inheritance badge', () => {
+    expect(ciso).toContain('var provider=(typeof capProvider===\'function\')?capProvider(c.k):\'specific\';');
+    expect(ciso).toContain('◆ Common control · inherited from Corporate');
+    expect(ciso).toContain('◇ Region-specific control');
   });
 });
 
