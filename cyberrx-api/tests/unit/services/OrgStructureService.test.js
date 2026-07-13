@@ -24,7 +24,7 @@ describe('OrgStructureService', () => {
       ]);
       expect(out).toEqual([
         { id: 'emea', label: 'EMEA', countries: 'UK · Germany', regime: 'GDPR', entities: [
-          { id: 'emea_uk_ireland', label: 'UK & Ireland' }, { id: 'emea_dach', label: 'DACH' },
+          { id: 'emea_uk_ireland', label: 'UK & Ireland', model: 'centralized' }, { id: 'emea_dach', label: 'DACH', model: 'centralized' },
         ] },
       ]);
     });
@@ -34,7 +34,14 @@ describe('OrgStructureService', () => {
       const out = Org.normalizeStructure([{ label: '' }, { label: 'APAC', entities: [{ label: '' }, { label: 'Japan' }] }]);
       expect(out).toHaveLength(1);
       expect(out[0].id).toBe('apac');
-      expect(out[0].entities).toEqual([{ id: 'apac_japan', label: 'Japan' }]);
+      expect(out[0].entities).toEqual([{ id: 'apac_japan', label: 'Japan', model: 'centralized' }]);
+    });
+
+    it('preserves each entity\'s operating model (default centralized; federated passes through)', () => {
+      const out = Org.normalizeStructure([
+        { label: 'EMEA', entities: [{ label: 'UK', model: 'federated' }, { label: 'DACH', model: 'bogus' }, { label: 'Iberia' }] },
+      ]);
+      expect(out[0].entities.map((e) => e.model)).toEqual(['federated', 'centralized', 'centralized']);
     });
   });
 
@@ -43,7 +50,7 @@ describe('OrgStructureService', () => {
       const scopes = Org.flattenScopes([{ id: 'apac', label: 'APAC', entities: [{ id: 'apac_japan', label: 'Japan' }] }]);
       expect(scopes[0]).toEqual({ id: 'enterprise', label: 'Enterprise', kind: 'rollup', parent: null });
       expect(scopes).toContainEqual({ id: 'apac', label: 'APAC', kind: 'region', parent: 'enterprise', countries: '', regime: '' });
-      expect(scopes).toContainEqual({ id: 'apac_japan', label: 'Japan', kind: 'entity', parent: 'apac' });
+      expect(scopes).toContainEqual({ id: 'apac_japan', label: 'Japan', kind: 'entity', parent: 'apac', model: 'centralized' });
     });
   });
 

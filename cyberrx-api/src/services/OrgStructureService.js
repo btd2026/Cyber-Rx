@@ -34,7 +34,11 @@ function normalizeStructure(input) {
     const entities = (Array.isArray(r && r.entities) ? r.entities : []).map((e) => {
       const el = String((e && e.label) || '').trim();
       if (!el) return null;
-      return { id: `${id}_${slug(el)}`, label: el };
+      // Per-entity operating model (NIST GSS): centralized/hybrid inherit the Corporate
+      // baseline, federated runs its own. Default centralized (inherit). Preserved so the
+      // cockpit's common-control inheritance is entity-accurate from stored data.
+      const model = ['centralized', 'hybrid', 'federated'].includes(e && e.model) ? e.model : 'centralized';
+      return { id: `${id}_${slug(el)}`, label: el, model };
     }).filter(Boolean);
     return {
       id,
@@ -53,7 +57,7 @@ function flattenScopes(structure) {
   (Array.isArray(structure) ? structure : []).forEach((r) => {
     out.push({ id: r.id, label: r.label, kind: 'region', parent: 'enterprise', countries: r.countries || '', regime: r.regime || '' });
     (Array.isArray(r.entities) ? r.entities : []).forEach((e) => {
-      out.push({ id: e.id, label: e.label, kind: 'entity', parent: r.id });
+      out.push({ id: e.id, label: e.label, kind: 'entity', parent: r.id, model: e.model || 'centralized' });
     });
   });
   return out;

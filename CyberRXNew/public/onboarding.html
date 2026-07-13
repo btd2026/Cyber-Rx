@@ -1092,7 +1092,7 @@
     return Array.prototype.slice.call(document.querySelectorAll('#orgRegions .reg-card')).map(function(c){
       var label=(c.querySelector('.r-name').value||'').trim();if(!label)return null;var id=orgSlug(label);
       var ents=Array.prototype.slice.call(c.querySelectorAll('.ent-row')).map(function(r){
-        var el=(r.querySelector('.e-name').value||'').trim();if(!el)return null;var own=!!(r.querySelector('.e-own')&&r.querySelector('.e-own').checked);return {id:id+'_'+orgSlug(el),label:el,own:own};}).filter(Boolean);
+        var el=(r.querySelector('.e-name').value||'').trim();if(!el)return null;var own=!!(r.querySelector('.e-own')&&r.querySelector('.e-own').checked);var eid=id+'_'+orgSlug(el);var mdl=(typeof OB_ENTITY_MODELS!=='undefined'&&OB_ENTITY_MODELS[eid])||'centralized';return {id:eid,label:el,own:own,model:mdl};}).filter(Boolean);
       return {id:id,label:label,countries:(c.querySelector('.r-countries').value||'').trim(),regime:(c.querySelector('.r-regime').value||'').trim(),entities:ents};
     }).filter(Boolean);
   }
@@ -2067,6 +2067,17 @@
   // belongs to a specific entity — or to Corporate, whose common controls every entity inherits.
   var OB_ENTITY_TABS=['sys','connect','risk','control','exec'];
   var OB_ACTIVE_ENTITY='corporate';
+  // Per-entity operating model — each entity independently INHERITS the Corporate baseline
+  // (centralized), inherits it AND runs some of its own (hybrid), or runs entirely its own
+  // with no inheritance (federated). Many entities can inherit from Corporate. Default:
+  // centralized (inherit), the common case for a global program.
+  var OB_ENTITY_MODELS={};
+  try{OB_ENTITY_MODELS=JSON.parse(localStorage.getItem('cyberrx_entity_models')||'{}')||{};}catch(_){OB_ENTITY_MODELS={};}
+  function obEntityModel(id){return OB_ENTITY_MODELS[id]||'centralized';}
+  function saveEntityModels(){try{localStorage.setItem('cyberrx_entity_models',JSON.stringify(OB_ENTITY_MODELS));}catch(_){}try{if(typeof obSaveState==='function')obSaveState();}catch(_){}}
+  var OB_MODES=[['centralized','Centralized','Inherits every Corporate common control — runs none of its own baseline.'],
+                ['hybrid','Hybrid','Inherits the Corporate baseline and runs some controls locally too.'],
+                ['federated','Federated','Runs entirely its own controls — inherits nothing from Corporate.']];
   // The entities the user defined in Regions & entities (live cards, else the saved structure).
   function obEntityList(){
     var out=[];
@@ -2075,7 +2086,7 @@
     return out;
   }
   function obEntityPath(id){
-    if(id==='corporate')return 'Corporate <span style="color:var(--muted)">· shared, inherited by all</span>';
+    if(id==='corporate')return 'Corporate <span style="color:var(--muted)">· the baseline every centralized / hybrid entity inherits</span>';
     var e=obEntityList().filter(function(x){return x.id===id;})[0];
     return e?('Corporate → '+esc(e.region)+' → <b>'+esc(e.label)+'</b>'):'Corporate';
   }
@@ -2083,22 +2094,45 @@
     var host=document.getElementById('entityCtx');if(!host)return;
     if(OB_ENTITY_TABS.indexOf(key)<0){host.innerHTML='';return;}
     var ents=obEntityList();
-    var opts='<option value="corporate">Corporate — shared (inherited by all)</option>'+
-      ents.map(function(e){return '<option value="'+esc(e.id)+'"'+(e.id===OB_ACTIVE_ENTITY?' selected':'')+'>'+esc(e.region)+' › '+esc(e.label)+'</option>';}).join('');
+    var opts='<option value="corporate">Corporate — the shared baseline (inherited by all)</option>'+
+      ents.map(function(e){return '<option value="'+esc(e.id)+'"'+(e.id===OB_ACTIVE_ENTITY?' selected':'')+'>'+esc(e.region)+' › '+esc(e.label)+' · '+obEntityModel(e.id)+'</option>';}).join('');
+    // Per-entity operating-model picker (only for a real entity, not the Corporate baseline).
+    var modelRow='';
+    if(OB_ACTIVE_ENTITY!=='corporate'&&ents.length){
+      var cur=obEntityModel(OB_ACTIVE_ENTITY);
+      var chips=OB_MODES.map(function(m){return '<span class="chip'+(m[0]===cur?' on':'')+'" data-emode="'+m[0]+'" title="'+esc(m[2])+'">'+m[1]+'</span>';}).join('');
+      var desc=(OB_MODES.filter(function(m){return m[0]===cur;})[0]||[])[2]||'';
+      modelRow='<div style="margin-top:11px;padding-top:11px;border-top:1px solid color-mix(in srgb,#2563eb 20%,transparent)">'
+        +'<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span style="font-size:11.5px;font-weight:700;color:var(--ink)">Operating model for this entity</span>'
+        +'<div class="chips" style="gap:6px">'+chips+'</div>'
+        +'<button type="button" id="emodeAll" style="font-size:11px;color:#2563eb;background:none;border:1px solid color-mix(in srgb,#2563eb 35%,transparent);border-radius:7px;padding:5px 9px;cursor:pointer">Apply to all '+ents.length+' entities</button></div>'
+        +'<div style="font-size:11px;color:var(--muted);margin-top:6px">'+esc(desc)+'</div></div>';
+    } else if(OB_ACTIVE_ENTITY==='corporate'){
+      var inh=ents.filter(function(e){return obEntityModel(e.id)!=='federated';}).length;
+      modelRow='<div style="margin-top:11px;padding-top:11px;border-top:1px solid color-mix(in srgb,#2563eb 20%,transparent);font-size:11.5px;color:var(--ink-2)">'
+        +'This is the <b>Corporate baseline</b> (set the common controls under <b>Regions &amp; entities → Security operating model</b>). '
+        +(ents.length?('<b>'+inh+'</b> of <b>'+ents.length+'</b> entit'+(ents.length===1?'y':'ies')+' currently inherit it; the rest are federated.'):'')+'</div>';
+    }
     var hint=ents.length
-      ?('You defined <b>'+ents.length+'</b> '+(ents.length===1?'entity':'entities')+'. Everything on this tab is captured for the selected one; pick <b>Corporate</b> for common controls every entity inherits.')
-      :('No entities yet — add them under <b>Regions & entities</b> and each will appear here to configure on its own. Configuring at <b>Corporate</b> for now (applies to all).');
+      ?('You defined <b>'+ents.length+'</b> '+(ents.length===1?'entity':'entities')+'. Everything on this tab is captured for the selected one, and each entity sets <b>its own operating model</b> — centralized entities inherit the Corporate baseline, federated ones run their own.')
+      :('No entities yet — add them under <b>Regions & entities</b> and each will appear here with its own operating model. Configuring at <b>Corporate</b> for now (applies to all).');
     host.innerHTML='<div style="border:1px solid #2563eb;border-radius:12px;padding:12px 15px;margin:0 0 16px;background:color-mix(in srgb,#2563eb 6%,transparent)">'
       +'<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">'
       +'<span style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#2563eb;white-space:nowrap">Configuring for</span>'
-      +'<select id="entityCtxSel" style="padding:8px 12px;border:1px solid var(--line);border-radius:8px;font-size:13px;font-weight:600;background:#fff;min-width:230px">'+opts+'</select>'
+      +'<select id="entityCtxSel" style="padding:8px 12px;border:1px solid var(--line);border-radius:8px;font-size:13px;font-weight:600;background:#fff;min-width:250px">'+opts+'</select>'
       +'<span style="font-size:12.5px;color:var(--ink)">'+obEntityPath(OB_ACTIVE_ENTITY)+'</span></div>'
+      +modelRow
       +'<div style="font-size:11.5px;color:var(--muted);margin-top:8px;line-height:1.5">'+hint+'</div></div>';
     var sel=document.getElementById('entityCtxSel');
     if(sel)sel.addEventListener('change',function(){OB_ACTIVE_ENTITY=sel.value;renderEntityCtx(key);
-      // Pre-fill the systems import owner with the active entity so discovered systems are entity-scoped.
-      var sb=document.getElementById('sysBulk');if(sb&&sel.value!=='corporate'&&!sb.value.trim())sb.placeholder=sb.placeholder;
       try{if(typeof obSaveState==='function')obSaveState();}catch(_){}});
+    host.querySelectorAll('[data-emode]').forEach(function(ch){ch.addEventListener('click',function(){
+      OB_ENTITY_MODELS[OB_ACTIVE_ENTITY]=ch.getAttribute('data-emode');saveEntityModels();
+      try{if(typeof updateOrgBadge==='function')updateOrgBadge();}catch(_){}renderEntityCtx(key);});});
+    var all=document.getElementById('emodeAll');
+    if(all)all.addEventListener('click',function(){var m=obEntityModel(OB_ACTIVE_ENTITY);
+      obEntityList().forEach(function(e){OB_ENTITY_MODELS[e.id]=m;});saveEntityModels();
+      try{if(typeof updateOrgBadge==='function')updateOrgBadge();}catch(_){}renderEntityCtx(key);});
   }
   function obPresentTabs(){var present={};obSecs().forEach(function(sec){var k=obTabOf(sec);if(k)present[k]=1;});return OB_TABS.filter(function(t){return present[t.k];});}
   // A tab counts as COMPLETE when the user has actually put data into it — i.e. any
