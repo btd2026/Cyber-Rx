@@ -5261,9 +5261,10 @@ function c5FrameworksClassic(host){
   function _w(n){return (_tot>0?Math.max(0,Math.min(100,n/_tot*100)):0)+'%';}
   var evBox=(!T.total)?'':('<div style="display:grid;grid-template-columns:1fr 1fr;gap:22px;border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:14px">'+
     '<div>'+
-      '<div style="font-weight:600;font-size:13px;color:var(--ink);margin-bottom:4px">How '+_tot+' controls are evidenced</div>'+
-      // Continuous assessment = every control a connected tool pulls telemetry for (live + hybrid).
-      '<div style="font-size:11.5px;color:var(--muted);margin-bottom:11px"><b style="color:var(--good)">'+(_sc.sys+_sc.hybrid)+' of '+_tot+'</b> continuously assessed from your connected tools — <b>'+_sc.sys+'</b> fully automated, <b>'+_sc.hybrid+'</b> hybrid (telemetry pulled, a human validates). Only <b>'+_sc.doc+'</b> can’t be automated at all.</div>'+
+      '<div style="font-weight:600;font-size:13px;color:var(--ink);margin-bottom:4px">Continuous monitoring · all '+_tot+' NIST CSF 2.0 controls</div>'+
+      // Continuous assessment = every control a connected tool pulls telemetry for (live + hybrid),
+      // re-scored on each refresh — not point-in-time evidence collection.
+      '<div style="font-size:11.5px;color:var(--muted);margin-bottom:11px"><b style="color:var(--good)">'+(_sc.sys+_sc.hybrid)+' of '+_tot+'</b> are continuously assessed from your connected tools — <b>'+_sc.sys+'</b> fully automated (re-scored on every telemetry refresh), <b>'+_sc.hybrid+'</b> hybrid (telemetry pulled, a human validates). <b>'+_sc.doc+'</b> are policy-governed — attested from an analyzed document, inherently not automatable'+(_sc.none?(', and <b>'+_sc.none+'</b> await a source (the plan is on the right)'):'')+'. Continuous, not a point-in-time audit.</div>'+
       '<div style="display:flex;height:10px;border-radius:6px;overflow:hidden;background:var(--line)">'+
         '<div style="width:'+_w(_sc.sys)+';background:var(--good)"></div>'+
         (_sc.hybrid?('<div style="width:'+_w(_sc.hybrid)+';background:color-mix(in srgb,var(--good) 50%,var(--blue))"></div>'):'')+
@@ -5280,7 +5281,7 @@ function c5FrameworksClassic(host){
       '</div>'+
     '</div>'+
     '<div>'+
-      '<div style="font-weight:600;font-size:13px;color:var(--ink);margin-bottom:9px">Close the gap</div>'+
+      '<div style="font-weight:600;font-size:13px;color:var(--ink);margin-bottom:9px">Bring more under continuous monitoring</div>'+
       (_gaps.length?_gaps.map(function(g){return '<div style="font-size:12.5px;color:var(--ink-2);margin-bottom:6px">'+(g.kind==='d'?'↥ Upload':'⚡ Connect')+' <b>'+c5esc(g.label)+'</b>'+(g.n>1?(' ('+g.n+')'):'')+(g.kind==='d'?(' <a class="c5gap-up" data-c5gapup="'+c5esc(g.s||g.label)+'" title="Go to onboarding and upload this document" style="color:var(--blue);font-weight:600;cursor:pointer">upload now →</a>'):(' <a class="c5gap-up" data-c5gapconn="'+c5esc(g.label)+'" title="Go to onboarding and connect this tool" style="color:var(--blue);font-weight:600;cursor:pointer">connect now →</a>'))+'</div>';}).join(''):'<div style="font-size:12.5px;color:var(--good);margin-bottom:6px">All controls evidenced.</div>')+
       '<button id="c5reanalyzeBtn" type="button" style="margin-top:4px;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);font-weight:600;font-size:12px;padding:6px 12px;border-radius:8px;cursor:pointer">↻ Re-score documents</button>'+
     '</div>'+
