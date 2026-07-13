@@ -19,6 +19,7 @@ const pipeline = require('../services/DocumentPipelineService');
 const extraction = require('../services/DocumentExtractionService');
 const SampleDoc = require('../services/SampleDocService');
 const OrgStructure = require('../services/OrgStructureService');
+const EntityEvidence = require('../services/EntityEvidenceService');
 const ProcessExtraction = require('../services/ProcessExtractionService');
 const ScanQuota = require('../services/ScanQuotaService');
 const RagIngest = require('../services/rag/RagIngestService');
@@ -301,6 +302,34 @@ router.get('/org-structure', async (req, res) => {
   try {
     const structure = await OrgStructure.get(orgId);
     res.json({ structure, scopes: OrgStructure.flattenScopes(structure) });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Per-entity control evidence (Layer B). Save one scope's signals + document scores, and
+// resolve any scope's evidence with inheritance (entity <- region <- enterprise) so the
+// cockpit reads the right bundle for whatever branch is selected.
+router.post('/save-entity-evidence', async (req, res) => {
+  const orgId = orgOf(req);
+  if (!orgId) return res.status(400).json({ error: 'org_id is required' });
+  const scope = (req.body && req.body.scope) || (req.query && req.query.scope);
+  if (!scope) return res.status(400).json({ error: 'scope is required' });
+  try {
+    const saved = await EntityEvidence.saveEntity(orgId, scope, req.body || {});
+    res.json({ scope, saved });
+  } catch (e) {
+    logger.warn('save-entity-evidence failed', { error: e.message });
+    res.status(500).json({ error: e.message });
+  }
+});
+router.get('/entity-evidence', async (req, res) => {
+  const orgId = orgOf(req);
+  if (!orgId) return res.status(400).json({ error: 'org_id is required' });
+  const scope = (req.query && req.query.scope) || 'enterprise';
+  try {
+    const evidence = await EntityEvidence.resolve(orgId, scope);
+    res.json({ scope, chain: EntityEvidence.inheritanceChain(scope), evidence });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
