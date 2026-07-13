@@ -14,21 +14,23 @@ const path = require('path');
 const cockpit = fs.readFileSync(path.resolve(__dirname, '../../../CyberRXNew/public/cockpit.html'), 'utf8');
 
 describe('Regional scope — model & switcher', () => {
-  it('defines the Enterprise → Region → Entity hierarchy', () => {
+  it('defines the Enterprise → Region → Entity hierarchy (EMEA includes EU)', () => {
     expect(cockpit).toContain('var REGIONS=[');
     ['enterprise', 'americas', 'emea', 'apac'].forEach((id) => expect(cockpit).toContain("id:'" + id + "'"));
-    expect(cockpit).toContain('entities:[{id:\'americas_us\'');
+    expect(cockpit).toContain("{id:'emea_eu',label:'EU (Continental)'}");
   });
 
-  it('carries per-scope telemetry so posture varies by region (APAC is the laggard)', () => {
-    expect(cockpit).toContain('var REGION_SIG={');
-    expect(cockpit).toContain('apac:{edr_pct:82');
+  it('telemetry lives at the entity leaf; regions/enterprise are true aggregates', () => {
+    expect(cockpit).toContain('var ENTITY_SIG={');
+    expect(cockpit).toContain('function scopeSignalValues(id)');
+    // region = mean of its entities; enterprise = mean of regions
+    expect(cockpit).toContain('return meanSig(reg.entities.map(function(e){return ENTITY_SIG[e.id];}));');
+    expect(cockpit).toContain("if(id==='enterprise')return meanSig(REGIONS.filter(function(r){return r.kind==='region';})");
   });
 
-  it('applyScope re-scopes telemetry and crown jewels, guarding Enterprise >= regions', () => {
+  it('applyScope re-scopes telemetry (via scopeSignalValues) and crown jewels', () => {
     expect(cockpit).toContain('function applyScope(id)');
-    // only override tools the enterprise actually has connected
-    expect(cockpit).toContain('if(SIGNALS_BASE[k]!=null)s[k]={key:k,value:ov[k],demo:true};');
+    expect(cockpit).toContain('var ov=scopeSignalValues(id)||{};');
     // crown jewels filter to the region
     expect(cockpit).toContain('LIVE_MASTER.crown_jewels.filter(function(c){return c.region===region;})');
   });
