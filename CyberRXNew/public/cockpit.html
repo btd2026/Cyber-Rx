@@ -2957,8 +2957,31 @@ function renderScopeBar(){
       +reg.entities.map(function(e){return '<button class="subtab'+(SCOPE===e.id?' on':'')+'" data-scope="'+e.id+'">'+esc(e.label)+'</button>';}).join('')
       +'<span style="font-size:10.5px;color:var(--muted);align-self:center;margin-left:4px">'+esc(reg.regime||'')+'</span></div>';
   }
-  host.innerHTML='<span class="seatlbl">Scope</span>'+top+sub;
+  host.innerHTML='<span class="seatlbl">Scope</span>'+top+sub+scopeSummary();
   host.querySelectorAll('[data-scope]').forEach(function(b){b.onclick=function(){selectScope(b.getAttribute('data-scope'));};});
+}
+/* A prominent "Now viewing" line right under the scope tabs that recomputes on every
+   click — the region's crown jewels, CSF maturity and key telemetry. This guarantees the
+   scope change is visible even on a tab (like Program Health) whose body barely moves. */
+function scopeSummary(){
+  try{
+    var svc=(typeof c5Services==='function')?c5Services():null;
+    if(!svc||svc.total==null)return '';
+    var edr=(typeof sig==='function')?sig('edr_pct'):null;
+    var mfa=(typeof sig==='function')?sig('mfa_pct'):null;
+    var csf=null;try{if(typeof c5fwTree==='function'&&typeof fwDeployedIds==='function')csf=c5fwTree('csf',fwDeployedIds()).overall;}catch(_){}
+    var meta=scopeMeta(SCOPE)||{};
+    var chip=function(t){return '<span style="font-weight:600;color:var(--ink)">'+t+'</span>';};
+    var parts=[chip(esc(scopeLabel(SCOPE)))];
+    parts.push(svc.total+' crown jewel'+(svc.total===1?'':'s'));
+    if(csf!=null)parts.push('CSF '+Number(csf).toFixed(2));
+    if(edr!=null)parts.push('EDR '+edr+'%');
+    if(mfa!=null)parts.push('MFA '+mfa+'%');
+    if(SCOPE!=='enterprise'&&meta.regime)parts.push('<span style="color:var(--muted)">'+esc(meta.regime)+'</span>');
+    return '<div style="flex-basis:100%;margin-top:8px;font-size:12px;color:var(--ink-2);display:flex;flex-wrap:wrap;gap:9px;align-items:center">'
+      +'<span style="font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--blue)">Now viewing</span>'
+      +parts.join('<span style="color:var(--line)">·</span>')+'</div>';
+  }catch(_){return '';}
 }
 function selectScope(id){try{applyScope(id);}catch(_){}renderScopeBar();try{render('ciso');}catch(_){}}
 /* Offline demo sample — a realistic, self-consistent workspace so every figure and every
