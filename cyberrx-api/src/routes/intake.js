@@ -18,6 +18,7 @@ const { normalize } = require('../services/DocumentNormalizer');
 const pipeline = require('../services/DocumentPipelineService');
 const extraction = require('../services/DocumentExtractionService');
 const SampleDoc = require('../services/SampleDocService');
+const OrgStructure = require('../services/OrgStructureService');
 const ProcessExtraction = require('../services/ProcessExtractionService');
 const ScanQuota = require('../services/ScanQuotaService');
 const RagIngest = require('../services/rag/RagIngestService');
@@ -280,6 +281,31 @@ router.get('/documents/:id/assessments', async (req, res) => {
 // application→process mapping (and all downstream calculations) can use it.
 // Idempotent: replaces previously intake-sourced processes for this org.
 const SLUG = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'process';
+// Persist the org hierarchy (regions -> entities) the wizard captured, and serve it back
+// so the cockpit scopes Enterprise -> Region -> Entity from real data. Stored on
+// orgs.setup_json.org_structure via OrgStructureService.
+router.post('/save-org-structure', async (req, res) => {
+  const orgId = orgOf(req);
+  if (!orgId) return res.status(400).json({ error: 'org_id is required' });
+  try {
+    const structure = await OrgStructure.save(orgId, req.body && req.body.org_structure);
+    res.json({ saved: structure.length, structure });
+  } catch (e) {
+    logger.warn('save-org-structure failed', { error: e.message });
+    res.status(500).json({ error: e.message });
+  }
+});
+router.get('/org-structure', async (req, res) => {
+  const orgId = orgOf(req);
+  if (!orgId) return res.status(400).json({ error: 'org_id is required' });
+  try {
+    const structure = await OrgStructure.get(orgId);
+    res.json({ structure, scopes: OrgStructure.flattenScopes(structure) });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 router.post('/save-processes', async (req, res) => {
   const orgId = orgOf(req);
   if (!orgId) return res.status(400).json({ error: 'org_id is required' });
