@@ -264,15 +264,22 @@
 
   <!-- 1a3 · System discovery & bulk import (enterprise scale) -->
   <div class="sec">
-    <div class="sh"><div class="sn">✦</div><div><div class="st">Systems <span style="color:var(--muted)">— discover, don’t type</span></div><div class="sd">A global estate is <b>thousands of systems</b> — you don’t enumerate them by hand. Connect a discovery source and Nerion pulls your inventory, or bulk-import a list. Each system is placed in its <b>region</b> and <b>asset class</b> so controls score per system and roll up to the region. <span style="color:var(--muted)">This is the discovery layer that fills the structure skeleton you defined above.</span></div></div><div class="badge" id="bdisc">optional</div></div>
-    <div style="margin-top:4px;font-size:12.5px;color:var(--ink)">Connect a discovery source</div>
+    <div class="sh"><div class="sn">✦</div><div><div class="st">Systems <span style="color:var(--muted)">— discover, don’t type</span></div><div class="sd">A global estate is <b>thousands of systems</b> — you don’t enumerate them by hand. Three ways to bring them in: <b>connect a discovery source</b> (enter its instance URL &amp; API token — Nerion pulls the inventory read-only), <b>upload a CSV / spreadsheet</b> if you don’t run a CMDB, or <b>paste</b> a short list. Each system is placed in its <b>region</b> and <b>asset class</b> so controls score per system and roll up to the region. <span style="color:var(--muted)">This is the discovery layer that fills the structure skeleton you defined above.</span></div></div><div class="badge" id="bdisc">optional</div></div>
+
+    <div style="margin-top:6px;font-size:12.5px;color:var(--ink);font-weight:700">1 · Connect a discovery source <span style="color:var(--muted);font-weight:500">— pick one, then enter its connection details</span></div>
     <div class="chips" id="discSources" style="margin-top:8px">
       <span class="chip" data-src="cmdb" data-n="1240" data-l="ServiceNow CMDB">ServiceNow CMDB</span>
       <span class="chip" data-src="cloud" data-n="640" data-l="Cloud (AWS · Azure · GCP)">Cloud (AWS · Azure · GCP)</span>
       <span class="chip" data-src="idp" data-n="180" data-l="Okta / Entra (SaaS apps)">Okta / Entra (SaaS apps)</span>
       <span class="chip" data-src="edr" data-n="9800" data-l="EDR (endpoints/servers)">EDR (endpoints)</span>
     </div>
-    <div style="margin-top:16px;font-size:12.5px;color:var(--ink)">…or bulk-import <span style="color:var(--muted)">(one per line: <code>name, class, owner, process, criticality</code> — <b>owner</b> is the entity that runs it (e.g. <code>emea_uk</code>) or <code>corporate</code> for a shared system inherited by all; <b>process</b> is the business process it supports. Nerion derives the chain <b>Entity → Process → System</b> from this.)</span></div>
+    <div id="discConn"></div>
+
+    <div style="margin-top:20px;font-size:12.5px;color:var(--ink);font-weight:700">2 · No CMDB? Upload your system list <span style="color:var(--muted);font-weight:500">— export your asset register to CSV and drop it here</span></div>
+    <div style="margin-top:8px"><input type="file" id="sysFile" accept=".csv,.tsv,.txt" style="font-size:12.5px"></div>
+    <div style="margin-top:6px;font-size:11.5px;color:var(--muted)">Columns: <code>name, class, owner, process, criticality</code> — <b>owner</b> is the entity id (e.g. <code>emea_uk</code>) or <code>corporate</code> for a shared system inherited by all; <b>class</b> is one of saas / iaas / server / endpoint / identity / data / network. Nerion derives the chain <b>Entity → Process → System</b> from it.</div>
+
+    <div style="margin-top:20px;font-size:12.5px;color:var(--ink);font-weight:700">3 · …or paste a few <span style="color:var(--muted);font-weight:500">(one per line: <code>name, class, owner, process, criticality</code>)</span></div>
     <textarea id="sysBulk" placeholder="Global identity (Okta), identity, corporate, Identity &amp; access, Critical&#10;UK billing platform, saas, emea_uk, Order-to-cash, Critical&#10;LATAM fulfilment, server, americas_latam, Order-to-cash, High" style="width:100%;min-height:90px;margin-top:8px;padding:10px;border:1px solid var(--line);border-radius:8px;font-family:ui-monospace,monospace;font-size:12px"></textarea>
     <div style="margin-top:8px"><button class="conn-go" id="sysImport" type="button">Import systems</button></div>
     <div id="discResult" style="margin-top:14px"></div>
@@ -1110,20 +1117,58 @@
   }
   function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   function saveSystems(){try{localStorage.setItem('cyberrx_systems',JSON.stringify({discovered:DISCOVERED,imported:IMPORTED,total:discTotal()}));}catch(_){}var b=document.getElementById('bdisc');if(b){var t=discTotal();if(t){b.textContent='✓ '+t.toLocaleString()+' systems';b.classList.add('done');}}try{if(typeof obSaveState==='function')obSaveState();}catch(_){}}
+  // The actual connection mechanics per discovery source — the instance URL / API token a
+  // real integration needs. Credentials are NEVER persisted from onboarding; the secure
+  // connector flow at go-live re-collects them. Here they make the "how do I connect" concrete.
+  var SRC_FIELDS={
+    cmdb:{ic:'🗄',api:'ServiceNow Table API · cmdb_ci',fields:[{k:'url',l:'Instance URL',ph:'https://yourorg.service-now.com'},{k:'user',l:'Integration user',ph:'svc-nerion'},{k:'token',l:'API token / password',ph:'••••••••••',pw:true}]},
+    cloud:{ic:'☁',api:'AWS Config · Azure Resource Graph · GCP Asset Inventory',fields:[{k:'prov',l:'Provider',ph:'AWS / Azure / GCP'},{k:'acct',l:'Account / Subscription / Project',ph:'e.g. 123456789012'},{k:'token',l:'Read-only role ARN or API key',ph:'arn:aws:iam::…:role/NerionReadOnly',pw:true}]},
+    idp:{ic:'🔑',api:'Okta Apps API · Microsoft Graph',fields:[{k:'url',l:'Org domain',ph:'yourorg.okta.com  ·  tenant.onmicrosoft.com'},{k:'token',l:'API token',ph:'••••••••••',pw:true}]},
+    edr:{ic:'🛡',api:'Managed-device inventory (CrowdStrike / Defender / SentinelOne)',fields:[{k:'url',l:'Console / tenant URL',ph:'https://yourtenant.crowdstrike.com'},{k:'cid',l:'Client ID',ph:'client id'},{k:'token',l:'Client secret',ph:'••••••••••',pw:true}]}
+  };
+  // Render a connection card for each selected source: its real URL/API fields + a
+  // Connect & pull button. Once connected it shows the pulled count (read-only in demo).
+  function renderDiscConn(){
+    var host=document.getElementById('discConn');if(!host)return;
+    var sel=Array.prototype.slice.call(document.querySelectorAll('#discSources .chip.on'));
+    host.innerHTML=sel.map(function(c){
+      var src=c.getAttribute('data-src'),label=c.getAttribute('data-l'),n=Number(c.getAttribute('data-n'))||0;
+      var meta=SRC_FIELDS[src]||{ic:'🔌',api:'inventory',fields:[]};var connected=DISCOVERED[label]!=null;
+      var fields=meta.fields.map(function(f){return '<div class="field" style="flex:1;min-width:190px"><label style="font-size:11px;color:var(--muted)">'+esc(f.l)+'</label><input data-cf="'+src+'.'+f.k+'" type="'+(f.pw?'password':'text')+'" placeholder="'+esc(f.ph)+'"'+(connected?' disabled':'')+' style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font-size:12px"></div>';}).join('');
+      return '<div style="border:1px solid '+(connected?'var(--good)':'var(--blue)')+';border-radius:10px;padding:12px 14px;margin-top:10px;background:var(--surface,transparent)">'
+        +'<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><b style="font-size:12.5px;color:var(--ink)">'+meta.ic+' '+esc(label)+'</b>'
+        +(connected?('<span style="font-size:11px;font-weight:700;color:var(--good)">✓ connected · '+n.toLocaleString()+' systems pulled</span>'):('<span style="font-size:10.5px;color:var(--muted)">reads '+esc(meta.api)+'</span>'))+'</div>'
+        +'<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">'+fields+'</div>'
+        +(connected
+          ?'<div style="font-size:11px;color:var(--muted);margin-top:8px">The live '+esc(label)+' API syncs your real inventory on go-live. <span data-disc-edit="'+src+'" style="color:var(--blue);cursor:pointer;font-weight:600">Edit connection</span></div>'
+          :'<div style="margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button class="conn-go" type="button" data-connsrc="'+src+'">Connect &amp; pull inventory</button><span style="font-size:11px;color:var(--muted)">Read-only · credentials aren’t stored from setup — the secure connector re-collects them at go-live.</span></div>')
+        +'</div>';
+    }).join('');
+    host.querySelectorAll('[data-connsrc]').forEach(function(btn){btn.addEventListener('click',function(){
+      var src=btn.getAttribute('data-connsrc'),chip=document.querySelector('#discSources .chip[data-src="'+src+'"]');if(!chip)return;
+      DISCOVERED[chip.getAttribute('data-l')]=Number(chip.getAttribute('data-n'))||0;renderDiscConn();renderDiscResult();saveSystems();});});
+    host.querySelectorAll('[data-disc-edit]').forEach(function(lk){lk.addEventListener('click',function(){
+      var src=lk.getAttribute('data-disc-edit'),chip=document.querySelector('#discSources .chip[data-src="'+src+'"]');if(!chip)return;
+      delete DISCOVERED[chip.getAttribute('data-l')];renderDiscConn();renderDiscResult();saveSystems();});});
+  }
+  // One parser for both the CSV upload and the paste box — owner is an entity id (region
+  // derived from it) or 'corporate' for a shared/GSS system inherited by every entity.
+  function parseSystems(text){return (text||'').split(/\r?\n/).map(function(l){var p=l.split(',').map(function(x){return x.trim();});if(!p[0])return null;
+    var scope=(p[2]||'').toLowerCase();var region=(scope==='corporate'||!scope)?'':(scope.indexOf('_')>0?scope.split('_')[0]:scope);
+    return {name:p[0],class:(p[1]||'').toLowerCase(),owner:scope||'',region:region,process:p[3]||'',criticality:p[4]||''};}).filter(Boolean);}
   (function(){
+    // Selecting a source opens its connection card; it isn't counted until you Connect & pull.
     document.querySelectorAll('#discSources .chip').forEach(function(c){c.addEventListener('click',function(){
-      var src=c.getAttribute('data-l'),n=Number(c.getAttribute('data-n'))||0;
-      if(c.classList.toggle('on')){DISCOVERED[src]=n;}else{delete DISCOVERED[src];}
-      renderDiscResult();saveSystems();});});
+      if(!c.classList.toggle('on'))delete DISCOVERED[c.getAttribute('data-l')];
+      renderDiscConn();renderDiscResult();saveSystems();});});
     var imp=document.getElementById('sysImport');if(imp)imp.addEventListener('click',function(){
-      var raw=(document.getElementById('sysBulk').value||'').split(/\r?\n/);
-      IMPORTED=raw.map(function(l){var p=l.split(',').map(function(x){return x.trim();});if(!p[0])return null;
-        var scope=(p[2]||'').toLowerCase();var region=(scope==='corporate'||!scope)?'':(scope.indexOf('_')>0?scope.split('_')[0]:scope);
-        return {name:p[0],class:(p[1]||'').toLowerCase(),owner:scope||'',region:region,process:p[3]||'',criticality:p[4]||''};}).filter(Boolean);
-      renderDiscResult();saveSystems();});
+      IMPORTED=parseSystems(document.getElementById('sysBulk').value||'');renderDiscResult();saveSystems();});
+    // Upload path for orgs without a CMDB — read the CSV and parse it exactly like the paste box.
+    var sf=document.getElementById('sysFile');if(sf)sf.addEventListener('change',function(){var f=sf.files&&sf.files[0];if(!f)return;
+      var r=new FileReader();r.onload=function(){IMPORTED=parseSystems(String(r.result||''));renderDiscResult();saveSystems();var b=document.getElementById('bdisc');};r.readAsText(f);});
     // restore
     try{var s=JSON.parse(localStorage.getItem('cyberrx_systems')||'null');if(s){DISCOVERED=s.discovered||{};IMPORTED=s.imported||[];
-      Object.keys(DISCOVERED).forEach(function(k){document.querySelectorAll('#discSources .chip').forEach(function(c){if(c.getAttribute('data-l')===k)c.classList.add('on');});});renderDiscResult();}}catch(_){}
+      Object.keys(DISCOVERED).forEach(function(k){document.querySelectorAll('#discSources .chip').forEach(function(c){if(c.getAttribute('data-l')===k)c.classList.add('on');});});renderDiscConn();renderDiscResult();}}catch(_){}
   })();
 
   // ---- Per-entity connectors. Common controls are inherited from Corporate (connected
