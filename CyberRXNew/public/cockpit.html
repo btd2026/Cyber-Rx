@@ -1719,8 +1719,26 @@ var DOC_TYPES=[
   {k:'d7',l:'Business Continuity / DR Plan'},{k:'d8',l:'Change Management Policy'},
   {k:'d9',l:'Configuration Management Policy'},{k:'d10',l:'Data Protection Policy'}
 ];
-function docScores(){try{return JSON.parse(localStorage.getItem('cyberrx_doc_scores')||'{}')||{};}catch(_){return {};}}
-function saveDocScore(id,o){var m=docScores();m[id]=o;try{localStorage.setItem('cyberrx_doc_scores',JSON.stringify(m));}catch(_){}}
+/* The globally-uploaded document scores (enterprise-level) — the raw store. */
+function docScoresBase(){try{return JSON.parse(localStorage.getItem('cyberrx_doc_scores')||'{}')||{};}catch(_){return {};}}
+function saveDocScore(id,o){var m=docScoresBase();m[id]=o;try{localStorage.setItem('cyberrx_doc_scores',JSON.stringify(m));}catch(_){}}
+/* Document evidence RESOLVED for the current scope, with inheritance: an entity inherits
+   its region's policies, which inherit the enterprise's globally-uploaded set — so you
+   upload a global policy once and override only where a region genuinely differs. This is
+   what wires the 📄 document side of every control down to the selected region. In
+   production these per-entity doc scores come from the backend (documents tagged by
+   entity); the demo carries illustrative per-region profiles (DEMO_DOC_REGION). */
+function docScores(){
+  var out=docScoresBase();
+  try{
+    if(typeof demoActive==='function'&&demoActive()&&typeof SCOPE!=='undefined'&&typeof DEMO_DOC_REGION!=='undefined'){
+      var region=(typeof scopeRegion==='function')?scopeRegion(SCOPE):null;out=Object.assign({},out);
+      if(region&&DEMO_DOC_REGION[region])Object.keys(DEMO_DOC_REGION[region]).forEach(function(id){out[id]=demoDocFromProfile(DEMO_DOC_REGION[region][id]);});
+      if(SCOPE!==region&&DEMO_DOC_REGION[SCOPE])Object.keys(DEMO_DOC_REGION[SCOPE]).forEach(function(id){out[id]=demoDocFromProfile(DEMO_DOC_REGION[SCOPE][id]);});
+    }
+  }catch(_){}
+  return out;
+}
 function docList(){try{return JSON.parse(localStorage.getItem('cyberrx_docs')||'[]')||[];}catch(_){return [];}}
 function saveDocList(a){try{localStorage.setItem('cyberrx_docs',JSON.stringify(a.slice(0,20)));}catch(_){}}
 function pctToCmmi(p){return p==null?null:p>=90?5:p>=75?4:p>=50?3:p>=25?2:p>0?1:0;}
@@ -1851,7 +1869,17 @@ function demoDocAttrs(cmmi){
   ];
   return A.map(function(a){var found=cmmi>=a.min;var o={label:a.label,found:found};if(found){o.evidence=a.ev;}else{o.reasoning=a.miss||('Expected attribute “'+a.label.toLowerCase()+'” not evidenced in the analyzed policy.');}return o;});
 }
-function seedDemoDocScores(){if(!demoActive()||Object.keys(docScores()).length)return;
+/* Per-region document profiles (demo): the policies a region has uploaded and how well
+   they score each control — Americas strong on SEC governance & IR, EMEA strong on
+   GDPR/DORA data-protection, APAC still on draft policies. Entities inherit their region.
+   Each entry is [cmmi, document name]; docScores() expands it to the full attribute shape. */
+var DEMO_DOC_REGION={
+  americas:{'GV.OC-01':[5,'US Information Security Policy'],'GV.RR-01':[4,'US Governance Charter (SEC Item 106)'],'RS.MA-01':[4,'US Incident Response Runbook'],'DE.CM-01':[3,'US Security Monitoring Standard']},
+  emea:{'GV.OC-01':[5,'EMEA Information Security Policy'],'GV.RM-01':[4,'EMEA Risk Framework (DORA)'],'PR.DS-01':[4,'EMEA Data Protection Policy (GDPR)'],'PR.DS-02':[4,'EMEA Data Protection Policy (GDPR)'],'GV.PO-01':[5,'EMEA ISMS Policy (ISO 27001)']},
+  apac:{'GV.OC-01':[2,'APAC Security Policy (draft)'],'PR.AA-01':[2,'APAC Access Control Policy (draft)'],'RS.MA-01':[1,'APAC IR Plan (not finalized)']}
+};
+function demoDocFromProfile(spec){var cmmi=spec[0],docName=spec[1];var attrs=demoDocAttrs(cmmi);var matched=attrs.filter(function(a){return a.found;}).length;return {cmmi:cmmi,doc:docName,matched:matched,total:attrs.length,attrs:attrs};}
+function seedDemoDocScores(){if(!demoActive()||Object.keys(docScoresBase()).length)return;
   var sample={'GV.OC-01':4,'GV.OC-03':3,'GV.RM-01':3,'GV.PO-01':4,'GV.PO-02':3,'PR.AA-01':4,'PR.AA-05':3,'PR.AT-01':3,'ID.RA-01':3,'ID.RA-05':2,'DE.CM-01':2,'RS.MA-01':3};
   Object.keys(sample).forEach(function(id){var attrs=demoDocAttrs(sample[id]);var matched=attrs.filter(function(a){return a.found;}).length;
     saveDocScore(id,{cmmi:sample[id],doc:'Information Security Policy (sample).pdf',matched:matched,total:attrs.length,attrs:attrs});});}

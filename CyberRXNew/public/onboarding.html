@@ -236,7 +236,7 @@
 
   <!-- 1a · Organizational structure (regions & entities) -->
   <div class="sec">
-    <div class="sh"><div class="sn">✦</div><div><div class="st">Organizational structure <span style="color:var(--muted)">(regions &amp; entities)</span></div><div class="sd">Your global footprint — the regions and the legal entities / branches under each. Nerion scopes the whole cockpit to any level you pick (<b>Enterprise → Region → Entity</b>): the group CISO sees the consolidated roll-up, each regional CISO sees their own posture, and privacy/regulatory obligations attach per region. Leave it empty and Nerion runs single-entity.</div></div><div class="badge" id="borg">optional</div></div>
+    <div class="sh"><div class="sn">✦</div><div><div class="st">Organizational structure <span style="color:var(--muted)">(regions &amp; entities)</span></div><div class="sd">Your global footprint — the regions and the legal entities / branches under each. Nerion scopes the whole cockpit to any level you pick (<b>Enterprise → Region → Entity</b>): the group CISO sees the consolidated roll-up, each regional CISO sees their own posture, and privacy/regulatory obligations attach per region. Tick <b>“own systems &amp; docs”</b> on a branch that connects its own tools and uploads its own policies (e.g. EMEA on Defender with a GDPR data-protection policy); leave it unticked and the branch <b>inherits</b> the region/enterprise — so a global policy is uploaded once, and you override only where a branch genuinely differs. Leave it empty and Nerion runs single-entity.</div></div><div class="badge" id="borg">optional</div></div>
     <div id="orgRegions"></div>
     <div style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap">
       <button class="conn-go" id="addRegion" type="button">+ Add region</button>
@@ -961,11 +961,14 @@
   // ---- Organizational structure: regions → entities. Drives the cockpit scope switcher
   // (Enterprise → Region → Entity). Persisted to cyberrx_org_structure, which the cockpit reads.
   function orgSlug(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'')||'x';}
-  function addOrgEntity(entWrap,v){v=v||{};var row=document.createElement('div');row.className='ent-row';row.style.cssText='display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:6px';
+  function addOrgEntity(entWrap,v){v=v||{};var row=document.createElement('div');row.className='ent-row';row.style.cssText='display:grid;grid-template-columns:1fr auto auto;gap:8px;margin-top:6px;align-items:center';
     row.innerHTML='<input class="e-name" placeholder="Entity / branch — e.g. UK &amp; Ireland" style="padding:7px 9px;border:1px solid var(--line);border-radius:8px">'+
+      '<label style="display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--muted);white-space:nowrap;cursor:pointer" title="On: this branch connects its OWN systems and uploads its OWN documents. Off: it inherits the region / enterprise policies and tools.">'+
+        '<input type="checkbox" class="e-own"> own systems &amp; docs</label>'+
       '<button class="e-del" type="button" title="Remove" style="border:1px solid var(--line);background:#fff;border-radius:8px;cursor:pointer;color:var(--muted);width:34px">✕</button>';
     entWrap.appendChild(row);
     if(v.label)row.querySelector('.e-name').value=v.label;
+    if(v.own)row.querySelector('.e-own').checked=true;
     row.querySelector('.e-del').addEventListener('click',function(){row.remove();updateOrgBadge();});
     ['input','change'].forEach(function(ev){row.addEventListener(ev,updateOrgBadge);});
   }
@@ -993,7 +996,7 @@
     return Array.prototype.slice.call(document.querySelectorAll('#orgRegions .reg-card')).map(function(c){
       var label=(c.querySelector('.r-name').value||'').trim();if(!label)return null;var id=orgSlug(label);
       var ents=Array.prototype.slice.call(c.querySelectorAll('.ent-row')).map(function(r){
-        var el=(r.querySelector('.e-name').value||'').trim();if(!el)return null;return {id:id+'_'+orgSlug(el),label:el};}).filter(Boolean);
+        var el=(r.querySelector('.e-name').value||'').trim();if(!el)return null;var own=!!(r.querySelector('.e-own')&&r.querySelector('.e-own').checked);return {id:id+'_'+orgSlug(el),label:el,own:own};}).filter(Boolean);
       return {id:id,label:label,countries:(c.querySelector('.r-countries').value||'').trim(),regime:(c.querySelector('.r-regime').value||'').trim(),entities:ents};
     }).filter(Boolean);
   }
