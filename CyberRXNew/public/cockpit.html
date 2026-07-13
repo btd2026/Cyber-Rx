@@ -31,10 +31,15 @@
   .dot{width:7px;height:7px;border-radius:50%;background:var(--good)}
   .mocktag{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--warn);border:1px solid rgba(250,178,25,.4);border-radius:99px;padding:3px 9px}
   .seats{border-bottom:1px solid var(--line);background:var(--plane);position:sticky;top:0;z-index:9}
-  .seats-in{display:flex;align-items:center;gap:6px;height:50px;overflow-x:auto}
-  .seatlbl{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-right:8px;white-space:nowrap}
+  .seats-in{display:flex;align-items:center;gap:5px 6px;min-height:50px;flex-wrap:wrap;padding:7px 0}
+  .seatlbl{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-right:6px;white-space:nowrap}
   .seat{font-weight:600;font-size:13px;color:var(--ink-2);background:none;border:1px solid transparent;border-radius:99px;padding:6px 14px;cursor:pointer;white-space:nowrap}
   .seat.on{color:var(--ink);background:var(--surface-2);border-color:var(--blue)}
+  /* Explicit Enterprise → Region → Entity hierarchy in the scope bar */
+  .scope-sep{color:var(--line);font-size:15px;font-weight:400;margin:0 1px;user-select:none}
+  .scope-tier{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 3px 0 4px;white-space:nowrap}
+  .seat.ent{font-size:12px;padding:5px 11px}
+  .seat.ent.on{background:color-mix(in srgb,var(--blue) 12%,var(--surface-2))}
   #dataModeBar{display:none}
   .hero{padding:30px 0 4px}
   .eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--blue);font-weight:600;margin-bottom:12px}
@@ -3139,12 +3144,33 @@ function applyScope(id){
     LIVE.counts=Object.assign({},LIVE_MASTER.counts||{},{crown_jewels:LIVE.crown_jewels.filter(function(c){return !c.provisional;}).length});
   }
 }
+/* The scope bar IS the Enterprise → Region → Entity hierarchy, always visible. Three
+   labelled tiers: Enterprise (root) › Region (the three regions) › Entity (the selected
+   region's branches — 10+). The current path is highlighted at every level, and the Entity
+   tier only appears once you're inside a region, so the drill-down structure is explicit and
+   navigable rather than hidden behind a click. */
 function renderScopeBar(){
   var host=document.getElementById('scopeBar');if(!host)return;
-  var activeRegion=scopeRegion(SCOPE);
-  var top=REGIONS.map(function(r){var on=(r.id===SCOPE)||(r.id!=='enterprise'&&r.id===activeRegion);
-    return '<button class="seat'+(on?' on':'')+'" data-scope="'+r.id+'"'+(r.countries?(' title="'+r.countries+(r.regime?(' · '+r.regime):'')+'"'):(' title="'+(r.note||'')+'"'))+'>'+r.label+'</button>';}).join('');
-  host.innerHTML='<span class="seatlbl">Scope</span>'+top;
+  var activeRegion=scopeRegion(SCOPE);           // region id, or 'enterprise'
+  var regions=REGIONS.filter(function(r){return r.kind==='region';});
+  var esc=(typeof c5esc==='function')?c5esc:function(s){return s;};
+  // Tier 1 — Enterprise root
+  var ent=REGIONS.filter(function(r){return r.id==='enterprise';})[0]||{id:'enterprise',label:'Enterprise'};
+  var html='<span class="seatlbl">Scope</span>'
+    +'<button class="seat'+(SCOPE==='enterprise'?' on':'')+'" data-scope="enterprise" title="'+esc(ent.note||'Consolidated across all regions')+'">'+esc(ent.label)+'</button>'
+    +'<span class="scope-sep">›</span><span class="scope-tier">Region</span>'
+    // Tier 2 — Regions
+    +regions.map(function(r){var on=(r.id===activeRegion);
+      return '<button class="seat'+(on?' on':'')+'" data-scope="'+r.id+'" title="'+esc((r.countries||'')+(r.regime?(' · '+r.regime):''))+'">'+esc(r.label)+'</button>';}).join('');
+  // Tier 3 — Entities of the active region (only inside a region)
+  var reg=null;regions.forEach(function(r){if(r.id===activeRegion)reg=r;});
+  if(reg&&reg.entities&&reg.entities.length){
+    html+='<span class="scope-sep">›</span><span class="scope-tier">Entity · '+reg.entities.length+'</span>'
+      +'<button class="seat ent'+(SCOPE===reg.id?' on':'')+'" data-scope="'+reg.id+'" title="Consolidated roll-up of '+esc(reg.label)+'">All '+esc(reg.label)+'</button>'
+      +reg.entities.map(function(e){var on=(SCOPE===e.id);
+        return '<button class="seat ent'+(on?' on':'')+'" data-scope="'+e.id+'">'+esc(e.label)+'</button>';}).join('');
+  }
+  host.innerHTML=html;
   host.querySelectorAll('[data-scope]').forEach(function(b){b.onclick=function(){selectScope(b.getAttribute('data-scope'));};});
 }
 /* A prominent regional header at the TOP of the cockpit content — the selected scope's
