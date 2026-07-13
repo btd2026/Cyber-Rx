@@ -1020,20 +1020,60 @@
     row.querySelector('.e-del').addEventListener('click',function(){row.remove();updateOrgBadge();});
     ['input','change'].forEach(function(ev){row.addEventListener(ev,updateOrgBadge);});
   }
+  // Region & country catalog — regions and their countries are PICKED, not typed. Each region
+  // carries its typical countries and primary regulator, so choosing a region auto-fills both.
+  var REGION_OPTIONS=[
+    {label:'Americas',regime:'SEC · CCPA · LGPD',countries:['United States','Canada','Brazil','Mexico','Argentina','Chile','Colombia']},
+    {label:'North America',regime:'SEC · CCPA · PIPEDA',countries:['United States','Canada','Mexico']},
+    {label:'LATAM',regime:'LGPD · Ley 25.326',countries:['Brazil','Mexico','Argentina','Chile','Colombia','Peru']},
+    {label:'EMEA',regime:'GDPR · DORA · NIS2',countries:['United Kingdom','Germany','France','Netherlands','Spain','Italy','Nordics','UAE','Saudi Arabia','South Africa']},
+    {label:'Europe (Continental)',regime:'GDPR · DORA · NIS2',countries:['Germany','France','Netherlands','Spain','Italy','Belgium','Poland','Nordics']},
+    {label:'UK & Ireland',regime:'UK GDPR · DORA',countries:['United Kingdom','Ireland']},
+    {label:'DACH',regime:'GDPR · NIS2',countries:['Germany','Austria','Switzerland']},
+    {label:'Middle East & Africa',regime:'PDPL · POPIA',countries:['UAE','Saudi Arabia','Qatar','South Africa','Egypt','Nigeria','Kenya']},
+    {label:'APAC',regime:'APPI · PDPA · Privacy Act',countries:['Japan','Australia','Singapore','India','South Korea','China','Hong Kong','New Zealand']},
+    {label:'Greater China',regime:'PIPL',countries:['China','Hong Kong','Taiwan']},
+    {label:'Japan',regime:'APPI',countries:['Japan']},
+    {label:'ANZ',regime:'Privacy Act 1988',countries:['Australia','New Zealand']},
+    {label:'India',regime:'DPDP Act',countries:['India']},
+    {label:'SE Asia',regime:'PDPA',countries:['Singapore','Malaysia','Thailand','Indonesia','Philippines','Vietnam']},
+    {label:'Global',regime:'Multi-jurisdiction',countries:['United States','United Kingdom','Germany','Japan','Australia','Singapore','Brazil','India']}
+  ];
+  function orgRegionMeta(label){return REGION_OPTIONS.filter(function(o){return o.label===label;})[0]||null;}
+  // Countries multi-select: click chips to toggle. The hidden .r-countries input holds the
+  // "·"-joined value so collectOrgStructure reads it unchanged.
+  function renderCountryChips(box,hidden,regionLabel,selected){
+    selected=(selected||[]).slice();var meta=orgRegionMeta(regionLabel);var base=meta?meta.countries.slice():[];
+    selected.forEach(function(c){if(base.indexOf(c)<0)base.push(c);});  // keep any custom/saved country
+    if(!base.length){box.innerHTML='<span style="font-size:12px;color:var(--muted)">Pick a region first</span>';hidden.value=(selected.join(' · '));return;}
+    box.innerHTML=base.map(function(c){var on=selected.indexOf(c)>=0;return '<span class="chip'+(on?' on':'')+'" data-c="'+esc(c)+'">'+esc(c)+'</span>';}).join('');
+    function sync(){hidden.value=Array.prototype.slice.call(box.querySelectorAll('.chip.on')).map(function(s){return s.getAttribute('data-c');}).join(' · ');}
+    box.querySelectorAll('.chip').forEach(function(ch){ch.addEventListener('click',function(){ch.classList.toggle('on');sync();updateOrgBadge();});});
+    sync();
+  }
   function addOrgRegion(v){v=v||{};var wrap=document.getElementById('orgRegions');if(!wrap)return;
     var card=document.createElement('div');card.className='reg-card';card.style.cssText='border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px';
-    card.innerHTML='<div style="display:grid;grid-template-columns:1.3fr 1.7fr 1.3fr auto;gap:10px;align-items:end">'+
-        '<div class="field"><label>Region</label><input class="r-name" placeholder="e.g. EMEA"></div>'+
-        '<div class="field"><label>Countries</label><input class="r-countries" placeholder="UK · Germany · UAE"></div>'+
-        '<div class="field"><label>Primary regulator</label><input class="r-regime" placeholder="GDPR · DORA"></div>'+
-        '<button class="r-del" type="button" title="Remove region" style="height:38px;border:1px solid var(--line);background:#fff;border-radius:8px;cursor:pointer;color:var(--muted)">✕</button>'+
+    var regOpts='<option value="">Select region…</option>'+REGION_OPTIONS.map(function(o){return '<option>'+esc(o.label)+'</option>';}).join('');
+    card.innerHTML='<div style="display:grid;grid-template-columns:1.1fr 2fr 1.2fr auto;gap:10px;align-items:start">'+
+        '<div class="field"><label>Region</label><select class="r-name" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font-size:13px;background:#fff">'+regOpts+'</select></div>'+
+        '<div class="field"><label>Countries <span style="color:var(--muted);font-weight:400">— click to toggle</span></label><div class="chips r-countries-box" style="min-height:38px;padding:4px 0"></div><input type="hidden" class="r-countries"></div>'+
+        '<div class="field"><label>Primary regulator</label><input class="r-regime" placeholder="auto-filled from region" style="padding:9px 11px"></div>'+
+        '<button class="r-del" type="button" title="Remove region" style="height:38px;margin-top:22px;border:1px solid var(--line);background:#fff;border-radius:8px;cursor:pointer;color:var(--muted)">✕</button>'+
       '</div>'+
-      '<div class="ent-wrap" style="margin-top:8px"></div>'+
+      '<div class="ent-wrap" style="margin-top:10px"></div>'+
       '<button class="r-addent conn-go" type="button" style="margin-top:6px;font-size:12px;padding:5px 10px">+ Add entity / branch</button>';
     wrap.appendChild(card);
-    if(v.label)card.querySelector('.r-name').value=v.label;
-    if(v.countries)card.querySelector('.r-countries').value=v.countries;
-    if(v.regime)card.querySelector('.r-regime').value=v.regime;
+    var sel=card.querySelector('.r-name'),box=card.querySelector('.r-countries-box'),hidden=card.querySelector('.r-countries'),reg=card.querySelector('.r-regime');
+    var meta=orgRegionMeta(v.label);
+    if(v.label)sel.value=v.label;
+    reg.value=v.regime||(meta?meta.regime:'');
+    // initial countries: saved value if present, else the region's full set (all pre-selected)
+    var initC=v.countries?String(v.countries).split(/\s*[·,]\s*/).filter(Boolean):(meta?meta.countries.slice():[]);
+    renderCountryChips(box,hidden,sel.value,initC);
+    sel.addEventListener('change',function(){var m=orgRegionMeta(sel.value);
+      if(m&&!reg.value.trim())reg.value=m.regime;                 // auto-fill regulator when empty
+      renderCountryChips(box,hidden,sel.value,m?m.countries.slice():[]);  // pre-select the region's countries
+      updateOrgBadge();});
     var entWrap=card.querySelector('.ent-wrap');(v.entities||[]).forEach(function(e){addOrgEntity(entWrap,e);});
     card.querySelector('.r-addent').addEventListener('click',function(){addOrgEntity(entWrap,{});updateOrgBadge();});
     card.querySelector('.r-del').addEventListener('click',function(){card.remove();updateOrgBadge();});
@@ -1055,9 +1095,9 @@
   }
   (function(){var a=document.getElementById('addRegion');if(a)a.addEventListener('click',function(){addOrgRegion({});});
     var q=document.getElementById('orgQuickFill');if(q)q.addEventListener('click',function(){var wrap=document.getElementById('orgRegions');if(wrap)wrap.innerHTML='';
-      [{label:'Americas',countries:'US · Canada · Brazil · Mexico',regime:'SEC · CCPA · LGPD',entities:[{label:'US HQ & East'},{label:'LATAM'}]},
-       {label:'EMEA',countries:'UK · Germany · UAE · South Africa',regime:'GDPR · DORA · NIS2',entities:[{label:'UK & Ireland'},{label:'DACH'}]},
-       {label:'APAC',countries:'Japan · Singapore · Australia · India',regime:'APPI · PDPA · Privacy Act',entities:[{label:'Japan'},{label:'SE Asia & ANZ'}]}].forEach(addOrgRegion);updateOrgBadge();});
+      [{label:'Americas',entities:[{label:'US HQ & East'},{label:'LATAM'}]},
+       {label:'EMEA',entities:[{label:'UK & Ireland'},{label:'DACH'}]},
+       {label:'APAC',entities:[{label:'Japan'},{label:'SE Asia & ANZ'}]}].forEach(addOrgRegion);updateOrgBadge();});
     // restore a previously-defined structure
     try{var raw=localStorage.getItem('cyberrx_org_structure');if(raw){var o=JSON.parse(raw);if(Array.isArray(o)&&o.length)o.forEach(addOrgRegion);}}catch(_){}
   })();
