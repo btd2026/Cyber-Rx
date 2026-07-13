@@ -34,6 +34,14 @@ describe('Onboarding — system discovery & bulk import', () => {
     expect(onboarding).toContain('inherited by every entity when centralized');
   });
 
+  it('derives the Entity -> Process -> System chain from the import', () => {
+    // each system declares its owning entity AND the process it supports
+    expect(onboarding).toContain('process:p[3]||\'\'');
+    expect(onboarding).toContain('if(r.process)procs[(r.owner||\'\')+\'|\'+r.process.toLowerCase()]=1;');
+    expect(onboarding).toContain('Corporate → Region → ');
+    expect(onboarding).toContain('→ risks → controls');
+  });
+
   it('persists the discovered + imported estate to cyberrx_systems', () => {
     expect(onboarding).toContain("localStorage.setItem('cyberrx_systems',JSON.stringify({discovered:DISCOVERED,imported:IMPORTED,total:discTotal()}));");
   });
