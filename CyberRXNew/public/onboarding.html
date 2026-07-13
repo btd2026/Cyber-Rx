@@ -244,6 +244,15 @@
     </div>
   </div>
 
+  <!-- 1a2 · Security operating model (common vs system-specific controls) -->
+  <div class="sec">
+    <div class="sh"><div class="sn">✦</div><div><div class="st">Security operating model <span style="color:var(--muted)">(common vs system-specific controls)</span></div><div class="sd">Global firms don’t assess every control per region from scratch. Some are <b>common controls</b> provided once by <b>corporate</b> — a global IdP, the corporate SOC, enterprise governance — and <b>inherited</b> by every region; the rest are <b>system-specific</b>, run by each region. Nerion then inherits correctly: a region can’t score below the corporate baseline on an inherited control, and only its own controls vary. This is the NIST <b>General Support System → Major Application</b> model.</div></div><div class="badge" id="bsec">optional</div></div>
+    <div class="field" style="max-width:520px"><label>How is security operated?</label>
+      <div class="chips" id="secModel"><span class="chip" data-m="centralized">Centralized</span><span class="chip on" data-m="hybrid">Hybrid</span><span class="chip" data-m="federated">Federated</span></div></div>
+    <div style="margin-top:14px"><label style="display:block;margin-bottom:8px">Controls provided by <b>Corporate</b> (common — inherited by every region). Untick one to make it <b>system-specific</b> (each region runs its own).</label>
+      <div id="secCommon" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:6px 18px"></div></div>
+  </div>
+
   <!-- 1b · Board governance & incident readiness -->
   <div class="sec">
     <div class="sh"><div class="sn">✦</div><div><div class="st">Board governance &amp; incident readiness</div><div class="sd">The board’s own oversight structure — what the SEC (Reg S-K Item 106) requires you to disclose, plus your response-and-recover readiness. Powers the CEO/Board governance panel.</div></div><div class="badge" id="bgov">recommended</div></div>
@@ -1014,6 +1023,26 @@
     try{var raw=localStorage.getItem('cyberrx_org_structure');if(raw){var o=JSON.parse(raw);if(Array.isArray(o)&&o.length)o.forEach(addOrgRegion);}}catch(_){}
   })();
 
+  // ---- Security operating model: which controls are corporate COMMON (inherited by all
+  // regions) vs SYSTEM-SPECIFIC (federated). Drives the cockpit's common-control inheritance.
+  var SEC_CAPS=[['mfa','Identity & Access (MFA / SSO)'],['pam','Privileged Access (PAM)'],['aware','Security Awareness'],['siem','Detection & Response (SIEM / SOC)'],['cspm','Cloud Posture (CSPM)'],['backup','Backup & Recovery'],['edr','Endpoint (EDR)'],['vuln','Vulnerability Mgmt'],['dlp','Data Protection (DLP)'],['seg','Network Segmentation'],['sspm','SaaS Posture (SSPM)']];
+  var SEC_DEFAULTS={centralized:['mfa','pam','aware','siem','cspm','backup','vuln','dlp'],hybrid:['mfa','pam','aware','siem','cspm','backup'],federated:['aware']};
+  function renderSecCommon(common){var wrap=document.getElementById('secCommon');if(!wrap)return;common=common||[];
+    wrap.innerHTML=SEC_CAPS.map(function(c){var on=common.indexOf(c[0])>=0;
+      return '<label data-cap="'+c[0]+'" style="display:flex;gap:8px;align-items:center;cursor:pointer;font-size:13px;color:var(--ink)"><input type="checkbox" class="sc-box"'+(on?' checked':'')+'> '+c[1]+'</label>';}).join('');
+    wrap.querySelectorAll('label[data-cap]').forEach(function(l){l.addEventListener('change',saveSecModel);});
+  }
+  function currentSecModel(){var m='hybrid';var on=document.querySelector('#secModel .chip.on');if(on)m=on.getAttribute('data-m');
+    var common=Array.prototype.slice.call(document.querySelectorAll('#secCommon label[data-cap]')).filter(function(l){return l.querySelector('.sc-box').checked;}).map(function(l){return l.getAttribute('data-cap');});
+    return {model:m,common:common};}
+  function saveSecModel(){try{var o=currentSecModel();localStorage.setItem('cyberrx_security_model',JSON.stringify(o));var b=document.getElementById('bsec');if(b){b.textContent='✓ '+o.model+' · '+o.common.length+' common';b.classList.add('done');}}catch(_){}try{if(typeof obSaveState==='function')obSaveState();}catch(_){}}
+  (function(){
+    document.querySelectorAll('#secModel .chip').forEach(function(c){c.addEventListener('click',function(){document.querySelectorAll('#secModel .chip').forEach(function(x){x.classList.remove('on');});c.classList.add('on');renderSecCommon(SEC_DEFAULTS[c.getAttribute('data-m')]||[]);saveSecModel();});});
+    var saved=null;try{saved=JSON.parse(localStorage.getItem('cyberrx_security_model')||'null');}catch(_){}
+    if(saved&&saved.model){document.querySelectorAll('#secModel .chip').forEach(function(x){x.classList.toggle('on',x.getAttribute('data-m')===saved.model);});renderSecCommon(saved.common||[]);}
+    else{renderSecCommon(SEC_DEFAULTS.hybrid);}
+  })();
+
   // ---- business capability map (CISO Enterprise-Risk: capabilities with highest exposure) ----
   var CAP_GRC=['Adequate','Watch','Gap'];
   // Registry of every repeatable-row list so onboarding can save & restore the
@@ -1692,7 +1721,7 @@
     var seatNames={};document.querySelectorAll('.seatname').forEach(function(i){if(i.value.trim())seatNames[i.dataset.seat]=i.value.trim();});
     var seatEmails={};document.querySelectorAll('.seatemail').forEach(function(i){var e=i.value.trim();if(e&&/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e))seatEmails[i.dataset.seat]=e;});
     var payload={
-      org_name:org,org_id:orgId,industry:v('industry'),regions:REGIONS,org_structure:collectOrgStructure(),currency:CUR_CODE,
+      org_name:org,org_id:orgId,industry:v('industry'),regions:REGIONS,org_structure:collectOrgStructure(),security_model:currentSecModel(),currency:CUR_CODE,
       financials:{revenue:mval('finRevenue'),operatingIncome:mval('finOpInc'),netIncome:mval('finNetInc'),enterpriseValue:mval('finEV'),sharesOutstanding:mval('finShares')},
       appetite:mval('finAppetite'),budget:mval('finBudget'),dataRecords:mval('finRecords'),
       principalRisks:{creditMarket:mval('ermCredit'),operational:mval('ermOps'),thirdParty:mval('ermTP'),compliance:mval('ermComp')},
