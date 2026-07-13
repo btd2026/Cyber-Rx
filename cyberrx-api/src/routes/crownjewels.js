@@ -147,30 +147,6 @@ router.post('/ingest', optionalJWT, async (req, res) => {
       },
     };
 
-    // AI risk & governance (frontier-AI threat exposure + AI-we-run governance).
-    const ai = b.aiGovernance || {};
-    const aiGovernance = {
-      systems: money(ai.systems), decisioning: ai.decisioning || null, framework: ai.framework || null,
-      policy: ai.policy || null, euAiAct: ai.euAiAct || null, inventory: ai.inventory || null,
-    };
-
-    // AI & Software Supply-Chain Security (CISO tab) — self-reported posture, all
-    // optional. Empty strings normalize to null so the cockpit gates honestly.
-    const asc = b.aiSupplyChain || {};
-    const nn = (v) => { const s = v == null ? '' : String(v).trim(); return s ? s.slice(0, 120) : null; };
-    const ni = (v) => { const n = Number(v); return isFinite(n) && n >= 0 ? Math.round(n) : 0; };
-    const aiSupplyChain = {
-      // Counts come from the uploaded / connected AI & machine-identity inventory.
-      aimlSystems: ni(asc.aimlSystems), genaiSanctioned: ni(asc.genaiSanctioned),
-      machineIdentities: ni(asc.machineIdentities), cbomAssets: ni(asc.cbomAssets),
-      aiDataSensitivity: nn(asc.aiDataSensitivity), inventorySource: nn(asc.inventorySource),
-      inventoryLoaded: asc.inventoryLoaded === true || asc.inventoryLoaded === 'true',
-      // Legacy self-report fields (posture now reads live from connected tools).
-      aiSpm: nn(asc.aiSpm), shadowAiMonitored: nn(asc.shadowAiMonitored), dlpToAi: nn(asc.dlpToAi),
-      codeScanning: nn(asc.codeScanning), pipelineScanning: nn(asc.pipelineScanning),
-      secretsMgmt: nn(asc.secretsMgmt), nhiMonitored: nn(asc.nhiMonitored), cbomStatus: nn(asc.cbomStatus),
-    };
-
     // Strategic initiatives (CEO per-initiative go/no-go safety check + decision brief).
     const strategicInitiatives = Array.isArray(b.strategicInitiatives)
       ? b.strategicInitiatives.filter((s) => s && s.name).slice(0, 20).map((s) => ({
@@ -285,7 +261,7 @@ router.post('/ingest', optionalJWT, async (req, res) => {
        VALUES ($1,$2,$3,$4::jsonb,NOW())
        ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name,
          setup_json = COALESCE(orgs.setup_json,'{}'::jsonb) || EXCLUDED.setup_json`,
-      [mapped.org.id, mapped.org.name, '', JSON.stringify({ economics, resilience, initiatives, governance, aiGovernance, aiSupplyChain, growth, strategicInitiatives, objectives, capabilities, crownJewelRegister, bia, riskAppetite, regulatoryRegister, materialityCriteria, benchmarkData, document_validation: documentValidation, seatNames, seatEmails })]);
+      [mapped.org.id, mapped.org.name, '', JSON.stringify({ economics, resilience, initiatives, governance, growth, strategicInitiatives, objectives, capabilities, crownJewelRegister, bia, riskAppetite, regulatoryRegister, materialityCriteria, benchmarkData, document_validation: documentValidation, seatNames, seatEmails })]);
 
     // Idempotent replace: clear the org's prior inventory, then insert the mapped rows.
     step = 'clear_inventory';
