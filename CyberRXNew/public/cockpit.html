@@ -3034,7 +3034,25 @@ function scopeBanner(){
   }catch(_){return '';}
 }
 function wireScopeBanner(){try{var el=document.getElementById('scopeBanner');if(!el)return;el.querySelectorAll('[data-scope]').forEach(function(b){b.onclick=function(){selectScope(b.getAttribute('data-scope'));};});}catch(_){}}
-function selectScope(id){try{applyScope(id);}catch(_){}renderScopeBar();try{render('ciso');}catch(_){}}
+/* Layer B — in a real (non-demo) workspace, pull the selected scope's control evidence
+   (signals + document scores, already inheritance-resolved by the backend) and apply it,
+   so the framework tree and doc-review reflect that branch's actual tools & policies.
+   Best-effort and guarded: demo uses ENTITY_SIG / DEMO_DOC_REGION; a failure is a no-op. */
+function fetchEntityEvidence(scope){
+  try{
+    if(typeof demoActive==='function'&&demoActive())return;
+    var base=(typeof apiBase==='function')?apiBase():'',o=(typeof orgId==='function')?orgId():'';
+    if(!base||!o)return;
+    fetch(base+'/api/intake/entity-evidence?org_id='+encodeURIComponent(o)+'&scope='+encodeURIComponent(scope||SCOPE),{headers:{'Accept':'application/json','X-Org-Id':o}})
+      .then(function(r){return r&&r.ok?r.json():null;})
+      .then(function(d){if(!d||!d.evidence)return;var ev=d.evidence;
+        if(ev.signals&&SIGNALS_BASE){var s=JSON.parse(JSON.stringify(SIGNALS_BASE));Object.keys(ev.signals).forEach(function(k){s[k]={key:k,value:ev.signals[k]};});SIGNALS=s;}
+        if(ev.doc_scores&&Object.keys(ev.doc_scores).length){try{localStorage.setItem('cyberrx_doc_scores',JSON.stringify(ev.doc_scores));}catch(_){}}
+        try{render('ciso');}catch(_){}})
+      .catch(function(){});
+  }catch(_){}
+}
+function selectScope(id){try{applyScope(id);}catch(_){}renderScopeBar();try{render('ciso');}catch(_){}try{fetchEntityEvidence(id);}catch(_){}}
 /* Offline demo sample — a realistic, self-consistent workspace so every figure and every
    answer reads fully populated without a backend. Used ONLY in demo/trial mode and only when
    the backend returns nothing; a real backend always overrides it. Cyber is deliberately OVER
