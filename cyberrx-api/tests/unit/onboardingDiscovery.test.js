@@ -29,4 +29,10 @@ describe('Onboarding — system discovery & bulk import', () => {
   it('persists the discovered + imported estate to cyberrx_systems', () => {
     expect(onboarding).toContain("localStorage.setItem('cyberrx_systems',JSON.stringify({discovered:DISCOVERED,imported:IMPORTED,total:discTotal()}));");
   });
+
+  it('materiality triage: Critical/High are material (triage first), the rest auto-classified', () => {
+    expect(onboarding).toContain("var material=IMPORTED.filter(function(r){return /^(critical|high)$/i.test(r.criticality||'');}).length;");
+    expect(onboarding).toContain('material — triage first');
+    expect(onboarding).toContain('auto-classified standard');
+  });
 });
