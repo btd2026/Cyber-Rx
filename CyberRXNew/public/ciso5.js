@@ -4973,6 +4973,35 @@ function assetProvenance(cj){
   else if(!applicable.length)gap='No connected tool applies to a '+((typeof ASSET_CLASS_LABEL!=='undefined'&&ASSET_CLASS_LABEL[cls])||cls)+' — this asset is not evidenced.';
   return {class:cls,label:(typeof ASSET_CLASS_LABEL!=='undefined'&&ASSET_CLASS_LABEL[cls])||cls,applicable:applicable,inapplicable:inapplicable,gap:gap};
 }
+/* ===== Per-system RISK derivation (System → Risk → Control) =====
+   A system's asset class determines the risks it carries — adversarial (ATT&CK-style) and
+   non-adversarial — and each risk names the capabilities that mitigate it. Combined with
+   assetProvenance (which of those capabilities actually, validly cover this class), we get
+   the full chain per system: this system → these risks → these controls, covered or not. */
+var ASSET_RISK_MODEL={
+  saas:[{r:'Account takeover / OAuth-token abuse',adv:true,caps:['mfa','sspm','siem']},{r:'SaaS data exfiltration',adv:true,caps:['dlp','sspm','siem']},{r:'Over-privileged access & misconfig',adv:true,caps:['sspm','pam']},{r:'Third-party / vendor dependency failure',adv:false,caps:['sspm','backup']},{r:'Privacy / regulatory (data residency)',adv:false,caps:['dlp','sspm']}],
+  iaas:[{r:'Cloud misconfiguration exploited',adv:true,caps:['cspm','vuln']},{r:'Lateral movement in the cloud estate',adv:true,caps:['seg','siem']},{r:'Region outage / failed failover',adv:false,caps:['backup','cspm']},{r:'Data corruption / bad deploy',adv:false,caps:['backup']}],
+  endpoint:[{r:'Ransomware / malware',adv:true,caps:['edr','backup']},{r:'Phishing → endpoint compromise',adv:true,caps:['aware','edr']},{r:'Insider error or abuse',adv:false,caps:['edr','dlp']}],
+  server:[{r:'Exploitation of an unpatched vulnerability',adv:true,caps:['vuln','edr']},{r:'Lateral movement / blast radius',adv:true,caps:['seg','edr','siem']},{r:'Outage / DR failure',adv:false,caps:['backup']},{r:'Data corruption',adv:false,caps:['backup']}],
+  identity:[{r:'Credential compromise',adv:true,caps:['mfa','siem']},{r:'Privilege escalation',adv:true,caps:['pam','siem']},{r:'Insider misuse of access',adv:false,caps:['pam','siem']}],
+  data:[{r:'Data exfiltration',adv:true,caps:['dlp','siem']},{r:'Data corruption / integrity loss',adv:false,caps:['backup']},{r:'Privacy / regulatory exposure',adv:false,caps:['dlp']}],
+  network:[{r:'Lateral movement',adv:true,caps:['seg','siem']},{r:'Denial of service / outage',adv:false,caps:['seg']}]
+};
+/* Derive one system's risks, each mapped to its mitigating controls with coverage/validity. */
+function assetRisks(cj){
+  var cls=(cj&&cj.class)||'server';var crit=(cj&&cj.tier)||'';
+  var pr=(typeof assetProvenance==='function')?assetProvenance(cj):{applicable:[]};
+  var covered={};(pr.applicable||[]).forEach(function(a){covered[a.k]=a.pct;});
+  var byName={};(typeof CAPS!=='undefined'?CAPS:[]).forEach(function(c){byName[c.k]=c.name;});
+  var risks=(ASSET_RISK_MODEL[cls]||[]).map(function(x){
+    var controls=x.caps.map(function(k){var applies=(typeof capAppliesTo==='function')?capAppliesTo(k,cls):true;
+      return {k:k,name:byName[k]||k,coverage:(covered[k]!=null?covered[k]:null),applies:applies};});
+    var mitigated=controls.some(function(c){return c.applies&&c.coverage!=null;});
+    return {risk:x.r,adversarial:!!x.adv,controls:controls,mitigated:mitigated};
+  });
+  return {class:cls,label:(typeof ASSET_CLASS_LABEL!=='undefined'&&ASSET_CLASS_LABEL[cls])||cls,criticality:crit,risks:risks,
+    open:risks.filter(function(r){return !r.mitigated;}).length};
+}
 /* The Neuron Controls lens — capability × (adversarial + 5 non-adversarial lanes)
    × framework projection, in one view. Read-only; renders into the panel passed in. */
 function c5NeuronControls(host){
@@ -5077,6 +5106,31 @@ function c5NeuronControls(host){
   function shortCap(n){return String(n).replace(/ *\(.*/,'').replace(/ ?[/&].*/,'').trim();}
   function okChip(a){return '<span title="'+esc((a.tool||'')+' — valid evidence for this asset class')+'" style="font-size:10.5px;color:var(--good);background:color-mix(in srgb,var(--good) 12%,transparent);border:1px solid color-mix(in srgb,var(--good) 30%,transparent);border-radius:6px;padding:2px 7px;white-space:nowrap">'+esc(shortCap(a.name))+' '+a.pct+'%</span>';}
   function noChip(a){return '<span title="'+esc((a.tool||a.name)+' does not cover this asset class — not credited as evidence')+'" style="font-size:10.5px;color:var(--crit);background:color-mix(in srgb,var(--crit) 10%,transparent);border:1px solid color-mix(in srgb,var(--crit) 28%,transparent);border-radius:6px;padding:2px 7px;white-space:nowrap;text-decoration:line-through">'+esc(shortCap(a.name))+' ✕</span>';}
+  // Per-system risk → control chips (System → Risk → Control, from assetRisks).
+  function ctrlChip(c){
+    if(!c.applies)return '<span title="'+esc(c.name+' does not cover this asset class — not a valid control here')+'" style="font-size:10px;color:var(--muted);border:1px dashed var(--line);border-radius:6px;padding:1px 6px;white-space:nowrap;text-decoration:line-through">'+esc(shortCap(c.name))+'</span>';
+    if(c.coverage!=null)return '<span title="'+esc(c.name+' — deployed, '+c.coverage+'% coverage')+'" style="font-size:10px;color:var(--good);background:color-mix(in srgb,var(--good) 12%,transparent);border:1px solid color-mix(in srgb,var(--good) 30%,transparent);border-radius:6px;padding:1px 6px;white-space:nowrap">'+esc(shortCap(c.name))+' '+c.coverage+'%</span>';
+    return '<span title="'+esc(c.name+' mitigates this risk but is not deployed for this system — open gap')+'" style="font-size:10px;color:var(--crit);background:color-mix(in srgb,var(--crit) 10%,transparent);border:1px solid color-mix(in srgb,var(--crit) 28%,transparent);border-radius:6px;padding:1px 6px;white-space:nowrap">'+esc(shortCap(c.name))+' — gap</span>';
+  }
+  function riskBlock(cj){
+    if(typeof assetRisks!=='function')return '';
+    var ar=assetRisks(cj);if(!ar.risks.length)return '';
+    var rows=ar.risks.map(function(r){
+      var tag=r.adversarial
+        ?'<span title="Adversarial risk — a threat actor (MITRE ATT&CK)" style="font-size:9px;font-weight:700;color:var(--crit);white-space:nowrap">⚔ ADVERSARIAL</span>'
+        :'<span title="Non-adversarial risk — outage, corruption, insider error, supply-chain, privacy" style="font-size:9px;font-weight:700;color:var(--blue);white-space:nowrap">⚙ OPERATIONAL</span>';
+      var mit=r.mitigated
+        ?'<span style="font-size:9.5px;font-weight:700;color:var(--good);white-space:nowrap">mitigated</span>'
+        :'<span style="font-size:9.5px;font-weight:700;color:var(--crit);white-space:nowrap">open</span>';
+      return '<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:5px 0;border-top:1px solid var(--line)">'
+        +tag+'<span style="font-size:11px;color:var(--ink);flex:0 1 auto">'+esc(r.risk)+'</span>'
+        +'<span style="color:var(--muted);font-size:10px">→</span>'
+        +r.controls.map(ctrlChip).join(' ')+mit+'</div>';
+    }).join('');
+    return '<div style="margin-top:9px"><div style="font-size:10.5px;font-weight:700;color:var(--ink-2);margin-bottom:2px">Risks this system carries '
+      +(ar.open>0?('<span style="color:var(--crit)">· '+ar.open+' open</span>'):'<span style="color:var(--good)">· all mitigated</span>')
+      +' <span style="color:var(--muted);font-weight:600">— System → Risk → Control</span></div>'+rows+'</div>';
+  }
   var provRows=cjs.map(function(cj){var pr=assetProvenance(cj);
     return '<div style="border:1px solid var(--line);border-radius:10px;padding:11px 13px;margin-bottom:9px;background:var(--surface)">'
       +'<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap"><b style="font-size:12.5px;color:var(--ink)">'+esc(cj.name)+(cj.tool?(' <span style="color:var(--muted);font-weight:600">· '+esc(cj.tool)+'</span>'):'')+'</b>'
@@ -5084,6 +5138,7 @@ function c5NeuronControls(host){
       +'<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;align-items:center"><span style="font-size:10.5px;color:var(--muted);margin-right:2px">Evidenced by</span>'+(pr.applicable.length?pr.applicable.map(okChip).join(''):'<span style="font-size:10.5px;color:var(--muted)">— nothing applicable connected</span>')+'</div>'
       +(pr.inapplicable.length?('<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;align-items:center"><span style="font-size:10.5px;color:var(--muted);margin-right:2px">Not valid here</span>'+pr.inapplicable.map(noChip).join('')+'</div>'):'')
       +(pr.gap?('<div style="font-size:11px;color:var(--crit);margin-top:8px;line-height:1.5">⚠ '+esc(pr.gap)+'</div>'):'')
+      +riskBlock(cj)
       +'</div>';
   }).join('');
   var provPanel=cjs.length?('<div style="margin-top:24px"><div style="font-size:12.5px;font-weight:800;color:var(--ink);margin-bottom:4px">Telemetry provenance by asset <span style="color:var(--muted);font-weight:600">— "prove it"</span></div>'
