@@ -494,54 +494,6 @@
     <div class="result" id="resRisk"></div>
   </div>
 
-  <!-- 6a2 · Business capability map (CISO Enterprise-Risk: capabilities with highest exposure) -->
-  <div class="sec" id="secBcap">
-    <div class="sh"><div class="sn">✦</div><div><div class="st">Business capability map <span style="color:var(--muted)">(for the CISO Enterprise-Risk read)</span></div><div class="sd">Your core business capabilities and the cyber exposure each carries. Powers the CISO Program-Health tile <b>“business capabilities with highest exposure.”</b> For each capability Nerion needs four things: its <b>business exposure ($)</b>, its <b>GRC control-coverage</b> (Adequate / Watch / Gap), the number of <b>open control gaps</b>, and the number of <b>open risks</b> — exposure is then ranked as <span style="white-space:nowrap">(open gaps + open risks) × capability-tier weight</span>. <b>No GRC tool? Upload an Excel/CSV</b> (columns: capability · exposure · grc_status · control_gaps · open_risk) or type them in. Leave blank to keep the tile illustrative.</div></div><div class="badge" id="bcap">optional</div></div>
-    <div class="srcchoice"><div class="srcopt sel" data-choice="cap" data-mode="upload"><div class="so-h">✎ Add manually / upload Excel</div><div class="so-d">capability · exposure · GRC coverage · gaps · risks</div></div><div class="srcopt" data-choice="cap" data-mode="connect"><div class="so-h">⚡ Pull from GRC</div><div class="so-d">Archer / ServiceNow GRC / LeanIX — live</div></div></div>
-    <div id="capUpload">
-      <div id="capRows"></div>
-      <button type="button" id="addCap" class="conn-go" style="margin-top:4px">+ Add capability</button>
-    </div>
-    <div id="capConnect" style="display:none">
-      <div class="conn-row"><div class="field" style="min-width:200px"><label>GRC / capability platform</label><select id="capSys"><option>Archer</option><option>ServiceNow GRC</option><option>LeanIX</option><option>Ardoq</option><option>SAP GRC</option></select></div><div class="field" style="flex:1;min-width:220px"><label>Instance URL / API token</label><input id="capCred" placeholder="https://yourorg.archer.com · token"></div><button class="conn-go" data-conn="cap" type="button">Connect &amp; save</button></div>
-    </div>
-  </div>
-
-  <!-- (Crown Jewel Register removed — crown jewels are inferred from your inventory in
-       the "Map applications → processes" step above (data-sensitivity × exposure ×
-       process-criticality) and are editable there via "Adjust the auto-mapping", so we
-       don't ask you to re-enter them.) -->
-  <!-- (BIA removed — the Business processes step already captures per-process RTO,
-       criticality and impact; the dashboards derive BIA from it, so we don't ask twice.) -->
-
-
-  <!-- 6a6 · Risk Appetite Statements (Board / CRO) -->
-  <div class="sec">
-    <div class="sh"><div class="sn">✦</div><div><div class="st">Risk Appetite Statements <span style="color:var(--muted)">(for the Board &amp; CRO)</span></div><div class="sd">Board-set cyber-risk appetite per category — the thresholds the Board and CRO measure posture against. From your ERM / risk appetite statement.</div></div><div class="badge" id="brap">optional</div></div>
-    <div id="rapRows"></div>
-    <button type="button" id="addRap" class="conn-go" style="margin-top:4px">+ Add category</button>
-  </div>
-
-  <!-- 6a7 · Regulatory Register (Board / CLO) -->
-  <div class="sec">
-    <div class="sh"><div class="sn">✦</div><div><div class="st">Regulatory Register <span style="color:var(--muted)">(for the Board &amp; CLO)</span></div><div class="sd">Cyber-relevant regulatory obligations and their compliance status. Powers the regulatory-exposure reads. From your GRC / compliance register.</div></div><div class="badge" id="breg">optional</div></div>
-    <div id="regRows"></div>
-    <button type="button" id="addReg" class="conn-go" style="margin-top:4px">+ Add obligation</button>
-  </div>
-
-  <!-- 6a8 · Materiality Criteria (Board) -->
-  <div class="sec">
-    <div class="sh"><div class="sn">✦</div><div><div class="st">Materiality Criteria <span style="color:var(--muted)">(for the Board)</span></div><div class="sd">Your thresholds for a “material” cyber incident (for board awareness &amp; SEC disclosure). From your disclosure-controls policy.</div></div><div class="badge" id="bmat">optional</div></div>
-    <div id="matRows"></div>
-    <button type="button" id="addMat" class="conn-go" style="margin-top:4px">+ Add criterion</button>
-  </div>
-
-  <!-- 6a9 · Benchmark Data (Board) -->
-  <div class="sec">
-    <div class="sh"><div class="sn">✦</div><div><div class="st">Benchmark Data <span style="color:var(--muted)">(for the Board)</span></div><div class="sd">Peer / industry benchmarks to judge cyber-investment adequacy — our value vs benchmark per metric.</div></div><div class="badge" id="bben">optional</div></div>
-    <div id="benRows"></div>
-    <button type="button" id="addBen" class="conn-go" style="margin-top:4px">+ Add metric</button>
-  </div>
 
   <!-- 6b · Cyber projects & initiatives -->
   <div class="sec">
@@ -558,20 +510,6 @@
     <div class="result" id="resInit"></div>
   </div>
 
-  <!-- 6c · Third-party vendors (tier 1 & 2) -->
-  <div class="sec" id="secVendor">
-    <div class="sh"><div class="sn">✦</div><div><div class="st">Third-party vendors (tier 1 &amp; 2)</div><div class="sd">Your critical suppliers — the ones whose security <b>is</b> your exposure. Upload a list, or pull them from your third-party risk (TPRM) platform. Your monitoring service (SecurityScorecard / BitSight / UpGuard / Panorays / Black Kite — connected in step 7) then rates each one <b>live</b> in the cockpit’s third-party panel.</div></div><div class="badge" id="bvend">optional</div></div>
-    <div class="srcchoice"><div class="srcopt sel" data-choice="vend" data-mode="upload"><div class="so-h">⤓ Upload a file</div><div class="so-d">CSV or TSV</div></div><div class="srcopt" data-choice="vend" data-mode="connect"><div class="so-h">⚡ Pull from TPRM</div><div class="so-d">AuditBoard / OneTrust / ProcessUnity — live</div></div></div>
-    <div id="vendUpload">
-      <div class="drop" id="dropVend"><div class="ic">⤓</div><div class="t">Upload your tier-1 / tier-2 vendor list (CSV or TSV)</div><div class="s">click to browse or drop a file</div><input type="file" id="fileVend" accept=".csv,.tsv,.txt" style="display:none"></div>
-      <div class="tmpl">columns: <b>name</b>, tier, domain, criticality &nbsp;·&nbsp; e.g. &nbsp;Amazon Web Services, 1, aws.amazon.com, Critical<br><span style="color:var(--muted)"><b>tier</b> is 1 or 2 (how critical the vendor is to you). <b>domain</b> lets the monitoring service resolve the right company on its portal. <b>criticality</b> is optional context.</span></div>
-    </div>
-    <div id="vendConnect" style="display:none">
-      <div class="conn-row"><div class="field" style="min-width:200px"><label>TPRM platform</label><select id="vendSys"><option>AuditBoard</option><option>OneTrust</option><option>ProcessUnity</option><option>Prevalent</option><option>ServiceNow VRM</option><option>Archer</option></select></div><div class="field" style="flex:1;min-width:220px"><label>Instance URL / API token</label><input id="vendCred" placeholder="https://yourorg.auditboardapp.com · token"></div><button class="conn-go" id="pullVend" type="button">Pull vendors</button></div>
-      <div class="conn-msg" id="vendConnMsg"></div>
-    </div>
-    <div class="result" id="resVend"></div>
-  </div>
 
   <!-- 7 · Connect tools -->
   <div class="sec" id="secTools">
@@ -1214,42 +1152,6 @@
   // rows a user typed or uploaded (they are dynamic DOM, so the field-snapshot
   // autosave misses them — this is what makes uploads to these registers persist).
   var OB_REGISTERS={};
-  function addCapRow(v){v=v||{};var wrap=document.getElementById('capRows');if(!wrap)return;
-    var row=document.createElement('div');row.className='cap-row';row.style.cssText='display:grid;grid-template-columns:1.6fr 1.1fr 0.9fr 0.85fr 0.85fr auto;gap:10px;margin-bottom:10px;align-items:end';
-    row.innerHTML='<div class="field"><label>Capability</label><input class="cap-name" placeholder="e.g. Claims processing · Member enrollment · Payments"></div>'+
-      '<div class="field"><label>Cyber exposure</label><div class="moneyf"><span class="cur mcur">$</span><input type="number" step="any" class="mnum cap-val" placeholder="40"><select class="munit cap-valu"><option value="1000000000">B</option><option value="1000000" selected>M</option><option value="1000">K</option></select></div></div>'+
-      '<div class="field"><label>GRC control-coverage</label><select class="cap-grc">'+CAP_GRC.map(function(g){return '<option>'+g+'</option>';}).join('')+'</select></div>'+
-      '<div class="field"><label>Open control gaps</label><input type="number" step="1" min="0" class="cap-gaps" placeholder="0"></div>'+
-      '<div class="field"><label>Open risks</label><input type="number" step="1" min="0" class="cap-risk" placeholder="0"></div>'+
-      '<button class="cap-del" type="button" title="Remove" style="height:38px;border:1px solid var(--line);background:#fff;border-radius:8px;cursor:pointer;color:var(--muted)">✕</button>';
-    wrap.appendChild(row);
-    if(v.name)row.querySelector('.cap-name').value=v.name;
-    if(v.grc_status){var g=row.querySelector('.cap-grc');for(var gi=0;gi<g.options.length;gi++){if(g.options[gi].text.toLowerCase()===String(v.grc_status).trim().toLowerCase()){g.selectedIndex=gi;break;}}}
-    if(v.control_gaps!=null&&String(v.control_gaps)!=='')row.querySelector('.cap-gaps').value=String(v.control_gaps).replace(/[^0-9.]/g,'');
-    if(v.open_risk!=null&&String(v.open_risk)!=='')row.querySelector('.cap-risk').value=String(v.open_risk).replace(/[^0-9.]/g,'');
-    // exposure: a raw number from an upload row (unit defaults to M), or a dollar re-add.
-    if(v.exposure_usd!=null)row.querySelector('.cap-val').value=v.exposure_usd>=1e9?(v.exposure_usd/1e9):(v.exposure_usd>=1e6?(v.exposure_usd/1e6):(v.exposure_usd/1e3));
-    else if(v.exposure!=null&&String(v.exposure).trim()!=='')row.querySelector('.cap-val').value=String(v.exposure).replace(/[^0-9.]/g,'');
-    row.querySelector('.cap-del').addEventListener('click',function(){row.remove();updateCapBadge();});
-    ['input','change'].forEach(function(ev){row.addEventListener(ev,updateCapBadge);});
-    wrap.setAttribute('data-coll','0');wrap.style.display=''; // adding a row expands the list
-    updateCapBadge();
-  }
-  function collectCapabilities(){return Array.prototype.slice.call(document.querySelectorAll('#capRows .cap-row')).map(function(r){
-    var name=(r.querySelector('.cap-name').value||'').trim();if(!name)return null;
-    var val=parseFloat(r.querySelector('.cap-val').value||'')||null,unit=parseFloat(r.querySelector('.cap-valu').value)||1;
-    var gaps=parseFloat(r.querySelector('.cap-gaps').value||'');var risk=parseFloat(r.querySelector('.cap-risk').value||'');
-    return {name:name,exposure_usd:val!=null?Math.round(val*unit):null,grc_status:r.querySelector('.cap-grc').value,control_gaps:isNaN(gaps)?null:gaps,open_risk:isNaN(risk)?null:risk};
-  }).filter(Boolean);}
-  function updateCapBadge(){var n=collectCapabilities().length,b=document.getElementById('bcap');if(b){if(n){b.textContent='✓ '+n+' capabilit'+(n>1?'ies':'y');b.classList.add('done');}else{b.textContent='optional';b.classList.remove('done');}}obRowCollapse('capRows','cap-row','capability','capabilities');}
-  (function(){var a=document.getElementById('addCap');if(a)a.addEventListener('click',function(){addCapRow();});})();
-  // Register the capability map so its rows (typed or CSV-uploaded) save & restore.
-  OB_REGISTERS.cap={add:addCapRow,collect:collectCapabilities,clear:function(){var w=document.getElementById('capRows');if(w)w.innerHTML='';updateCapBadge();}};
-  // No GRC tool? Upload an Excel/CSV instead — columns: capability · exposure ·
-  // grc_status (Adequate/Watch/Gap) · control_gaps · open_risk.
-  (function(){var CAP_IO={add:function(v){addCapRow(v);}};
-    enableRegisterIO('cap','addCap',CAP_IO,[{cls:'name',names:['capability','name','process','function','business_capability']},{cls:'exposure',names:['exposure','exposure_usd','cyber_exposure','amount','loss'],money:true},{cls:'grc_status',names:['grc_status','grc','status','coverage','control_coverage']},{cls:'control_gaps',names:['control_gaps','gaps','open_gaps','open_control_gaps']},{cls:'open_risk',names:['open_risk','open_risks','risks','risk_count']}],null,null,true);
-  })();
 
   // ---- CISO registers: Crown Jewel Register · BIA · SBOM (guided entry, validated) ----
   // Small generic repeatable-row helper: fields = [{cls,label,type,ph,opts?}].
@@ -1310,28 +1212,6 @@
     OB_REGISTERS[wrapId.replace(/Rows$/,'')]=api;
     return api;
   }
-  // DELTA registers (Board / CLO / CRO)
-  var RAP=makeRowList('rapRows','rap-row',[
-    {cls:'rap-cat',key:'category',label:'Risk category',ph:'e.g. Identity & access',w:'1.6fr'},
-    {cls:'rap-app',key:'appetite_usd',label:'Appetite',type:'money',ph:'120',w:'1.1fr'},
-    {cls:'rap-thr',key:'threshold',label:'Threshold',ph:'e.g. High',w:'1fr'}],'brap','category');
-  var REG=makeRowList('regRows','reg-row',[
-    {cls:'reg-name',key:'regulation',label:'Regulation',ph:'e.g. GDPR · HIPAA',w:'1.3fr'},
-    {cls:'reg-obl',key:'obligation',label:'Obligation',ph:'e.g. 72-hr breach notice',w:'1.6fr'},
-    {cls:'reg-stat',key:'status',label:'Status',type:'select',opts:['Compliant','At-risk','Non-compliant'],w:'1fr'},
-    {cls:'reg-exp',key:'exposure_usd',label:'Exposure',type:'money',ph:'',w:'1fr'}],'breg','obligation');
-  var MAT=makeRowList('matRows','mat-row',[
-    {cls:'mat-met',key:'metric',label:'Criterion',ph:'e.g. Loss ≥ 5% net income',w:'1.8fr'},
-    {cls:'mat-thr',key:'threshold_usd',label:'Threshold',type:'money',ph:'',w:'1.1fr'},
-    {cls:'mat-bas',key:'basis',label:'Basis',ph:'e.g. SEC Item 1.05',w:'1.2fr'}],'bmat','criterion');
-  var BEN=makeRowList('benRows','ben-row',[
-    {cls:'ben-met',key:'metric',label:'Metric',ph:'e.g. Security spend % of IT',w:'1.8fr'},
-    {cls:'ben-our',key:'our_value',label:'Our value',ph:'e.g. 9%',w:'1fr'},
-    {cls:'ben-bmk',key:'benchmark',label:'Benchmark',ph:'e.g. 11%',w:'1fr'}],'bben','metric');
-  (function(){
-    var m=[['addRap',RAP],['addReg',REG],['addMat',MAT],['addBen',BEN]];
-    m.forEach(function(x){var b=document.getElementById(x[0]);if(b)b.addEventListener('click',function(){x[1].add();});});
-  })();
 
   // ---- Registers can also be Uploaded (CSV/TSV) or Connected (API), not just typed ----
   function importRows(parsed,rowList,colSpec){
@@ -1376,11 +1256,6 @@
     // the system where they live (board portal / strategy / portfolio tool).
     var STRAT_IO={add:function(v){addStratRow(v);}};
     enableRegisterIO('strat','addStrat',STRAT_IO,[{cls:'name',names:['initiative','name','project','move']},{cls:'type',names:['type','category','kind']},{cls:'value',names:['value','value_usd','value at stake','amount','stake'],money:true},{cls:'horizon',names:['horizon','timeline','when','timeframe']}],['Board portal / Diligent','Confluence / SharePoint','Jira / Portfolio (PPM)','Anaplan','Workday Adaptive'],'Strategy / portfolio source');
-    // (the Business capability map already offers manual entry + a GRC connect)
-    enableRegisterIO('rap','addRap',RAP,[{cls:'rap-cat',names:['category','risk_category','name']},{cls:'rap-app',names:['appetite','appetite_usd','threshold_usd'],money:true},{cls:'rap-thr',names:['threshold','level','tolerance']}],['ERM Platform','Archer','ServiceNow ERM'],'ERM source');
-    enableRegisterIO('reg','addReg',REG,[{cls:'reg-name',names:['regulation','reg','name']},{cls:'reg-obl',names:['obligation','requirement','duty']},{cls:'reg-stat',names:['status','state','compliance']},{cls:'reg-exp',names:['exposure','fine','penalty','exposure_usd'],money:true}],['GRC','Archer','ServiceNow GRC'],'GRC / compliance source');
-    enableRegisterIO('mat','addMat',MAT,[{cls:'mat-met',names:['metric','criterion','name']},{cls:'mat-thr',names:['threshold','threshold_usd','amount'],money:true},{cls:'mat-bas',names:['basis','reference','rule']}],['GRC','Disclosure controls'],'Materiality source');
-    enableRegisterIO('ben','addBen',BEN,[{cls:'ben-met',names:['metric','name']},{cls:'ben-our',names:['our_value','our','current','value']},{cls:'ben-bmk',names:['benchmark','peer','industry']}],['Benchmark provider','Gartner','IANS'],'Benchmark source');
   })();
 
   // ---- policy & document evidence (framework CMMI via /api/documents/analyze) ----
@@ -1490,40 +1365,6 @@
     }).catch(function(){msg.textContent='Could not reach your ticketing system. Upload a list instead.';msg.style.color='var(--warn)';});
   });
 
-  // ---- third-party vendors (tier 1 & 2) → cockpit vendor-risk panel ----
-  var VENDORS=[];
-  function storeVend(){try{localStorage.setItem('cyberrx_vendors',JSON.stringify(VENDORS.slice(0,500)));}catch(_){}}
-  function vendBadge(){var b=document.getElementById('bvend');if(b){if(VENDORS.length){b.textContent='✓ '+VENDORS.length+' vendor'+(VENDORS.length>1?'s':'');b.classList.add('done');}else{b.textContent='optional';b.classList.remove('done');}}}
-  function vendRows(){showRows(document.getElementById('resVend'),VENDORS,function(x){return '<div class="xrow"><span class="nm">'+x.name+'</span><span class="mt">tier '+(x.tier||'2')+(x.domain?(' · '+x.domain):'')+(x.criticality?(' · '+x.criticality):'')+'</span></div>';});}
-  function normTier(t){t=String(t==null?'':t).toLowerCase();if(/1|critical|strategic/.test(t))return '1';if(/3|low|tail/.test(t))return '3';return '2';}
-  wireDrop('dropVend','fileVend',function(file){readFile(file,function(p){var h=p.headers;
-    var nc=findCol(h,['vendor_name','vendor','name','supplier','third_party','company']),tc=findCol(h,['tier','criticality_tier','level']),dc=findCol(h,['domain','website','url','primary_domain']),cc=findCol(h,['criticality','crit','importance','risk_tier']);
-    VENDORS=p.rows.map(function(c){return {name:get(c,nc)||c[0],tier:normTier(get(c,tc)),domain:(get(c,dc)||'').replace(/^https?:\/\//,'').replace(/\/.*$/,'')||'',criticality:get(c,cc)||''};}).filter(function(x){return x.name;});
-    vendRows();storeVend();vendBadge();});});
-  // Representative tier-1/2 vendors by industry, pulled when a TPRM platform is
-  // "connected" — the real AuditBoard/OneTrust/ProcessUnity API syncs the tenant's
-  // actual vendor register on go-live. Names + domains are real so the monitoring
-  // service can resolve each company's live rating.
-  var IND_VENDORS={
-    health:[['Change Healthcare','1','changehealthcare.com'],['Epic Systems','1','epic.com'],['Optum','1','optum.com'],['Cerner (Oracle Health)','1','oracle.com'],['Snowflake','2','snowflake.com'],['Okta','2','okta.com'],['Salesforce','2','salesforce.com'],['Amazon Web Services','1','aws.amazon.com']],
-    tech:[['Amazon Web Services','1','aws.amazon.com'],['Microsoft Azure','1','microsoft.com'],['GitHub','1','github.com'],['Stripe','1','stripe.com'],['Okta','2','okta.com'],['Datadog','2','datadoghq.com'],['Cloudflare','2','cloudflare.com'],['Snowflake','2','snowflake.com']],
-    fin:[['Fiserv','1','fiserv.com'],['FIS','1','fisglobal.com'],['Jack Henry','1','jackhenry.com'],['Bloomberg','1','bloomberg.com'],['Amazon Web Services','1','aws.amazon.com'],['Okta','2','okta.com'],['Salesforce','2','salesforce.com'],['Snowflake','2','snowflake.com']],
-    retail:[['Stripe','1','stripe.com'],['Shopify','1','shopify.com'],['Salesforce','2','salesforce.com'],['Amazon Web Services','1','aws.amazon.com'],['SAP','2','sap.com'],['Okta','2','okta.com'],['Twilio','2','twilio.com'],['Adyen','1','adyen.com']],
-    gov:[['Oracle','1','oracle.com'],['Amazon Web Services','1','aws.amazon.com'],['Microsoft','1','microsoft.com'],['Okta','2','okta.com'],['ServiceNow','2','servicenow.com'],['Palantir','2','palantir.com'],['Accenture Federal','2','accenture.com'],['Snowflake','2','snowflake.com']],
-    mfg:[['SAP','1','sap.com'],['Siemens','1','siemens.com'],['Rockwell Automation','1','rockwellautomation.com'],['Oracle','2','oracle.com'],['Microsoft','2','microsoft.com'],['PTC','2','ptc.com'],['Amazon Web Services','2','aws.amazon.com'],['Snowflake','2','snowflake.com']],
-    energy:[['GE Vernova','1','gevernova.com'],['Schneider Electric','1','se.com'],['Oracle','1','oracle.com'],['Amazon Web Services','2','aws.amazon.com'],['Microsoft','2','microsoft.com'],['OSIsoft (AVEVA)','1','aveva.com'],['Okta','2','okta.com'],['Snowflake','2','snowflake.com']],
-    telecom:[['Ericsson','1','ericsson.com'],['Nokia','1','nokia.com'],['Amdocs','1','amdocs.com'],['Amazon Web Services','1','aws.amazon.com'],['Oracle','2','oracle.com'],['Salesforce','2','salesforce.com'],['Okta','2','okta.com'],['Snowflake','2','snowflake.com']]
-  };
-  var pullVendBtn=document.getElementById('pullVend');
-  if(pullVendBtn)pullVendBtn.addEventListener('click',function(){
-    var msg=document.getElementById('vendConnMsg'),sys=v('vendSys'),cred=v('vendCred');
-    if(!cred){msg.textContent='Enter the instance URL / token for your TPRM platform.';msg.style.color='var(--warn)';return;}
-    pullVendBtn.textContent='⟳ Pulling…';
-    var src=IND_VENDORS[invKey()]||IND_VENDORS.tech;
-    VENDORS=src.map(function(r){return {name:r[0],tier:r[1],domain:r[2],criticality:r[1]==='1'?'Critical':'Important'};});
-    vendRows();storeVend();vendBadge();
-    pullVendBtn.textContent='✓ Pulled';pullVendBtn.classList.add('done');
-    msg.innerHTML='✓ Pulled <b>'+VENDORS.length+'</b> tier-1/2 vendors from <b>'+sys+'</b> <span style="color:var(--muted)">(representative — the live '+sys+' API syncs your real vendor register on go-live)</span>. Edit the list, or switch to Upload for a full export.';msg.style.color='var(--good)';});
 
   // ---- crown-jewel chain: process → application → crown jewels ----
   // A visual, editable map: each application is linked to the process(es) it
@@ -1915,12 +1756,7 @@
       },
       strategicInitiatives:collectStrategic(),
       objectives:collectObjectives(),
-      capabilities:collectCapabilities(),
       bia:PROC.map(function(p){return {name:p.name,rto_hours:p.rto,impact_usd:p.revenue};}),
-      riskAppetite:RAP.collect(),
-      regulatoryRegister:REG.collect(),
-      materialityCriteria:MAT.collect(),
-      benchmarkData:BEN.collect(),
       seatNames:seatNames,seatEmails:seatEmails,
       growth:{
         pipelineUsd:mval('growthPipeline'),reviewBeforeWks:v('growthBefore'),reviewNowWks:v('growthNow'),
@@ -2158,7 +1994,7 @@
     var registers={};try{Object.keys(OB_REGISTERS).forEach(function(k){try{registers[k]=OB_REGISTERS[k].collect();}catch(_){}});}catch(_){}
     return {v:2,ts:Date.now(),fields:f,seatN:seatN,seatE:seatE,certs:certs,
       proc:PROC,app:APP,risk:RISK,
-      init:(typeof INIT!=='undefined'?INIT:null),vendors:(typeof VENDORS!=='undefined'?VENDORS:null),
+      init:(typeof INIT!=='undefined'?INIT:null),
       aiInv:(typeof AI_INV!=='undefined'?AI_INV:null),
       registers:registers,
       seltools:(typeof SELTOOLS!=='undefined'?SELTOOLS:null)};
@@ -2180,7 +2016,6 @@
       if(Array.isArray(s.app)&&s.app.length){APP=s.app;showRows(document.getElementById('resApp'),APP,function(x){return '<div class="xrow"><span class="nm">'+x.name+'</span><span class="mt">'+(x.host||'')+(x.vendor?(' · '+x.vendor):'')+'</span></div>';});var b5=document.getElementById('b5');if(b5){b5.dataset.n=APP.length;badgeDone('b5');}}
       if(Array.isArray(s.risk)&&s.risk.length){RISK=s.risk;showRows(document.getElementById('resRisk'),RISK,function(x){return '<div class="xrow"><span class="nm">'+x.title+'</span><span class="mt">'+(x.asset||'')+(x.exposure?(' · '+x.exposure):'')+' · '+(x.severity||'')+'</span></div>';});var b6=document.getElementById('b6');if(b6){b6.dataset.n=RISK.length;badgeDone('b6');}}
       if(typeof INIT!=='undefined'&&Array.isArray(s.init)&&s.init.length){INIT=s.init;try{showRows(document.getElementById('resInit'),INIT,function(x){return '<div class="xrow"><span class="nm">'+x.name+'</span><span class="mt">'+(x.owner||'')+(x.cost?(' · '+x.cost):'')+' · '+(x.status||'')+'</span></div>';});var bi=document.getElementById('binit');if(bi){bi.textContent='✓ '+INIT.length+' loaded';bi.classList.add('done');}}catch(_){}}
-      if(typeof VENDORS!=='undefined'&&Array.isArray(s.vendors)&&s.vendors.length){VENDORS=s.vendors;try{vendRows();}catch(_){}}
       if(s.aiInv&&typeof AI_INV!=='undefined'){AI_INV=s.aiInv;try{renderAiInv();}catch(_){}
         // Bring back the visible "loaded" affordances (badge + message) so the restored
         // inventory reads as saved, not as needing a re-upload.
