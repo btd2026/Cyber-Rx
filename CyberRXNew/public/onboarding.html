@@ -226,9 +226,6 @@
       <div class="field"><label>Reporting currency</label><select id="currency">
         <option value="$|USD">$ — US Dollar (USD)</option><option value="€|EUR">€ — Euro (EUR)</option><option value="£|GBP">£ — British Pound (GBP)</option><option value="C$|CAD">C$ — Canadian Dollar (CAD)</option><option value="A$|AUD">A$ — Australian Dollar (AUD)</option><option value="S$|SGD">S$ — Singapore Dollar (SGD)</option><option value="¥|JPY">¥ — Japanese Yen (JPY)</option><option value="CHF|CHF">CHF — Swiss Franc</option><option value="₹|INR">₹ — Indian Rupee (INR)</option>
       </select></div>
-      <div class="field"><label>Operating regions <span class="h">— sets notification clocks &amp; penalties</span></label>
-        <div class="chips" id="regions"><span class="chip" data-r="US">US</span><span class="chip" data-r="EU">EU</span><span class="chip" data-r="UK">UK</span><span class="chip" data-r="Canada">Canada</span><span class="chip" data-r="Singapore">Singapore</span><span class="chip" data-r="Australia">Australia</span><span class="chip" data-r="APAC">APAC</span><span class="chip" data-r="Global">Global</span></div>
-      </div>
     </div>
     <div style="margin-top:16px"><label style="display:block;margin-bottom:8px">Leadership <span class="h">— each seat’s cockpit is addressed to them, their name is stamped on every decision, and their email lets the CISO send reminders from the cockpit</span></label>
       <div class="row c3">
@@ -609,7 +606,7 @@
 <script>
   function apiBase(){try{return (window.CYBERRX_API||localStorage.getItem('cyberrx_api_base')||'https://cyber-rx.onrender.com').replace(/\/+$/,'');}catch(_){return 'https://cyber-rx.onrender.com';}}
   function slug(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,32)||'org';}
-  var PROC=[],APP=[],RISK=[],REGIONS=[];
+  var PROC=[],APP=[],RISK=[];
   var CUR_SYM='$',CUR_CODE='USD';
 
   // ---- money fields: number + unit → value, with a formatted equivalent ----
@@ -651,8 +648,8 @@
     var policy=aup?(boardApproved?'Board-approved':'Drafted'):null;
     // Decisioning from an inventory column; null unless the column was present.
     var decisioning=(loaded&&AI_INV.customerFacingCol)?(AI_INV.customerFacing?'Yes':'No'):null;
-    // EU AI Act scope derived from operating regions + inventory presence.
-    var euEU=(REGIONS||[]).some(function(r){return /^EU$|europe|global/i.test(r);});
+    // EU AI Act scope (AI-governance capture retired; kept dead-safe).
+    var euEU=false;
     var euAiAct=loaded?(euEU?(AI_INV.customerFacing?'Yes — high-risk system':'Yes — limited-risk'):'Not in scope'):null;
     // Unsourced fields are null (not '' / 0) so the cockpit's conn checks render an honest
     // empty state instead of "connected, 0" — no estimates.
@@ -1697,8 +1694,7 @@
   }
   window.addEventListener('resize',function(){if(document.getElementById('cjmap'))drawMap();});
 
-  // regions chips
-  document.querySelectorAll('#regions .chip').forEach(function(c){c.addEventListener('click',function(){c.classList.toggle('on');REGIONS=[...document.querySelectorAll('#regions .chip.on')].map(function(x){return x.dataset.r;});var b=document.getElementById('b1');if(REGIONS.length){b.textContent='✓ '+REGIONS.length+' regions';b.classList.add('done');}else{b.textContent='optional';b.classList.remove('done');}updateSummary();if(typeof computeAiGov==='function')computeAiGov();});});
+  // Operating regions are captured by the Regions & entities structure now — no flat picker.
   ['orgName','industry','finRevenue','finAppetite','insLimit'].forEach(function(id){var e=document.getElementById(id);if(e)e.addEventListener('input',updateSummary);});
   function v(id){var e=document.getElementById(id);return e?String(e.value||'').trim():'';}
   function anyFin(){return mval('finRevenue')||mval('finOpInc')||mval('finNetInc')||mval('finEV')||mval('finAppetite')||mval('finBudget');}
@@ -1887,7 +1883,7 @@
     var seatNames={};document.querySelectorAll('.seatname').forEach(function(i){if(i.value.trim())seatNames[i.dataset.seat]=i.value.trim();});
     var seatEmails={};document.querySelectorAll('.seatemail').forEach(function(i){var e=i.value.trim();if(e&&/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e))seatEmails[i.dataset.seat]=e;});
     var payload={
-      org_name:org,org_id:orgId,industry:v('industry'),regions:REGIONS,org_structure:collectOrgStructure(),security_model:currentSecModel(),currency:CUR_CODE,
+      org_name:org,org_id:orgId,industry:v('industry'),org_structure:collectOrgStructure(),security_model:currentSecModel(),currency:CUR_CODE,
       financials:{revenue:mval('finRevenue'),operatingIncome:mval('finOpInc'),netIncome:mval('finNetInc'),enterpriseValue:mval('finEV'),sharesOutstanding:mval('finShares')},
       appetite:mval('finAppetite'),budget:mval('finBudget'),dataRecords:mval('finRecords'),
       principalRisks:{creditMarket:mval('ermCredit'),operational:mval('ermOps'),thirdParty:mval('ermTP'),compliance:mval('ermComp')},
@@ -2160,7 +2156,7 @@
     // Serialize every repeatable-row register (SBOM, risk appetite, capability map,
     // regulatory, materiality, benchmark, …) so typed/uploaded rows survive reload.
     var registers={};try{Object.keys(OB_REGISTERS).forEach(function(k){try{registers[k]=OB_REGISTERS[k].collect();}catch(_){}});}catch(_){}
-    return {v:2,ts:Date.now(),fields:f,seatN:seatN,seatE:seatE,certs:certs,regions:REGIONS,
+    return {v:2,ts:Date.now(),fields:f,seatN:seatN,seatE:seatE,certs:certs,
       proc:PROC,app:APP,risk:RISK,
       init:(typeof INIT!=='undefined'?INIT:null),vendors:(typeof VENDORS!=='undefined'?VENDORS:null),
       aiInv:(typeof AI_INV!=='undefined'?AI_INV:null),
@@ -2180,7 +2176,6 @@
       if(Array.isArray(s.certs))document.querySelectorAll('#growthCerts input[type=checkbox]').forEach(function(c){c.checked=s.certs.indexOf(c.value)>=0;});
       try{var cur=document.getElementById('currency');if(cur&&cur.value){var p=cur.value.split('|');CUR_SYM=p[0]||CUR_SYM;CUR_CODE=p[1]||CUR_CODE;document.querySelectorAll('.mcur').forEach(function(c){c.textContent=CUR_SYM;});}}catch(_){}
       try{document.querySelectorAll('.money').forEach(function(i){if(typeof updateEq==='function')updateEq(i.id);});}catch(_){}
-      if(Array.isArray(s.regions)){REGIONS=s.regions.slice();document.querySelectorAll('#regions .chip').forEach(function(c){c.classList.toggle('on',REGIONS.indexOf(c.dataset.r)>=0);});var b1=document.getElementById('b1');if(b1&&REGIONS.length){b1.textContent='✓ '+REGIONS.length+' regions';b1.classList.add('done');}}
       if(Array.isArray(s.proc)&&s.proc.length){PROC=s.proc;showRows(document.getElementById('resProc'),PROC,function(x){return '<div class="xrow"><span class="nm">'+x.name+'</span><span class="mt">'+(x.data||'')+(x.revenue?(' · '+x.revenue):'')+(x.rto?(' · RTO '+x.rto+'h'):'')+'</span></div>';});var b4=document.getElementById('b4');if(b4){b4.dataset.n=PROC.length;badgeDone('b4');}}
       if(Array.isArray(s.app)&&s.app.length){APP=s.app;showRows(document.getElementById('resApp'),APP,function(x){return '<div class="xrow"><span class="nm">'+x.name+'</span><span class="mt">'+(x.host||'')+(x.vendor?(' · '+x.vendor):'')+'</span></div>';});var b5=document.getElementById('b5');if(b5){b5.dataset.n=APP.length;badgeDone('b5');}}
       if(Array.isArray(s.risk)&&s.risk.length){RISK=s.risk;showRows(document.getElementById('resRisk'),RISK,function(x){return '<div class="xrow"><span class="nm">'+x.title+'</span><span class="mt">'+(x.asset||'')+(x.exposure?(' · '+x.exposure):'')+' · '+(x.severity||'')+'</span></div>';});var b6=document.getElementById('b6');if(b6){b6.dataset.n=RISK.length;badgeDone('b6');}}

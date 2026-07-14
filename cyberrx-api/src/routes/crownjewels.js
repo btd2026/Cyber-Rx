@@ -88,7 +88,16 @@ router.post('/ingest', optionalJWT, async (req, res) => {
       dataRecords: money(b.dataRecords),
       principalRisks: (function () { const p = b.principalRisks || {}; return { creditMarket: money(p.creditMarket), operational: money(p.operational), thirdParty: money(p.thirdParty), compliance: money(p.compliance) }; })(),
       industry: b.industry || null,
-      regions: Array.isArray(b.regions) ? b.regions : (b.regions ? [b.regions] : []),
+      // Operating regions now come from the org structure (Regions & entities), not a flat
+      // picker — flatten its region labels + countries so the CLO jurisdiction still derives.
+      regions: (function () {
+        const out = [];
+        (Array.isArray(b.org_structure) ? b.org_structure : []).forEach((r) => {
+          if (r && r.label) out.push(String(r.label));
+          String((r && r.countries) || '').split(/[·,]/).forEach((c) => { const t = c.trim(); if (t) out.push(t); });
+        });
+        return Array.from(new Set(out));
+      })(),
       currency: (typeof b.currency === 'string' && b.currency.trim()) ? b.currency.trim().toUpperCase() : 'USD',
       risks_proposed: risksProposed, // true when Nerion proposed the register (no upload)
     };
