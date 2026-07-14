@@ -65,16 +65,14 @@ describe('onboarding — the bespoke registers fold like the rest (shared obRowC
     expect(orc).toMatch(/total>1\?plural:singular/);
     expect(orc).toContain("plural=plural||(singular+'s')");
   });
-  it('strategic initiatives, objectives, and the capability map each call it', () => {
+  it('strategic initiatives and objectives each call it', () => {
     expect(onb).toContain("obRowCollapse('stratRows','strat-row','initiative')");
     expect(onb).toContain("obRowCollapse('objRows','obj-row','objective')");
-    expect(onb).toContain("obRowCollapse('capRows','cap-row','capability','capabilities')");
   });
   it('adding a row to each bespoke list expands it', () => {
     const strat = onb.slice(onb.indexOf('function addStratRow('), onb.indexOf('function collectStrategic('));
     const obj = onb.slice(onb.indexOf('function addObjRow('), onb.indexOf('function collectObjectives('));
-    const cap = onb.slice(onb.indexOf('function addCapRow('), onb.indexOf('function collectCapabilities('));
-    [strat, obj, cap].forEach((fn) => {
+    [strat, obj].forEach((fn) => {
       expect(fn).toContain("wrap.setAttribute('data-coll','0');wrap.style.display=''");
     });
   });

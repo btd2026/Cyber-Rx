@@ -188,17 +188,6 @@ router.post('/ingest', optionalJWT, async (req, res) => {
           .map((o) => ({ name: String(o.name || o).slice(0, 140), map: o.map ? String(o.map).slice(0, 40) : '' }))
       : [];
 
-    // Business capability map (name + cyber exposure + GRC status) — powers the CISO
-    // Enterprise-Risk tile "business capabilities with highest exposure".
-    const capabilities = Array.isArray(b.capabilities)
-      ? b.capabilities.filter((c) => c && c.name).slice(0, 40)
-          .map((c) => {
-            const gaps = Number(c.control_gaps); const risk = Number(c.open_risk);
-            return { name: String(c.name).slice(0, 140), exposure_usd: money(c.exposure_usd), grc_status: c.grc_status ? String(c.grc_status).slice(0, 20) : null,
-              control_gaps: Number.isFinite(gaps) ? gaps : null, open_risk: Number.isFinite(risk) ? risk : null };
-          })
-      : [];
-
     // CISO registers (documents) — Crown Jewel Register, BIA, SBOM. Normalized to a
     // defined internal schema; a `document_validation` map records provided/invalid so
     // the readiness gate treats a malformed upload as not-satisfied.
@@ -221,28 +210,6 @@ router.post('/ingest', optionalJWT, async (req, res) => {
       impact_usd: money(p.impact_usd != null ? p.impact_usd : p.impact),
       criticality: p.criticality ? String(p.criticality).slice(0, 20) : null,
     }), 'bia');
-    // DELTA registers (Board / CLO / CRO): Risk Appetite, Regulatory, Materiality, Benchmark.
-    const riskAppetite = normReg(b.riskAppetite, (r, i) => ({
-      category: String(r.category || r.name || ('Category ' + (i + 1))).slice(0, 120),
-      appetite_usd: money(r.appetite_usd != null ? r.appetite_usd : r.appetite),
-      threshold: r.threshold ? String(r.threshold).slice(0, 40) : null,
-    }), 'riskAppetite');
-    const regulatoryRegister = normReg(b.regulatoryRegister, (r, i) => ({
-      regulation: String(r.regulation || r.name || ('Regulation ' + (i + 1))).slice(0, 140),
-      obligation: r.obligation ? String(r.obligation).slice(0, 200) : null,
-      status: r.status ? String(r.status).slice(0, 40) : null,
-      exposure_usd: money(r.exposure_usd != null ? r.exposure_usd : r.exposure),
-    }), 'regulatoryRegister');
-    const materialityCriteria = normReg(b.materialityCriteria, (r, i) => ({
-      metric: String(r.metric || r.name || ('Criterion ' + (i + 1))).slice(0, 140),
-      threshold_usd: money(r.threshold_usd != null ? r.threshold_usd : r.threshold),
-      basis: r.basis ? String(r.basis).slice(0, 120) : null,
-    }), 'materialityCriteria');
-    const benchmarkData = normReg(b.benchmarkData, (r, i) => ({
-      metric: String(r.metric || r.name || ('Metric ' + (i + 1))).slice(0, 140),
-      our_value: r.our_value != null ? String(r.our_value).slice(0, 60) : null,
-      benchmark: r.benchmark != null ? String(r.benchmark).slice(0, 60) : null,
-    }), 'benchmarkData');
 
     // Executive names by seat id — each seat's decisions are stamped with the leader's
     // name. Stored server-side so the cockpit shows them on any device.
@@ -270,7 +237,7 @@ router.post('/ingest', optionalJWT, async (req, res) => {
        VALUES ($1,$2,$3,$4::jsonb,NOW())
        ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name,
          setup_json = COALESCE(orgs.setup_json,'{}'::jsonb) || EXCLUDED.setup_json`,
-      [mapped.org.id, mapped.org.name, '', JSON.stringify({ economics, resilience, initiatives, governance, growth, strategicInitiatives, objectives, capabilities, crownJewelRegister, bia, riskAppetite, regulatoryRegister, materialityCriteria, benchmarkData, document_validation: documentValidation, seatNames, seatEmails })]);
+      [mapped.org.id, mapped.org.name, '', JSON.stringify({ economics, resilience, initiatives, governance, growth, strategicInitiatives, objectives, crownJewelRegister, bia, document_validation: documentValidation, seatNames, seatEmails })]);
 
     // Idempotent replace: clear the org's prior inventory, then insert the mapped rows.
     step = 'clear_inventory';
