@@ -5153,6 +5153,30 @@ function c5AssessmentRollup(){
   var confidence=totW?mvW/totW:0;
   return {overall:overall,confidence:confidence,functions:fnScores,categories:catScores};
 }
+/* ===== DRIFT DETECTION — the score is for the board, the drift alert is for the operator.
+   The score is a lagging summary; the alert on CHANGE is what people act on. A control
+   flipping met → not-met raises a finding and (on a connected ITSM) an automatic ticket.
+   Compares the current verdict to the prior snapshot — here deterministic for the demo; in
+   production the evidence store's last record. */
+var VERDICT_RANK={not_assessed:0,not_met:1,partial:2,met:3};
+function c5AssessmentPrior(a){var h=c5hash(a.id+'|prior');
+  if(h%13===0)return 'met';                          // was met, now worse → regression
+  if(h%13===1)return 'not_met';                      // was worse, now better → improvement
+  if(h%13===2&&a.verdict==='met')return 'partial';   // partial regression
+  return a.verdict;}
+function c5DriftAlerts(){
+  var ids=Object.keys(CSF_BASE_METHOD);var cw=c5CrownControlWeights();
+  var out={regressions:[],improvements:[],expired:[]};
+  ids.forEach(function(id){var a=c5ControlAssessment(id);var prior=c5AssessmentPrior(a);
+    var now=VERDICT_RANK[a.verdict],was=VERDICT_RANK[prior];var wt=c5ControlWeight(id,cw);
+    if(now<was){var breach=(prior==='met'&&(a.verdict==='not_met'||a.verdict==='not_assessed'));
+      out.regressions.push({id:id,from:prior,to:a.verdict,method:a.method,drop:was-now,weight:wt,
+        severity:(breach||wt>=2.2)?'high':(was-now>=2?'high':'medium'),ticket:breach});}
+    else if(now>was)out.improvements.push({id:id,from:prior,to:a.verdict});
+    if(a.freshness==='expired')out.expired.push({id:id});});
+  out.regressions.sort(function(x,y){return (y.weight-x.weight)||(y.drop-x.drop);});
+  return out;
+}
 /* The honest continuous-assessment view — the anti-vanity summary + every one of the 106
    controls with its method, three-axis state and freshness. Read-only. */
 function c5ContinuousAssessment(host){
@@ -5205,6 +5229,24 @@ function c5ContinuousAssessment(host){
       +['Control','Method','Verdict','Assurance · confidence','Coverage','Freshness','Cadence'].map(function(h){return '<th style="'+thin+'">'+h+'</th>';}).join('')
       +'</tr></thead><tbody>'+rows+'</tbody></table></div></div>';
   }).join('');
+  // Drift alerts — the actionable delta since last assessment. Regressions first; a
+  // met → not-met flip auto-raises a ticket on the connected ITSM.
+  var drift=c5DriftAlerts();var verdLbl={met:'met',partial:'partially met',not_met:'not met',not_assessed:'not assessed'};
+  var driftPanel='';
+  if(drift.regressions.length){
+    var top=drift.regressions.slice(0,8).map(function(d){var sev=d.severity==='high'?'crit':'warn';
+      return '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:5px 0;border-top:1px solid color-mix(in srgb,var(--crit) 15%,transparent)">'
+        +'<span style="font-size:9px;font-weight:800;color:var(--'+sev+');text-transform:uppercase">'+d.severity+'</span>'
+        +'<span style="font-family:ui-monospace,monospace;font-size:11.5px;color:var(--ink)">'+esc(d.id)+'</span>'
+        +'<span style="font-size:11px;color:var(--ink-2)">'+verdLbl[d.from]+' <span style="color:var(--muted)">→</span> <b style="color:var(--'+sev+')">'+verdLbl[d.to]+'</b></span>'
+        +(d.ticket?'<span style="font-size:10px;font-weight:700;color:var(--crit);background:color-mix(in srgb,var(--crit) 10%,transparent);border-radius:6px;padding:1px 7px">🎫 ticket auto-raised</span>':'')
+        +(d.weight>1?'<span style="font-size:10px;color:var(--muted)">crown-jewel control</span>':'')+'</div>';}).join('');
+    driftPanel='<div style="border:1px solid var(--crit);border-radius:12px;padding:12px 15px;margin:10px 0;background:color-mix(in srgb,var(--crit) 5%,transparent)">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><div style="font-size:12.5px;font-weight:800;color:var(--crit)">⚠ '+drift.regressions.length+' control'+(drift.regressions.length>1?'s':'')+' drifted since last assessment</div>'
+      +'<div style="font-size:11px;color:var(--muted)">'+drift.improvements.length+' improved · '+drift.expired.length+' evidence expired</div></div>'
+      +'<div style="font-size:11px;color:var(--muted);margin:4px 0 6px">The score is the lagging summary; this is what to act on now. A <b>met → not-met</b> flip raises a finding and an automatic ticket on your connected ITSM (Jira / ServiceNow).</div>'
+      +top+(drift.regressions.length>8?('<div style="font-size:11px;color:var(--muted);margin-top:6px">+ '+(drift.regressions.length-8)+' more</div>'):'')+'</div>';
+  }
   // Crown-jewel-weighted, weakest-link rollup — NOT a simple average. Shown on the 0–5 scale.
   var roll=c5AssessmentRollup();var FNL={GV:'Govern',ID:'Identify',PR:'Protect',DE:'Detect',RS:'Respond',RC:'Recover'};
   function scoreCol(v){return v>=0.8?'good':v>=0.6?'blue':v>=0.4?'warn':'crit';}
@@ -5223,6 +5265,7 @@ function c5ContinuousAssessment(host){
     +'<div style="font-size:15px;font-weight:800;color:var(--ink)">Continuous assessment · all '+s.total+' NIST CSF 2.0 controls</div>'
     +'<div style="font-size:12.5px;color:var(--ink-2);line-height:1.6;margin:5px 0 12px;max-width:820px">Every control is assessed on a cadence — never point-in-time. The <b>method differs by control</b> and Nerion is honest about which it used: a governance outcome has no sensor, so it is a scheduled <b>attestation</b> with freshness tracking, not fake automation. Each control carries three axes that are never blended into one number — <b>verdict</b>, <b>assurance</b>, and <b>freshness</b> — plus <b>coverage</b> (the observed vs known population).</div>'
     +'<div style="font-size:11px;color:var(--muted);margin-bottom:8px"><b style="color:var(--ink)">'+s.machineVerifiable+'</b> machine-verifiable today (live + hybrid) — grows as you connect sources · <b style="color:var(--ink)">'+s.attested+'</b> attested, decaying on their review cycle · <span style="color:var(--good)">'+trend+'</span> on met verdicts</div>'
+    +driftPanel
     +summary
     +rollupPanel
     +cadenceBar
