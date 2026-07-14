@@ -5097,6 +5097,62 @@ function c5AssessmentSummary(){
   s.machineVerifiable=s.live+s.hybrid;
   return s;
 }
+/* A single control's 0–1 score — the three axes MULTIPLIED, never averaged, so a weakly
+   evidenced control can't inflate the number: verdict × assurance × freshness × coverage.
+   An expired attestation (verdict not_assessed) scores 0; a met live control at 94% coverage
+   scores ~0.94. Confidence rides alongside as the assurance tier. */
+function c5ControlScore(a){
+  var vb={met:1,partial:0.5,not_met:0,not_assessed:0}[a.verdict];if(vb==null)vb=0;
+  var af=a.method==='live'?1:a.method==='hybrid'?0.9:a.method==='attestation'?0.75:0;
+  var ff={healthy:1,expiring:0.85,expired:0.5,none:0}[a.freshness];if(ff==null)ff=0;
+  var cf=a.coverage?a.coverage.pct/100:1;
+  return vb*af*ff*cf;
+}
+/* Crown-jewel weighting — a control that protects a CONFIRMED crown jewel counts more than
+   one on the HR wiki. From each crown jewel's asset class → the capabilities that validly
+   cover it → the CSF controls those capabilities evidence, weighted by the jewel's tier.
+   This is where the crown-jewel model makes Nerion's CSF score mean something a competitor's
+   doesn't. */
+function c5CrownControlWeights(){
+  var w={};var cjs=(typeof LIVE!=='undefined'&&LIVE&&LIVE.crown_jewels)||[];
+  var tierW={Critical:3,High:2.2,Medium:1.6};
+  var nc=(typeof neuronControls==='function')?neuronControls():[];
+  var capCsf={};nc.forEach(function(n){capCsf[n.k]=(n.crosswalk&&n.crosswalk.csf)||[];});
+  cjs.forEach(function(cj){var tw=tierW[cj.tier]||1.8;
+    var pr=(typeof assetProvenance==='function')?assetProvenance(cj):{applicable:[]};
+    (pr.applicable||[]).forEach(function(x){(capCsf[x.k]||[]).forEach(function(cid){w[cid]=Math.max(w[cid]||1,tw);});});});
+  return w;
+}
+function c5ControlWeight(id,cw){cw=cw||c5CrownControlWeights();return cw[id]||1;}
+/* Roll up control → category → function → overall. NOT a simple average: weight by
+   crown-jewel criticality, and apply a WEAKEST-LINK pull at the category level so one
+   catastrophically broken crown-jewel control can't be hidden by healthy siblings. The
+   overall carries its CONFIDENCE — the share of weighted score that is machine-verified. */
+function c5AssessmentRollup(){
+  var ids=Object.keys(CSF_BASE_METHOD);var cw=c5CrownControlWeights();
+  var byCat={},byFn={};
+  ids.forEach(function(id){var a=c5ControlAssessment(id);var sc=c5ControlScore(a);var wt=c5ControlWeight(id,cw);
+    var cat=id.split('-')[0];var fn=id.split('.')[0];
+    (byCat[cat]=byCat[cat]||{fn:fn,items:[]}).items.push({id:id,score:sc,weight:wt,method:a.method,verdict:a.verdict});});
+  var catScores={};Object.keys(byCat).forEach(function(cat){var it=byCat[cat].items;
+    var wsum=it.reduce(function(s,x){return s+x.weight;},0);
+    var wavg=wsum?it.reduce(function(s,x){return s+x.score*x.weight;},0)/wsum:0;
+    // weakest-link: the lowest-scoring crown-jewel-weighted control drags the category down.
+    var crown=it.filter(function(x){return x.weight>1;});
+    var weakest=crown.length?Math.min.apply(null,crown.map(function(x){return x.score;})):wavg;
+    var score=(weakest<0.5)?(wavg+weakest)/2:wavg;   // a broken crown-jewel control can't be averaged away
+    catScores[cat]={fn:byCat[cat].fn,score:score,wavg:wavg,weakest:weakest,weight:wsum,count:it.length};
+    (byFn[byCat[cat].fn]=byFn[byCat[cat].fn]||[]).push(catScores[cat]);});
+  var fnScores={};Object.keys(byFn).forEach(function(fn){var cs=byFn[fn];
+    var wsum=cs.reduce(function(s,c){return s+c.weight;},0);
+    fnScores[fn]={score:wsum?cs.reduce(function(s,c){return s+c.score*c.weight;},0)/wsum:0,weight:wsum,cats:cs.length};});
+  var fw=Object.keys(fnScores).reduce(function(s,f){return s+fnScores[f].weight;},0);
+  var overall=fw?Object.keys(fnScores).reduce(function(s,f){return s+fnScores[f].score*fnScores[f].weight;},0)/fw:0;
+  // Confidence: weighted share of the score that comes from machine-verified evidence.
+  var mvW=0,totW=0;ids.forEach(function(id){var a=c5ControlAssessment(id);var wt=c5ControlWeight(id,cw);totW+=wt;if(a.method==='live')mvW+=wt;});
+  var confidence=totW?mvW/totW:0;
+  return {overall:overall,confidence:confidence,functions:fnScores,categories:catScores};
+}
 /* The honest continuous-assessment view — the anti-vanity summary + every one of the 106
    controls with its method, three-axis state and freshness. Read-only. */
 function c5ContinuousAssessment(host){
@@ -5149,6 +5205,15 @@ function c5ContinuousAssessment(host){
       +['Control','Method','Verdict','Assurance · confidence','Coverage','Freshness','Cadence'].map(function(h){return '<th style="'+thin+'">'+h+'</th>';}).join('')
       +'</tr></thead><tbody>'+rows+'</tbody></table></div></div>';
   }).join('');
+  // Crown-jewel-weighted, weakest-link rollup — NOT a simple average. Shown on the 0–5 scale.
+  var roll=c5AssessmentRollup();var FNL={GV:'Govern',ID:'Identify',PR:'Protect',DE:'Detect',RS:'Respond',RC:'Recover'};
+  function scoreCol(v){return v>=0.8?'good':v>=0.6?'blue':v>=0.4?'warn':'crit';}
+  var fnBars=['GV','ID','PR','DE','RS','RC'].filter(function(f){return roll.functions[f];}).map(function(f){var v=roll.functions[f].score;var pc=Math.round(v*100);return '<div style="min-width:92px"><div style="display:flex;justify-content:space-between;font-size:10.5px;margin-bottom:3px"><span style="font-weight:700;color:var(--ink-2)">'+FNL[f]+'</span><span style="font-weight:700;color:var(--'+scoreCol(v)+')">'+(v*5).toFixed(2)+'</span></div><div style="height:5px;background:var(--surface-2);border-radius:3px;overflow:hidden"><i style="display:block;height:100%;width:'+pc+'%;background:var(--'+scoreCol(v)+')"></i></div></div>';}).join('');
+  var rollupPanel='<div style="border:1px solid var(--line);border-radius:12px;padding:13px 16px;margin:10px 0;background:var(--surface)">'
+    +'<div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">'
+    +'<div><div style="font-size:26px;font-weight:800;color:var(--'+scoreCol(roll.overall)+');line-height:1">'+(roll.overall*5).toFixed(2)+'</div><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)">Weighted posture · confidence '+Math.round(roll.confidence*100)+'%</div></div>'
+    +'<div style="display:flex;gap:12px;flex-wrap:wrap;padding-left:14px;border-left:1px solid var(--line)">'+fnBars+'</div></div>'
+    +'<div style="font-size:11px;color:var(--muted);margin-top:9px;line-height:1.5">Rolled up <b>crown-jewel-weighted</b> with a <b>weakest-link</b> rule at category level — a broken control on a confirmed crown jewel can\'t be averaged away by healthy siblings. The number carries its <b>confidence</b> (the share that is machine-verified), so it can\'t read green on assertion alone.</div></div>';
   var globalCad=c5CadenceOverrides().global||'';
   var cadenceBar='<div style="border:1px solid var(--line);border-radius:11px;padding:11px 14px;margin:10px 0 4px;background:var(--surface);display:flex;gap:12px;align-items:center;flex-wrap:wrap">'
     +'<span style="font-size:11px;font-weight:700;color:var(--ink)">Assessment cadence</span>'
@@ -5159,6 +5224,7 @@ function c5ContinuousAssessment(host){
     +'<div style="font-size:12.5px;color:var(--ink-2);line-height:1.6;margin:5px 0 12px;max-width:820px">Every control is assessed on a cadence — never point-in-time. The <b>method differs by control</b> and Nerion is honest about which it used: a governance outcome has no sensor, so it is a scheduled <b>attestation</b> with freshness tracking, not fake automation. Each control carries three axes that are never blended into one number — <b>verdict</b>, <b>assurance</b>, and <b>freshness</b> — plus <b>coverage</b> (the observed vs known population).</div>'
     +'<div style="font-size:11px;color:var(--muted);margin-bottom:8px"><b style="color:var(--ink)">'+s.machineVerifiable+'</b> machine-verifiable today (live + hybrid) — grows as you connect sources · <b style="color:var(--ink)">'+s.attested+'</b> attested, decaying on their review cycle · <span style="color:var(--good)">'+trend+'</span> on met verdicts</div>'
     +summary
+    +rollupPanel
     +cadenceBar
     +'<div style="font-size:11px;color:var(--muted);margin:12px 0 2px;line-height:1.5">A control assessed by attestation 340 days ago on an annual cadence is not "passing" — it is <b style="color:var(--warn)">expiring</b>. Freshness is a first-class part of status: the proof decaying past its TTL flips the control with no human action, which is what makes "continuous" true across all '+s.total+', not just the live ones.</div>'
     +rowsByFn+'</div>';
