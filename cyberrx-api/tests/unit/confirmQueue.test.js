@@ -19,11 +19,10 @@ describe('Hybrid confirm queue', () => {
     expect(ciso).toContain('function c5ConfirmControl(id,decision){');
     expect(ciso).toContain("localStorage.setItem('cyberrx_confirmations',JSON.stringify(o));");
   });
-  it('renders the queue with Approve/Dispute and wires the actions', () => {
-    expect(ciso).toContain('Weekly confirm queue · ');
+  it('renders the queue with Approve/Dispute and wires the actions (in its own tab view)', () => {
+    expect(ciso).toContain('Weekly confirm queue');
     expect(ciso).toContain('data-confirm="approve:');
     expect(ciso).toContain('data-confirm="dispute:');
-    expect(ciso).toContain("c5ConfirmControl(id,(act==='clear')?null:act);c5ContinuousAssessment(host);");
-    expect(ciso).toContain('+queuePanel');
+    expect(ciso).toContain("c5ConfirmControl(v[1],(v[0]==='clear')?null:v[0]);c5ConfirmQueueView(host);");
   });
 });
