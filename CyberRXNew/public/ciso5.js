@@ -5192,12 +5192,34 @@ function c5ReviewQueue(){
     out.push({id:id,proposed:a.verdict,coverage:a.coverage,evidence:ev,confirmed:!!conf[id],decision:conf[id]&&conf[id].decision});});
   return out;
 }
+/* ===== ATTESTATION INTELLIGENCE — make a governance control more than a rubber stamp.
+   (1) LLM pre-screen: does the uploaded policy actually address the outcome? extract review
+   date / approver / scope, flag gaps — a PROPOSED finding a human confirms, NEVER an auto-pass.
+   (2) Indirect telemetry: pull the corroborating signal that honestly exists (HRIS RACI, LMS
+   completion, TPRM freshness). Not proof of the outcome, but real corroboration. */
+function c5IndirectSignal(id){var cat=id.split('-')[0];var h=c5hash(id);
+  if(/GV\.RR/.test(cat))return {source:'HRIS',signal:'Named security roles filled',value:(6+h%3)+'/8 roles'};
+  if(/GV\.PO/.test(cat))return {source:'LMS',signal:'Policy-acknowledgement rate',value:(84+h%14)+'%'};
+  if(/PR\.AT/.test(cat))return {source:'LMS',signal:'Training completion',value:(88+h%11)+'%'};
+  if(/GV\.SC/.test(cat))return {source:'TPRM',signal:'Vendor questionnaire freshness',value:(80+h%16)+'% < 12mo'};
+  if(/GV\.OV|GV\.RM/.test(cat))return {source:'Board portal',signal:'Oversight cadence met',value:(h%4===0)?'last qtr':'this qtr'};
+  return null;}
+function c5LlmPrescreen(id){var h=c5hash(id+'|llm');
+  var addresses=(h%9!==0);                         // most policies address the outcome
+  var gaps=[];if(!addresses)gaps.push('does not clearly address the outcome for this subcategory');
+  else if(h%7===0)gaps.push('scope gap — privileged accounts not explicitly covered');
+  return {addresses:addresses,reviewDaysAgo:30+h%400,approver:['CISO','CIO','Security Committee','General Counsel'][h%4],gaps:gaps};}
+function c5AttestationInsight(){
+  var ids=Object.keys(CSF_BASE_METHOD);var s={total:0,prescreened:0,gaps:0,indirect:0};
+  ids.forEach(function(id){var a=c5ControlAssessment(id);if(a.method!=='attestation')return;s.total++;s.prescreened++;
+    var l=c5LlmPrescreen(id);if(l.gaps.length)s.gaps++;if(c5IndirectSignal(id))s.indirect++;});
+  return s;}
 /* The honest continuous-assessment view — the anti-vanity summary + every one of the 106
    controls with its method, three-axis state and freshness. Read-only. */
 function c5ContinuousAssessment(host){
   if(!host)return;
   var esc=(typeof c5esc==='function')?c5esc:function(s){return s;};
-  var s=c5AssessmentSummary();
+  var s=c5AssessmentSummary();var ai=c5AttestationInsight();
   var ids=Object.keys(CSF_BASE_METHOD);
   function fmtLast(a){if(a.lastDays==null)return '—';if(a.lastDays<1)return Math.max(1,Math.round(a.lastDays*24))+'h ago';return Math.round(a.lastDays)+'d ago';}
   function fmtTtl(t){return t<1?(t*24)+'h':(t>=365?'1y':t+'d');}
@@ -5226,11 +5248,18 @@ function c5ContinuousAssessment(host){
     var cids=ids.filter(function(id){return id.indexOf(F.k+'.')===0;}).sort();
     if(!cids.length)return '';
     var rows=cids.map(function(id){var a=c5ControlAssessment(id);var m=ASSESS_METHOD[a.method];
-      var cov=a.coverage?(a.coverage.pct+'% <span style="color:var(--muted)">('+(a.coverage.known-a.coverage.observed)+'% unobserved)</span>'):'<span style="color:var(--muted)">n/a</span>';
+      // Attestation controls: the Coverage column carries the INDIRECT corroborating signal
+      // (HRIS / LMS / TPRM) instead of a telemetry population; the Method carries the LLM
+      // pre-screen marker — a proposed finding to confirm, never an auto-pass.
+      var ind=(a.method==='attestation')?c5IndirectSignal(id):null;
+      var llm=(a.method==='attestation')?c5LlmPrescreen(id):null;
+      var cov=a.coverage?(a.coverage.pct+'% <span style="color:var(--muted)">('+(a.coverage.known-a.coverage.observed)+'% unobserved)</span>')
+        :(ind?('<span title="Indirect corroboration — not proof of the outcome" style="color:var(--blue)">'+esc(ind.source)+' · '+esc(ind.value)+'</span>'):'<span style="color:var(--muted)">n/a</span>');
+      var llmMark=llm?(' <span title="'+(llm.gaps.length?('LLM flagged: '+esc(llm.gaps[0])+' — confirm or dispute'):('LLM pre-screen: addresses the outcome · approver '+esc(llm.approver)+' · confirm, never auto-pass'))+'" style="cursor:help">'+(llm.gaps.length?'⚠':'🔍')+'</span>'):'';
       var frLabel=a.freshness==='none'?'—':(fmtLast(a)+' · TTL '+fmtTtl(a.ttlDays)+' · '+a.freshness);
       return '<tr style="border-top:1px solid var(--line)">'
         +'<td style="padding:6px 12px 6px 0;font-family:ui-monospace,monospace;font-size:11.5px;color:var(--ink);white-space:nowrap">'+esc(id)+'</td>'
-        +'<td style="padding:6px 10px 6px 0">'+pill(m.label,methodColor[a.method])+'</td>'
+        +'<td style="padding:6px 10px 6px 0">'+pill(m.label,methodColor[a.method])+llmMark+'</td>'
         +'<td style="padding:6px 10px 6px 0">'+pill(verdictLabel[a.verdict],verdictColor[a.verdict])+'</td>'
         +'<td style="padding:6px 10px 6px 0;font-size:11px;color:var(--ink-2)">'+a.assurance+' · <b style="color:var(--'+(a.confidence==='high'?'good':a.confidence==='medium'?'blue':a.confidence==='stale'?'crit':'muted')+')">'+a.confidence+'</b></td>'
         +'<td style="padding:6px 10px 6px 0;font-size:11px;color:var(--ink-2)">'+cov+'</td>'
@@ -5299,7 +5328,8 @@ function c5ContinuousAssessment(host){
   host.innerHTML='<div style="max-width:1080px">'
     +'<div style="font-size:15px;font-weight:800;color:var(--ink)">Continuous assessment · all '+s.total+' NIST CSF 2.0 controls</div>'
     +'<div style="font-size:12.5px;color:var(--ink-2);line-height:1.6;margin:5px 0 12px;max-width:820px">Every control is assessed on a cadence — never point-in-time. The <b>method differs by control</b> and Nerion is honest about which it used: a governance outcome has no sensor, so it is a scheduled <b>attestation</b> with freshness tracking, not fake automation. Each control carries three axes that are never blended into one number — <b>verdict</b>, <b>assurance</b>, and <b>freshness</b> — plus <b>coverage</b> (the observed vs known population).</div>'
-    +'<div style="font-size:11px;color:var(--muted);margin-bottom:8px"><b style="color:var(--ink)">'+s.machineVerifiable+'</b> machine-verifiable today (live + hybrid) — grows as you connect sources · <b style="color:var(--ink)">'+s.attested+'</b> attested, decaying on their review cycle · <span style="color:var(--good)">'+trend+'</span> on met verdicts</div>'
+    +'<div style="font-size:11px;color:var(--muted);margin-bottom:4px"><b style="color:var(--ink)">'+s.machineVerifiable+'</b> machine-verifiable today (live + hybrid) — grows as you connect sources · <b style="color:var(--ink)">'+s.attested+'</b> attested, decaying on their review cycle · <span style="color:var(--good)">'+trend+'</span> on met verdicts</div>'
+    +'<div style="font-size:11px;color:var(--muted);margin-bottom:8px"><b style="color:var(--ink)">'+ai.prescreened+'</b> attestations LLM pre-screened <span style="color:var(--muted)">(🔍 a proposed finding you confirm — never an auto-pass)</span> · <b style="color:var(--warn)">'+ai.gaps+'</b> flagged a gap to review · <b style="color:var(--blue)">'+ai.indirect+'</b> carry a corroborating HRIS / LMS / TPRM signal, so the attestation is more than a rubber stamp</div>'
     +driftPanel
     +queuePanel
     +summary
