@@ -4722,6 +4722,8 @@ document.addEventListener('click',function(e){
    "Classic View" is the existing framework-maturity content, relocated as-is. */
 var C5_PH_DEFAULT='classic'; // flip to 'nerion' to change the default tab in one line
 var C5_PH_TAB=C5_PH_DEFAULT;
+// Continuous-assessment view: active function subtab + selected control (for the detail panel).
+var C5_ASSESS_FN='GV', C5_ASSESS_CTRL=null;
 function c5CjtSrc(){try{return new URL('crownjewel-tree.html',location.href).href;}catch(_){return 'crownjewel-tree.html';}}
 var C5_CJT_INPUT=null,C5_CJT_WIRED=false;
 function c5CjtMsg(e){var f=document.getElementById('c5cjt-frame');if(!f)return;
@@ -5244,35 +5246,58 @@ function c5ContinuousAssessment(host){
       C5_CADENCE_KEYS.map(function(k){return '<option value="'+k+'"'+(k===curKey?' selected':'')+'>'+C5_CADENCE_LABEL[k]+'</option>';}).join('');
     return '<select data-cadence="'+scope+'" style="font-size:11px;padding:3px 6px;border:1px solid var(--'+(overridden?'blue':'line')+');border-radius:6px;background:var(--surface);color:var(--ink)'+(extra||'')+'">'+opts+'</select>';
   }
-  var rowsByFn=FN.map(function(F){
-    var cids=ids.filter(function(id){return id.indexOf(F.k+'.')===0;}).sort();
+  // One clickable control row — selecting it opens the detail panel below (like Classic view).
+  function assessRow(id){var a=c5ControlAssessment(id);var m=ASSESS_METHOD[a.method];
+    var ind=(a.method==='attestation')?c5IndirectSignal(id):null;
+    var llm=(a.method==='attestation')?c5LlmPrescreen(id):null;
+    var cov=a.coverage?(a.coverage.pct+'% <span style="color:var(--muted)">('+(a.coverage.known-a.coverage.observed)+'% unobserved)</span>')
+      :(ind?('<span title="Indirect corroboration — not proof of the outcome" style="color:var(--blue)">'+esc(ind.source)+' · '+esc(ind.value)+'</span>'):'<span style="color:var(--muted)">n/a</span>');
+    var llmMark=llm?(' <span title="'+(llm.gaps.length?('LLM flagged: '+esc(llm.gaps[0])):('LLM pre-screen — confirm, never auto-pass'))+'" style="cursor:help">'+(llm.gaps.length?'⚠':'🔍')+'</span>'):'';
+    var frLabel=a.freshness==='none'?'—':(fmtLast(a)+' · TTL '+fmtTtl(a.ttlDays)+' · '+a.freshness);
+    var selRow=(C5_ASSESS_CTRL===id);
+    return '<tr data-assessctl="'+id+'" style="border-top:1px solid var(--line);cursor:pointer;background:'+(selRow?'color-mix(in srgb,var(--blue) 8%,transparent)':'transparent')+'">'
+      +'<td style="padding:6px 12px 6px 0;font-family:ui-monospace,monospace;font-size:11.5px;color:var(--'+(selRow?'blue':'ink')+');white-space:nowrap">'+esc(id)+' ›</td>'
+      +'<td style="padding:6px 10px 6px 0">'+pill(m.label,methodColor[a.method])+llmMark+'</td>'
+      +'<td style="padding:6px 10px 6px 0">'+pill(verdictLabel[a.verdict],verdictColor[a.verdict])+'</td>'
+      +'<td style="padding:6px 10px 6px 0;font-size:11px;color:var(--ink-2)">'+a.assurance+' · <b style="color:var(--'+(a.confidence==='high'?'good':a.confidence==='medium'?'blue':a.confidence==='stale'?'crit':'muted')+')">'+a.confidence+'</b></td>'
+      +'<td style="padding:6px 10px 6px 0;font-size:11px;color:var(--ink-2)">'+cov+'</td>'
+      +'<td style="padding:6px 10px 6px 0;font-size:11px;color:var(--'+freshColor[a.freshness]+')">'+frLabel+'</td>'
+      +'<td style="padding:6px 0">'+cadSelect('control:'+id,a.cadenceKey,a.cadenceSource==='control')+'</td></tr>';
+  }
+  function assessTable(fnKey){
+    var cids=ids.filter(function(id){return id.indexOf(fnKey+'.')===0;}).sort();
     if(!cids.length)return '';
-    var rows=cids.map(function(id){var a=c5ControlAssessment(id);var m=ASSESS_METHOD[a.method];
-      // Attestation controls: the Coverage column carries the INDIRECT corroborating signal
-      // (HRIS / LMS / TPRM) instead of a telemetry population; the Method carries the LLM
-      // pre-screen marker — a proposed finding to confirm, never an auto-pass.
-      var ind=(a.method==='attestation')?c5IndirectSignal(id):null;
-      var llm=(a.method==='attestation')?c5LlmPrescreen(id):null;
-      var cov=a.coverage?(a.coverage.pct+'% <span style="color:var(--muted)">('+(a.coverage.known-a.coverage.observed)+'% unobserved)</span>')
-        :(ind?('<span title="Indirect corroboration — not proof of the outcome" style="color:var(--blue)">'+esc(ind.source)+' · '+esc(ind.value)+'</span>'):'<span style="color:var(--muted)">n/a</span>');
-      var llmMark=llm?(' <span title="'+(llm.gaps.length?('LLM flagged: '+esc(llm.gaps[0])+' — confirm or dispute'):('LLM pre-screen: addresses the outcome · approver '+esc(llm.approver)+' · confirm, never auto-pass'))+'" style="cursor:help">'+(llm.gaps.length?'⚠':'🔍')+'</span>'):'';
-      var frLabel=a.freshness==='none'?'—':(fmtLast(a)+' · TTL '+fmtTtl(a.ttlDays)+' · '+a.freshness);
-      return '<tr style="border-top:1px solid var(--line)">'
-        +'<td style="padding:6px 12px 6px 0;font-family:ui-monospace,monospace;font-size:11.5px;color:var(--ink);white-space:nowrap">'+esc(id)+'</td>'
-        +'<td style="padding:6px 10px 6px 0">'+pill(m.label,methodColor[a.method])+llmMark+'</td>'
-        +'<td style="padding:6px 10px 6px 0">'+pill(verdictLabel[a.verdict],verdictColor[a.verdict])+'</td>'
-        +'<td style="padding:6px 10px 6px 0;font-size:11px;color:var(--ink-2)">'+a.assurance+' · <b style="color:var(--'+(a.confidence==='high'?'good':a.confidence==='medium'?'blue':a.confidence==='stale'?'crit':'muted')+')">'+a.confidence+'</b></td>'
-        +'<td style="padding:6px 10px 6px 0;font-size:11px;color:var(--ink-2)">'+cov+'</td>'
-        +'<td style="padding:6px 10px 6px 0;font-size:11px;color:var(--'+freshColor[a.freshness]+')">'+frLabel+'</td>'
-        +'<td style="padding:6px 0">'+cadSelect('control:'+id,a.cadenceKey,a.cadenceSource==='control')+'</td></tr>';
-    }).join('');
     var thin='text-align:left;padding:6px 10px 6px 0;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)';
-    return '<div style="margin-top:16px"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:4px"><div style="font-size:12.5px;font-weight:800;color:var(--ink)">'+F.l+' <span style="color:var(--muted);font-weight:600">· '+cids.length+' controls</span></div>'
-      +'<div style="font-size:10.5px;color:var(--muted)">Function cadence '+cadSelect('fn:'+F.k,(c5CadenceOverrides().fn||{})[F.k]||'',!!((c5CadenceOverrides().fn||{})[F.k]))+'</div></div>'
-      +'<div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;min-width:800px"><thead><tr>'
+    return '<div style="overflow-x:auto;margin-top:6px"><table style="border-collapse:collapse;width:100%;min-width:800px"><thead><tr>'
       +['Control','Method','Verdict','Assurance · confidence','Coverage','Freshness','Cadence'].map(function(h){return '<th style="'+thin+'">'+h+'</th>';}).join('')
-      +'</tr></thead><tbody>'+rows+'</tbody></table></div></div>';
-  }).join('');
+      +'</tr></thead><tbody>'+cids.map(assessRow).join('')+'</tbody></table></div>';
+  }
+  // Rich detail for one control — opened by clicking its row.
+  function c5AssessDetail(id){
+    var a=c5ControlAssessment(id);var m=ASSESS_METHOD[a.method];var eff=c5EffectiveCadence(id,a.method);
+    var rows=[['Method',m.label+' — '+m.how],['Verdict',verdictLabel[a.verdict]],['Assurance',a.assurance+' · confidence '+a.confidence],
+      ['Freshness',a.freshness==='none'?'—':(fmtLast(a)+' · TTL '+fmtTtl(a.ttlDays)+' · '+a.freshness+(a.nextDays!=null?(' · next in '+a.nextDays+'d'):''))],
+      ['Cadence',eff.label+' <span style="color:var(--muted)">('+eff.source+')</span>']];
+    if(a.coverage)rows.push(['Coverage',a.coverage.pct+'% observed · <span style="color:var(--warn)">'+(a.coverage.known-a.coverage.observed)+'% unobserved</span> (blind spot)']);
+    var extra='';
+    if(a.method==='attestation'){var llm=c5LlmPrescreen(id);var ind=c5IndirectSignal(id);
+      extra='<div style="margin-top:10px;padding:10px 12px;border:1px solid var(--line);border-radius:8px">'
+        +'<div style="font-size:11px;font-weight:700;color:var(--ink)">'+(llm.gaps.length?'⚠':'🔍')+' LLM pre-screen <span style="color:var(--muted);font-weight:500">— a proposed finding to confirm, never an auto-pass</span></div>'
+        +'<div style="font-size:11.5px;color:var(--ink-2);margin-top:4px">'+(llm.addresses?'Addresses the outcome':'Does not clearly address the outcome')+' · approver '+esc(llm.approver)+' · reviewed '+llm.reviewDaysAgo+'d ago'+(llm.gaps.length?('<div style="color:var(--warn);margin-top:3px">Gap: '+esc(llm.gaps[0])+'</div>'):'')+'</div>'
+        +(ind?('<div style="font-size:11px;color:var(--blue);margin-top:6px">Corroboration · '+esc(ind.source)+': '+esc(ind.signal)+' — '+esc(ind.value)+' <span style="color:var(--muted)">(not proof of the outcome)</span></div>'):'')+'</div>';
+    } else if(a.method==='hybrid'){var conf=c5Confirmations()[id];
+      extra='<div style="margin-top:10px;padding:10px 12px;border:1px solid var(--blue);border-radius:8px;background:color-mix(in srgb,var(--blue) 5%,transparent)">'
+        +'<div style="font-size:11px;font-weight:700;color:var(--blue)">Weekly confirm — Nerion proposed <b>'+verdictLabel[a.verdict]+'</b> from the pulled evidence</div>'
+        +(conf?('<div style="font-size:11.5px;color:var(--'+(conf.decision==='dispute'?'crit':'good')+');margin-top:5px">'+(conf.decision==='dispute'?'✗ disputed':'✓ confirmed')+' · <span data-confirm="clear:'+id+'" style="color:var(--muted);cursor:pointer">undo</span></div>')
+          :('<div style="margin-top:7px;display:flex;gap:8px"><button data-confirm="approve:'+id+'" style="font-size:11px;font-weight:700;color:#fff;background:var(--good);border:none;border-radius:6px;padding:4px 12px;cursor:pointer">Approve</button><button data-confirm="dispute:'+id+'" style="font-size:11px;font-weight:700;color:var(--crit);background:none;border:1px solid var(--crit);border-radius:6px;padding:4px 12px;cursor:pointer">Dispute</button></div>'))+'</div>';
+    } else if(a.method==='awaiting'){extra='<div style="font-size:11.5px;color:var(--muted);margin-top:8px;padding:8px 10px;border:1px dashed var(--line);border-radius:8px">A sensor could assess this, but its connector is not wired yet — connect it to light the control up.</div>';}
+    var desc=(typeof CSF_DESC!=='undefined'&&CSF_DESC[id])?('<div style="font-size:12px;color:var(--ink-2);line-height:1.55;margin-top:4px">'+esc(CSF_DESC[id])+'</div>'):'';
+    return '<div style="border:1px solid var(--blue);border-radius:12px;padding:14px 16px;margin-top:14px;background:var(--surface)">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div style="font-family:ui-monospace,monospace;font-size:14px;font-weight:800;color:var(--ink)">'+esc(id)+'</div><span data-assessclose="1" style="cursor:pointer;color:var(--muted);font-size:12px">✕ close</span></div>'
+      +desc
+      +'<div style="margin-top:10px;display:grid;grid-template-columns:110px 1fr;gap:5px 12px;font-size:12px">'+rows.map(function(r){return '<div style="color:var(--muted);font-weight:600">'+r[0]+'</div><div style="color:var(--ink)">'+r[1]+'</div>';}).join('')+'</div>'
+      +extra+'</div>';
+  }
   // Drift alerts — the actionable delta since last assessment. Regressions first; a
   // met → not-met flip auto-raises a ticket on the connected ITSM.
   var drift=c5DriftAlerts();var verdLbl={met:'met',partial:'partially met',not_met:'not met',not_assessed:'not assessed'};
@@ -5325,6 +5350,16 @@ function c5ContinuousAssessment(host){
     +'<span style="font-size:11px;font-weight:700;color:var(--ink)">Assessment cadence</span>'
     +'<span style="font-size:11.5px;color:var(--muted)">Global floor '+cadSelect('global',globalCad,!!globalCad)+'</span>'
     +'<span style="font-size:11px;color:var(--muted);flex:1;min-width:220px">The scheduler is control-aware: live re-checks continuously, attestations on their review cycle. Set a global floor, tune per function or per control below — nobody is forced to rubber-stamp weekly.</span></div>';
+  // Per-function subtabs — the 106 controls are split by function so the tab isn't one long
+  // scroll; clicking a control row opens its detail (like Classic view).
+  if(!roll.functions[C5_ASSESS_FN])C5_ASSESS_FN='GV';
+  var fnStrip='<div style="display:flex;gap:5px;flex-wrap:wrap;margin:16px 0 0;border-bottom:1px solid var(--line)">'
+    +FN.map(function(F){var cnt=ids.filter(function(id){return id.indexOf(F.k+'.')===0;}).length;var fs=roll.functions[F.k];var v=fs?fs.score:0;var on=(C5_ASSESS_FN===F.k);
+      return '<button data-assessfn="'+F.k+'" style="font-size:12px;font-weight:'+(on?'800':'600')+';color:var(--'+(on?'ink':'muted')+');background:'+(on?'var(--surface)':'transparent')+';border:1px solid '+(on?'var(--line)':'transparent')+';border-bottom:2px solid '+(on?'var(--blue)':'transparent')+';border-radius:8px 8px 0 0;padding:7px 12px;cursor:pointer;white-space:nowrap">'+F.l+' <b style="color:var(--'+scoreCol(v)+')">'+(v*5).toFixed(1)+'</b> <span style="color:var(--muted);font-weight:500">· '+cnt+'</span></button>';
+    }).join('')+'</div>';
+  var fnCad='<div style="font-size:11px;color:var(--muted);margin:8px 0 0">Cadence for all <b style="color:var(--ink)">'+FNL[C5_ASSESS_FN]+'</b> controls '+cadSelect('fn:'+C5_ASSESS_FN,(c5CadenceOverrides().fn||{})[C5_ASSESS_FN]||'',!!((c5CadenceOverrides().fn||{})[C5_ASSESS_FN]))+'</div>';
+  var activeTable=assessTable(C5_ASSESS_FN);
+  var detailPanel=C5_ASSESS_CTRL?c5AssessDetail(C5_ASSESS_CTRL):'<div style="font-size:11px;color:var(--muted);margin-top:8px">Click any control for its method, three axes, freshness, cadence and evidence.</div>';
   host.innerHTML='<div style="max-width:1080px">'
     +'<div style="font-size:15px;font-weight:800;color:var(--ink)">Continuous assessment · all '+s.total+' NIST CSF 2.0 controls</div>'
     +'<div style="font-size:12.5px;color:var(--ink-2);line-height:1.6;margin:5px 0 12px;max-width:820px">Every control is assessed on a cadence — never point-in-time. The <b>method differs by control</b> and Nerion is honest about which it used: a governance outcome has no sensor, so it is a scheduled <b>attestation</b> with freshness tracking, not fake automation. Each control carries three axes that are never blended into one number — <b>verdict</b>, <b>assurance</b>, and <b>freshness</b> — plus <b>coverage</b> (the observed vs known population).</div>'
@@ -5336,14 +5371,18 @@ function c5ContinuousAssessment(host){
     +rollupPanel
     +cadenceBar
     +'<div style="font-size:11px;color:var(--muted);margin:12px 0 2px;line-height:1.5">A control assessed by attestation 340 days ago on an annual cadence is not "passing" — it is <b style="color:var(--warn)">expiring</b>. Freshness is a first-class part of status: the proof decaying past its TTL flips the control with no human action, which is what makes "continuous" true across all '+s.total+', not just the live ones.</div>'
-    +rowsByFn+'</div>';
+    +fnStrip+fnCad+activeTable+detailPanel+'</div>';
   // Wire cadence overrides — a change re-resolves every control's freshness and re-renders.
-  host.querySelectorAll('[data-cadence]').forEach(function(sel){sel.addEventListener('change',function(){
+  host.querySelectorAll('[data-cadence]').forEach(function(sel){sel.addEventListener('change',function(e){e.stopPropagation();
     c5SetCadence(sel.getAttribute('data-cadence'),sel.value);c5ContinuousAssessment(host);});});
   // Wire the confirm queue — approve / dispute / undo, then re-render.
-  host.querySelectorAll('[data-confirm]').forEach(function(btn){btn.addEventListener('click',function(){
+  host.querySelectorAll('[data-confirm]').forEach(function(btn){btn.addEventListener('click',function(e){e.stopPropagation();
     var v=btn.getAttribute('data-confirm').split(':');var act=v[0],id=v[1];
     c5ConfirmControl(id,(act==='clear')?null:act);c5ContinuousAssessment(host);});});
+  // Wire function subtabs + clickable control rows + the detail close (Classic-view style).
+  host.querySelectorAll('[data-assessfn]').forEach(function(b){b.onclick=function(){C5_ASSESS_FN=b.getAttribute('data-assessfn');C5_ASSESS_CTRL=null;c5ContinuousAssessment(host);};});
+  host.querySelectorAll('[data-assessctl]').forEach(function(row){row.onclick=function(e){if(e.target.closest('select')||e.target.closest('[data-confirm]'))return;var id=row.getAttribute('data-assessctl');C5_ASSESS_CTRL=(C5_ASSESS_CTRL===id)?null:id;c5ContinuousAssessment(host);};});
+  var acl=host.querySelector('[data-assessclose]');if(acl)acl.onclick=function(){C5_ASSESS_CTRL=null;c5ContinuousAssessment(host);};
 }
 /* The Neuron Controls lens — capability × (adversarial + 5 non-adversarial lanes)
    × framework projection, in one view. Read-only; renders into the panel passed in. */

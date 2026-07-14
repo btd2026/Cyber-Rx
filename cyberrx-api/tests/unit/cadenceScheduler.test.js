@@ -32,7 +32,7 @@ describe('Cadence — control-aware scheduler', () => {
     expect(ciso).toContain('c5SetCadence(sel.getAttribute(\'data-cadence\'),sel.value);c5ContinuousAssessment(host);');
     // global, per-function and per-control selectors all exist
     expect(ciso).toContain("cadSelect('global'");
-    expect(ciso).toContain("cadSelect('fn:'+F.k");
+    expect(ciso).toContain("cadSelect('fn:'+C5_ASSESS_FN");
     expect(ciso).toContain("cadSelect('control:'+id");
   });
 
