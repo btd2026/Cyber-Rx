@@ -5177,6 +5177,21 @@ function c5DriftAlerts(){
   out.regressions.sort(function(x,y){return (y.weight-x.weight)||(y.drop-x.drop);});
   return out;
 }
+/* ===== HYBRID WEEKLY CONFIRM QUEUE — reduce human touch to a single click. For hybrid
+   controls Nerion pulls the evidence and computes a PROPOSED verdict; the human's job shrinks
+   from "go find proof" to "approve or dispute." Batched with the evidence pre-attached — the
+   difference between a 4-hour chore and a 10-minute pass. Decisions persist. */
+function c5Confirmations(){try{var o=JSON.parse(localStorage.getItem('cyberrx_confirmations')||'{}');return (o&&typeof o==='object')?o:{};}catch(_){return {};}}
+function c5ConfirmControl(id,decision){var o=c5Confirmations();if(decision)o[id]={decision:decision};else delete o[id];try{localStorage.setItem('cyberrx_confirmations',JSON.stringify(o));}catch(_){}}
+function c5ReviewQueue(){
+  var ids=Object.keys(CSF_BASE_METHOD);var conf=c5Confirmations();
+  var proj=(typeof neuronFrameworkProjection==='function')?neuronFrameworkProjection('csf'):{controls:{}};
+  var out=[];
+  ids.forEach(function(id){var a=c5ControlAssessment(id);if(a.method!=='hybrid')return;
+    var ev=((proj.controls&&proj.controls[id])||[]).filter(function(m){return m.evidence!=='none';}).map(function(m){return m.name;});
+    out.push({id:id,proposed:a.verdict,coverage:a.coverage,evidence:ev,confirmed:!!conf[id],decision:conf[id]&&conf[id].decision});});
+  return out;
+}
 /* The honest continuous-assessment view — the anti-vanity summary + every one of the 106
    controls with its method, three-axis state and freshness. Read-only. */
 function c5ContinuousAssessment(host){
@@ -5247,6 +5262,26 @@ function c5ContinuousAssessment(host){
       +'<div style="font-size:11px;color:var(--muted);margin:4px 0 6px">The score is the lagging summary; this is what to act on now. A <b>met → not-met</b> flip raises a finding and an automatic ticket on your connected ITSM (Jira / ServiceNow).</div>'
       +top+(drift.regressions.length>8?('<div style="font-size:11px;color:var(--muted);margin-top:6px">+ '+(drift.regressions.length-8)+' more</div>'):'')+'</div>';
   }
+  // Hybrid weekly confirm queue — evidence pre-attached, one click each.
+  var queue=c5ReviewQueue();var pending=queue.filter(function(q){return !q.confirmed;});
+  var queuePanel='';
+  if(queue.length){
+    var qrows=queue.slice(0,10).map(function(q){var pv=verdLbl[q.proposed]||q.proposed;var pc=q.proposed==='met'?'good':q.proposed==='partial'?'warn':'crit';
+      var chips=q.evidence.slice(0,3).map(function(n){return '<span style="font-size:10px;color:var(--blue);background:color-mix(in srgb,var(--blue) 10%,transparent);border-radius:6px;padding:1px 6px">'+esc(String(n).replace(/ *\(.*/,''))+'</span>';}).join(' ');
+      var act=q.confirmed
+        ?('<span style="font-size:11px;font-weight:700;color:var(--'+(q.decision==='dispute'?'crit':'good')+')">'+(q.decision==='dispute'?'✗ disputed':'✓ confirmed')+'</span> <span data-confirm="clear:'+q.id+'" style="font-size:10px;color:var(--muted);cursor:pointer">undo</span>')
+        :('<button data-confirm="approve:'+q.id+'" style="font-size:11px;font-weight:700;color:#fff;background:var(--good);border:none;border-radius:6px;padding:4px 10px;cursor:pointer">Approve</button> <button data-confirm="dispute:'+q.id+'" style="font-size:11px;font-weight:700;color:var(--crit);background:none;border:1px solid var(--crit);border-radius:6px;padding:4px 10px;cursor:pointer">Dispute</button>');
+      return '<div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap;padding:6px 0;border-top:1px solid var(--line)">'
+        +'<span style="font-family:ui-monospace,monospace;font-size:11.5px;color:var(--ink);min-width:74px">'+esc(q.id)+'</span>'
+        +'<span style="font-size:11px;color:var(--muted)">proposed</span><span style="font-size:11px;font-weight:700;color:var(--'+pc+')">'+pv+'</span>'
+        +(q.coverage?('<span style="font-size:10.5px;color:var(--muted)">'+q.coverage.pct+'% cov</span>'):'')
+        +'<span style="flex:1;min-width:120px">'+chips+'</span>'+act+'</div>';}).join('');
+    queuePanel='<div style="border:1px solid var(--blue);border-radius:12px;padding:12px 15px;margin:10px 0;background:color-mix(in srgb,var(--blue) 5%,transparent)">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><div style="font-size:12.5px;font-weight:800;color:var(--blue)">✔ Weekly confirm queue · '+pending.length+' awaiting a click</div>'
+      +'<div style="font-size:11px;color:var(--muted)">'+(queue.length-pending.length)+' of '+queue.length+' confirmed this cycle</div></div>'
+      +'<div style="font-size:11px;color:var(--muted);margin:4px 0 4px">Hybrid controls: Nerion pulled the evidence and proposed a verdict — you approve or dispute. No hunting for proof.</div>'
+      +qrows+(queue.length>10?('<div style="font-size:11px;color:var(--muted);margin-top:6px">+ '+(queue.length-10)+' more in the queue</div>'):'')+'</div>';
+  }
   // Crown-jewel-weighted, weakest-link rollup — NOT a simple average. Shown on the 0–5 scale.
   var roll=c5AssessmentRollup();var FNL={GV:'Govern',ID:'Identify',PR:'Protect',DE:'Detect',RS:'Respond',RC:'Recover'};
   function scoreCol(v){return v>=0.8?'good':v>=0.6?'blue':v>=0.4?'warn':'crit';}
@@ -5266,6 +5301,7 @@ function c5ContinuousAssessment(host){
     +'<div style="font-size:12.5px;color:var(--ink-2);line-height:1.6;margin:5px 0 12px;max-width:820px">Every control is assessed on a cadence — never point-in-time. The <b>method differs by control</b> and Nerion is honest about which it used: a governance outcome has no sensor, so it is a scheduled <b>attestation</b> with freshness tracking, not fake automation. Each control carries three axes that are never blended into one number — <b>verdict</b>, <b>assurance</b>, and <b>freshness</b> — plus <b>coverage</b> (the observed vs known population).</div>'
     +'<div style="font-size:11px;color:var(--muted);margin-bottom:8px"><b style="color:var(--ink)">'+s.machineVerifiable+'</b> machine-verifiable today (live + hybrid) — grows as you connect sources · <b style="color:var(--ink)">'+s.attested+'</b> attested, decaying on their review cycle · <span style="color:var(--good)">'+trend+'</span> on met verdicts</div>'
     +driftPanel
+    +queuePanel
     +summary
     +rollupPanel
     +cadenceBar
@@ -5274,6 +5310,10 @@ function c5ContinuousAssessment(host){
   // Wire cadence overrides — a change re-resolves every control's freshness and re-renders.
   host.querySelectorAll('[data-cadence]').forEach(function(sel){sel.addEventListener('change',function(){
     c5SetCadence(sel.getAttribute('data-cadence'),sel.value);c5ContinuousAssessment(host);});});
+  // Wire the confirm queue — approve / dispute / undo, then re-render.
+  host.querySelectorAll('[data-confirm]').forEach(function(btn){btn.addEventListener('click',function(){
+    var v=btn.getAttribute('data-confirm').split(':');var act=v[0],id=v[1];
+    c5ConfirmControl(id,(act==='clear')?null:act);c5ContinuousAssessment(host);});});
 }
 /* The Neuron Controls lens — capability × (adversarial + 5 non-adversarial lanes)
    × framework projection, in one view. Read-only; renders into the panel passed in. */
