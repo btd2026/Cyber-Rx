@@ -352,6 +352,16 @@
     <div id="obDocList" style="margin-top:12px"></div>
   </div>
 
+  <!-- 1e2 · Continuous-monitoring cadence (control-aware scheduler floor) -->
+  <div class="sec">
+    <div class="sh"><div class="sn">✦</div><div><div class="st">Continuous-monitoring cadence <span style="color:var(--muted)">(how often controls re-check)</span></div><div class="sd">Every one of the 106 NIST CSF controls is assessed on a <b>cadence</b> — never point-in-time. The method sets a sensible default (live telemetry re-checks continuously, attestations on their review cycle); this sets a <b>global floor</b> you can tune per function or per control later in the cockpit. It is <b>not</b> a blunt "run everything weekly" knob — a policy attestation shouldn't run more than its review cycle.</div></div><div class="badge" id="bcad">optional</div></div>
+    <div class="field" style="max-width:340px;margin-top:8px"><label>Global cadence floor</label>
+      <select id="obCadence" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:#fff">
+        <option value="">Per method (recommended default)</option>
+        <option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="semiannual">Semi-annual</option><option value="annual">Annual</option>
+      </select></div>
+  </div>
+
   <!-- 2 · Financials -->
   <div class="sec">
     <div class="sh"><div class="sn">2</div><div><div class="st">Financials &amp; appetite</div><div class="sd">Turns cyber risk into board language — % of revenue, materiality, appetite, ROI. Enter a number and pick the unit (B/M/K).</div></div><div class="badge" id="b2">optional</div></div>
@@ -1984,10 +1994,15 @@
     {t:'corp',m:'organization'},
     {t:'sys',m:'business processes'},{t:'sys',m:'systems & applications'},{t:'sys',m:'map applications'},{t:'sys',m:'brings money'},{t:'sys',m:'systems'},
     {t:'connect',m:'per-entity connectors'},{t:'connect',m:'connect your tools'},
-    {t:'control',m:'policy & document'},{t:'control',m:'board governance'},{t:'control',m:'ai risk'},{t:'control',m:'software supply-chain'},
+    {t:'control',m:'policy & document'},{t:'control',m:'continuous-monitoring cadence'},{t:'control',m:'board governance'},{t:'control',m:'ai risk'},{t:'control',m:'software supply-chain'},
     {t:'exec',m:'enterprise risk portfolio'},{t:'exec',m:'financials'},{t:'exec',m:'growth engine'},{t:'exec',m:'insurance'},{t:'exec',m:'strategic initiatives'},{t:'exec',m:'strategic objectives'},
     {t:'risk',m:'risk register'},{t:'risk',m:'business capability map'},{t:'risk',m:'software bill of materials'},{t:'risk',m:'risk appetite'},{t:'risk',m:'regulatory register'},{t:'risk',m:'materiality criteria'},{t:'risk',m:'benchmark data'},{t:'risk',m:'third-party vendors'},{t:'risk',m:'cyber projects'}
   ];
+  // Continuous-monitoring cadence — the global floor the cockpit's control-aware scheduler reads.
+  (function(){var sel=document.getElementById('obCadence');if(!sel)return;
+    try{var ov=JSON.parse(localStorage.getItem('cyberrx_assessment_cadence')||'{}');if(ov&&ov.global)sel.value=ov.global;}catch(_){}
+    sel.addEventListener('change',function(){try{var ov=JSON.parse(localStorage.getItem('cyberrx_assessment_cadence')||'{}')||{};if(sel.value)ov.global=sel.value;else delete ov.global;localStorage.setItem('cyberrx_assessment_cadence',JSON.stringify(ov));}catch(_){}var b=document.getElementById('bcad');if(b){if(sel.value){b.textContent='✓ '+sel.options[sel.selectedIndex].text;b.classList.add('done');}else{b.textContent='optional';b.classList.remove('done');}}try{if(typeof obSaveState==='function')obSaveState();}catch(_){}});
+  })();
   var OB_ACTIVE='corp';
   function obSecs(){return Array.prototype.slice.call(document.querySelectorAll('.wrap > .sec'));}
   function obTabOf(sec){var st=sec.querySelector('.st');var h=(st?st.textContent:'').toLowerCase();

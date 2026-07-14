@@ -5021,6 +5021,27 @@ var ASSESS_METHOD={
   awaiting:{label:'Awaiting a source',assurance:'unassessed',cadence:'—',ttlDays:0,how:'A sensor could assess this, but its connector is not wired yet — connect it to light the control up.'}
 };
 var ASSESS_ORDER=['live','hybrid','attestation','awaiting'];
+/* Cadence is control-aware and USER-TUNABLE. Each method has a sensible default; the user
+   sets a global floor and can override per function or per control underneath — so a
+   config-drift check runs hourly while a policy attestation stays annual, and nobody is
+   forced to rubber-stamp weekly. Persisted to cyberrx_assessment_cadence (also captured at
+   onboarding). Precedence: per-control > per-function > global > method default. */
+var C5_CADENCE_TTL={continuous:0.04,daily:1,weekly:7,monthly:30,quarterly:90,semiannual:182,annual:365};
+var C5_CADENCE_LABEL={continuous:'Continuous',daily:'Daily',weekly:'Weekly',monthly:'Monthly',quarterly:'Quarterly',semiannual:'Semi-annual',annual:'Annual'};
+var C5_CADENCE_KEYS=['continuous','daily','weekly','monthly','quarterly','semiannual','annual'];
+function c5MethodDefaultCadence(method){return {live:'continuous',hybrid:'weekly',attestation:'annual',awaiting:'annual'}[method]||'annual';}
+function c5CadenceOverrides(){try{var o=JSON.parse(localStorage.getItem('cyberrx_assessment_cadence')||'{}');return (o&&typeof o==='object')?o:{};}catch(_){return {};}}
+function c5EffectiveCadence(id,method){
+  var ov=c5CadenceOverrides();var fn=String(id).split('.')[0];
+  var key=(ov.control&&ov.control[id])||(ov.fn&&ov.fn[fn])||ov.global||c5MethodDefaultCadence(method);
+  if(C5_CADENCE_TTL[key]==null)key=c5MethodDefaultCadence(method);
+  return {key:key,label:C5_CADENCE_LABEL[key]||key,ttlDays:C5_CADENCE_TTL[key],source:(ov.control&&ov.control[id])?'control':(ov.fn&&ov.fn[fn])?'function':ov.global?'global':'default'};
+}
+function c5SetCadence(scope,val){var ov=c5CadenceOverrides();
+  if(scope==='global'){if(val)ov.global=val;else delete ov.global;}
+  else if(scope.indexOf('fn:')===0){ov.fn=ov.fn||{};var f=scope.slice(3);if(val)ov.fn[f]=val;else delete ov.fn[f];}
+  else if(scope.indexOf('control:')===0){ov.control=ov.control||{};var c=scope.slice(8);if(val)ov.control[c]=val;else delete ov.control[c];}
+  try{localStorage.setItem('cyberrx_assessment_cadence',JSON.stringify(ov));}catch(_){}}
 function c5hash(s){var h=0;s=String(s||'');for(var i=0;i<s.length;i++){h=((h<<5)-h+s.charCodeAt(i))|0;}return Math.abs(h);}
 /* One control's honest three-axis assessment. Deterministic from the control id so the demo
    is self-consistent; in a real workspace last-assessed/coverage come from the evidence store. */
@@ -5036,9 +5057,11 @@ function c5ControlAssessment(id){
   else if(base==='doc')method='attestation';
   else method='awaiting';                       // telemetry-capable but no connector wired
   var meta=ASSESS_METHOD[method];var hsh=c5hash(id);
-  // Freshness: deterministic "last assessed" scaled to the method's TTL; some attestations
+  // Effective cadence = user override (control > function > global) or the method default.
+  var eff=c5EffectiveCadence(id,method);
+  // Freshness: deterministic "last assessed" scaled to the EFFECTIVE TTL; some attestations
   // are intentionally stale so "expiring/expired" is visible — that's the honesty.
-  var ttl=meta.ttlDays;
+  var ttl=eff.ttlDays;
   var lastDays=method==='live'?((hsh%20)/20*0.5)                       // hours
     :method==='hybrid'?(hsh%9)                                          // days
     :method==='attestation'?(30+hsh%400)                               // 30–430 days
@@ -5057,7 +5080,7 @@ function c5ControlAssessment(id){
   // Confidence is the assurance axis, surfaced so a dashboard can't show "green, high
   // confidence" for something a person merely asserted.
   var confidence=method==='live'?'high':method==='hybrid'?'medium':method==='attestation'?(fresh==='healthy'?'low':'stale'):'none';
-  return {id:id,method:method,assurance:meta.assurance,cadence:meta.cadence,ttlDays:ttl,
+  return {id:id,method:method,assurance:meta.assurance,cadence:eff.label,cadenceKey:eff.key,cadenceSource:eff.source,ttlDays:ttl,
     lastDays:lastDays,nextDays:nextDays,freshness:fresh,coverage:coverage,verdict:verdict,confidence:confidence};
 }
 /* The anti-vanity summary — NOT one blended number. Counts by assurance tier, how many are
@@ -5098,6 +5121,12 @@ function c5ContinuousAssessment(host){
     +'</div>';
   var FN=[{k:'GV',l:'Govern'},{k:'ID',l:'Identify'},{k:'PR',l:'Protect'},{k:'DE',l:'Detect'},{k:'RS',l:'Respond'},{k:'RC',l:'Recover'}];
   function pill(txt,c){return '<span style="font-size:10px;font-weight:700;color:var(--'+c+');background:color-mix(in srgb,var(--'+c+') 12%,transparent);border:1px solid color-mix(in srgb,var(--'+c+') 30%,transparent);border-radius:20px;padding:2px 8px;white-space:nowrap">'+txt+'</span>';}
+  // A cadence <select> for a scope (global / fn:GV / control:ID). "default" clears the override.
+  function cadSelect(scope,curKey,overridden,extra){
+    var opts='<option value="">'+(scope==='global'?'Per method (default)':'inherit')+'</option>'+
+      C5_CADENCE_KEYS.map(function(k){return '<option value="'+k+'"'+(k===curKey?' selected':'')+'>'+C5_CADENCE_LABEL[k]+'</option>';}).join('');
+    return '<select data-cadence="'+scope+'" style="font-size:11px;padding:3px 6px;border:1px solid var(--'+(overridden?'blue':'line')+');border-radius:6px;background:var(--surface);color:var(--ink)'+(extra||'')+'">'+opts+'</select>';
+  }
   var rowsByFn=FN.map(function(F){
     var cids=ids.filter(function(id){return id.indexOf(F.k+'.')===0;}).sort();
     if(!cids.length)return '';
@@ -5110,21 +5139,32 @@ function c5ContinuousAssessment(host){
         +'<td style="padding:6px 10px 6px 0">'+pill(verdictLabel[a.verdict],verdictColor[a.verdict])+'</td>'
         +'<td style="padding:6px 10px 6px 0;font-size:11px;color:var(--ink-2)">'+a.assurance+' · <b style="color:var(--'+(a.confidence==='high'?'good':a.confidence==='medium'?'blue':a.confidence==='stale'?'crit':'muted')+')">'+a.confidence+'</b></td>'
         +'<td style="padding:6px 10px 6px 0;font-size:11px;color:var(--ink-2)">'+cov+'</td>'
-        +'<td style="padding:6px 0;font-size:11px;color:var(--'+freshColor[a.freshness]+')">'+frLabel+'</td></tr>';
+        +'<td style="padding:6px 10px 6px 0;font-size:11px;color:var(--'+freshColor[a.freshness]+')">'+frLabel+'</td>'
+        +'<td style="padding:6px 0">'+cadSelect('control:'+id,a.cadenceKey,a.cadenceSource==='control')+'</td></tr>';
     }).join('');
     var thin='text-align:left;padding:6px 10px 6px 0;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)';
-    return '<div style="margin-top:16px"><div style="font-size:12.5px;font-weight:800;color:var(--ink);margin-bottom:4px">'+F.l+' <span style="color:var(--muted);font-weight:600">· '+cids.length+' controls</span></div>'
-      +'<div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;min-width:720px"><thead><tr>'
-      +['Control','Method','Verdict','Assurance · confidence','Coverage','Freshness'].map(function(h){return '<th style="'+thin+'">'+h+'</th>';}).join('')
+    return '<div style="margin-top:16px"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:4px"><div style="font-size:12.5px;font-weight:800;color:var(--ink)">'+F.l+' <span style="color:var(--muted);font-weight:600">· '+cids.length+' controls</span></div>'
+      +'<div style="font-size:10.5px;color:var(--muted)">Function cadence '+cadSelect('fn:'+F.k,(c5CadenceOverrides().fn||{})[F.k]||'',!!((c5CadenceOverrides().fn||{})[F.k]))+'</div></div>'
+      +'<div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;min-width:800px"><thead><tr>'
+      +['Control','Method','Verdict','Assurance · confidence','Coverage','Freshness','Cadence'].map(function(h){return '<th style="'+thin+'">'+h+'</th>';}).join('')
       +'</tr></thead><tbody>'+rows+'</tbody></table></div></div>';
   }).join('');
+  var globalCad=c5CadenceOverrides().global||'';
+  var cadenceBar='<div style="border:1px solid var(--line);border-radius:11px;padding:11px 14px;margin:10px 0 4px;background:var(--surface);display:flex;gap:12px;align-items:center;flex-wrap:wrap">'
+    +'<span style="font-size:11px;font-weight:700;color:var(--ink)">Assessment cadence</span>'
+    +'<span style="font-size:11.5px;color:var(--muted)">Global floor '+cadSelect('global',globalCad,!!globalCad)+'</span>'
+    +'<span style="font-size:11px;color:var(--muted);flex:1;min-width:220px">The scheduler is control-aware: live re-checks continuously, attestations on their review cycle. Set a global floor, tune per function or per control below — nobody is forced to rubber-stamp weekly.</span></div>';
   host.innerHTML='<div style="max-width:1080px">'
     +'<div style="font-size:15px;font-weight:800;color:var(--ink)">Continuous assessment · all '+s.total+' NIST CSF 2.0 controls</div>'
     +'<div style="font-size:12.5px;color:var(--ink-2);line-height:1.6;margin:5px 0 12px;max-width:820px">Every control is assessed on a cadence — never point-in-time. The <b>method differs by control</b> and Nerion is honest about which it used: a governance outcome has no sensor, so it is a scheduled <b>attestation</b> with freshness tracking, not fake automation. Each control carries three axes that are never blended into one number — <b>verdict</b>, <b>assurance</b>, and <b>freshness</b> — plus <b>coverage</b> (the observed vs known population).</div>'
     +'<div style="font-size:11px;color:var(--muted);margin-bottom:8px"><b style="color:var(--ink)">'+s.machineVerifiable+'</b> machine-verifiable today (live + hybrid) — grows as you connect sources · <b style="color:var(--ink)">'+s.attested+'</b> attested, decaying on their review cycle · <span style="color:var(--good)">'+trend+'</span> on met verdicts</div>'
     +summary
+    +cadenceBar
     +'<div style="font-size:11px;color:var(--muted);margin:12px 0 2px;line-height:1.5">A control assessed by attestation 340 days ago on an annual cadence is not "passing" — it is <b style="color:var(--warn)">expiring</b>. Freshness is a first-class part of status: the proof decaying past its TTL flips the control with no human action, which is what makes "continuous" true across all '+s.total+', not just the live ones.</div>'
     +rowsByFn+'</div>';
+  // Wire cadence overrides — a change re-resolves every control's freshness and re-renders.
+  host.querySelectorAll('[data-cadence]').forEach(function(sel){sel.addEventListener('change',function(){
+    c5SetCadence(sel.getAttribute('data-cadence'),sel.value);c5ContinuousAssessment(host);});});
 }
 /* The Neuron Controls lens — capability × (adversarial + 5 non-adversarial lanes)
    × framework projection, in one view. Read-only; renders into the panel passed in. */
