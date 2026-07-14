@@ -5316,26 +5316,10 @@ function c5ContinuousAssessment(host){
       +'<div style="font-size:11px;color:var(--muted);margin:4px 0 6px">The score is the lagging summary; this is what to act on now. A <b>met → not-met</b> flip raises a finding and an automatic ticket on your connected ITSM (Jira / ServiceNow).</div>'
       +top+(drift.regressions.length>8?('<div style="font-size:11px;color:var(--muted);margin-top:6px">+ '+(drift.regressions.length-8)+' more</div>'):'')+'</div>';
   }
-  // Hybrid weekly confirm queue — evidence pre-attached, one click each.
-  var queue=c5ReviewQueue();var pending=queue.filter(function(q){return !q.confirmed;});
-  var queuePanel='';
-  if(queue.length){
-    var qrows=queue.slice(0,10).map(function(q){var pv=verdLbl[q.proposed]||q.proposed;var pc=q.proposed==='met'?'good':q.proposed==='partial'?'warn':'crit';
-      var chips=q.evidence.slice(0,3).map(function(n){return '<span style="font-size:10px;color:var(--blue);background:color-mix(in srgb,var(--blue) 10%,transparent);border-radius:6px;padding:1px 6px">'+esc(String(n).replace(/ *\(.*/,''))+'</span>';}).join(' ');
-      var act=q.confirmed
-        ?('<span style="font-size:11px;font-weight:700;color:var(--'+(q.decision==='dispute'?'crit':'good')+')">'+(q.decision==='dispute'?'✗ disputed':'✓ confirmed')+'</span> <span data-confirm="clear:'+q.id+'" style="font-size:10px;color:var(--muted);cursor:pointer">undo</span>')
-        :('<button data-confirm="approve:'+q.id+'" style="font-size:11px;font-weight:700;color:#fff;background:var(--good);border:none;border-radius:6px;padding:4px 10px;cursor:pointer">Approve</button> <button data-confirm="dispute:'+q.id+'" style="font-size:11px;font-weight:700;color:var(--crit);background:none;border:1px solid var(--crit);border-radius:6px;padding:4px 10px;cursor:pointer">Dispute</button>');
-      return '<div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap;padding:6px 0;border-top:1px solid var(--line)">'
-        +'<span style="font-family:ui-monospace,monospace;font-size:11.5px;color:var(--ink);min-width:74px">'+esc(q.id)+'</span>'
-        +'<span style="font-size:11px;color:var(--muted)">proposed</span><span style="font-size:11px;font-weight:700;color:var(--'+pc+')">'+pv+'</span>'
-        +(q.coverage?('<span style="font-size:10.5px;color:var(--muted)">'+q.coverage.pct+'% cov</span>'):'')
-        +'<span style="flex:1;min-width:120px">'+chips+'</span>'+act+'</div>';}).join('');
-    queuePanel='<div style="border:1px solid var(--blue);border-radius:12px;padding:12px 15px;margin:10px 0;background:color-mix(in srgb,var(--blue) 5%,transparent)">'
-      +'<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><div style="font-size:12.5px;font-weight:800;color:var(--blue)">✔ Weekly confirm queue · '+pending.length+' awaiting a click</div>'
-      +'<div style="font-size:11px;color:var(--muted)">'+(queue.length-pending.length)+' of '+queue.length+' confirmed this cycle</div></div>'
-      +'<div style="font-size:11px;color:var(--muted);margin:4px 0 4px">Hybrid controls: Nerion pulled the evidence and proposed a verdict — you approve or dispute. No hunting for proof.</div>'
-      +qrows+(queue.length>10?('<div style="font-size:11px;color:var(--muted);margin-top:6px">+ '+(queue.length-10)+' more in the queue</div>'):'')+'</div>';
-  }
+  // The hybrid weekly confirm queue lives in its own "Confirm queue" tab (c5ConfirmQueueView);
+  // a compact link here points to it so the operator knows how many are waiting.
+  var pendingN=c5ReviewQueue().filter(function(q){return !q.confirmed;}).length;
+  var queuePanel=pendingN?('<div style="border:1px solid var(--blue);border-radius:10px;padding:9px 14px;margin:10px 0;background:color-mix(in srgb,var(--blue) 5%,transparent);font-size:12px;color:var(--ink-2)">✔ <b style="color:var(--blue)">'+pendingN+'</b> hybrid control'+(pendingN>1?'s':'')+' awaiting a one-click confirm — see the <b>Confirm queue</b> tab.</div>'):'';
   // Crown-jewel-weighted, weakest-link rollup — NOT a simple average. Shown on the 0–5 scale.
   var roll=c5AssessmentRollup();var FNL={GV:'Govern',ID:'Identify',PR:'Protect',DE:'Detect',RS:'Respond',RC:'Recover'};
   function scoreCol(v){return v>=0.8?'good':v>=0.6?'blue':v>=0.4?'warn':'crit';}
@@ -5383,6 +5367,41 @@ function c5ContinuousAssessment(host){
   host.querySelectorAll('[data-assessfn]').forEach(function(b){b.onclick=function(){C5_ASSESS_FN=b.getAttribute('data-assessfn');C5_ASSESS_CTRL=null;c5ContinuousAssessment(host);};});
   host.querySelectorAll('[data-assessctl]').forEach(function(row){row.onclick=function(e){if(e.target.closest('select')||e.target.closest('[data-confirm]'))return;var id=row.getAttribute('data-assessctl');C5_ASSESS_CTRL=(C5_ASSESS_CTRL===id)?null:id;c5ContinuousAssessment(host);};});
   var acl=host.querySelector('[data-assessclose]');if(acl)acl.onclick=function(){C5_ASSESS_CTRL=null;c5ContinuousAssessment(host);};
+}
+/* The hybrid weekly confirm queue — its own tab. Nerion pulls the evidence and proposes a
+   verdict; the human's job shrinks to approve or dispute. Shows the FULL queue (not a top-N),
+   grouped pending-first, with a summary. */
+function c5ConfirmQueueView(host){
+  if(!host)return;
+  var esc=(typeof c5esc==='function')?c5esc:function(s){return s;};
+  var verdLbl={met:'met',partial:'partially met',not_met:'not met',not_assessed:'not assessed'};
+  var queue=c5ReviewQueue();
+  var pending=queue.filter(function(q){return !q.confirmed;});
+  var confirmed=queue.filter(function(q){return q.confirmed&&q.decision!=='dispute';});
+  var disputed=queue.filter(function(q){return q.decision==='dispute';});
+  function stat(n,l,c){return '<div style="min-width:120px;border:1px solid var(--line);border-radius:11px;padding:11px 13px;background:var(--surface)"><div style="font-size:24px;font-weight:800;color:var(--'+c+');line-height:1">'+n+'</div><div style="font-size:11px;font-weight:600;color:var(--ink-2);margin-top:2px">'+l+'</div></div>';}
+  // pending first, then confirmed/disputed
+  var ordered=pending.concat(queue.filter(function(q){return q.confirmed;}));
+  function row(q){var pv=verdLbl[q.proposed]||q.proposed;var pc=q.proposed==='met'?'good':q.proposed==='partial'?'warn':'crit';
+    var chips=q.evidence.slice(0,4).map(function(n){return '<span style="font-size:10px;color:var(--blue);background:color-mix(in srgb,var(--blue) 10%,transparent);border-radius:6px;padding:1px 6px">'+esc(String(n).replace(/ *\(.*/,''))+'</span>';}).join(' ');
+    var act=q.confirmed
+      ?('<span style="font-size:11px;font-weight:700;color:var(--'+(q.decision==='dispute'?'crit':'good')+')">'+(q.decision==='dispute'?'✗ disputed':'✓ confirmed')+'</span> <span data-confirm="clear:'+q.id+'" style="font-size:10px;color:var(--muted);cursor:pointer">undo</span>')
+      :('<button data-confirm="approve:'+q.id+'" style="font-size:11px;font-weight:700;color:#fff;background:var(--good);border:none;border-radius:6px;padding:4px 12px;cursor:pointer">Approve</button> <button data-confirm="dispute:'+q.id+'" style="font-size:11px;font-weight:700;color:var(--crit);background:none;border:1px solid var(--crit);border-radius:6px;padding:4px 12px;cursor:pointer">Dispute</button>');
+    return '<div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap;padding:7px 0;border-top:1px solid var(--line)">'
+      +'<span style="font-family:ui-monospace,monospace;font-size:11.5px;color:var(--ink);min-width:74px">'+esc(q.id)+'</span>'
+      +'<span style="font-size:11px;color:var(--muted)">proposed</span><span style="font-size:11px;font-weight:700;color:var(--'+pc+')">'+pv+'</span>'
+      +(q.coverage?('<span style="font-size:10.5px;color:var(--muted)">'+q.coverage.pct+'% cov</span>'):'')
+      +'<span style="flex:1;min-width:120px">'+chips+'</span>'+act+'</div>';
+  }
+  host.innerHTML='<div style="max-width:1080px">'
+    +'<div style="font-size:15px;font-weight:800;color:var(--ink)">Weekly confirm queue</div>'
+    +'<div style="font-size:12.5px;color:var(--ink-2);line-height:1.6;margin:5px 0 12px;max-width:820px">The <b>hybrid</b> controls — Nerion pulled the evidence and computed a <b>proposed verdict</b>; your job shrinks from "go find proof" to <b>approve or dispute</b>. A 10-minute pass, not a 4-hour chore. Decisions persist and feed the score.</div>'
+    +'<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">'+stat(pending.length,'awaiting a click','blue')+stat(confirmed.length,'confirmed','good')+stat(disputed.length,'disputed','crit')+'</div>'
+    +(queue.length?('<div style="border:1px solid var(--line);border-radius:12px;padding:4px 15px 12px;background:var(--surface)">'+ordered.map(row).join('')+'</div>')
+      :'<div style="font-size:12px;color:var(--muted);border:1px dashed var(--line);border-radius:10px;padding:14px">No hybrid controls in the queue yet — connect telemetry so controls graduate to the machine-evidenced tier.</div>')
+    +'</div>';
+  host.querySelectorAll('[data-confirm]').forEach(function(btn){btn.addEventListener('click',function(){
+    var v=btn.getAttribute('data-confirm').split(':');c5ConfirmControl(v[1],(v[0]==='clear')?null:v[0]);c5ConfirmQueueView(host);});});
 }
 /* The Neuron Controls lens — capability × (adversarial + 5 non-adversarial lanes)
    × framework projection, in one view. Read-only; renders into the panel passed in. */
@@ -5589,11 +5608,13 @@ function nerionInternal(){try{return (typeof localStorage!=='undefined'&&localSt
 function c5Frameworks(){
   var host=document.getElementById('c5-frameworks');if(!host)return;
   var internal=nerionInternal();
-  var tab=(C5_PH_TAB==='nerion')?'nerion':(C5_PH_TAB==='assess')?'assess':(C5_PH_TAB==='neuron')?'neuron':(C5_PH_TAB==='nmap'&&internal)?'nmap':'classic';
+  var tab=(C5_PH_TAB==='nerion')?'nerion':(C5_PH_TAB==='assess')?'assess':(C5_PH_TAB==='queue')?'queue':(C5_PH_TAB==='neuron')?'neuron':(C5_PH_TAB==='nmap'&&internal)?'nmap':'classic';
+  var qN=(typeof c5ReviewQueue==='function')?c5ReviewQueue().filter(function(q){return !q.confirmed;}).length:0;
   host.innerHTML=c5header()+
     '<div class="subwrap c5phwrap"><div class="subtabs">'+
       '<button class="subtab'+(tab==='classic'?' on':'')+'" data-phtab="classic">Classic View</button>'+
       '<button class="subtab'+(tab==='assess'?' on':'')+'" data-phtab="assess">Continuous assessment</button>'+
+      '<button class="subtab'+(tab==='queue'?' on':'')+'" data-phtab="queue">Confirm queue'+(qN?(' <span style="font-size:10px;font-weight:800;color:#fff;background:var(--blue);border-radius:20px;padding:1px 6px">'+qN+'</span>'):'')+'</button>'+
       '<button class="subtab'+(tab==='neuron'?' on':'')+'" data-phtab="neuron">Neuron Controls</button>'+
       '<button class="subtab'+(tab==='nerion'?' on':'')+'" data-phtab="nerion">Nerion’s View</button>'+
       (internal?('<button class="subtab'+(tab==='nmap'?' on':'')+'" data-phtab="nmap" style="color:var(--warn)">◆ Nerion Map · internal</button>'):'')+
@@ -5602,6 +5623,7 @@ function c5Frameworks(){
   var body=document.getElementById('c5ph-body');
   if(tab==='nerion'){c5MountCrownTree(body);}
   else if(tab==='assess'){c5ContinuousAssessment(body);}
+  else if(tab==='queue'){c5ConfirmQueueView(body);}
   else if(tab==='neuron'){c5NeuronControls(body);}
   else if(tab==='nmap'&&internal){c5NeuronMap(body);}
   else{c5FrameworksClassic(body);}
