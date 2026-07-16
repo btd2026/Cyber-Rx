@@ -24,7 +24,7 @@ describe('Attestation intelligence', () => {
   });
   it('surfaces the pre-screen marker + indirect signal in the view', () => {
     expect(ciso).toContain('var ai=c5AttestationInsight();');
-    expect(ciso).toContain('LLM-flagged gap');
+    expect(ciso).toContain('LLM pre-screen: ');
     // indirect signal takes the coverage column for attestation controls
     expect(ciso).toContain("var ind=(a.method==='attestation')?c5IndirectSignal(id):null;");
     expect(ciso).toContain('+llmMark');

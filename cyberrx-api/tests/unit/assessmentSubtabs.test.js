@@ -12,7 +12,7 @@ const ciso = fs.readFileSync(path.resolve(__dirname, '../../../CyberRXNew/public
 
 describe('Continuous assessment — Classic-view layout', () => {
   it('tracks expanded functions + the selected control', () => {
-    expect(ciso).toContain('var C5_ASSESS_EXP=null, C5_ASSESS_CTRL=null;');
+    expect(ciso).toContain('var C5_ASSESS_EXP=null, C5_ASSESS_CTRL=null, C5_ASSESS_DRIFT_ALL=false;');
   });
   it('uses classic chrome — c5shell header, .c5cards, expandable .c5fw-tree, two-pane .c5fw-wrap', () => {
     expect(ciso).toContain("c5shell('Continuous assessment · how is every control assessed?'");
