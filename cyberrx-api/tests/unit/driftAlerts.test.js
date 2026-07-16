@@ -31,6 +31,6 @@ describe('Drift detection', () => {
     expect(ciso).toContain('drifted since last assessment');
     expect(ciso).toContain('🎫 ticket auto-raised');
     expect(ciso).toContain('The score is the lagging summary; this is what to act on now.');
-    expect(ciso).toContain('+driftPanel');
+    expect(ciso).toContain('driftPanel+');
   });
 });

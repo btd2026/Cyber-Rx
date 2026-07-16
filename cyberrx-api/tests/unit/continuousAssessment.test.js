@@ -54,8 +54,7 @@ describe('Continuous assessment — the honest model', () => {
 
   it('renders the honest view and wires it as its own Program Health tab', () => {
     expect(ciso).toContain('function c5ContinuousAssessment(host){');
-    expect(ciso).toContain('Continuous assessment · all ');
-    expect(ciso).toContain('never point-in-time');
+    expect(ciso).toContain('NIST CSF 2.0 controls, continuously assessed — never point-in-time.');
     expect(ciso).toContain("data-phtab=\"assess\">Continuous assessment</button>");
     expect(ciso).toContain("else if(tab==='assess'){c5ContinuousAssessment(body);}");
   });

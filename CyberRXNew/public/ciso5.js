@@ -4722,8 +4722,8 @@ document.addEventListener('click',function(e){
    "Classic View" is the existing framework-maturity content, relocated as-is. */
 var C5_PH_DEFAULT='classic'; // flip to 'nerion' to change the default tab in one line
 var C5_PH_TAB=C5_PH_DEFAULT;
-// Continuous-assessment view: active function subtab + selected control (for the detail panel).
-var C5_ASSESS_FN='GV', C5_ASSESS_CTRL=null;
+// Continuous-assessment view (Classic-view layout): expanded functions + selected control.
+var C5_ASSESS_EXP=null, C5_ASSESS_CTRL=null;
 function c5CjtSrc(){try{return new URL('crownjewel-tree.html',location.href).href;}catch(_){return 'crownjewel-tree.html';}}
 var C5_CJT_INPUT=null,C5_CJT_WIRED=false;
 function c5CjtMsg(e){var f=document.getElementById('c5cjt-frame');if(!f)return;
@@ -5268,7 +5268,7 @@ function c5ContinuousAssessment(host){
     var cids=ids.filter(function(id){return id.indexOf(fnKey+'.')===0;}).sort();
     if(!cids.length)return '';
     var thin='text-align:left;padding:6px 10px 6px 0;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)';
-    return '<div style="overflow-x:auto;margin-top:6px"><table style="border-collapse:collapse;width:100%;min-width:800px"><thead><tr>'
+    return '<div style="overflow-x:auto;margin-top:6px"><table style="border-collapse:collapse;width:100%;min-width:680px"><thead><tr>'
       +['Control','Method','Verdict','Assurance · confidence','Coverage','Freshness','Cadence'].map(function(h){return '<th style="'+thin+'">'+h+'</th>';}).join('')
       +'</tr></thead><tbody>'+cids.map(assessRow).join('')+'</tbody></table></div>';
   }
@@ -5316,56 +5316,49 @@ function c5ContinuousAssessment(host){
       +'<div style="font-size:11px;color:var(--muted);margin:4px 0 6px">The score is the lagging summary; this is what to act on now. A <b>met → not-met</b> flip raises a finding and an automatic ticket on your connected ITSM (Jira / ServiceNow).</div>'
       +top+(drift.regressions.length>8?('<div style="font-size:11px;color:var(--muted);margin-top:6px">+ '+(drift.regressions.length-8)+' more</div>'):'')+'</div>';
   }
-  // The hybrid weekly confirm queue lives in its own "Confirm queue" tab (c5ConfirmQueueView);
-  // a compact link here points to it so the operator knows how many are waiting.
+  // Compact link to the confirm-queue tab (the queue itself lives in c5ConfirmQueueView).
   var pendingN=c5ReviewQueue().filter(function(q){return !q.confirmed;}).length;
-  var queuePanel=pendingN?('<div style="border:1px solid var(--blue);border-radius:10px;padding:9px 14px;margin:10px 0;background:color-mix(in srgb,var(--blue) 5%,transparent);font-size:12px;color:var(--ink-2)">✔ <b style="color:var(--blue)">'+pendingN+'</b> hybrid control'+(pendingN>1?'s':'')+' awaiting a one-click confirm — see the <b>Confirm queue</b> tab.</div>'):'';
-  // Crown-jewel-weighted, weakest-link rollup — NOT a simple average. Shown on the 0–5 scale.
+  var queuePanel=pendingN?('<div style="border:1px solid var(--blue);border-radius:10px;padding:9px 14px;margin:12px 0;background:color-mix(in srgb,var(--blue) 5%,transparent);font-size:12px;color:var(--ink-2)">✔ <b style="color:var(--blue)">'+pendingN+'</b> hybrid control'+(pendingN>1?'s':'')+' awaiting a one-click confirm — see the <b>Confirm queue</b> tab.</div>'):'';
   var roll=c5AssessmentRollup();var FNL={GV:'Govern',ID:'Identify',PR:'Protect',DE:'Detect',RS:'Respond',RC:'Recover'};
   function scoreCol(v){return v>=0.8?'good':v>=0.6?'blue':v>=0.4?'warn':'crit';}
-  var fnBars=['GV','ID','PR','DE','RS','RC'].filter(function(f){return roll.functions[f];}).map(function(f){var v=roll.functions[f].score;var pc=Math.round(v*100);return '<div style="min-width:92px"><div style="display:flex;justify-content:space-between;font-size:10.5px;margin-bottom:3px"><span style="font-weight:700;color:var(--ink-2)">'+FNL[f]+'</span><span style="font-weight:700;color:var(--'+scoreCol(v)+')">'+(v*5).toFixed(2)+'</span></div><div style="height:5px;background:var(--surface-2);border-radius:3px;overflow:hidden"><i style="display:block;height:100%;width:'+pc+'%;background:var(--'+scoreCol(v)+')"></i></div></div>';}).join('');
-  var rollupPanel='<div style="border:1px solid var(--line);border-radius:12px;padding:13px 16px;margin:10px 0;background:var(--surface)">'
-    +'<div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">'
-    +'<div><div style="font-size:26px;font-weight:800;color:var(--'+scoreCol(roll.overall)+');line-height:1">'+(roll.overall*5).toFixed(2)+'</div><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)">Weighted posture · confidence '+Math.round(roll.confidence*100)+'%</div></div>'
-    +'<div style="display:flex;gap:12px;flex-wrap:wrap;padding-left:14px;border-left:1px solid var(--line)">'+fnBars+'</div></div>'
-    +'<div style="font-size:11px;color:var(--muted);margin-top:9px;line-height:1.5">Rolled up <b>crown-jewel-weighted</b> with a <b>weakest-link</b> rule at category level — a broken control on a confirmed crown jewel can\'t be averaged away by healthy siblings. The number carries its <b>confidence</b> (the share that is machine-verified), so it can\'t read green on assertion alone.</div></div>';
   var globalCad=c5CadenceOverrides().global||'';
-  var cadenceBar='<div style="border:1px solid var(--line);border-radius:11px;padding:11px 14px;margin:10px 0 4px;background:var(--surface);display:flex;gap:12px;align-items:center;flex-wrap:wrap">'
+  var cadenceBar='<div style="border:1px solid var(--line);border-radius:11px;padding:11px 14px;margin:12px 0 0;background:var(--surface);display:flex;gap:12px;align-items:center;flex-wrap:wrap">'
     +'<span style="font-size:11px;font-weight:700;color:var(--ink)">Assessment cadence</span>'
     +'<span style="font-size:11.5px;color:var(--muted)">Global floor '+cadSelect('global',globalCad,!!globalCad)+'</span>'
-    +'<span style="font-size:11px;color:var(--muted);flex:1;min-width:220px">The scheduler is control-aware: live re-checks continuously, attestations on their review cycle. Set a global floor, tune per function or per control below — nobody is forced to rubber-stamp weekly.</span></div>';
-  // Per-function subtabs — the 106 controls are split by function so the tab isn't one long
-  // scroll; clicking a control row opens its detail (like Classic view).
-  if(!roll.functions[C5_ASSESS_FN])C5_ASSESS_FN='GV';
-  var fnStrip='<div style="display:flex;gap:5px;flex-wrap:wrap;margin:16px 0 0;border-bottom:1px solid var(--line)">'
-    +FN.map(function(F){var cnt=ids.filter(function(id){return id.indexOf(F.k+'.')===0;}).length;var fs=roll.functions[F.k];var v=fs?fs.score:0;var on=(C5_ASSESS_FN===F.k);
-      return '<button data-assessfn="'+F.k+'" style="font-size:12px;font-weight:'+(on?'800':'600')+';color:var(--'+(on?'ink':'muted')+');background:'+(on?'var(--surface)':'transparent')+';border:1px solid '+(on?'var(--line)':'transparent')+';border-bottom:2px solid '+(on?'var(--blue)':'transparent')+';border-radius:8px 8px 0 0;padding:7px 12px;cursor:pointer;white-space:nowrap">'+F.l+' <b style="color:var(--'+scoreCol(v)+')">'+(v*5).toFixed(1)+'</b> <span style="color:var(--muted);font-weight:500">· '+cnt+'</span></button>';
-    }).join('')+'</div>';
-  var fnCad='<div style="font-size:11px;color:var(--muted);margin:8px 0 0">Cadence for all <b style="color:var(--ink)">'+FNL[C5_ASSESS_FN]+'</b> controls '+cadSelect('fn:'+C5_ASSESS_FN,(c5CadenceOverrides().fn||{})[C5_ASSESS_FN]||'',!!((c5CadenceOverrides().fn||{})[C5_ASSESS_FN]))+'</div>';
-  var activeTable=assessTable(C5_ASSESS_FN);
-  var detailPanel=C5_ASSESS_CTRL?c5AssessDetail(C5_ASSESS_CTRL):'<div style="font-size:11px;color:var(--muted);margin-top:8px">Click any control for its method, three axes, freshness, cadence and evidence.</div>';
-  host.innerHTML='<div style="max-width:1080px">'
-    +'<div style="font-size:15px;font-weight:800;color:var(--ink)">Continuous assessment · all '+s.total+' NIST CSF 2.0 controls</div>'
-    +'<div style="font-size:12.5px;color:var(--ink-2);line-height:1.6;margin:5px 0 12px;max-width:820px">Every control is assessed on a cadence — never point-in-time. The <b>method differs by control</b> and Nerion is honest about which it used: a governance outcome has no sensor, so it is a scheduled <b>attestation</b> with freshness tracking, not fake automation. Each control carries three axes that are never blended into one number — <b>verdict</b>, <b>assurance</b>, and <b>freshness</b> — plus <b>coverage</b> (the observed vs known population).</div>'
-    +'<div style="font-size:11px;color:var(--muted);margin-bottom:4px"><b style="color:var(--ink)">'+s.machineVerifiable+'</b> machine-verifiable today (live + hybrid) — grows as you connect sources · <b style="color:var(--ink)">'+s.attested+'</b> attested, decaying on their review cycle · <span style="color:var(--good)">'+trend+'</span> on met verdicts</div>'
-    +'<div style="font-size:11px;color:var(--muted);margin-bottom:8px"><b style="color:var(--ink)">'+ai.prescreened+'</b> attestations LLM pre-screened <span style="color:var(--muted)">(🔍 a proposed finding you confirm — never an auto-pass)</span> · <b style="color:var(--warn)">'+ai.gaps+'</b> flagged a gap to review · <b style="color:var(--blue)">'+ai.indirect+'</b> carry a corroborating HRIS / LMS / TPRM signal, so the attestation is more than a rubber stamp</div>'
-    +driftPanel
-    +queuePanel
-    +summary
-    +rollupPanel
-    +cadenceBar
-    +'<div style="font-size:11px;color:var(--muted);margin:12px 0 2px;line-height:1.5">A control assessed by attestation 340 days ago on an annual cadence is not "passing" — it is <b style="color:var(--warn)">expiring</b>. Freshness is a first-class part of status: the proof decaying past its TTL flips the control with no human action, which is what makes "continuous" true across all '+s.total+', not just the live ones.</div>'
-    +fnStrip+fnCad+activeTable+detailPanel+'</div>';
-  // Wire cadence overrides — a change re-resolves every control's freshness and re-renders.
+    +'<span style="font-size:11px;color:var(--muted);flex:1;min-width:220px">Control-aware: live re-checks continuously, attestations on their review cycle. Set a global floor, tune per control in its detail below — nobody is forced to rubber-stamp weekly.</span></div>';
+  // ── Summary cards, classic .c5cards chrome ──
+  if(C5_ASSESS_EXP==null){C5_ASSESS_EXP={};}
+  if(C5_ASSESS_CTRL==null){C5_ASSESS_CTRL='PR.AA-03';C5_ASSESS_EXP.PR=true;}
+  function card(l,v,vc,cn){return '<div class="c5card"><div class="c5card-top"><span class="c5card-l">'+l+'</span><span class="c5chip c5-computed">computed</span></div><div class="c5card-v" style="color:var(--'+vc+')">'+v+'</div><div class="cn">'+cn+'</div></div>';}
+  var cards='<div class="c5cards">'
+    +card('Weighted posture',(roll.overall*5).toFixed(1)+' / 5',scoreCol(roll.overall),'confidence '+Math.round(roll.confidence*100)+'% · crown-jewel-weighted, weakest-link')
+    +card('Continuously assessed',s.machineVerifiable,'good',s.continuouslyVerified+' live · '+s.humanConfirmed+' hybrid · grows with connectors')
+    +card('Attested',s.attested,'warn',s.expiringSoon+' expiring / expired · '+ai.gaps+' LLM-flagged gaps')
+    +card('Not assessed',s.notAssessed,'crit',s.awaiting+' awaiting a source')
+    +'</div>';
+  // ── Expandable function tree (classic .c5fw-tree); each function opens to its control table ──
+  var tree='<div class="c5fw-tree">'+FN.map(function(F){
+    var cids=ids.filter(function(id){return id.indexOf(F.k+'.')===0;}).sort();if(!cids.length)return '';
+    var open=!!C5_ASSESS_EXP[F.k];var fs=roll.functions[F.k];var v=fs?fs.score:0;var gc=scoreCol(v);
+    var inner=open?('<div style="padding:4px 14px 12px 30px">'+assessTable(F.k)+'</div>'):'';
+    return '<div class="c5fw-g"><div class="c5fw-grow" data-assessexp="'+F.k+'"><span class="c5fw-tw">'+(open?'▾':'▸')+'</span><span class="c5fw-dot" style="background:var(--'+gc+')"></span><span class="c5fw-id">'+F.k+'</span><span class="c5fw-nm">'+F.l+'</span><span class="c5fw-lvl">'+cids.length+' controls</span><span class="c5fw-sc" style="color:var(--'+gc+')">'+(v*5).toFixed(1)+'</span></div>'+inner+'</div>';
+  }).join('')+'</div>';
+  var detail=C5_ASSESS_CTRL?c5AssessDetail(C5_ASSESS_CTRL):'<div class="c5fw-detail"><div style="font-size:12.5px;color:var(--muted)">Open a function and click a control to see its method, the three axes, freshness, cadence and evidence.</div></div>';
+  host.innerHTML=c5header()+
+    c5shell('Continuous assessment · how is every control assessed?','All '+s.total+' NIST CSF 2.0 controls, continuously assessed — never point-in-time.',null,'The <b>method differs by control</b> and Nerion is honest about which it used: live telemetry, a weekly human-confirm, or a scheduled <b>attestation</b> with freshness tracking — a governance outcome has no sensor, so it is not fake-automated. Each control carries three axes never blended into one number — <b>verdict</b>, <b>assurance</b> and <b>freshness</b> — plus <b>coverage</b> (observed vs known). Open a function to see its controls; click one for the detail.')+
+    cards+
+    driftPanel+
+    queuePanel+
+    cadenceBar+
+    '<div class="c5fw-wrap"><div class="c5fw-right">'+tree+'</div><div class="c5fw-left" id="assessDetail">'+detail+'</div></div>'+
+    '<div class="c5foot">Method: <b style="color:var(--good)">live</b> = a sensor observes it (re-scored on every refresh) · <b style="color:var(--blue)">hybrid</b> = telemetry pulled, a human confirms · <b style="color:var(--warn)">attestation</b> = owner-assigned, LLM pre-screened, freshness-tracked · <b>awaiting</b> = connect a source to light it up. Freshness decays past the TTL, so an old attestation reads <b style="color:var(--warn)">expiring</b>, not passing — which is what makes "continuous" true across all '+s.total+'.</div>';
+  // Wiring — cadence overrides, confirm actions, expand/collapse, control select, detail close.
   host.querySelectorAll('[data-cadence]').forEach(function(sel){sel.addEventListener('change',function(e){e.stopPropagation();
     c5SetCadence(sel.getAttribute('data-cadence'),sel.value);c5ContinuousAssessment(host);});});
-  // Wire the confirm queue — approve / dispute / undo, then re-render.
   host.querySelectorAll('[data-confirm]').forEach(function(btn){btn.addEventListener('click',function(e){e.stopPropagation();
-    var v=btn.getAttribute('data-confirm').split(':');var act=v[0],id=v[1];
-    c5ConfirmControl(id,(act==='clear')?null:act);c5ContinuousAssessment(host);});});
-  // Wire function subtabs + clickable control rows + the detail close (Classic-view style).
-  host.querySelectorAll('[data-assessfn]').forEach(function(b){b.onclick=function(){C5_ASSESS_FN=b.getAttribute('data-assessfn');C5_ASSESS_CTRL=null;c5ContinuousAssessment(host);};});
-  host.querySelectorAll('[data-assessctl]').forEach(function(row){row.onclick=function(e){if(e.target.closest('select')||e.target.closest('[data-confirm]'))return;var id=row.getAttribute('data-assessctl');C5_ASSESS_CTRL=(C5_ASSESS_CTRL===id)?null:id;c5ContinuousAssessment(host);};});
+    var v=btn.getAttribute('data-confirm').split(':');c5ConfirmControl(v[1],(v[0]==='clear')?null:v[0]);c5ContinuousAssessment(host);});});
+  host.querySelectorAll('[data-assessexp]').forEach(function(b){b.onclick=function(){var k=b.getAttribute('data-assessexp');C5_ASSESS_EXP[k]=!C5_ASSESS_EXP[k];c5ContinuousAssessment(host);};});
+  host.querySelectorAll('[data-assessctl]').forEach(function(row){row.onclick=function(e){if(e.target.closest('select')||e.target.closest('[data-confirm]'))return;C5_ASSESS_CTRL=row.getAttribute('data-assessctl');c5ContinuousAssessment(host);};});
   var acl=host.querySelector('[data-assessclose]');if(acl)acl.onclick=function(){C5_ASSESS_CTRL=null;c5ContinuousAssessment(host);};
 }
 /* The hybrid weekly confirm queue — its own tab. Nerion pulls the evidence and proposes a
