@@ -30,10 +30,11 @@ describe('Cadence — control-aware scheduler', () => {
     expect(ciso).toContain('function c5SetCadence(scope,val){');
     expect(ciso).toContain("localStorage.setItem('cyberrx_assessment_cadence',JSON.stringify(ov));");
     expect(ciso).toContain('c5SetCadence(sel.getAttribute(\'data-cadence\'),sel.value);c5ContinuousAssessment(host);');
-    // global, per-function and per-control selectors all exist
+    // global floor + per-control (in each row / the detail) selectors exist; the fn override
+    // still resolves in c5EffectiveCadence even though the dedicated fn selector was retired.
     expect(ciso).toContain("cadSelect('global'");
-    expect(ciso).toContain("cadSelect('fn:'+C5_ASSESS_FN");
     expect(ciso).toContain("cadSelect('control:'+id");
+    expect(ciso).toContain("(ov.fn&&ov.fn[fn])");
   });
 
   it('onboarding captures the global cadence floor into the same key the cockpit reads', () => {

@@ -1,34 +1,40 @@
 'use strict';
 
 /**
- * Continuous-assessment view is split into per-function subtabs (Govern … Recover) so it
- * isn't one 106-row scroll, and each control row is clickable to open a detail panel — like
- * Classic view. Source-scan guard.
+ * The Continuous-assessment view uses the Classic-view layout: c5shell header, .c5cards
+ * summary, an expandable function tree (.c5fw-tree), and a two-pane .c5fw-wrap with the
+ * control detail pinned on the left — while keeping the continuous columns (method / verdict /
+ * assurance / coverage / freshness / cadence). Source-scan guard.
  */
 const fs = require('fs');
 const path = require('path');
 const ciso = fs.readFileSync(path.resolve(__dirname, '../../../CyberRXNew/public/ciso5.js'), 'utf8');
 
-describe('Continuous assessment — per-function subtabs + clickable detail', () => {
-  it('tracks the active function subtab and the selected control', () => {
-    expect(ciso).toContain("var C5_ASSESS_FN='GV', C5_ASSESS_CTRL=null;");
+describe('Continuous assessment — Classic-view layout', () => {
+  it('tracks expanded functions + the selected control', () => {
+    expect(ciso).toContain('var C5_ASSESS_EXP=null, C5_ASSESS_CTRL=null;');
   });
-  it('renders one function at a time (subtab strip + single-function table), not all 106', () => {
-    expect(ciso).toContain('function assessTable(fnKey){');
-    expect(ciso).toContain('var activeTable=assessTable(C5_ASSESS_FN);');
-    expect(ciso).toContain('data-assessfn="');
-    // the strip shows each function's score + control count
-    expect(ciso).toContain("var cnt=ids.filter(function(id){return id.indexOf(F.k+'.')===0;}).length;");
+  it('uses classic chrome — c5shell header, .c5cards, expandable .c5fw-tree, two-pane .c5fw-wrap', () => {
+    expect(ciso).toContain("c5shell('Continuous assessment · how is every control assessed?'");
+    expect(ciso).toContain('var cards=\'<div class="c5cards">\'');
+    expect(ciso).toContain('var tree=\'<div class="c5fw-tree">\'');
+    expect(ciso).toContain('<div class="c5fw-wrap"><div class="c5fw-right">');
+    expect(ciso).toContain('<div class="c5fw-left" id="assessDetail">');
   });
-  it('control rows are clickable and open a detail panel (Classic-view style)', () => {
+  it('each function group is expandable and opens to its control table (keeping the columns)', () => {
+    expect(ciso).toContain('data-assessexp="');
+    expect(ciso).toContain('var inner=open?(\'<div style="padding:4px 14px 12px 30px">\'+assessTable(F.k)+\'</div>\'):\'\';');
+    expect(ciso).toContain("['Control','Method','Verdict','Assurance · confidence','Coverage','Freshness','Cadence']");
+  });
+  it('control rows are clickable and open the detail in the left pane', () => {
     expect(ciso).toContain('function assessRow(id){');
     expect(ciso).toContain('data-assessctl="');
     expect(ciso).toContain('function c5AssessDetail(id){');
-    expect(ciso).toContain('var detailPanel=C5_ASSESS_CTRL?c5AssessDetail(C5_ASSESS_CTRL):');
+    expect(ciso).toContain('var detail=C5_ASSESS_CTRL?c5AssessDetail(C5_ASSESS_CTRL):');
   });
-  it('wires subtab clicks, row clicks and detail close, re-rendering each time', () => {
-    expect(ciso).toContain("host.querySelectorAll('[data-assessfn]').forEach(function(b){b.onclick=function(){C5_ASSESS_FN=b.getAttribute('data-assessfn');C5_ASSESS_CTRL=null;c5ContinuousAssessment(host);};});");
-    expect(ciso).toContain("var id=row.getAttribute('data-assessctl');C5_ASSESS_CTRL=(C5_ASSESS_CTRL===id)?null:id;c5ContinuousAssessment(host);");
+  it('wires expand/collapse, row select and detail close, re-rendering each time', () => {
+    expect(ciso).toContain("host.querySelectorAll('[data-assessexp]').forEach(function(b){b.onclick=function(){var k=b.getAttribute('data-assessexp');C5_ASSESS_EXP[k]=!C5_ASSESS_EXP[k];c5ContinuousAssessment(host);};});");
+    expect(ciso).toContain("C5_ASSESS_CTRL=row.getAttribute('data-assessctl');c5ContinuousAssessment(host);");
     expect(ciso).toContain("if(e.target.closest('select')||e.target.closest('[data-confirm]'))return;");
   });
 });
