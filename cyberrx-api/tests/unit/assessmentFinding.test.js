@@ -36,9 +36,18 @@ describe('Continuous assessment — Classic-depth finding detail', () => {
     expect(ciso).toContain("card('Overall maturity',overall5.toFixed(1)+' / 5'");
     expect(ciso).toContain("card('Coverage',covPct+'%'");
     expect(ciso).toContain("card('Controls failing',failing");
-    expect(ciso).toContain('Continuous monitoring · all \'+s.total+\' NIST CSF 2.0 controls');
-    expect(ciso).toContain('Bring more under continuous monitoring');
-    expect(ciso).toContain('var evBox=');
-    expect(ciso).toContain('evBox+');
+    // the standalone continuous-monitoring breakdown box was removed
+    // the peer-benchmark box (same as Classic) is included instead
+    expect(ciso).toContain('id="c5fwPeerBox"');
+    expect(ciso).toContain('Peer benchmark · \'+fwShort+\' · ');
+    expect(ciso).toContain('peerBox+');
+  });
+  it('drift panel is a clean card whose rows open the finding, with an expandable show-all', () => {
+    expect(ciso).toContain('var C5_ASSESS_EXP=null, C5_ASSESS_CTRL=null, C5_ASSESS_DRIFT_ALL=false;');
+    expect(ciso).toContain('var shown=C5_ASSESS_DRIFT_ALL?drift.regressions:drift.regressions.slice(0,8);');
+    expect(ciso).toContain('data-driftmore="1"');
+    expect(ciso).toContain('C5_ASSESS_DRIFT_ALL=!C5_ASSESS_DRIFT_ALL;c5ContinuousAssessment(host);');
+    // drift rows carry data-assessctl so a click opens that control's finding
+    expect(ciso).toContain('return \'<div data-assessctl="\'+esc(d.id)+\'"');
   });
 });

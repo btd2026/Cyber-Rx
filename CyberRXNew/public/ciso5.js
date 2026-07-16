@@ -4723,7 +4723,7 @@ document.addEventListener('click',function(e){
 var C5_PH_DEFAULT='classic'; // flip to 'nerion' to change the default tab in one line
 var C5_PH_TAB=C5_PH_DEFAULT;
 // Continuous-assessment view (Classic-view layout): expanded functions + selected control.
-var C5_ASSESS_EXP=null, C5_ASSESS_CTRL=null;
+var C5_ASSESS_EXP=null, C5_ASSESS_CTRL=null, C5_ASSESS_DRIFT_ALL=false;
 function c5CjtSrc(){try{return new URL('crownjewel-tree.html',location.href).href;}catch(_){return 'crownjewel-tree.html';}}
 var C5_CJT_INPUT=null,C5_CJT_WIRED=false;
 function c5CjtMsg(e){var f=document.getElementById('c5cjt-frame');if(!f)return;
@@ -5338,18 +5338,22 @@ function c5ContinuousAssessment(host){
   var drift=c5DriftAlerts();var verdLbl={met:'met',partial:'partially met',not_met:'not met',not_assessed:'not assessed'};
   var driftPanel='';
   if(drift.regressions.length){
-    var top=drift.regressions.slice(0,8).map(function(d){var sev=d.severity==='high'?'crit':'warn';
-      return '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:5px 0;border-top:1px solid color-mix(in srgb,var(--crit) 15%,transparent)">'
-        +'<span style="font-size:9px;font-weight:800;color:var(--'+sev+');text-transform:uppercase">'+d.severity+'</span>'
-        +'<span style="font-family:ui-monospace,monospace;font-size:11.5px;color:var(--ink)">'+esc(d.id)+'</span>'
-        +'<span style="font-size:11px;color:var(--ink-2)">'+verdLbl[d.from]+' <span style="color:var(--muted)">→</span> <b style="color:var(--'+sev+')">'+verdLbl[d.to]+'</b></span>'
-        +(d.ticket?'<span style="font-size:10px;font-weight:700;color:var(--crit);background:color-mix(in srgb,var(--crit) 10%,transparent);border-radius:6px;padding:1px 7px">🎫 ticket auto-raised</span>':'')
-        +(d.weight>1?'<span style="font-size:10px;color:var(--muted)">crown-jewel control</span>':'')+'</div>';}).join('');
-    driftPanel='<div style="border:1px solid var(--crit);border-radius:12px;padding:12px 15px;margin:10px 0;background:color-mix(in srgb,var(--crit) 5%,transparent)">'
-      +'<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><div style="font-size:12.5px;font-weight:800;color:var(--crit)">⚠ '+drift.regressions.length+' control'+(drift.regressions.length>1?'s':'')+' drifted since last assessment</div>'
-      +'<div style="font-size:11px;color:var(--muted)">'+drift.improvements.length+' improved · '+drift.expired.length+' evidence expired</div></div>'
-      +'<div style="font-size:11px;color:var(--muted);margin:4px 0 6px">The score is the lagging summary; this is what to act on now. A <b>met → not-met</b> flip raises a finding and an automatic ticket on your connected ITSM (Jira / ServiceNow).</div>'
-      +top+(drift.regressions.length>8?('<div style="font-size:11px;color:var(--muted);margin-top:6px">+ '+(drift.regressions.length-8)+' more</div>'):'')+'</div>';
+    // Clean, neutral card (matches the rest of the page). Click a row to open its finding;
+    // "show all / fewer" expands the full list.
+    var shown=C5_ASSESS_DRIFT_ALL?drift.regressions:drift.regressions.slice(0,8);
+    var dRows=shown.map(function(d){var sev=d.severity==='high'?'crit':'warn';
+      return '<div data-assessctl="'+esc(d.id)+'" style="display:flex;gap:9px;align-items:center;flex-wrap:wrap;padding:7px 4px;border-top:1px solid var(--line);cursor:pointer">'
+        +'<span style="font-size:9px;font-weight:800;letter-spacing:.04em;color:var(--'+sev+');text-transform:uppercase;width:52px;flex:none">'+d.severity+'</span>'
+        +'<span style="font-family:ui-monospace,monospace;font-size:11.5px;color:var(--ink);width:70px;flex:none">'+esc(d.id)+'</span>'
+        +'<span style="font-size:11.5px;color:var(--ink-2);flex:1;min-width:130px">'+verdLbl[d.from]+' <span style="color:var(--muted)">→</span> <b style="color:var(--'+sev+')">'+verdLbl[d.to]+'</b></span>'
+        +(d.ticket?'<span style="font-size:10px;font-weight:700;color:var(--crit);background:color-mix(in srgb,var(--crit) 10%,transparent);border-radius:6px;padding:2px 8px;white-space:nowrap">🎫 ticket auto-raised</span>':'')
+        +(d.weight>1?'<span style="font-size:10px;color:var(--muted);white-space:nowrap">crown-jewel</span>':'')+'</div>';}).join('');
+    var more=(drift.regressions.length>8)?('<div style="border-top:1px solid var(--line);padding-top:8px;margin-top:2px"><span data-driftmore="1" style="font-size:11.5px;font-weight:600;color:var(--blue);cursor:pointer">'+(C5_ASSESS_DRIFT_ALL?('▲ Show fewer'):('▼ Show all '+drift.regressions.length))+'</span></div>'):'';
+    driftPanel='<div style="border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:14px;background:var(--surface)">'
+      +'<div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px"><div style="font-weight:600;font-size:13px;color:var(--ink)"><span style="color:var(--warn)">⚠</span> '+drift.regressions.length+' control'+(drift.regressions.length>1?'s':'')+' drifted since last assessment</div>'
+      +'<div style="font-size:11.5px;color:var(--muted)">'+drift.improvements.length+' improved · '+drift.expired.length+' evidence expired</div></div>'
+      +'<div style="font-size:11.5px;color:var(--muted);margin:5px 0 8px;line-height:1.5">The score is the lagging summary; this is what to act on now. A <b>met → not-met</b> flip raises a finding and an automatic ticket on your connected ITSM (Jira / ServiceNow). Click any row to open its finding.</div>'
+      +dRows+more+'</div>';
   }
   // Compact link to the confirm-queue tab (the queue itself lives in c5ConfirmQueueView).
   var pendingN=c5ReviewQueue().filter(function(q){return !q.confirmed;}).length;
@@ -5374,24 +5378,15 @@ function c5ContinuousAssessment(host){
     +card('Trend · vs last cycle',tarrow+' '+(net>0?'+':'')+net,tcol,drift.improvements.length+' improved · '+drift.regressions.length+' regressed')
     +card('Controls failing',failing,failing>0?'crit':'good','deficiencies (not met / not assessed)')
     +'</div>';
-  // ── Continuous-monitoring breakdown box (classic evBox) ──
-  function _w(n){return (s.total>0?Math.max(0,Math.min(100,n/s.total*100)):0)+'%';}
-  var evBox='<div style="display:grid;grid-template-columns:1fr 1fr;gap:22px;border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:14px">'
-    +'<div>'
-    +'<div style="font-weight:600;font-size:13px;color:var(--ink);margin-bottom:4px">Continuous monitoring · all '+s.total+' NIST CSF 2.0 controls</div>'
-    +'<div style="font-size:11.5px;color:var(--muted);margin-bottom:11px"><b style="color:var(--good)">'+(s.live+s.hybrid)+' of '+s.total+'</b> are continuously assessed from your connected tools — <b>'+s.live+'</b> live telemetry (re-scored on every refresh), <b>'+s.hybrid+'</b> hybrid (telemetry pulled, a human validates). <b>'+s.attestation+'</b> are policy-governed — attested from an analyzed document, inherently not automatable. <b>'+s.awaiting+'</b> await a source. Continuous, not a point-in-time audit.</div>'
-    +'<div style="display:flex;height:10px;border-radius:6px;overflow:hidden;background:var(--line)"><div style="width:'+_w(s.live)+';background:var(--good)"></div><div style="width:'+_w(s.hybrid)+';background:color-mix(in srgb,var(--good) 50%,var(--blue))"></div><div style="width:'+_w(s.attestation)+';background:var(--blue)"></div><div style="width:'+_w(s.awaiting)+';background:color-mix(in srgb,var(--warn) 65%,var(--line))"></div></div>'
-    +'<div style="display:flex;gap:16px;margin-top:9px;font-size:12px;color:var(--ink-2);flex-wrap:wrap">'
-      +'<span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--good);margin-right:5px;vertical-align:middle"></span><b style="color:var(--ink)">'+s.live+'</b> live telemetry</span>'
-      +'<span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:color-mix(in srgb,var(--good) 50%,var(--blue));margin-right:5px;vertical-align:middle"></span><b style="color:var(--ink)">'+s.hybrid+'</b> hybrid</span>'
-      +'<span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--blue);margin-right:5px;vertical-align:middle"></span><b style="color:var(--ink)">'+s.attestation+'</b> attestation</span>'
-      +'<span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:color-mix(in srgb,var(--warn) 65%,var(--line));margin-right:5px;vertical-align:middle"></span><b style="color:var(--ink)">'+s.awaiting+'</b> awaiting a source</span>'
-    +'</div></div>'
-    +'<div><div style="font-weight:600;font-size:13px;color:var(--ink);margin-bottom:9px">Bring more under continuous monitoring</div>'
-    +'<div style="font-size:12.5px;color:var(--ink-2);margin-bottom:6px">⚡ Connect the sources for the <b>'+s.awaiting+'</b> awaiting control'+(s.awaiting===1?'':'s')+' to graduate them to live / hybrid.</div>'
-    +'<div style="font-size:12.5px;color:var(--ink-2);margin-bottom:6px">🔍 <b>'+ai.gaps+'</b> attestation'+(ai.gaps===1?'':'s')+' have an LLM-flagged gap — resolve in the control detail.</div>'
-    +'<div style="font-size:12.5px;color:var(--ink-2)">🎫 <b>'+s.expiringSoon+'</b> expiring / expired — re-attest before the TTL lapses.</div></div>'
-    +'</div>';
+  // ── Peer-benchmark box (same as Classic view) ──
+  var fwShort='NIST CSF 2.0';
+  var peerBox='<div id="c5fwPeerBox" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border:1px solid var(--line);border-radius:14px;background:var(--surface-2);cursor:pointer;margin-top:14px;transition:border-color .15s"'
+    +' onmouseover="this.style.borderColor=\'var(--blue)\'" onmouseout="this.style.borderColor=\'var(--line)\'">'
+    +'<div style="display:flex;align-items:center;gap:11px;min-width:0">'
+    +'<span style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:9px;flex:none;background:var(--surface);color:var(--blue)">'+((typeof c5icon==='function')?c5icon('scale'):'⚖')+'</span>'
+    +'<div style="min-width:0"><div style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--blue)">Peer benchmark · '+fwShort+' · '+((typeof c5peerLive==='function'&&c5peerLive())?'view comparison':'sample preview')+'</div>'
+    +'<div style="font-size:12px;color:var(--ink-2);margin-top:1px">'+((typeof c5peerLive==='function'&&c5peerLive())?('See how your '+fwShort+' continuous-assessment posture compares to the DTNKShield community — anonymously.'):('Preview how your '+fwShort+' posture will compare — the live cohort unlocks at '+((typeof c5peerMin==='function')?c5peerMin():5)+' clients (anonymous, k-anonymity-gated).'))+'</div></div>'
+    +'</div><span class="peer-badge">'+((typeof c5peerLive==='function'&&c5peerLive())?'DTNKShield ›':'Sample ›')+'</span></div>';
   // ── Expandable function tree (classic .c5fw-tree); each function opens to its control table ──
   var tree='<div class="c5fw-tree">'+FN.map(function(F){
     var cids=ids.filter(function(id){return id.indexOf(F.k+'.')===0;}).sort();if(!cids.length)return '';
@@ -5403,7 +5398,7 @@ function c5ContinuousAssessment(host){
   host.innerHTML=c5header()+
     c5shell('Continuous assessment · how is every control assessed?','All '+s.total+' NIST CSF 2.0 controls, continuously assessed — never point-in-time.',null,'The <b>method differs by control</b> and Nerion is honest about which it used: live telemetry, a weekly human-confirm, or a scheduled <b>attestation</b> with freshness tracking — a governance outcome has no sensor, so it is not fake-automated. Each control carries three axes never blended into one number — <b>verdict</b>, <b>assurance</b> and <b>freshness</b> — plus <b>coverage</b> (observed vs known). Open a function to see its controls; click one for the detail.')+
     cards+
-    evBox+
+    peerBox+
     driftPanel+
     queuePanel+
     cadenceBar+
@@ -5417,6 +5412,8 @@ function c5ContinuousAssessment(host){
   host.querySelectorAll('[data-assessexp]').forEach(function(b){b.onclick=function(){var k=b.getAttribute('data-assessexp');C5_ASSESS_EXP[k]=!C5_ASSESS_EXP[k];c5ContinuousAssessment(host);};});
   host.querySelectorAll('[data-assessctl]').forEach(function(row){row.onclick=function(e){if(e.target.closest('select')||e.target.closest('[data-confirm]'))return;C5_ASSESS_CTRL=row.getAttribute('data-assessctl');c5ContinuousAssessment(host);};});
   var acl=host.querySelector('[data-assessclose]');if(acl)acl.onclick=function(){C5_ASSESS_CTRL=null;c5ContinuousAssessment(host);};
+  var dm=host.querySelector('[data-driftmore]');if(dm)dm.onclick=function(){C5_ASSESS_DRIFT_ALL=!C5_ASSESS_DRIFT_ALL;c5ContinuousAssessment(host);};
+  var pb=host.querySelector('#c5fwPeerBox');if(pb)pb.onclick=function(){if(typeof c5fwPeerOpen==='function')c5fwPeerOpen();};
 }
 /* The hybrid weekly confirm queue — its own tab. Nerion pulls the evidence and proposes a
    verdict; the human's job shrinks to approve or dispute. Shows the FULL queue (not a top-N),
