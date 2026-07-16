@@ -798,7 +798,9 @@ var CUR='ceo';
 function render(seat){
   CUR=seat;var s=SEATS[seat];
   if(!s){try{console.warn('render(): unknown seat',seat);}catch(_){}return;} // defensive: never crash on an unregistered seat (e.g. latent cpo/audit)
-  var h=(typeof scopeBanner==='function'?scopeBanner():'')+((typeof c5seatHeader==='function')?c5seatHeader():('<div class="hero"><div class="eyebrow">'+s.eyebrow+'</div></div>'));
+  // Seat header (CISO …) FIRST, then the "Now viewing" scope banner directly BELOW it — the
+  // scope switcher / regions-at-a-glance drill sits under the seat, not above it.
+  var h=((typeof c5seatHeader==='function')?c5seatHeader():('<div class="hero"><div class="eyebrow">'+s.eyebrow+'</div></div>'))+(typeof scopeBanner==='function'?scopeBanner():'');
   h+='<div id="secTabs" class="sectabs"></div><div id="secWrap">'+s.body()+'</div>';
   document.getElementById('app').innerHTML=localizeInd(h);
   try{if(typeof wireScopeBanner==='function')wireScopeBanner();}catch(_){}
