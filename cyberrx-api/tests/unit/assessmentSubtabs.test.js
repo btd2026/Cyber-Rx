@@ -34,7 +34,16 @@ describe('Continuous assessment — Classic-view layout', () => {
   });
   it('wires expand/collapse, row select and detail close, re-rendering each time', () => {
     expect(ciso).toContain("host.querySelectorAll('[data-assessexp]').forEach(function(b){b.onclick=function(){var k=b.getAttribute('data-assessexp');C5_ASSESS_EXP[k]=!C5_ASSESS_EXP[k];c5ContinuousAssessment(host);};});");
-    expect(ciso).toContain("C5_ASSESS_CTRL=row.getAttribute('data-assessctl');c5ContinuousAssessment(host);");
+    expect(ciso).toContain("C5_ASSESS_CTRL=row.getAttribute('data-assessctl');C5_ASSESS_SUBTAB='controls';c5ContinuousAssessment(host);");
     expect(ciso).toContain("if(e.target.closest('select')||e.target.closest('[data-confirm]'))return;");
+  });
+  it('splits the view into Summary / Controls / Drift sub-tabs to reduce scroll', () => {
+    expect(ciso).toContain("var C5_ASSESS_SUBTAB='summary';");
+    // Controls tab only appears at a region/entity scope (or when a control is open)
+    expect(ciso).toContain('var showControls=isEntScope||!!C5_ASSESS_CTRL;');
+    expect(ciso).toContain("(showControls?assSubBtn('controls',");
+    // Summary is the exec overview; drift is its own tab
+    expect(ciso).toContain('subBody=scopeNavHtml+cards+peerBox+queuePanel;');
+    expect(ciso).toContain("host.querySelectorAll('[data-asssub]').forEach(function(b){b.onclick=function(){C5_ASSESS_SUBTAB=b.getAttribute('data-asssub');c5ContinuousAssessment(host);};});");
   });
 });

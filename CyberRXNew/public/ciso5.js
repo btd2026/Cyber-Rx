@@ -4724,6 +4724,8 @@ var C5_PH_DEFAULT='classic'; // flip to 'nerion' to change the default tab in on
 var C5_PH_TAB=C5_PH_DEFAULT;
 // Continuous-assessment view (Classic-view layout): expanded functions + selected control.
 var C5_ASSESS_EXP=null, C5_ASSESS_CTRL=null, C5_ASSESS_DRIFT_ALL=false;
+// Continuous-assessment sub-tab: 'summary' (exec overview) · 'controls' (per-scope detail) · 'drift'.
+var C5_ASSESS_SUBTAB='summary';
 function c5CjtSrc(){try{return new URL('crownjewel-tree.html',location.href).href;}catch(_){return 'crownjewel-tree.html';}}
 var C5_CJT_INPUT=null,C5_CJT_WIRED=false;
 function c5CjtMsg(e){var f=document.getElementById('c5cjt-frame');if(!f)return;
@@ -5386,8 +5388,9 @@ function c5ContinuousAssessment(host){
     +'<span style="font-size:11.5px;color:var(--muted)">Global floor '+cadSelect('global',globalCad,!!globalCad)+'</span>'
     +'<span style="font-size:11px;color:var(--muted);flex:1;min-width:220px">Control-aware: live re-checks continuously, attestations on their review cycle. Set a global floor, tune per control in its detail below — nobody is forced to rubber-stamp weekly.</span></div>';
   // ── Summary cards, classic .c5cards chrome ──
-  if(C5_ASSESS_EXP==null){C5_ASSESS_EXP={};}
-  if(C5_ASSESS_CTRL==null){C5_ASSESS_CTRL='PR.AA-03';C5_ASSESS_EXP.PR=true;}
+  if(C5_ASSESS_EXP==null){C5_ASSESS_EXP={PR:true};}
+  // NOTE: no control is auto-selected — the Controls sub-tab stays hidden at Enterprise until
+  // you drill into a region/entity (or click a drifted control), keeping the Summary short.
   function card(l,v,vc,cn){return '<div class="c5card"><div class="c5card-top"><span class="c5card-l">'+l+'</span><span class="c5chip c5-computed">computed</span></div><div class="c5card-v" style="color:var(--'+vc+')">'+v+'</div><div class="cn">'+cn+'</div></div>';}
   var overall5=(roll.overall*5);var evidenced=s.total-s.notAssessed;var covPct=s.total?Math.round(evidenced/s.total*100):0;
   var net=drift.improvements.length-drift.regressions.length;var tdir=net>0?'up':(net<0?'down':'flat');var tcol=tdir==='up'?'good':(tdir==='down'?'crit':'muted');var tarrow=tdir==='up'?'▲':(tdir==='down'?'▼':'▬');
@@ -5442,15 +5445,32 @@ function c5ContinuousAssessment(host){
         +sn+'</div>';
     }
   }}catch(_){}
+  // ── Sub-tabs — keep the page short: Summary (exec overview) · Controls (per-scope detail) ·
+  // Drift. The Controls tab appears only once you've drilled into a region/entity (or opened a
+  // drifted control); Drift is its own tab, kept out of the summary. ──
+  var isEntScope=(typeof SCOPE!=='undefined'&&SCOPE&&SCOPE!=='enterprise');
+  var showControls=isEntScope||!!C5_ASSESS_CTRL;
+  if(C5_ASSESS_SUBTAB==='controls'&&!showControls)C5_ASSESS_SUBTAB='summary';
+  if(C5_ASSESS_SUBTAB!=='controls'&&C5_ASSESS_SUBTAB!=='drift')C5_ASSESS_SUBTAB='summary';
+  var driftN=drift.regressions.length;
+  function assSubBtn(k,label,badge){return '<button class="subtab'+(C5_ASSESS_SUBTAB===k?' on':'')+'" data-asssub="'+k+'">'+label+(badge?(' <span style="font-size:10px;font-weight:800;color:#fff;background:var(--warn);border-radius:20px;padding:1px 6px">'+badge+'</span>'):'')+'</button>';}
+  var subBar='<div class="subwrap c5phwrap" style="margin-top:14px"><div class="subtabs">'
+    +assSubBtn('summary','Summary')
+    +(showControls?assSubBtn('controls','Controls · '+esc((typeof scopeLabel==='function')?scopeLabel(SCOPE):'scope')):'')
+    +assSubBtn('drift','Drift',driftN||'')
+    +'</div></div>';
+  var subBody;
+  if(C5_ASSESS_SUBTAB==='controls'){
+    subBody=cadenceBar+'<div class="c5fw-wrap"><div class="c5fw-right">'+tree+'</div><div class="c5fw-left" id="assessDetail">'+detail+'</div></div>';
+  }else if(C5_ASSESS_SUBTAB==='drift'){
+    subBody=driftPanel||'<div style="border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:14px;background:var(--surface);font-size:12.5px;color:var(--muted)">✓ No control has drifted since the last assessment.</div>';
+  }else{ // summary (default) — the exec overview: scope summary + region/entity cards + KPI cards
+    subBody=scopeNavHtml+cards+peerBox+queuePanel;
+  }
   host.innerHTML=c5header()+
     c5shell('Continuous assessment · how is every control assessed?','All '+s.total+' NIST CSF 2.0 controls, continuously assessed — never point-in-time.',null,'The <b>method differs by control</b> and Nerion is honest about which it used: live telemetry, a weekly human-confirm, or a scheduled <b>attestation</b> with freshness tracking — a governance outcome has no sensor, so it is not fake-automated. Each control carries three axes never blended into one number — <b>verdict</b>, <b>assurance</b> and <b>freshness</b> — plus <b>coverage</b> (observed vs known). Open a function to see its controls; click one for the detail.')+
-    scopeNavHtml+
-    cards+
-    peerBox+
-    driftPanel+
-    queuePanel+
-    cadenceBar+
-    '<div class="c5fw-wrap"><div class="c5fw-right">'+tree+'</div><div class="c5fw-left" id="assessDetail">'+detail+'</div></div>'+
+    subBar+
+    subBody+
     '<div class="c5foot">Method: <b style="color:var(--good)">live</b> = a sensor observes it (re-scored on every refresh) · <b style="color:var(--blue)">hybrid</b> = telemetry pulled, a human confirms · <b style="color:var(--warn)">attestation</b> = owner-assigned, LLM pre-screened, freshness-tracked · <b>awaiting</b> = connect a source to light it up. Freshness decays past the TTL, so an old attestation reads <b style="color:var(--warn)">expiring</b>, not passing — which is what makes "continuous" true across all '+s.total+'.</div>';
   // Wiring — scope switcher, cadence overrides, confirm actions, expand/collapse, control select, detail close.
   if(typeof wireScopeNav==='function')wireScopeNav(host); else host.querySelectorAll('[data-scope]').forEach(function(b){b.onclick=function(){if(typeof selectScope==='function')selectScope(b.getAttribute('data-scope'));};});
@@ -5458,8 +5478,9 @@ function c5ContinuousAssessment(host){
     c5SetCadence(sel.getAttribute('data-cadence'),sel.value);c5ContinuousAssessment(host);});});
   host.querySelectorAll('[data-confirm]').forEach(function(btn){btn.addEventListener('click',function(e){e.stopPropagation();
     var v=btn.getAttribute('data-confirm').split(':');c5ConfirmControl(v[1],(v[0]==='clear')?null:v[0]);c5ContinuousAssessment(host);});});
+  host.querySelectorAll('[data-asssub]').forEach(function(b){b.onclick=function(){C5_ASSESS_SUBTAB=b.getAttribute('data-asssub');c5ContinuousAssessment(host);};});
   host.querySelectorAll('[data-assessexp]').forEach(function(b){b.onclick=function(){var k=b.getAttribute('data-assessexp');C5_ASSESS_EXP[k]=!C5_ASSESS_EXP[k];c5ContinuousAssessment(host);};});
-  host.querySelectorAll('[data-assessctl]').forEach(function(row){row.onclick=function(e){if(e.target.closest('select')||e.target.closest('[data-confirm]'))return;C5_ASSESS_CTRL=row.getAttribute('data-assessctl');c5ContinuousAssessment(host);};});
+  host.querySelectorAll('[data-assessctl]').forEach(function(row){row.onclick=function(e){if(e.target.closest('select')||e.target.closest('[data-confirm]'))return;C5_ASSESS_CTRL=row.getAttribute('data-assessctl');C5_ASSESS_SUBTAB='controls';c5ContinuousAssessment(host);};});
   var acl=host.querySelector('[data-assessclose]');if(acl)acl.onclick=function(){C5_ASSESS_CTRL=null;c5ContinuousAssessment(host);};
   var dm=host.querySelector('[data-driftmore]');if(dm)dm.onclick=function(){C5_ASSESS_DRIFT_ALL=!C5_ASSESS_DRIFT_ALL;c5ContinuousAssessment(host);};
   var pb=host.querySelector('#c5fwPeerBox');if(pb)pb.onclick=function(){if(typeof c5fwPeerOpen==='function')c5fwPeerOpen();};

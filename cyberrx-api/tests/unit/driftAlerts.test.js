@@ -26,11 +26,12 @@ describe('Drift detection', () => {
     expect(ciso).toContain('out.regressions.sort(function(x,y){return (y.weight-x.weight)||(y.drop-x.drop);});');
   });
 
-  it('renders the actionable drift panel above the score with the auto-ticket badge', () => {
+  it('renders the actionable drift panel in its own sub-tab with the auto-ticket badge', () => {
     expect(ciso).toContain('var drift=c5DriftAlerts();');
     expect(ciso).toContain('drifted since last assessment');
     expect(ciso).toContain('🎫 ticket auto-raised');
     expect(ciso).toContain('The score is the lagging summary; this is what to act on now.');
-    expect(ciso).toContain('driftPanel+');
+    // drift lives in the Drift sub-tab (with a friendly empty state when nothing drifted)
+    expect(ciso).toContain("subBody=driftPanel||'");
   });
 });
