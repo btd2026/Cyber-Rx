@@ -5464,16 +5464,18 @@ function c5ContinuousAssessment(host){
     subBody=cadenceBar+'<div class="c5fw-wrap"><div class="c5fw-right">'+tree+'</div><div class="c5fw-left" id="assessDetail">'+detail+'</div></div>';
   }else if(C5_ASSESS_SUBTAB==='drift'){
     subBody=driftPanel||'<div style="border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:14px;background:var(--surface);font-size:12.5px;color:var(--muted)">✓ No control has drifted since the last assessment.</div>';
-  }else{ // summary (default) — the exec overview: scope summary + region/entity cards + KPI cards
-    subBody=scopeNavHtml+cards+peerBox+queuePanel;
+  }else{ // summary (default) — the exec overview KPI cards (the scope summary + drill sit above)
+    subBody=cards+peerBox+queuePanel;
   }
   host.innerHTML=c5header()+
     c5shell('Continuous assessment · how is every control assessed?','All '+s.total+' NIST CSF 2.0 controls, continuously assessed — never point-in-time.',null,'The <b>method differs by control</b> and Nerion is honest about which it used: live telemetry, a weekly human-confirm, or a scheduled <b>attestation</b> with freshness tracking — a governance outcome has no sensor, so it is not fake-automated. Each control carries three axes never blended into one number — <b>verdict</b>, <b>assurance</b> and <b>freshness</b> — plus <b>coverage</b> (observed vs known). Open a function to see its controls; click one for the detail.')+
+    scopeNavHtml+
     subBar+
     subBody+
     '<div class="c5foot">Method: <b style="color:var(--good)">live</b> = a sensor observes it (re-scored on every refresh) · <b style="color:var(--blue)">hybrid</b> = telemetry pulled, a human confirms · <b style="color:var(--warn)">attestation</b> = owner-assigned, LLM pre-screened, freshness-tracked · <b>awaiting</b> = connect a source to light it up. Freshness decays past the TTL, so an old attestation reads <b style="color:var(--warn)">expiring</b>, not passing — which is what makes "continuous" true across all '+s.total+'.</div>';
   // Wiring — scope switcher, cadence overrides, confirm actions, expand/collapse, control select, detail close.
-  if(typeof wireScopeNav==='function')wireScopeNav(host); else host.querySelectorAll('[data-scope]').forEach(function(b){b.onclick=function(){if(typeof selectScope==='function')selectScope(b.getAttribute('data-scope'));};});
+  // Picking a region/entity here drills straight into its Controls detail — no extra tab click.
+  host.querySelectorAll('[data-scope]').forEach(function(b){b.onclick=function(){var t=b.getAttribute('data-scope');C5_ASSESS_SUBTAB=(t&&t!=='enterprise')?'controls':'summary';if(typeof selectScope==='function')selectScope(t);};});
   host.querySelectorAll('[data-cadence]').forEach(function(sel){sel.addEventListener('change',function(e){e.stopPropagation();
     c5SetCadence(sel.getAttribute('data-cadence'),sel.value);c5ContinuousAssessment(host);});});
   host.querySelectorAll('[data-confirm]').forEach(function(btn){btn.addEventListener('click',function(e){e.stopPropagation();

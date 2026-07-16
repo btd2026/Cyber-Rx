@@ -42,8 +42,11 @@ describe('Continuous assessment — Classic-view layout', () => {
     // Controls tab only appears at a region/entity scope (or when a control is open)
     expect(ciso).toContain('var showControls=isEntScope||!!C5_ASSESS_CTRL;');
     expect(ciso).toContain("(showControls?assSubBtn('controls',");
-    // Summary is the exec overview; drift is its own tab
-    expect(ciso).toContain('subBody=scopeNavHtml+cards+peerBox+queuePanel;');
+    // Summary is the exec overview KPI cards; the scope summary/drill sits above the tab bar
+    expect(ciso).toContain('subBody=cards+peerBox+queuePanel;');
+    expect(ciso).toContain('scopeNavHtml+\n    subBar+');
+    // picking a region/entity drills straight into Controls — no extra tab click
+    expect(ciso).toContain("C5_ASSESS_SUBTAB=(t&&t!=='enterprise')?'controls':'summary';if(typeof selectScope==='function')selectScope(t);");
     expect(ciso).toContain("host.querySelectorAll('[data-asssub]').forEach(function(b){b.onclick=function(){C5_ASSESS_SUBTAB=b.getAttribute('data-asssub');c5ContinuousAssessment(host);};});");
   });
 });

@@ -43,8 +43,8 @@ describe('Continuous assessment — scope-aware (Enterprise → Region → Entit
     expect(ciso).toContain('if(typeof scopeNav===\'function\'){var sn=scopeNav();');
     expect(ciso).toContain('Now viewing · continuous assessment');
     expect(ciso).toContain('scopeNavHtml+');
-    // and wires its region/entity clicks to re-scope in place
-    expect(ciso).toContain('if(typeof wireScopeNav===\'function\')wireScopeNav(host);');
+    // and wires its region/entity clicks to re-scope and drill into the Controls detail
+    expect(ciso).toContain("if(typeof selectScope==='function')selectScope(t);");
   });
 });
 
