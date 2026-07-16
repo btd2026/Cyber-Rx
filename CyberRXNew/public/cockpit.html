@@ -3259,10 +3259,9 @@ function scopeBanner(){
       +(csf!=null?stat(csf.toFixed(2),'NIST CSF',col(csf)):'')
       +stat(svc.total,'Crown jewels',svc.total?'ink':'muted')
       +(fns.length?('<div style="display:flex;gap:12px;flex-wrap:wrap;padding-left:6px;border-left:1px solid var(--line)">'+fns.map(fnBar).join('')+'</div>'):'')+'</div>';
-    // Drill-down cards — the regions strip (always) plus, inside a region, its entities.
-    // Shared with the Continuous-assessment view via scopeNav() so both stay in lock-step.
-    var compare=(typeof scopeNav==='function')?scopeNav():'';
-    return '<div id="scopeBanner" style="border:1px solid var(--line);border-radius:14px;padding:15px 18px;margin-bottom:16px;background:var(--surface);display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;align-items:center">'+left+stats+compare+'</div>';
+    // The regions-at-a-glance drill (scopeNav) lives ONLY inside Continuous assessment now —
+    // this banner is the "Now viewing" summary (scope + score), not a second copy of the menu.
+    return '<div id="scopeBanner" style="border:1px solid var(--line);border-radius:14px;padding:15px 18px;margin-bottom:16px;background:var(--surface);display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;align-items:center">'+left+stats+'</div>';
   }catch(_){return '';}
 }
 function wireScopeBanner(){try{var el=document.getElementById('scopeBanner');if(!el)return;el.querySelectorAll('[data-scope]').forEach(function(b){b.onclick=function(){selectScope(b.getAttribute('data-scope'));};});}catch(_){}}

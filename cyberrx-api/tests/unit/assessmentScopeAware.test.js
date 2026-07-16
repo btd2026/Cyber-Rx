@@ -59,8 +59,10 @@ describe('Scope navigation — reusable strip (cockpit)', () => {
     // the parent region stays anchored while drilling an entity
     expect(cockpit).toContain('sel=(idOf(x.it)===SCOPE||idOf(x.it)===activeRegion)');
   });
-  it('the banner reuses scopeNav() so both stay in lock-step', () => {
-    expect(cockpit).toContain("var compare=(typeof scopeNav==='function')?scopeNav():'';");
+  it('the regions drill lives ONLY in Continuous assessment, not duplicated in the banner', () => {
+    // the banner is a "Now viewing" summary — it must NOT re-render the scopeNav menu
+    expect(cockpit).not.toContain("var compare=(typeof scopeNav==='function')?scopeNav():'';");
+    expect(cockpit).toContain('this banner is the "Now viewing" summary');
   });
   it('provides a generic [data-scope] wiring helper', () => {
     expect(cockpit).toContain('function wireScopeNav(el){');
