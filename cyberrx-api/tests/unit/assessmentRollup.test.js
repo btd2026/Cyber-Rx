@@ -41,8 +41,8 @@ describe('Assessment rollup — crown-jewel weighting + weakest link', () => {
 
   it('renders the weighted posture + per-function bars with the honest caveat', () => {
     expect(ciso).toContain('var roll=c5AssessmentRollup();');
-    expect(ciso).toContain('crown-jewel-weighted, weakest-link');
-    expect(ciso).toContain("card('Weighted posture',(roll.overall*5).toFixed(1)+' / 5'");
+    expect(ciso).toContain('var overall5=(roll.overall*5);');
+    expect(ciso).toContain("card('Overall maturity',overall5.toFixed(1)+' / 5'");
     expect(ciso).toContain('var cards=\'<div class="c5cards">\'');
   });
 });

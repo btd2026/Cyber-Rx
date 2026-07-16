@@ -5272,31 +5272,66 @@ function c5ContinuousAssessment(host){
       +['Control','Method','Verdict','Assurance · confidence','Coverage','Freshness','Cadence'].map(function(h){return '<th style="'+thin+'">'+h+'</th>';}).join('')
       +'</tr></thead><tbody>'+cids.map(assessRow).join('')+'</tbody></table></div>';
   }
-  // Rich detail for one control — opened by clicking its row.
+  // Full auditor-style Finding & recommendation — same structure & depth as Classic view.
+  function srcBlock(ic,vend,live,pct,cap){return '<div class="c5fw-src"><span class="c5fw-srcic">'+ic+'</span><div><b>'+esc(vend)+'</b> — '+esc(live)+(pct!=null?(' · '+pct+'% coverage'):'')+(cap?('<div class="c5fw-srcsub">'+esc(cap)+' capability</div>'):'')+'</div></div>';}
   function c5AssessDetail(id){
     var a=c5ControlAssessment(id);var m=ASSESS_METHOD[a.method];var eff=c5EffectiveCadence(id,a.method);
-    var rows=[['Method',m.label+' — '+m.how],['Verdict',verdictLabel[a.verdict]],['Assurance',a.assurance+' · confidence '+a.confidence],
+    var sc5=(typeof c5ControlScore==='function')?c5ControlScore(a)*5:0;
+    var st=(typeof c5fwStatus==='function')?c5fwStatus(sc5):{t:sc5>=3.5?'Meets target':'Deficiency',cls:sc5>=3.5?'good':(sc5>=2.5?'warn':'crit')};
+    var col=(typeof c5fwCol==='function')?c5fwCol(sc5):st.cls;
+    var lvl=(typeof c5fwLvl==='function')?c5fwLvl(sc5):'';
+    var name=(typeof csfDesc==='function'&&csfDesc(id))||id;var nameLc=String(name).replace(/\.$/,'').toLowerCase();
+    var meta=(typeof C5_CSF_META!=='undefined'&&C5_CSF_META[id])||{};var domain=String(meta.cat||'control').toLowerCase();
+    var pop=a.coverage?a.coverage.pct:null;var gapPct=(pop!=null)?(100-pop):null;
+    var proj=(typeof neuronFrameworkProjection==='function')?neuronFrameworkProjection('csf'):{controls:{}};
+    var srcNames=((proj.controls&&proj.controls[id])||[]).filter(function(x){return x.evidence!=='none';}).map(function(x){return String(x.name).replace(/ *\(.*/,'');});
+    var F={criteria:'Control <b>'+esc(id)+'</b> ('+esc(name)+') is assessed against a maturity target of CMMI 3.5 (Defined+).'};
+    if(a.method==='live'){
+      F.condition='Nerion collected '+esc(domain)+' evidence from '+esc(srcNames.length?srcNames.join(', '):'your connected tools')+' to assess whether '+esc(nameLc)+'. Automated continuous monitoring measured '+(pop!=null?pop:'—')+'% effective coverage across the in-scope population'+(gapPct?(' — '+gapPct+'% remains outside the control'):'')+'; assessed at CMMI '+sc5.toFixed(1)+'.';
+      F.conclusion=(a.verdict==='met')?'Nerion noted that all control criteria are functioning as expected.':(a.verdict==='partial')?('The control is largely operating, but '+(gapPct!=null?gapPct:'part of the')+'% of the population is outside coverage — a partial pass, not a full one.'):'The control is not meeting its target across the in-scope population.';
+      F.recommendation=(a.verdict==='met')?'Maintain coverage and retain the tool’s evidence export each cycle.':'Extend enforcement to the unobserved '+(gapPct!=null?gapPct+'%':'population')+' and re-verify on the next telemetry refresh.';
+      F.evidence=srcBlock('🔌',srcNames[0]||'Connected tool','demo telemetry',pop,meta.name||'');
+    } else if(a.method==='hybrid'){
+      F.condition='Nerion pulled '+esc(domain)+' telemetry from '+esc(srcNames.length?srcNames.join(', '):'your connected tools')+' and computed a proposed verdict; because the tool cannot fully prove the outcome on its own, a human validates it. Measured '+(pop!=null?pop:'—')+'% coverage across the population; assessed at CMMI '+sc5.toFixed(1)+'.';
+      F.conclusion='Telemetry indicates <b>'+verdictLabel[a.verdict]+'</b> — pending or completed human confirmation in the weekly queue.';
+      F.recommendation='Approve or dispute the proposed verdict in the Confirm-queue tab; keep the telemetry live so the next cycle is a one-click pass.';
+      F.evidence='<div style="font-size:11.5px;font-weight:700;color:color-mix(in srgb,var(--good) 55%,var(--blue));margin-bottom:6px">HYBRID — telemetry pulled, a human validates</div>'+srcBlock('🔌',srcNames[0]||'Connected tool','demo telemetry',pop,meta.name||'');
+    } else if(a.method==='attestation'){var llm=c5LlmPrescreen(id);var ind=c5IndirectSignal(id);
+      F.condition='This is a governance outcome with no sensor, so it is evidenced by a scheduled <b>attestation</b>. Nerion verified the artifact exists and is within its review period, and an LLM pre-screened the policy against the outcome. Last reviewed '+llm.reviewDaysAgo+' days ago on a '+eff.label.toLowerCase()+' cadence; assessed at CMMI '+sc5.toFixed(1)+'.';
+      F.conclusion=(a.freshness==='expired')?'The attestation has lapsed past its review period — it is no longer valid evidence, so the control reads not assessed until it is re-attested.':(llm.gaps.length?('The artifact is on file and current, but the LLM flagged a gap for an analyst to confirm: '+esc(llm.gaps[0])+'.'):'The artifact is on file, current, and the LLM pre-screen found it addresses the outcome.');
+      F.recommendation=(a.freshness==='expired')?'Re-attest and re-upload the governing policy to restore evidence.':(llm.gaps.length?'An analyst should confirm or dispute the LLM finding, then close the gap in the policy.':'Re-attest on the '+eff.label.toLowerCase()+' cycle; keep the approver and review date current.');
+      F.evidence='<div class="c5fw-src"><span class="c5fw-srcic">📄</span><div style="flex:1;min-width:0"><b>Governing policy</b> · LLM pre-screen: '+(llm.addresses?'addresses the outcome':'does not clearly address the outcome')+' · approver '+esc(llm.approver)+' · reviewed '+llm.reviewDaysAgo+'d ago<div class="c5fw-srcsub">'+(llm.gaps.length?('<span style="color:var(--warn)">⚠ Gap: '+esc(llm.gaps[0])+'</span> — a proposed finding to confirm, never an auto-pass'):'A proposed finding for a human to confirm — never an auto-pass')+'</div>'+(ind?('<div class="c5fw-srcsub" style="color:var(--blue)">Corroboration · '+esc(ind.source)+': '+esc(ind.signal)+' — '+esc(ind.value)+' (not proof of the outcome)</div>'):'')+'</div></div>';
+    } else {
+      F.condition='No connector is wired for this telemetry-assessable control yet, so it is currently unassessed.';
+      F.conclusion='Awaiting a source — the control has no valid evidence today.';
+      F.recommendation='Connect the source that evidences this control to bring it under continuous assessment.';
+      F.evidence='<div class="c5fw-src c5fw-src-none"><span class="c5fw-srcic">—</span><div>No source connected. Connect a tool to light this control up.</div></div>';
+    }
+    // Continuous three-axis facts + the per-control cadence + hybrid confirm action (picture-3
+    // detail, kept at the bottom of the finding).
+    var rows=[['Method',m.label],['Verdict',verdictLabel[a.verdict]],['Assurance',a.assurance+' · confidence '+a.confidence],
       ['Freshness',a.freshness==='none'?'—':(fmtLast(a)+' · TTL '+fmtTtl(a.ttlDays)+' · '+a.freshness+(a.nextDays!=null?(' · next in '+a.nextDays+'d'):''))],
-      ['Cadence',eff.label+' <span style="color:var(--muted)">('+eff.source+')</span>']];
+      ['Cadence',eff.label+' <span style="color:var(--muted)">('+eff.source+')</span> '+cadSelect('control:'+id,a.cadenceKey,a.cadenceSource==='control')]];
     if(a.coverage)rows.push(['Coverage',a.coverage.pct+'% observed · <span style="color:var(--warn)">'+(a.coverage.known-a.coverage.observed)+'% unobserved</span> (blind spot)']);
-    var extra='';
-    if(a.method==='attestation'){var llm=c5LlmPrescreen(id);var ind=c5IndirectSignal(id);
-      extra='<div style="margin-top:10px;padding:10px 12px;border:1px solid var(--line);border-radius:8px">'
-        +'<div style="font-size:11px;font-weight:700;color:var(--ink)">'+(llm.gaps.length?'⚠':'🔍')+' LLM pre-screen <span style="color:var(--muted);font-weight:500">— a proposed finding to confirm, never an auto-pass</span></div>'
-        +'<div style="font-size:11.5px;color:var(--ink-2);margin-top:4px">'+(llm.addresses?'Addresses the outcome':'Does not clearly address the outcome')+' · approver '+esc(llm.approver)+' · reviewed '+llm.reviewDaysAgo+'d ago'+(llm.gaps.length?('<div style="color:var(--warn);margin-top:3px">Gap: '+esc(llm.gaps[0])+'</div>'):'')+'</div>'
-        +(ind?('<div style="font-size:11px;color:var(--blue);margin-top:6px">Corroboration · '+esc(ind.source)+': '+esc(ind.signal)+' — '+esc(ind.value)+' <span style="color:var(--muted)">(not proof of the outcome)</span></div>'):'')+'</div>';
-    } else if(a.method==='hybrid'){var conf=c5Confirmations()[id];
-      extra='<div style="margin-top:10px;padding:10px 12px;border:1px solid var(--blue);border-radius:8px;background:color-mix(in srgb,var(--blue) 5%,transparent)">'
-        +'<div style="font-size:11px;font-weight:700;color:var(--blue)">Weekly confirm — Nerion proposed <b>'+verdictLabel[a.verdict]+'</b> from the pulled evidence</div>'
-        +(conf?('<div style="font-size:11.5px;color:var(--'+(conf.decision==='dispute'?'crit':'good')+');margin-top:5px">'+(conf.decision==='dispute'?'✗ disputed':'✓ confirmed')+' · <span data-confirm="clear:'+id+'" style="color:var(--muted);cursor:pointer">undo</span></div>')
-          :('<div style="margin-top:7px;display:flex;gap:8px"><button data-confirm="approve:'+id+'" style="font-size:11px;font-weight:700;color:#fff;background:var(--good);border:none;border-radius:6px;padding:4px 12px;cursor:pointer">Approve</button><button data-confirm="dispute:'+id+'" style="font-size:11px;font-weight:700;color:var(--crit);background:none;border:1px solid var(--crit);border-radius:6px;padding:4px 12px;cursor:pointer">Dispute</button></div>'))+'</div>';
-    } else if(a.method==='awaiting'){extra='<div style="font-size:11.5px;color:var(--muted);margin-top:8px;padding:8px 10px;border:1px dashed var(--line);border-radius:8px">A sensor could assess this, but its connector is not wired yet — connect it to light the control up.</div>';}
-    var desc=(typeof CSF_DESC!=='undefined'&&CSF_DESC[id])?('<div style="font-size:12px;color:var(--ink-2);line-height:1.55;margin-top:4px">'+esc(CSF_DESC[id])+'</div>'):'';
-    return '<div style="border:1px solid var(--blue);border-radius:12px;padding:14px 16px;margin-top:14px;background:var(--surface)">'
-      +'<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div style="font-family:ui-monospace,monospace;font-size:14px;font-weight:800;color:var(--ink)">'+esc(id)+'</div><span data-assessclose="1" style="cursor:pointer;color:var(--muted);font-size:12px">✕ close</span></div>'
-      +desc
-      +'<div style="margin-top:10px;display:grid;grid-template-columns:110px 1fr;gap:5px 12px;font-size:12px">'+rows.map(function(r){return '<div style="color:var(--muted);font-weight:600">'+r[0]+'</div><div style="color:var(--ink)">'+r[1]+'</div>';}).join('')+'</div>'
-      +extra+'</div>';
+    var confRow='';
+    if(a.method==='hybrid'){var conf=c5Confirmations()[id];
+      confRow=conf?('<div style="font-size:11.5px;color:var(--'+(conf.decision==='dispute'?'crit':'good')+');margin-top:8px">'+(conf.decision==='dispute'?'✗ disputed':'✓ confirmed')+' · <span data-confirm="clear:'+id+'" style="color:var(--muted);cursor:pointer">undo</span></div>')
+        :('<div style="margin-top:8px;display:flex;gap:8px"><button data-confirm="approve:'+id+'" style="font-size:11px;font-weight:700;color:#fff;background:var(--good);border:none;border-radius:6px;padding:4px 12px;cursor:pointer">Approve</button><button data-confirm="dispute:'+id+'" style="font-size:11px;font-weight:700;color:var(--crit);background:none;border:1px solid var(--crit);border-radius:6px;padding:4px 12px;cursor:pointer">Dispute</button></div>');
+    }
+    var descHtml='<div style="font-size:12px;color:var(--ink-2);margin-top:3px;line-height:1.4">'+esc(name)+'</div>';
+    return '<div class="c5fw-detail">'
+      +'<div class="c5fw-dtop"><div><div class="c5kick">Finding &amp; recommendation</div><div style="font-size:15px;font-weight:500;margin-top:4px"><b>'+esc(id)+'</b> — '+esc(name)+'</div>'+descHtml+'</div>'
+      +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="c5pill '+(st.cls==='good'?'g':st.cls==='warn'?'a':'r')+'">'+st.t+'</span><span data-assessclose="1" style="cursor:pointer;color:var(--muted);font-size:11px">✕ close</span></div></div>'
+      +'<div style="display:flex;align-items:baseline;gap:8px;margin-top:10px"><div style="font-size:26px;font-weight:500;font-family:var(--serif);color:var(--'+col+')">'+sc5.toFixed(1)+'<span style="font-size:14px;color:var(--muted)"> / 5</span></div><div class="c5intro" style="margin:0">'+lvl+' · target 3.5</div></div>'
+      +'<div class="ev-sec">Condition (what was tested)</div><div class="drill-p">'+F.condition+'</div>'
+      +'<div class="ev-sec">Criteria</div><div class="drill-p">'+F.criteria+'</div>'
+      +'<div class="ev-sec">Conclusion</div><div class="drill-p">'+F.conclusion+'</div>'
+      +'<div class="ev-sec">Recommendation</div><div class="drill-p">'+F.recommendation+'</div>'
+      +'<div class="ev-sec">Evidence source</div>'+F.evidence
+      +'<div class="ev-sec">Continuous assessment</div>'
+      +'<div style="display:grid;grid-template-columns:96px 1fr;gap:5px 12px;font-size:12px">'+rows.map(function(r){return '<div style="color:var(--muted);font-weight:600">'+r[0]+'</div><div style="color:var(--ink)">'+r[1]+'</div>';}).join('')+'</div>'
+      +confRow
+      +'</div>';
   }
   // Drift alerts — the actionable delta since last assessment. Regressions first; a
   // met → not-met flip auto-raises a ticket on the connected ITSM.
@@ -5330,11 +5365,32 @@ function c5ContinuousAssessment(host){
   if(C5_ASSESS_EXP==null){C5_ASSESS_EXP={};}
   if(C5_ASSESS_CTRL==null){C5_ASSESS_CTRL='PR.AA-03';C5_ASSESS_EXP.PR=true;}
   function card(l,v,vc,cn){return '<div class="c5card"><div class="c5card-top"><span class="c5card-l">'+l+'</span><span class="c5chip c5-computed">computed</span></div><div class="c5card-v" style="color:var(--'+vc+')">'+v+'</div><div class="cn">'+cn+'</div></div>';}
+  var overall5=(roll.overall*5);var evidenced=s.total-s.notAssessed;var covPct=s.total?Math.round(evidenced/s.total*100):0;
+  var net=drift.improvements.length-drift.regressions.length;var tdir=net>0?'up':(net<0?'down':'flat');var tcol=tdir==='up'?'good':(tdir==='down'?'crit':'muted');var tarrow=tdir==='up'?'▲':(tdir==='down'?'▼':'▬');
+  var failing=s.notMet+s.notAssessed;
   var cards='<div class="c5cards">'
-    +card('Weighted posture',(roll.overall*5).toFixed(1)+' / 5',scoreCol(roll.overall),'confidence '+Math.round(roll.confidence*100)+'% · crown-jewel-weighted, weakest-link')
-    +card('Continuously assessed',s.machineVerifiable,'good',s.continuouslyVerified+' live · '+s.humanConfirmed+' hybrid · grows with connectors')
-    +card('Attested',s.attested,'warn',s.expiringSoon+' expiring / expired · '+ai.gaps+' LLM-flagged gaps')
-    +card('Not assessed',s.notAssessed,'crit',s.awaiting+' awaiting a source')
+    +card('Overall maturity',overall5.toFixed(1)+' / 5',scoreCol(roll.overall),((typeof c5fwLvl==='function')?c5fwLvl(overall5):'')+' · target 3.5 · confidence '+Math.round(roll.confidence*100)+'%')
+    +card('Coverage',covPct+'%',covPct>=75?'good':covPct>=50?'warn':'crit',evidenced+' of '+s.total+' controls assessed')
+    +card('Trend · vs last cycle',tarrow+' '+(net>0?'+':'')+net,tcol,drift.improvements.length+' improved · '+drift.regressions.length+' regressed')
+    +card('Controls failing',failing,failing>0?'crit':'good','deficiencies (not met / not assessed)')
+    +'</div>';
+  // ── Continuous-monitoring breakdown box (classic evBox) ──
+  function _w(n){return (s.total>0?Math.max(0,Math.min(100,n/s.total*100)):0)+'%';}
+  var evBox='<div style="display:grid;grid-template-columns:1fr 1fr;gap:22px;border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:14px">'
+    +'<div>'
+    +'<div style="font-weight:600;font-size:13px;color:var(--ink);margin-bottom:4px">Continuous monitoring · all '+s.total+' NIST CSF 2.0 controls</div>'
+    +'<div style="font-size:11.5px;color:var(--muted);margin-bottom:11px"><b style="color:var(--good)">'+(s.live+s.hybrid)+' of '+s.total+'</b> are continuously assessed from your connected tools — <b>'+s.live+'</b> live telemetry (re-scored on every refresh), <b>'+s.hybrid+'</b> hybrid (telemetry pulled, a human validates). <b>'+s.attestation+'</b> are policy-governed — attested from an analyzed document, inherently not automatable. <b>'+s.awaiting+'</b> await a source. Continuous, not a point-in-time audit.</div>'
+    +'<div style="display:flex;height:10px;border-radius:6px;overflow:hidden;background:var(--line)"><div style="width:'+_w(s.live)+';background:var(--good)"></div><div style="width:'+_w(s.hybrid)+';background:color-mix(in srgb,var(--good) 50%,var(--blue))"></div><div style="width:'+_w(s.attestation)+';background:var(--blue)"></div><div style="width:'+_w(s.awaiting)+';background:color-mix(in srgb,var(--warn) 65%,var(--line))"></div></div>'
+    +'<div style="display:flex;gap:16px;margin-top:9px;font-size:12px;color:var(--ink-2);flex-wrap:wrap">'
+      +'<span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--good);margin-right:5px;vertical-align:middle"></span><b style="color:var(--ink)">'+s.live+'</b> live telemetry</span>'
+      +'<span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:color-mix(in srgb,var(--good) 50%,var(--blue));margin-right:5px;vertical-align:middle"></span><b style="color:var(--ink)">'+s.hybrid+'</b> hybrid</span>'
+      +'<span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--blue);margin-right:5px;vertical-align:middle"></span><b style="color:var(--ink)">'+s.attestation+'</b> attestation</span>'
+      +'<span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:color-mix(in srgb,var(--warn) 65%,var(--line));margin-right:5px;vertical-align:middle"></span><b style="color:var(--ink)">'+s.awaiting+'</b> awaiting a source</span>'
+    +'</div></div>'
+    +'<div><div style="font-weight:600;font-size:13px;color:var(--ink);margin-bottom:9px">Bring more under continuous monitoring</div>'
+    +'<div style="font-size:12.5px;color:var(--ink-2);margin-bottom:6px">⚡ Connect the sources for the <b>'+s.awaiting+'</b> awaiting control'+(s.awaiting===1?'':'s')+' to graduate them to live / hybrid.</div>'
+    +'<div style="font-size:12.5px;color:var(--ink-2);margin-bottom:6px">🔍 <b>'+ai.gaps+'</b> attestation'+(ai.gaps===1?'':'s')+' have an LLM-flagged gap — resolve in the control detail.</div>'
+    +'<div style="font-size:12.5px;color:var(--ink-2)">🎫 <b>'+s.expiringSoon+'</b> expiring / expired — re-attest before the TTL lapses.</div></div>'
     +'</div>';
   // ── Expandable function tree (classic .c5fw-tree); each function opens to its control table ──
   var tree='<div class="c5fw-tree">'+FN.map(function(F){
@@ -5347,6 +5403,7 @@ function c5ContinuousAssessment(host){
   host.innerHTML=c5header()+
     c5shell('Continuous assessment · how is every control assessed?','All '+s.total+' NIST CSF 2.0 controls, continuously assessed — never point-in-time.',null,'The <b>method differs by control</b> and Nerion is honest about which it used: live telemetry, a weekly human-confirm, or a scheduled <b>attestation</b> with freshness tracking — a governance outcome has no sensor, so it is not fake-automated. Each control carries three axes never blended into one number — <b>verdict</b>, <b>assurance</b> and <b>freshness</b> — plus <b>coverage</b> (observed vs known). Open a function to see its controls; click one for the detail.')+
     cards+
+    evBox+
     driftPanel+
     queuePanel+
     cadenceBar+
