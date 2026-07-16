@@ -98,11 +98,12 @@ describe('Neuron Controls — honesty rails', () => {
 });
 
 describe('Neuron Controls — surfaced as a framework subtab (additive, no route removed)', () => {
-  it('adds a Neuron Controls subtab alongside Classic and Nerion’s View', () => {
+  it('adds a Neuron Controls subtab alongside the assessment and Nerion’s View', () => {
     expect(ciso).toContain('data-phtab="neuron">Neuron Controls');
     expect(ciso).toContain("else if(tab==='neuron'){c5NeuronControls(body);}");
-    // the existing tabs are untouched
-    expect(ciso).toContain('data-phtab="classic">Classic View');
+    // Classic View was removed; the continuous-assessment tab is the default now
+    expect(ciso).not.toContain('data-phtab="classic">Classic View');
+    expect(ciso).toContain('data-phtab="assess">Continuous assessment');
     expect(ciso).toContain('data-phtab="nerion">Nerion');
   });
 });

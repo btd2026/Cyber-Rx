@@ -22,7 +22,7 @@ describe('Nerion Map — internal-only IP view', () => {
     expect(ciso).toContain('data-phtab="nmap"');
     expect(ciso).toContain("else if(tab==='nmap'&&internal){c5NeuronMap(body);}");
     // the tab resolution itself requires internal
-    expect(ciso).toContain("(C5_PH_TAB==='nmap'&&internal)?'nmap':'classic'");
+    expect(ciso).toContain("(C5_PH_TAB==='nmap'&&internal)?'nmap':'assess'");
   });
 
   it('renders the full crosswalk (CAP_FRAMEWORK csf/r53 + NEURON_XWALK external IDs)', () => {

@@ -5015,6 +5015,49 @@ function assetRisks(cj){
    evidence decays past its TTL so "continuous" is a true claim). Plus COVERAGE — the observed
    vs known population — so we never score what we can see and call it what we have. */
 var CSF_BASE_METHOD=(function(){var g={live:["GV.SC-07","ID.AM-01","ID.AM-02","ID.RA-01","PR.AA-01","PR.AA-03","PR.AA-05","PR.AT-01","PR.DS-11","PR.PS-02","PR.PS-04","PR.IR-01","DE.CM-01","DE.CM-03","DE.CM-09","DE.AE-02","DE.AE-03","DE.AE-06","RS.MA-02","RS.MA-03","RS.MI-01","RC.RP-03"],hybrid:["GV.OC-03","GV.RM-06","GV.RR-04","GV.PO-01","GV.PO-02","GV.OV-03","GV.SC-03","GV.SC-04","GV.SC-06","GV.SC-09","ID.AM-03","ID.AM-04","ID.AM-05","ID.AM-07","ID.AM-08","ID.RA-02","ID.RA-03","ID.RA-05","ID.RA-06","ID.RA-07","ID.RA-10","ID.IM-01","ID.IM-04","PR.AA-02","PR.AA-04","PR.AT-02","PR.DS-01","PR.DS-02","PR.PS-01","PR.PS-03","PR.PS-05","PR.PS-06","PR.IR-03","PR.IR-04","DE.CM-06","DE.AE-04","DE.AE-07","DE.AE-08","RS.MA-01","RS.MA-04","RS.AN-03","RS.AN-06","RS.AN-07","RS.AN-08","RS.CO-02","RS.MI-02","RC.RP-01","RC.RP-02","RC.RP-05"],doc:["GV.OC-01","GV.OC-02","GV.OC-04","GV.OC-05","GV.RM-01","GV.RM-02","GV.RM-03","GV.RM-04","GV.RM-05","GV.RM-07","GV.RR-01","GV.RR-02","GV.RR-03","GV.OV-01","GV.OV-02","GV.SC-01","GV.SC-02","GV.SC-05","GV.SC-08","GV.SC-10","ID.RA-04","ID.RA-08","ID.RA-09","ID.IM-02","ID.IM-03","PR.AA-06","PR.DS-10","PR.IR-02","DE.CM-02","RS.MA-05","RS.CO-03","RC.RP-04","RC.RP-06","RC.CO-03","RC.CO-04"]};var o={};Object.keys(g).forEach(function(k){g[k].forEach(function(id){o[id]=k;});});return o;})();
+/* ── AI-framework continuous assessment (NIST AI RMF + ISO/IEC 42001) — the SAME honest
+   three-axis structure applied to AI governance. Control IDs use the AI RMF `FUNCTION.subcat-n`
+   shape so the identical rollup (function → category → overall) works unchanged. Most AI
+   governance outcomes are attestation- or human-confirmed today; the model-monitoring controls
+   await an AI-telemetry connector, and the view stays honest about that. ── */
+var AI_CONTROLS=[
+ ['GOVERN.1-1','doc','Legal and regulatory requirements involving AI are understood, managed and documented.'],
+ ['GOVERN.1-2','doc','Trustworthy-AI characteristics are integrated into organizational policies and procedures.'],
+ ['GOVERN.1-3','doc','An AI management system (AIMS) policy is approved and maintained (ISO/IEC 42001 Cl. 5).'],
+ ['GOVERN.2-1','doc','Roles, responsibilities and authority for AI risk management are documented and assigned.'],
+ ['GOVERN.3-2','doc','Policies and procedures define human oversight of AI systems.'],
+ ['GOVERN.4-1','hybrid','Organizational culture supports the safe reporting of AI risks and incidents.'],
+ ['GOVERN.5-1','hybrid','Mechanisms collect and act on stakeholder feedback about AI systems.'],
+ ['GOVERN.6-1','hybrid','Policies and processes address risks from third-party AI software and data.'],
+ ['MAP.1-1','doc','The AI system context, purpose and intended use are established and documented.'],
+ ['MAP.2-3','doc','AI system capabilities, targeted uses, assumptions and limitations are documented.'],
+ ['MAP.3-4','hybrid','Benefits and negative impacts of each AI use are mapped and weighed.'],
+ ['MAP.4-1','hybrid','Third-party AI components, models and data are inventoried and their risks mapped.'],
+ ['MAP.5-1','doc','Potential impacts to individuals, groups and society are assessed and documented.'],
+ ['MEASURE.1-1','doc','Approaches and metrics for measuring AI risks are identified and documented.'],
+ ['MEASURE.2-1','hybrid','Test sets and evaluation procedures assess AI system performance.'],
+ ['MEASURE.2-3','live','AI system performance and behaviour are monitored in deployment.'],
+ ['MEASURE.2-5','hybrid','AI system robustness, reliability and safety are evaluated.'],
+ ['MEASURE.2-6','hybrid','AI system bias and fairness are evaluated across affected groups.'],
+ ['MEASURE.2-9','doc','AI system explainability and interpretability are assessed and documented.'],
+ ['MEASURE.3-1','hybrid','Mechanisms track and escalate identified AI risks over time.'],
+ ['MANAGE.1-1','doc','AI risks are prioritized, documented and acted on based on impact.'],
+ ['MANAGE.2-1','doc','Resources are allocated to manage AI risks throughout the lifecycle.'],
+ ['MANAGE.2-4','hybrid','Mechanisms sustain AI system value and govern safe decommissioning.'],
+ ['MANAGE.3-1','hybrid','Risks from third-party AI resources are managed and monitored.'],
+ ['MANAGE.4-1','live','Post-deployment AI incidents are detected, responded to and communicated.']
+];
+var AI_BASE_METHOD=(function(){var o={};AI_CONTROLS.forEach(function(c){o[c[0]]=c[1];});return o;})();
+var AI_DESC=(function(){var o={};AI_CONTROLS.forEach(function(c){o[c[0]]=c[2];});return o;})();
+// Active assessment framework for the continuous-assessment view: 'csf' (default) or 'ai'.
+var C5_ASSESS_FW='csf';
+var C5_ASSESS_FWCFG={
+  csf:{label:'NIST CSF 2.0',fns:[{k:'GV',l:'Govern'},{k:'ID',l:'Identify'},{k:'PR',l:'Protect'},{k:'DE',l:'Detect'},{k:'RS',l:'Respond'},{k:'RC',l:'Recover'}],proj:'csf'},
+  ai:{label:'NIST AI RMF + ISO 42001',fns:[{k:'GOVERN',l:'Govern'},{k:'MAP',l:'Map'},{k:'MEASURE',l:'Measure'},{k:'MANAGE',l:'Manage'}],proj:'ai'}
+};
+function c5AssessFwCfg(){return C5_ASSESS_FWCFG[C5_ASSESS_FW]||C5_ASSESS_FWCFG.csf;}
+function c5AssessMethods(){return C5_ASSESS_FW==='ai'?AI_BASE_METHOD:CSF_BASE_METHOD;}
+function c5AssessDesc(id){if(C5_ASSESS_FW==='ai')return AI_DESC[id]||id;return (typeof csfDesc==='function'&&csfDesc(id))||id;}
 /* Cadence + freshness TTL by ASSESSMENT METHOD — the scheduler is control-aware, not one
    global knob. Live re-evaluates on every connector refresh; hybrid on a weekly confirm
    queue; attestation on the policy review cycle. The user's global floor tightens these. */
@@ -5067,13 +5110,20 @@ function c5ScopeMaturity(){
    each entity is self-consistent and distinct; in a real workspace last-assessed/coverage
    come from that entity's evidence store. */
 function c5ControlAssessment(id){
-  var base=CSF_BASE_METHOD[id]||'doc';
-  var proj=(typeof neuronFrameworkProjection==='function')?neuronFrameworkProjection('csf'):{controls:{}};
+  var base=c5AssessMethods()[id]||'doc';
+  // CSF pulls live/hybrid evidence from the Neuron framework projection; the AI framework has no
+  // telemetry crosswalk yet, so its projection is empty and it is honest about it below.
+  var proj=(C5_ASSESS_FW==='csf'&&typeof neuronFrameworkProjection==='function')?neuronFrameworkProjection('csf'):{controls:{}};
   var ev=(proj.controls&&proj.controls[id])||[];
   var hasLive=ev.some(function(m){return m.evidence==='live';});
   var hasHybrid=ev.some(function(m){return m.evidence==='hybrid'||m.evidence==='live';});
   var method;
-  if(base==='live'&&hasLive)method='live';
+  if(C5_ASSESS_FW==='ai'){
+    // AI governance: doc→attestation, hybrid→human-confirmed review (model cards, bias reports),
+    // live→awaiting an AI-monitoring connector (none wired yet — stated plainly, never faked).
+    method=base==='doc'?'attestation':base==='hybrid'?'hybrid':'awaiting';
+  }
+  else if(base==='live'&&hasLive)method='live';
   else if((base==='live'||base==='hybrid')&&hasHybrid)method='hybrid';
   else if(base==='doc')method='attestation';
   else method='awaiting';                       // telemetry-capable but no connector wired
@@ -5110,7 +5160,7 @@ function c5ControlAssessment(id){
 /* The anti-vanity summary — NOT one blended number. Counts by assurance tier, how many are
    expiring, and how many are unassessed; plus a weighted posture that carries its confidence. */
 function c5AssessmentSummary(){
-  var ids=Object.keys(CSF_BASE_METHOD);
+  var ids=Object.keys(c5AssessMethods());
   var s={total:ids.length,live:0,hybrid:0,attestation:0,awaiting:0,expiring:0,expired:0,notAssessed:0,met:0,partial:0,notMet:0};
   ids.forEach(function(id){var a=c5ControlAssessment(id);s[a.method]++;
     if(a.freshness==='expiring')s.expiring++;if(a.freshness==='expired')s.expired++;
@@ -5153,7 +5203,7 @@ function c5ControlWeight(id,cw){cw=cw||c5CrownControlWeights();return cw[id]||1;
    catastrophically broken crown-jewel control can't be hidden by healthy siblings. The
    overall carries its CONFIDENCE — the share of weighted score that is machine-verified. */
 function c5AssessmentRollup(){
-  var ids=Object.keys(CSF_BASE_METHOD);var cw=c5CrownControlWeights();
+  var ids=Object.keys(c5AssessMethods());var cw=c5CrownControlWeights();
   var byCat={},byFn={};
   ids.forEach(function(id){var a=c5ControlAssessment(id);var sc=c5ControlScore(a);var wt=c5ControlWeight(id,cw);
     var cat=id.split('-')[0];var fn=id.split('.')[0];
@@ -5189,7 +5239,7 @@ function c5AssessmentPrior(a){var h=c5hash(c5Scope()+'|'+a.id+'|prior');
   if(h%13===2&&a.verdict==='met')return 'partial';   // partial regression
   return a.verdict;}
 function c5DriftAlerts(){
-  var ids=Object.keys(CSF_BASE_METHOD);var cw=c5CrownControlWeights();
+  var ids=Object.keys(c5AssessMethods());var cw=c5CrownControlWeights();
   var out={regressions:[],improvements:[],expired:[]};
   ids.forEach(function(id){var a=c5ControlAssessment(id);var prior=c5AssessmentPrior(a);
     var now=VERDICT_RANK[a.verdict],was=VERDICT_RANK[prior];var wt=c5ControlWeight(id,cw);
@@ -5208,7 +5258,7 @@ function c5DriftAlerts(){
 function c5Confirmations(){try{var o=JSON.parse(localStorage.getItem('cyberrx_confirmations')||'{}');return (o&&typeof o==='object')?o:{};}catch(_){return {};}}
 function c5ConfirmControl(id,decision){var o=c5Confirmations();if(decision)o[id]={decision:decision};else delete o[id];try{localStorage.setItem('cyberrx_confirmations',JSON.stringify(o));}catch(_){}}
 function c5ReviewQueue(){
-  var ids=Object.keys(CSF_BASE_METHOD);var conf=c5Confirmations();
+  var ids=Object.keys(CSF_BASE_METHOD);var conf=c5Confirmations();  // confirm queue is CSF-only
   var proj=(typeof neuronFrameworkProjection==='function')?neuronFrameworkProjection('csf'):{controls:{}};
   var out=[];
   ids.forEach(function(id){var a=c5ControlAssessment(id);if(a.method!=='hybrid')return;
@@ -5234,7 +5284,7 @@ function c5LlmPrescreen(id){var h=c5hash(id+'|llm');
   else if(h%7===0)gaps.push('scope gap — privileged accounts not explicitly covered');
   return {addresses:addresses,reviewDaysAgo:30+h%400,approver:['CISO','CIO','Security Committee','General Counsel'][h%4],gaps:gaps};}
 function c5AttestationInsight(){
-  var ids=Object.keys(CSF_BASE_METHOD);var s={total:0,prescreened:0,gaps:0,indirect:0};
+  var ids=Object.keys(c5AssessMethods());var s={total:0,prescreened:0,gaps:0,indirect:0};
   ids.forEach(function(id){var a=c5ControlAssessment(id);if(a.method!=='attestation')return;s.total++;s.prescreened++;
     var l=c5LlmPrescreen(id);if(l.gaps.length)s.gaps++;if(c5IndirectSignal(id))s.indirect++;});
   return s;}
@@ -5244,7 +5294,7 @@ function c5ContinuousAssessment(host){
   if(!host)return;
   var esc=(typeof c5esc==='function')?c5esc:function(s){return s;};
   var s=c5AssessmentSummary();var ai=c5AttestationInsight();
-  var ids=Object.keys(CSF_BASE_METHOD);
+  var ids=Object.keys(c5AssessMethods());
   function fmtLast(a){if(a.lastDays==null)return '—';if(a.lastDays<1)return Math.max(1,Math.round(a.lastDays*24))+'h ago';return Math.round(a.lastDays)+'d ago';}
   function fmtTtl(t){return t<1?(t*24)+'h':(t>=365?'1y':t+'d');}
   var freshColor={healthy:'good',expiring:'warn',expired:'crit',none:'muted'};
@@ -5260,7 +5310,7 @@ function c5ContinuousAssessment(host){
     +stat(s.awaiting,'awaiting a source','muted','connect to light up')
     +stat(s.notAssessed,'not assessed','crit','no valid proof now')
     +'</div>';
-  var FN=[{k:'GV',l:'Govern'},{k:'ID',l:'Identify'},{k:'PR',l:'Protect'},{k:'DE',l:'Detect'},{k:'RS',l:'Respond'},{k:'RC',l:'Recover'}];
+  var FN=c5AssessFwCfg().fns;
   function pill(txt,c){return '<span style="font-size:10px;font-weight:700;color:var(--'+c+');background:color-mix(in srgb,var(--'+c+') 12%,transparent);border:1px solid color-mix(in srgb,var(--'+c+') 30%,transparent);border-radius:20px;padding:2px 8px;white-space:nowrap">'+txt+'</span>';}
   // A cadence <select> for a scope (global / fn:GV / control:ID). "default" clears the override.
   function cadSelect(scope,curKey,overridden,extra){
@@ -5302,7 +5352,7 @@ function c5ContinuousAssessment(host){
     var st=(typeof c5fwStatus==='function')?c5fwStatus(sc5):{t:sc5>=3.5?'Meets target':'Deficiency',cls:sc5>=3.5?'good':(sc5>=2.5?'warn':'crit')};
     var col=(typeof c5fwCol==='function')?c5fwCol(sc5):st.cls;
     var lvl=(typeof c5fwLvl==='function')?c5fwLvl(sc5):'';
-    var name=(typeof csfDesc==='function'&&csfDesc(id))||id;var nameLc=String(name).replace(/\.$/,'').toLowerCase();
+    var name=c5AssessDesc(id);var nameLc=String(name).replace(/\.$/,'').toLowerCase();
     var meta=(typeof C5_CSF_META!=='undefined'&&C5_CSF_META[id])||{};var domain=String(meta.cat||'control').toLowerCase();
     var pop=a.coverage?a.coverage.pct:null;var gapPct=(pop!=null)?(100-pop):null;
     var proj=(typeof neuronFrameworkProjection==='function')?neuronFrameworkProjection('csf'):{controls:{}};
@@ -5379,7 +5429,7 @@ function c5ContinuousAssessment(host){
   }
   // Compact link to the confirm-queue tab (the queue itself lives in c5ConfirmQueueView).
   var pendingN=c5ReviewQueue().filter(function(q){return !q.confirmed;}).length;
-  var queuePanel=pendingN?('<div style="border:1px solid var(--blue);border-radius:10px;padding:9px 14px;margin:12px 0;background:color-mix(in srgb,var(--blue) 5%,transparent);font-size:12px;color:var(--ink-2)">✔ <b style="color:var(--blue)">'+pendingN+'</b> hybrid control'+(pendingN>1?'s':'')+' awaiting a one-click confirm — see the <b>Confirm queue</b> tab.</div>'):'';
+  var queuePanel=(C5_ASSESS_FW==='csf'&&pendingN)?('<div style="border:1px solid var(--blue);border-radius:10px;padding:9px 14px;margin:12px 0;background:color-mix(in srgb,var(--blue) 5%,transparent);font-size:12px;color:var(--ink-2)">✔ <b style="color:var(--blue)">'+pendingN+'</b> hybrid control'+(pendingN>1?'s':'')+' awaiting a one-click confirm — see the <b>Confirm queue</b> tab.</div>'):'';
   var roll=c5AssessmentRollup();var FNL={GV:'Govern',ID:'Identify',PR:'Protect',DE:'Detect',RS:'Respond',RC:'Recover'};
   function scoreCol(v){return v>=0.8?'good':v>=0.6?'blue':v>=0.4?'warn':'crit';}
   var globalCad=c5CadenceOverrides().global||'';
@@ -5402,7 +5452,7 @@ function c5ContinuousAssessment(host){
     +card('Controls failing',failing,failing>0?'crit':'good','deficiencies (not met / not assessed)')
     +'</div>';
   // ── Peer-benchmark box (same as Classic view) ──
-  var fwShort='NIST CSF 2.0';
+  var fwShort=(C5_ASSESS_FW==='ai'?'AI RMF':'NIST CSF 2.0');
   var peerBox='<div id="c5fwPeerBox" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border:1px solid var(--line);border-radius:14px;background:var(--surface-2);cursor:pointer;margin-top:14px;transition:border-color .15s"'
     +' onmouseover="this.style.borderColor=\'var(--blue)\'" onmouseout="this.style.borderColor=\'var(--line)\'">'
     +'<div style="display:flex;align-items:center;gap:11px;min-width:0">'
@@ -5428,17 +5478,23 @@ function c5ContinuousAssessment(host){
       // aggregate of all regions) plus the 6 CSF functions only. Same basis as the region
       // cards below, so it re-computes as you pick a region/entity.
       var sumCsf=null,sumFns=[];
-      try{ if(typeof c5fwTree==='function'&&typeof fwDeployedIds==='function'){var st=c5fwTree('csf',fwDeployedIds());sumCsf=st.overall;
-        sumFns=st.groups.map(function(g){return {n:String(g.id||g.name).split(' ')[0],s:g.score};}); } }catch(_){}
+      if(C5_ASSESS_FW==='ai'){
+        // AI framework has no c5fwTree — derive the overall + 4 functions from the AI rollup.
+        sumCsf=roll.overall*5;
+        sumFns=FN.map(function(F){var fsx=roll.functions[F.k];return {n:F.k,s:(fsx?fsx.score:0)*5};});
+      } else {
+        try{ if(typeof c5fwTree==='function'&&typeof fwDeployedIds==='function'){var st=c5fwTree('csf',fwDeployedIds());sumCsf=st.overall;
+          sumFns=st.groups.map(function(g){return {n:String(g.id||g.name).split(' ')[0],s:g.score};}); } }catch(_){}
+      }
       var scol=function(v){return v>=3.5?'good':v>=2?'blue':v>=1?'warn':'crit';};
       var fnBar=function(f){var w=Math.round(Math.max(0,Math.min(5,f.s))/5*100);return '<div style="min-width:78px"><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--ink-2);margin-bottom:3px"><span style="font-weight:700">'+esc(f.n)+'</span><span style="font-weight:700;color:var(--'+scol(f.s)+')">'+f.s.toFixed(1)+'</span></div><div style="height:5px;background:var(--surface-2);border-radius:3px;overflow:hidden"><i style="display:block;height:100%;width:'+w+'%;background:var(--'+scol(f.s)+')"></i></div></div>';};
       var isEnt=(typeof SCOPE==='undefined'||SCOPE==='enterprise');
       var sumHtml=(sumCsf!=null)?('<div style="display:flex;gap:22px;align-items:center;flex-wrap:wrap;margin-top:12px;padding-bottom:14px;border-bottom:1px solid var(--line)">'
-        +'<div style="text-align:center;min-width:74px"><div style="font-size:27px;font-weight:800;color:var(--'+scol(sumCsf)+');line-height:1">'+sumCsf.toFixed(2)+'</div><div style="font-size:9px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);margin-top:3px">'+(isEnt?'Aggregate · all regions':'NIST CSF')+'</div></div>'
+        +'<div style="text-align:center;min-width:74px"><div style="font-size:27px;font-weight:800;color:var(--'+scol(sumCsf)+');line-height:1">'+sumCsf.toFixed(2)+'</div><div style="font-size:9px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);margin-top:3px">'+(isEnt?'Aggregate · all regions':(C5_ASSESS_FW==='ai'?'AI RMF':'NIST CSF'))+'</div></div>'
         +(sumFns.length?('<div style="display:flex;gap:12px;flex-wrap:wrap;padding-left:16px;border-left:1px solid var(--line)">'+sumFns.map(fnBar).join('')+'</div>'):'')
         +'</div>'):'';
       scopeNavHtml='<div style="border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px;background:var(--surface)">'
-        +'<div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--blue)">Now viewing · continuous assessment</div>'
+        +'<div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--blue)">Now viewing · '+(C5_ASSESS_FW==='ai'?'AI frameworks':'continuous assessment')+'</div>'
         +'<div style="font-size:17px;font-weight:800;color:var(--ink);margin:2px 0 1px">'+esc(lbl||'Enterprise')+'</div>'
         +'<div style="font-size:11.5px;color:var(--muted)">Every region and entity is assessed on its own — pick one and the scores below change to match.</div>'
         +sumHtml
@@ -5468,7 +5524,7 @@ function c5ContinuousAssessment(host){
     subBody=cards+peerBox+queuePanel;
   }
   host.innerHTML=c5header()+
-    c5shell('Continuous assessment · how is every control assessed?','All '+s.total+' NIST CSF 2.0 controls, continuously assessed — never point-in-time.',null,'The <b>method differs by control</b> and Nerion is honest about which it used: live telemetry, a weekly human-confirm, or a scheduled <b>attestation</b> with freshness tracking — a governance outcome has no sensor, so it is not fake-automated. Each control carries three axes never blended into one number — <b>verdict</b>, <b>assurance</b> and <b>freshness</b> — plus <b>coverage</b> (observed vs known). Open a function to see its controls; click one for the detail.')+
+    c5shell('Continuous assessment · how is every control assessed?','All '+s.total+' '+c5AssessFwCfg().label+' controls, continuously assessed — never point-in-time.',null,'The <b>method differs by control</b> and Nerion is honest about which it used: live telemetry, a weekly human-confirm, or a scheduled <b>attestation</b> with freshness tracking — a governance outcome has no sensor, so it is not fake-automated. Each control carries three axes never blended into one number — <b>verdict</b>, <b>assurance</b> and <b>freshness</b> — plus <b>coverage</b> (observed vs known). Open a function to see its controls; click one for the detail.')+
     scopeNavHtml+
     subBar+
     subBody+
@@ -5735,25 +5791,29 @@ function nerionInternal(){try{return (typeof localStorage!=='undefined'&&localSt
 function c5Frameworks(){
   var host=document.getElementById('c5-frameworks');if(!host)return;
   var internal=nerionInternal();
-  var tab=(C5_PH_TAB==='nerion')?'nerion':(C5_PH_TAB==='assess')?'assess':(C5_PH_TAB==='queue')?'queue':(C5_PH_TAB==='neuron')?'neuron':(C5_PH_TAB==='nmap'&&internal)?'nmap':'classic';
+  var tab=(C5_PH_TAB==='nerion')?'nerion':(C5_PH_TAB==='ai')?'ai':(C5_PH_TAB==='queue')?'queue':(C5_PH_TAB==='neuron')?'neuron':(C5_PH_TAB==='nmap'&&internal)?'nmap':'assess';
   var qN=(typeof c5ReviewQueue==='function')?c5ReviewQueue().filter(function(q){return !q.confirmed;}).length:0;
   host.innerHTML=c5header()+
     '<div class="subwrap c5phwrap"><div class="subtabs">'+
-      '<button class="subtab'+(tab==='classic'?' on':'')+'" data-phtab="classic">Classic View</button>'+
       '<button class="subtab'+(tab==='assess'?' on':'')+'" data-phtab="assess">Continuous assessment</button>'+
+      '<button class="subtab'+(tab==='ai'?' on':'')+'" data-phtab="ai">AI frameworks</button>'+
       '<button class="subtab'+(tab==='queue'?' on':'')+'" data-phtab="queue">Confirm queue'+(qN?(' <span style="font-size:10px;font-weight:800;color:#fff;background:var(--blue);border-radius:20px;padding:1px 6px">'+qN+'</span>'):'')+'</button>'+
       '<button class="subtab'+(tab==='neuron'?' on':'')+'" data-phtab="neuron">Neuron Controls</button>'+
       '<button class="subtab'+(tab==='nerion'?' on':'')+'" data-phtab="nerion">Nerion’s View</button>'+
       (internal?('<button class="subtab'+(tab==='nmap'?' on':'')+'" data-phtab="nmap" style="color:var(--warn)">◆ Nerion Map · internal</button>'):'')+
     '</div></div><div id="c5ph-body"></div>';
-  host.querySelectorAll('[data-phtab]').forEach(function(b){b.onclick=function(){C5_PH_TAB=b.getAttribute('data-phtab');c5Frameworks();};});
+  host.querySelectorAll('[data-phtab]').forEach(function(b){b.onclick=function(){var nt=b.getAttribute('data-phtab');
+    // Switching between the CSF and AI assessments resets the drill so a CSF control id never
+    // leaks into the AI view (and vice-versa).
+    if((nt==='assess'||nt==='ai')&&nt!==C5_PH_TAB){C5_ASSESS_CTRL=null;C5_ASSESS_EXP=null;C5_ASSESS_SUBTAB='summary';}
+    C5_PH_TAB=nt;c5Frameworks();};});
   var body=document.getElementById('c5ph-body');
   if(tab==='nerion'){c5MountCrownTree(body);}
-  else if(tab==='assess'){c5ContinuousAssessment(body);}
+  else if(tab==='ai'){C5_ASSESS_FW='ai';c5ContinuousAssessment(body);}
   else if(tab==='queue'){c5ConfirmQueueView(body);}
   else if(tab==='neuron'){c5NeuronControls(body);}
   else if(tab==='nmap'&&internal){c5NeuronMap(body);}
-  else{c5FrameworksClassic(body);}
+  else{C5_ASSESS_FW='csf';c5ContinuousAssessment(body);}
 }
 /* Classic View — the framework-maturity content that Program Health rendered
    before, moved as-is behind its tab. Renders into the panel passed in (its own
