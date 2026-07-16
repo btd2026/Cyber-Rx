@@ -5421,10 +5421,24 @@ function c5ContinuousAssessment(host){
   var scopeNavHtml='';
   try{ if(typeof scopeNav==='function'){var sn=scopeNav();
     if(sn){var lbl=(typeof scopeLabel==='function')?scopeLabel(typeof SCOPE!=='undefined'?SCOPE:'enterprise'):'';
+      // Aggregate summary for the CURRENT scope — the overall NIST CSF (Enterprise = the
+      // aggregate of all regions) plus the 6 CSF functions only. Same basis as the region
+      // cards below, so it re-computes as you pick a region/entity.
+      var sumCsf=null,sumFns=[];
+      try{ if(typeof c5fwTree==='function'&&typeof fwDeployedIds==='function'){var st=c5fwTree('csf',fwDeployedIds());sumCsf=st.overall;
+        sumFns=st.groups.map(function(g){return {n:String(g.id||g.name).split(' ')[0],s:g.score};}); } }catch(_){}
+      var scol=function(v){return v>=3.5?'good':v>=2?'blue':v>=1?'warn':'crit';};
+      var fnBar=function(f){var w=Math.round(Math.max(0,Math.min(5,f.s))/5*100);return '<div style="min-width:78px"><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--ink-2);margin-bottom:3px"><span style="font-weight:700">'+esc(f.n)+'</span><span style="font-weight:700;color:var(--'+scol(f.s)+')">'+f.s.toFixed(1)+'</span></div><div style="height:5px;background:var(--surface-2);border-radius:3px;overflow:hidden"><i style="display:block;height:100%;width:'+w+'%;background:var(--'+scol(f.s)+')"></i></div></div>';};
+      var isEnt=(typeof SCOPE==='undefined'||SCOPE==='enterprise');
+      var sumHtml=(sumCsf!=null)?('<div style="display:flex;gap:22px;align-items:center;flex-wrap:wrap;margin-top:12px;padding-bottom:14px;border-bottom:1px solid var(--line)">'
+        +'<div style="text-align:center;min-width:74px"><div style="font-size:27px;font-weight:800;color:var(--'+scol(sumCsf)+');line-height:1">'+sumCsf.toFixed(2)+'</div><div style="font-size:9px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);margin-top:3px">'+(isEnt?'Aggregate · all regions':'NIST CSF')+'</div></div>'
+        +(sumFns.length?('<div style="display:flex;gap:12px;flex-wrap:wrap;padding-left:16px;border-left:1px solid var(--line)">'+sumFns.map(fnBar).join('')+'</div>'):'')
+        +'</div>'):'';
       scopeNavHtml='<div style="border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px;background:var(--surface)">'
         +'<div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--blue)">Now viewing · continuous assessment</div>'
         +'<div style="font-size:17px;font-weight:800;color:var(--ink);margin:2px 0 1px">'+esc(lbl||'Enterprise')+'</div>'
         +'<div style="font-size:11.5px;color:var(--muted)">Every region and entity is assessed on its own — pick one and the scores below change to match.</div>'
+        +sumHtml
         +sn+'</div>';
     }
   }}catch(_){}
