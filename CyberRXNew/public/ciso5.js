@@ -5415,8 +5415,22 @@ function c5ContinuousAssessment(host){
     return '<div class="c5fw-g"><div class="c5fw-grow" data-assessexp="'+F.k+'"><span class="c5fw-tw">'+(open?'▾':'▸')+'</span><span class="c5fw-dot" style="background:var(--'+gc+')"></span><span class="c5fw-id">'+F.k+'</span><span class="c5fw-nm">'+F.l+'</span><span class="c5fw-lvl">'+cids.length+' controls</span><span class="c5fw-sc" style="color:var(--'+gc+')">'+(v*5).toFixed(1)+'</span></div>'+inner+'</div>';
   }).join('')+'</div>';
   var detail=C5_ASSESS_CTRL?c5AssessDetail(C5_ASSESS_CTRL):'<div class="c5fw-detail"><div style="font-size:12.5px;color:var(--muted)">Open a function and click a control to see its method, the three axes, freshness, cadence and evidence.</div></div>';
+  // ── Scope switcher — the same Enterprise → Region → Entity navigation as the top banner,
+  // dropped in here so you can move scope without leaving Continuous assessment. Each scope
+  // has its OWN continuous scores, so switching one updates every card/tree/detail below. ──
+  var scopeNavHtml='';
+  try{ if(typeof scopeNav==='function'){var sn=scopeNav();
+    if(sn){var lbl=(typeof scopeLabel==='function')?scopeLabel(typeof SCOPE!=='undefined'?SCOPE:'enterprise'):'';
+      scopeNavHtml='<div style="border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px;background:var(--surface)">'
+        +'<div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--blue)">Now viewing · continuous assessment</div>'
+        +'<div style="font-size:17px;font-weight:800;color:var(--ink);margin:2px 0 1px">'+esc(lbl||'Enterprise')+'</div>'
+        +'<div style="font-size:11.5px;color:var(--muted)">Every region and entity is assessed on its own — pick one and the scores below change to match.</div>'
+        +sn+'</div>';
+    }
+  }}catch(_){}
   host.innerHTML=c5header()+
     c5shell('Continuous assessment · how is every control assessed?','All '+s.total+' NIST CSF 2.0 controls, continuously assessed — never point-in-time.',null,'The <b>method differs by control</b> and Nerion is honest about which it used: live telemetry, a weekly human-confirm, or a scheduled <b>attestation</b> with freshness tracking — a governance outcome has no sensor, so it is not fake-automated. Each control carries three axes never blended into one number — <b>verdict</b>, <b>assurance</b> and <b>freshness</b> — plus <b>coverage</b> (observed vs known). Open a function to see its controls; click one for the detail.')+
+    scopeNavHtml+
     cards+
     peerBox+
     driftPanel+
@@ -5424,7 +5438,8 @@ function c5ContinuousAssessment(host){
     cadenceBar+
     '<div class="c5fw-wrap"><div class="c5fw-right">'+tree+'</div><div class="c5fw-left" id="assessDetail">'+detail+'</div></div>'+
     '<div class="c5foot">Method: <b style="color:var(--good)">live</b> = a sensor observes it (re-scored on every refresh) · <b style="color:var(--blue)">hybrid</b> = telemetry pulled, a human confirms · <b style="color:var(--warn)">attestation</b> = owner-assigned, LLM pre-screened, freshness-tracked · <b>awaiting</b> = connect a source to light it up. Freshness decays past the TTL, so an old attestation reads <b style="color:var(--warn)">expiring</b>, not passing — which is what makes "continuous" true across all '+s.total+'.</div>';
-  // Wiring — cadence overrides, confirm actions, expand/collapse, control select, detail close.
+  // Wiring — scope switcher, cadence overrides, confirm actions, expand/collapse, control select, detail close.
+  if(typeof wireScopeNav==='function')wireScopeNav(host); else host.querySelectorAll('[data-scope]').forEach(function(b){b.onclick=function(){if(typeof selectScope==='function')selectScope(b.getAttribute('data-scope'));};});
   host.querySelectorAll('[data-cadence]').forEach(function(sel){sel.addEventListener('change',function(e){e.stopPropagation();
     c5SetCadence(sel.getAttribute('data-cadence'),sel.value);c5ContinuousAssessment(host);});});
   host.querySelectorAll('[data-confirm]').forEach(function(btn){btn.addEventListener('click',function(e){e.stopPropagation();

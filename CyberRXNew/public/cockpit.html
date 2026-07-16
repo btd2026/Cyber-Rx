@@ -3194,6 +3194,44 @@ function regionCsf(regionId){var savedS=SIGNALS,savedSC=SCOPE;try{
   var s=JSON.parse(JSON.stringify(SIGNALS_BASE||SIGNALS||{}));Object.keys(vals).forEach(function(k){s[k]={key:k,value:vals[k]};});SIGNALS=s;
   return c5fwTree('csf',fwDeployedIds()).overall;
 }catch(_){return null;}finally{SIGNALS=savedS;SCOPE=savedSC;}}
+/* Reusable scope navigation — the regions strip (ALWAYS shown, weakest first) plus, when you
+   are inside a region, that region's entities as a second strip below it, each with its own
+   distinct NIST CSF. The current scope is highlighted "now viewing" and its parent region stays
+   anchored while you drill into an entity, so you can always jump straight to another region or
+   back up. Rendered in the scope banner AND inside Continuous assessment. Clicks are wired via
+   [data-scope] → selectScope. Returns '' only if nothing can be scored. */
+function scopeNav(){
+  try{
+    var col=function(v){return v>=3.5?'good':v>=2?'blue':v>=1?'warn':'crit';};
+    var activeRegion=scopeRegion(SCOPE);
+    var reg=null;REGIONS.forEach(function(r){if(r.id===activeRegion)reg=r;});
+    function drillCards(title,items,idOf,labelOf,subOf){
+      items=items.map(function(it){return {it:it,csf:regionCsf(idOf(it))};}).filter(function(x){return x.csf!=null;});
+      items.sort(function(a,b){return a.csf-b.csf;});
+      if(!items.length)return '';
+      var cards=items.map(function(x,i){var c=col(x.csf),weak=(i===0),sel=(idOf(x.it)===SCOPE||idOf(x.it)===activeRegion);
+        return '<button data-scope="'+idOf(x.it)+'" style="text-align:left;border:1px solid '+(sel?'var(--blue)':(weak?'var(--crit)':'var(--line)'))+';border-radius:10px;padding:9px 12px;background:'+(sel?'color-mix(in srgb,var(--blue) 8%,var(--surface))':'var(--surface)')+';cursor:pointer;min-width:158px">'
+          +'<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><b style="font-size:12.5px;color:var(--ink)">'+esc(labelOf(x.it))+'</b><span style="font-size:17px;font-weight:800;color:var(--'+c+')">'+x.csf.toFixed(2)+'</span></div>'
+          +'<div style="font-size:10.5px;color:var(--muted);margin-top:2px">'+esc(subOf(x.it)||'')+'</div>'
+          +(sel?'<div style="font-size:10px;font-weight:700;color:var(--blue);margin-top:4px">● now viewing</div>':(weak?'<div style="font-size:10px;font-weight:700;color:var(--crit);margin-top:4px">◆ weakest — focus here</div>':''))+'</button>';
+      }).join('');
+      return '<div style="flex-basis:100%;margin-top:14px;border-top:1px solid var(--line);padding-top:12px"><div style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">'+esc(title)+'</div><div style="display:flex;gap:10px;flex-wrap:wrap">'+cards+'</div></div>';
+    }
+    // The regions strip is ALWAYS shown so you can hop between regions from any scope.
+    var out=drillCards('Regions at a glance · NIST CSF, weakest first',
+      REGIONS.filter(function(r){return r.kind==='region';}),
+      function(r){return r.id;},function(r){return r.label;},function(r){return r.regime;});
+    // Inside a region (or an entity within it), also show that region's entities below it.
+    if(reg&&reg.entities&&reg.entities.length){
+      out+=drillCards(reg.entities.length+' entities in '+reg.label+' · NIST CSF, weakest first',
+        reg.entities,function(e){return e.id;},function(e){return e.label;},
+        function(e){return (typeof scopeMeta==='function'&&scopeMeta(e.id)&&scopeMeta(e.id).regime)||'';});
+    }
+    return out;
+  }catch(_){return '';}
+}
+/* Wire any [data-scope] control inside a container to re-scope the whole cockpit. */
+function wireScopeNav(el){try{if(!el)return;el.querySelectorAll('[data-scope]').forEach(function(b){b.onclick=function(){if(typeof selectScope==='function')selectScope(b.getAttribute('data-scope'));};});}catch(_){}}
 function scopeBanner(){
   try{
     var svc=(typeof c5Services==='function')?c5Services():{total:0};
@@ -3219,33 +3257,9 @@ function scopeBanner(){
       +(csf!=null?stat(csf.toFixed(2),'NIST CSF',col(csf)):'')
       +stat(svc.total,'Crown jewels',svc.total?'ink':'muted')
       +(fns.length?('<div style="display:flex;gap:12px;flex-wrap:wrap;padding-left:6px;border-left:1px solid var(--line)">'+fns.map(fnBar).join('')+'</div>'):'')+'</div>';
-    // Drill-down cards. At Enterprise: the regions, weakest first. Inside a region (or an
-    // entity within it): every ENTITY in that region, weakest first — the global firm's
-    // 10+ branches, each with its own NIST CSF, each drillable. Mirror UX at both levels.
-    var compare='';
-    function drillCards(title,items,idOf,labelOf,subOf){
-      items=items.map(function(it){return {it:it,csf:regionCsf(idOf(it))};}).filter(function(x){return x.csf!=null;});
-      items.sort(function(a,b){return a.csf-b.csf;});
-      if(!items.length)return '';
-      var cards=items.map(function(x,i){var c=col(x.csf),weak=(i===0),sel=(idOf(x.it)===SCOPE||idOf(x.it)===activeRegion);
-        return '<button data-scope="'+idOf(x.it)+'" style="text-align:left;border:1px solid '+(sel?'var(--blue)':(weak?'var(--crit)':'var(--line)'))+';border-radius:10px;padding:9px 12px;background:'+(sel?'color-mix(in srgb,var(--blue) 8%,var(--surface))':'var(--surface)')+';cursor:pointer;min-width:158px">'
-          +'<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><b style="font-size:12.5px;color:var(--ink)">'+esc(labelOf(x.it))+'</b><span style="font-size:17px;font-weight:800;color:var(--'+c+')">'+x.csf.toFixed(2)+'</span></div>'
-          +'<div style="font-size:10.5px;color:var(--muted);margin-top:2px">'+esc(subOf(x.it)||'')+'</div>'
-          +(sel?'<div style="font-size:10px;font-weight:700;color:var(--blue);margin-top:4px">● now viewing</div>':(weak?'<div style="font-size:10px;font-weight:700;color:var(--crit);margin-top:4px">◆ weakest — focus here</div>':''))+'</button>';
-      }).join('');
-      return '<div style="flex-basis:100%;margin-top:14px;border-top:1px solid var(--line);padding-top:12px"><div style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">'+esc(title)+'</div><div style="display:flex;gap:10px;flex-wrap:wrap">'+cards+'</div></div>';
-    }
-    // The regions strip is ALWAYS shown — from any scope you can hop straight to another
-    // region without first going back to Enterprise. When you're inside a region, its
-    // entities are shown below it as a second strip so you can also drill down.
-    compare=drillCards('Regions at a glance · NIST CSF, weakest first',
-      REGIONS.filter(function(r){return r.kind==='region';}),
-      function(r){return r.id;},function(r){return r.label;},function(r){return r.regime;});
-    if(reg&&reg.entities&&reg.entities.length){
-      compare+=drillCards(reg.entities.length+' entities in '+reg.label+' · NIST CSF, weakest first',
-        reg.entities,function(e){return e.id;},function(e){return e.label;},
-        function(e){return (typeof scopeMeta==='function'&&scopeMeta(e.id)&&scopeMeta(e.id).regime)||'';});
-    }
+    // Drill-down cards — the regions strip (always) plus, inside a region, its entities.
+    // Shared with the Continuous-assessment view via scopeNav() so both stay in lock-step.
+    var compare=(typeof scopeNav==='function')?scopeNav():'';
     return '<div id="scopeBanner" style="border:1px solid var(--line);border-radius:14px;padding:15px 18px;margin-bottom:16px;background:var(--surface);display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;align-items:center">'+left+stats+compare+'</div>';
   }catch(_){return '';}
 }

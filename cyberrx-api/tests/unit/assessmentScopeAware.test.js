@@ -37,4 +37,32 @@ describe('Continuous assessment — scope-aware (Enterprise → Region → Entit
   it('drift alerts are scope-seeded too, so each entity has its own prior', () => {
     expect(ciso).toContain("function c5AssessmentPrior(a){var h=c5hash(c5Scope()+'|'+a.id+'|prior');");
   });
+
+  it('embeds the Enterprise→Region→Entity scope switcher inside the continuous view', () => {
+    // the continuous view builds and renders the shared scopeNav strip
+    expect(ciso).toContain('if(typeof scopeNav===\'function\'){var sn=scopeNav();');
+    expect(ciso).toContain('Now viewing · continuous assessment');
+    expect(ciso).toContain('scopeNavHtml+');
+    // and wires its region/entity clicks to re-scope in place
+    expect(ciso).toContain('if(typeof wireScopeNav===\'function\')wireScopeNav(host);');
+  });
+});
+
+describe('Scope navigation — reusable strip (cockpit)', () => {
+  const cockpit = fs.readFileSync(path.resolve(__dirname, '../../../CyberRXNew/public/cockpit.html'), 'utf8');
+  it('exposes a reusable scopeNav() that always shows regions + entities-when-present', () => {
+    expect(cockpit).toContain('function scopeNav(){');
+    // regions strip is unconditional
+    expect(cockpit).toContain("var out=drillCards('Regions at a glance · NIST CSF, weakest first',");
+    // entities strip only when the active region has entities
+    expect(cockpit).toContain('if(reg&&reg.entities&&reg.entities.length){');
+    // the parent region stays anchored while drilling an entity
+    expect(cockpit).toContain('sel=(idOf(x.it)===SCOPE||idOf(x.it)===activeRegion)');
+  });
+  it('the banner reuses scopeNav() so both stay in lock-step', () => {
+    expect(cockpit).toContain("var compare=(typeof scopeNav==='function')?scopeNav():'';");
+  });
+  it('provides a generic [data-scope] wiring helper', () => {
+    expect(cockpit).toContain('function wireScopeNav(el){');
+  });
 });
