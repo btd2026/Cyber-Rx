@@ -5045,8 +5045,25 @@ function c5SetCadence(scope,val){var ov=c5CadenceOverrides();
   else if(scope.indexOf('control:')===0){ov.control=ov.control||{};var c=scope.slice(8);if(val)ov.control[c]=val;else delete ov.control[c];}
   try{localStorage.setItem('cyberrx_assessment_cadence',JSON.stringify(ov));}catch(_){}}
 function c5hash(s){var h=0;s=String(s||'');for(var i=0;i<s.length;i++){h=((h<<5)-h+s.charCodeAt(i))|0;}return Math.abs(h);}
-/* One control's honest three-axis assessment. Deterministic from the control id so the demo
-   is self-consistent; in a real workspace last-assessed/coverage come from the evidence store. */
+/* The cockpit's current scope (Enterprise / Region / Entity). Every continuous assessment is
+   seeded with it, so switching entities in the scope bar re-assesses every control — each
+   entity genuinely has its own posture, not a shared one. */
+function c5Scope(){try{if(typeof SCOPE!=='undefined'&&SCOPE)return SCOPE;if(typeof window!=='undefined'&&window.SCOPE)return window.SCOPE;}catch(_){}return 'enterprise';}
+/* Scope maturity 0..1 — the mean coverage of the current scope's own telemetry (mfa/edr/pam/…),
+   so a mature entity (e.g. EMEA · DACH) assesses HIGHER and a weaker one (APAC · SE Asia) LOWER.
+   It biases coverage and verdict below, turning the abstract scope selection into different
+   control scores all the way down. Falls back to a neutral 0.82 when telemetry is unavailable. */
+function c5ScopeMaturity(){
+  try{var sv=(typeof scopeSignalValues==='function')?scopeSignalValues(c5Scope()):null;if(!sv)return 0.82;
+    var vals=[];Object.keys(sv).forEach(function(k){if(/_pct$/.test(k)&&k!=='phishing_pct'&&sv[k]!=null)vals.push(sv[k]);});
+    if(!vals.length)return 0.82;
+    var m=vals.reduce(function(a,b){return a+b;},0)/vals.length;
+    return Math.max(0.2,Math.min(1,m/100));
+  }catch(_){return 0.82;}
+}
+/* One control's honest three-axis assessment. Deterministic from the SCOPE + control id so
+   each entity is self-consistent and distinct; in a real workspace last-assessed/coverage
+   come from that entity's evidence store. */
 function c5ControlAssessment(id){
   var base=CSF_BASE_METHOD[id]||'doc';
   var proj=(typeof neuronFrameworkProjection==='function')?neuronFrameworkProjection('csf'):{controls:{}};
@@ -5058,7 +5075,10 @@ function c5ControlAssessment(id){
   else if((base==='live'||base==='hybrid')&&hasHybrid)method='hybrid';
   else if(base==='doc')method='attestation';
   else method='awaiting';                       // telemetry-capable but no connector wired
-  var meta=ASSESS_METHOD[method];var hsh=c5hash(id);
+  var meta=ASSESS_METHOD[method];var hsh=c5hash(c5Scope()+'|'+id);
+  // Scope bias: mature entities land more coverage/higher verdicts, weaker ones less — this is
+  // what makes the continuous assessment change as you move Enterprise → Region → Entity.
+  var mat=c5ScopeMaturity();var matAdj=Math.round((mat-0.8)*40);   // ~ -24 (weak) … +8 (strong)
   // Effective cadence = user override (control > function > global) or the method default.
   var eff=c5EffectiveCadence(id,method);
   // Freshness: deterministic "last assessed" scaled to the EFFECTIVE TTL; some attestations
@@ -5072,12 +5092,12 @@ function c5ControlAssessment(id){
   var nextDays=(ttl>0&&lastDays!=null)?Math.max(0,Math.round(ttl-lastDays)):null;
   // Coverage (denominator) — only telemetry carries an observed/known population.
   var coverage=null;
-  if(method==='live'||method==='hybrid'){var known=100;var observed=100-(hsh%22);coverage={observed:observed,known:known,pct:Math.round(observed/known*100)};}
+  if(method==='live'||method==='hybrid'){var known=100;var observed=Math.max(35,Math.min(100,100-(hsh%22)+matAdj));coverage={observed:observed,known:known,pct:Math.round(observed/known*100)};}
   // Verdict — graded, never binary. Telemetry: from coverage-adjusted signal. Attestation:
   // met only while the artifact is fresh; an expired attestation is NOT passing.
   var verdict;
   if(method==='awaiting')verdict='not_assessed';
-  else if(method==='attestation')verdict=(fresh==='expired')?'not_assessed':((hsh%10<1)?'partial':'met');
+  else if(method==='attestation')verdict=(fresh==='expired')?'not_assessed':((hsh%10)<(matAdj<-8?3:1)?'partial':'met');
   else{var sig=(coverage?coverage.pct:100)-(hsh%15);verdict=sig>=85?'met':(sig>=55?'partial':'not_met');}
   // Confidence is the assurance axis, surfaced so a dashboard can't show "green, high
   // confidence" for something a person merely asserted.
@@ -5161,7 +5181,7 @@ function c5AssessmentRollup(){
    Compares the current verdict to the prior snapshot — here deterministic for the demo; in
    production the evidence store's last record. */
 var VERDICT_RANK={not_assessed:0,not_met:1,partial:2,met:3};
-function c5AssessmentPrior(a){var h=c5hash(a.id+'|prior');
+function c5AssessmentPrior(a){var h=c5hash(c5Scope()+'|'+a.id+'|prior');
   if(h%13===0)return 'met';                          // was met, now worse → regression
   if(h%13===1)return 'not_met';                      // was worse, now better → improvement
   if(h%13===2&&a.verdict==='met')return 'partial';   // partial regression
@@ -5590,7 +5610,8 @@ function c5NeuronControls(host){
       +'</div>';
   }).join('');
   var provPanel=cjs.length?('<div style="margin-top:24px"><div style="font-size:12.5px;font-weight:800;color:var(--ink);margin-bottom:4px">Telemetry provenance by asset <span style="color:var(--muted);font-weight:600">— "prove it"</span></div>'
-    +'<div style="font-size:11.5px;color:var(--muted);margin-bottom:10px">Each asset is only evidenced by tools that actually cover its <b>class</b>. A tool that can’t see the asset (EDR on a SaaS app, CSPM on SaaS) is shown <span style="color:var(--crit)">struck through</span> and <b>not credited</b> — this is how Nerion refuses to claim Defender covers Salesforce.</div>'+provRows+'</div>'):'';
+    +'<div style="font-size:11.5px;color:var(--muted);margin-bottom:10px">Each asset is only evidenced by tools that actually cover its <b>class</b>. A tool that can’t see the asset (EDR on a SaaS app, CSPM on SaaS) is shown <span style="color:var(--crit)">struck through</span> and <b>not credited</b> — this is how Nerion refuses to claim Defender covers Salesforce.</div>'
+    +'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:12px;align-items:start">'+provRows+'</div></div>'):'';
   host.innerHTML=
     '<div style="max-width:1080px">'
     +'<div style="font-size:15px;font-weight:800;color:var(--ink)">Neuron Controls</div>'
@@ -5598,14 +5619,21 @@ function c5NeuronControls(host){
     +'<div style="font-size:12px;color:var(--ink-2);margin:10px 0 4px"><b style="color:var(--ink)">'+nc.length+'</b> Neuron Controls · <b style="color:var(--good)">'+live+'</b> live telemetry · <b style="color:var(--blue)">'+hyb+'</b> hybrid (a human validates) · <b style="color:var(--muted)">'+off+'</b> not deployed</div>'
     +'<div style="font-size:11px;color:var(--muted);margin-bottom:6px">Prevent reflects <b>control presence</b> (the capability is mapped &amp; deployed). Where a <b>BAS / purple-team</b> reading exists it graduates to <b style="color:var(--good)">proven</b> — the share of simulated attacks actually blocked. '+(effN>0?('<b style="color:var(--good)">'+effN+'</b> of '+nc.length+' capabilities '+(effN===1?'has':'have')+' a measured reading; the rest are presence-only.'):'No effectiveness readings yet — connect a BAS platform (AttackIQ, SafeBreach, Cymulate) or a purple-team feed to graduate presence to proven. Nothing is inferred.')+'</div>'
     +cardsHtml
-    +'<div style="margin-top:24px"><div style="font-size:12.5px;font-weight:800;color:var(--ink);margin-bottom:4px">Non-adversarial risk lanes</div>'
-    +'<div style="font-size:11.5px;color:var(--muted);margin-bottom:8px">The exposures that are not an intrusion — outage, corruption, insider, supply-chain, privacy — each covered by the same telemetry, so the whole estate is answered, not just crown jewels.</div>'+laneRows+'</div>'
-    +'<div style="margin-top:24px"><div style="font-size:12.5px;font-weight:800;color:var(--ink);margin-bottom:4px">Framework projection</div>'
+    // Lower sections tiled into two columns so the whole estate reads without a long scroll —
+    // the boxes themselves are unchanged, only their arrangement. Left: non-adversarial lanes;
+    // right: framework projection stacked over the risk-driver matrix.
+    +'<div style="display:flex;flex-wrap:wrap;gap:24px;margin-top:24px;align-items:flex-start">'
+    +'<div style="flex:1 1 500px;min-width:0"><div style="font-size:12.5px;font-weight:800;color:var(--ink);margin-bottom:4px">Non-adversarial risk lanes</div>'
+    +'<div style="font-size:11.5px;color:var(--muted);margin-bottom:8px">The exposures that are not an intrusion — outage, corruption, insider, supply-chain, privacy — each covered by the same telemetry, so the whole estate is answered, not just crown jewels.</div>'
+    +'<div style="overflow-x:auto">'+laneRows+'</div></div>'
+    +'<div style="flex:1 1 420px;min-width:0;display:flex;flex-direction:column;gap:22px">'
+    +'<div><div style="font-size:12.5px;font-weight:800;color:var(--ink);margin-bottom:4px">Framework projection</div>'
     +'<div style="font-size:11.5px;color:var(--muted);margin-bottom:10px">The same measurements, reported into each framework by control ID. One control model, six frameworks.</div>'
     +'<div style="display:flex;flex-wrap:wrap;gap:10px">'+fwStrip+'</div></div>'
-    +'<div style="margin-top:24px"><div style="font-size:12.5px;font-weight:800;color:var(--ink);margin-bottom:4px">Risk-driver coverage by framework</div>'
+    +'<div><div style="font-size:12.5px;font-weight:800;color:var(--ink);margin-bottom:4px">Risk-driver coverage by framework</div>'
     +'<div style="font-size:11.5px;color:var(--muted);margin-bottom:10px">Every framework, split by <b>why</b> each control matters — the adversarial lens (ATT&amp;CK) and the five non-adversarial lanes. Cells show controls <b>evidenced by deployed telemetry</b> / controls mapped. The dual-lens view: compliance is not only about stopping attackers — it is also uptime, integrity, insider, supply-chain and privacy.</div>'
-    +driverMatrix+'</div>'
+    +driverMatrix+'</div></div>'
+    +'</div>'
     +provPanel
     +'</div>';
 }
