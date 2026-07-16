@@ -3227,7 +3227,7 @@ function scopeBanner(){
       items=items.map(function(it){return {it:it,csf:regionCsf(idOf(it))};}).filter(function(x){return x.csf!=null;});
       items.sort(function(a,b){return a.csf-b.csf;});
       if(!items.length)return '';
-      var cards=items.map(function(x,i){var c=col(x.csf),weak=(i===0),sel=(idOf(x.it)===SCOPE);
+      var cards=items.map(function(x,i){var c=col(x.csf),weak=(i===0),sel=(idOf(x.it)===SCOPE||idOf(x.it)===activeRegion);
         return '<button data-scope="'+idOf(x.it)+'" style="text-align:left;border:1px solid '+(sel?'var(--blue)':(weak?'var(--crit)':'var(--line)'))+';border-radius:10px;padding:9px 12px;background:'+(sel?'color-mix(in srgb,var(--blue) 8%,var(--surface))':'var(--surface)')+';cursor:pointer;min-width:158px">'
           +'<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><b style="font-size:12.5px;color:var(--ink)">'+esc(labelOf(x.it))+'</b><span style="font-size:17px;font-weight:800;color:var(--'+c+')">'+x.csf.toFixed(2)+'</span></div>'
           +'<div style="font-size:10.5px;color:var(--muted);margin-top:2px">'+esc(subOf(x.it)||'')+'</div>'
@@ -3235,12 +3235,14 @@ function scopeBanner(){
       }).join('');
       return '<div style="flex-basis:100%;margin-top:14px;border-top:1px solid var(--line);padding-top:12px"><div style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">'+esc(title)+'</div><div style="display:flex;gap:10px;flex-wrap:wrap">'+cards+'</div></div>';
     }
-    if(SCOPE==='enterprise'){
-      compare=drillCards('Regions at a glance · NIST CSF, weakest first',
-        REGIONS.filter(function(r){return r.kind==='region';}),
-        function(r){return r.id;},function(r){return r.label;},function(r){return r.regime;});
-    }else if(reg&&reg.entities&&reg.entities.length){
-      compare=drillCards(reg.entities.length+' entities in '+reg.label+' · NIST CSF, weakest first',
+    // The regions strip is ALWAYS shown — from any scope you can hop straight to another
+    // region without first going back to Enterprise. When you're inside a region, its
+    // entities are shown below it as a second strip so you can also drill down.
+    compare=drillCards('Regions at a glance · NIST CSF, weakest first',
+      REGIONS.filter(function(r){return r.kind==='region';}),
+      function(r){return r.id;},function(r){return r.label;},function(r){return r.regime;});
+    if(reg&&reg.entities&&reg.entities.length){
+      compare+=drillCards(reg.entities.length+' entities in '+reg.label+' · NIST CSF, weakest first',
         reg.entities,function(e){return e.id;},function(e){return e.label;},
         function(e){return (typeof scopeMeta==='function'&&scopeMeta(e.id)&&scopeMeta(e.id).regime)||'';});
     }
