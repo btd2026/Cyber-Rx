@@ -5600,6 +5600,59 @@ function c5ConfirmQueueView(host){
   host.querySelectorAll('[data-confirm]').forEach(function(btn){btn.addEventListener('click',function(){
     var v=btn.getAttribute('data-confirm').split(':');c5ConfirmControl(v[1],(v[0]==='clear')?null:v[0]);c5ConfirmQueueView(host);});});
 }
+/* ===== OPERATIONAL IMPACT — the honest alternative to a modeled dollar figure. Impact is
+   expressed in what a board and a regulator can actually verify: which important business
+   services would be disrupted, for how long, whether recovery is PROVEN (tested) or only
+   modeled, and whether that beats the impact tolerance the board set. This is the operational-
+   resilience currency (UK Op-Res impact tolerances / DORA), not a Monte-Carlo ALE nobody
+   trusts. Built on the shared c5CriticalServices() recovery records. */
+function c5Resilience(){
+  var host=document.getElementById('c5-resilience');if(!host)return;
+  var esc=(typeof c5esc==='function')?c5esc:function(s){return s;};
+  var svcs=(typeof c5CriticalServices==='function')?c5CriticalServices():[];
+  function hrs(h){if(h==null)return '—';return h>=48?(Math.round(h/24)+'d'):(h+'h');}
+  if(!svcs.length){host.innerHTML=(typeof c5header==='function'?c5header():'')+'<div style="font-size:12.5px;color:var(--muted);border:1px dashed var(--line);border-radius:12px;padding:16px">No critical business services mapped yet — add them at onboarding so their impact tolerance and proven recovery surface here.</div>';return;}
+  var within=svcs.filter(function(s){return s.rto<=s.tgt;}).length;
+  var over=svcs.length-within;
+  var proven=svcs.filter(function(s){return s.live;}).length;              // recovery tested / telemetry-proven
+  var noFailover=svcs.filter(function(s){return /no failover/i.test(s.failover);}).length;
+  var verdict=over>0?(over+' critical service'+(over>1?'s':'')+' can’t be recovered within tolerance'):(proven<svcs.length?'Recovery holds on paper — but not all of it is proven':'Every critical service recovers within tolerance — and it’s proven');
+  var vcol=over>0?'crit':(proven<svcs.length?'warn':'good');
+  function card(n,l,c,sub){return '<div class="c5card"><div class="c5card-top"><span class="c5card-l">'+l+'</span><span class="c5chip c5-computed">computed</span></div><div class="c5card-v" style="color:var(--'+c+')">'+n+'</div><div class="cn">'+sub+'</div></div>';}
+  var cards='<div class="c5cards">'
+    +card(within+' / '+svcs.length,'Within tolerance',within===svcs.length?'good':'warn','recover inside the board’s limit')
+    +card(over,'Over tolerance',over>0?'crit':'good','can’t recover in time — the real exposure')
+    +card(proven+' / '+svcs.length,'Recovery proven',proven===svcs.length?'good':'warn','tested / telemetry — not just modeled')
+    +card(noFailover,'No failover',noFailover>0?'crit':'good','single points of failure')
+    +'</div>';
+  var th='text-align:left;padding:7px 12px 7px 0;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);border-bottom:1px solid var(--line);white-space:nowrap';
+  var rows=svcs.map(function(s){
+    var ok=s.rto<=s.tgt;var overBy=ok?0:(s.rto-s.tgt);
+    var statusPill=ok
+      ?'<span style="font-size:10px;font-weight:700;color:var(--good);background:color-mix(in srgb,var(--good) 12%,transparent);border:1px solid color-mix(in srgb,var(--good) 30%,transparent);border-radius:20px;padding:2px 8px;white-space:nowrap">within tolerance</span>'
+      :'<span style="font-size:10px;font-weight:700;color:var(--crit);background:color-mix(in srgb,var(--crit) 10%,transparent);border:1px solid color-mix(in srgb,var(--crit) 28%,transparent);border-radius:20px;padding:2px 8px;white-space:nowrap">over by '+hrs(overBy)+'</span>';
+    var proof=s.live
+      ?'<span style="font-size:10px;font-weight:700;color:var(--good)">✓ proven — recovery tested</span>'
+      :'<span style="font-size:10px;font-weight:700;color:var(--warn)">modeled — recovery not tested</span>';
+    var nf=/no failover/i.test(s.failover);
+    var td='padding:9px 12px 9px 0;border-top:1px solid var(--line);font-size:12px;vertical-align:top';
+    return '<tr>'
+      +'<td style="'+td+'"><b style="color:var(--ink)">'+esc(s.n)+'</b><div style="font-size:10.5px;color:var(--muted)">depends on '+esc(s.dep)+'</div></td>'
+      +'<td style="'+td+';white-space:nowrap">'+hrs(s.tgt)+'</td>'
+      +'<td style="'+td+';white-space:nowrap;color:var(--'+(ok?'ink':'crit')+');font-weight:700">'+hrs(s.rto)+'</td>'
+      +'<td style="'+td+'">'+statusPill+'</td>'
+      +'<td style="'+td+'">'+proof+'</td>'
+      +'<td style="'+td+';color:var(--'+(nf?'crit':'ink-2')+');white-space:nowrap">'+(nf?'⚠ ':'')+esc(s.failover)+'</td></tr>';
+  }).join('');
+  var table='<div style="overflow-x:auto;margin-top:14px"><table style="border-collapse:collapse;width:100%;min-width:720px"><thead><tr>'
+    +['Important business service','Impact tolerance','Recovers in','Status','Recovery proof','Failover'].map(function(h){return '<th style="'+th+'">'+h+'</th>';}).join('')
+    +'</tr></thead><tbody>'+rows+'</tbody></table></div>';
+  var intro='Impact here is measured in what you can verify — <b>hours of downtime and services lost</b>, not a modeled dollar. For each important business service: the <b>impact tolerance</b> the board set, how long it actually takes to recover, whether that recovery is <b>proven by a test</b> or only modeled, and whether a failover exists. A service that can’t be recovered inside tolerance — or whose recovery has never been tested — is your real exposure.';
+  var foot='<div class="c5foot">Impact tolerance and recovery come from your resilience telemetry and DR-test records where connected (<b>proven</b>); the rest are modeled sample rows until per-service recovery telemetry connects — labelled <b style="color:var(--warn)">modeled</b>, never presented as tested. This is the operational-resilience read (UK Operational Resilience impact tolerances · EU DORA) — the impact currency a regulator recognizes.</div>';
+  host.innerHTML=(typeof c5header==='function'?c5header():'')
+    +(typeof c5shell==='function'?c5shell('Operational impact · what breaks, for how long, and is recovery proven?',verdict,vcol,intro):('<div style="font-size:15px;font-weight:800">Operational impact</div><div>'+intro+'</div>'))
+    +cards+table+foot;
+}
 /* The Neuron Controls lens — capability × (adversarial + 5 non-adversarial lanes)
    × framework projection, in one view. Read-only; renders into the panel passed in. */
 function c5NeuronControls(host){
