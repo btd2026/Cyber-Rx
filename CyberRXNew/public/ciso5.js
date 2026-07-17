@@ -5501,6 +5501,24 @@ function c5ContinuousAssessment(host){
         +sn+'</div>';
     }
   }}catch(_){}
+  // ── "Can you prove it?" — the assurance front door. Not a maturity score: the honest split of
+  // what is PROVEN by a sensor today vs merely asserted on a policy vs unproven. This is Nerion's
+  // wedge — the defensible read a board / auditor / regulator can trust. On the AI tab it is the
+  // "AI proof gap": governance is not assurance. ──
+  var isAiFw=(C5_ASSESS_FW==='ai');
+  var pvProven=s.live,pvHuman=s.hybrid,pvAsserted=s.attestation,pvUnproven=s.awaiting+s.notAssessed;
+  var pvPct=s.total?Math.round(pvProven/s.total*100):0;
+  var pvSegs=[['Proven',pvProven,'good'],['Human-confirmed',pvHuman,'blue'],['Asserted',pvAsserted,'warn'],['Unproven',pvUnproven,'muted']];
+  var pvBar=pvSegs.map(function(x){var w=s.total?(x[1]/s.total*100):0;return w>0?('<div title="'+esc(x[0]+': '+x[1])+'" style="width:'+w+'%;background:var(--'+x[2]+')"></div>'):'';}).join('');
+  var pvLegend=pvSegs.map(function(x){return '<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--ink-2)"><i style="width:9px;height:9px;border-radius:2px;background:var(--'+x[2]+');display:inline-block"></i><b style="color:var(--ink)">'+x[1]+'</b> '+x[0]+'</span>';}).join('');
+  var pvLine=isAiFw
+    ?('You operate <b>'+s.total+'</b> AI-governance controls — but only <b style="color:var(--good)">'+pvPct+'%</b> are continuously <b>proven</b>. The rest are <b>attested</b> (a policy says so) or <b>awaiting</b> an AI-monitoring connector. Governance is not assurance: this is the gap between “we have a policy” and “we can prove it.”')
+    :('<b style="color:var(--good)">'+pvPct+'%</b> of your posture is <b>proven by a sensor right now</b>; the rest is human-confirmed, <b>asserted</b> on a policy, or unproven. Green here means <b>observed today</b> — not a document on file. This is the number you can defend to a board, an auditor or a regulator.');
+  var provHero='<div style="border:1px solid var(--blue);border-radius:14px;padding:15px 17px;margin-top:14px;background:color-mix(in srgb,var(--blue) 4%,var(--surface))">'
+    +'<div style="font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--blue)">'+(isAiFw?'The AI proof gap':'Can you prove it?')+'</div>'
+    +'<div style="font-size:12.5px;color:var(--ink-2);line-height:1.55;margin:4px 0 10px;max-width:880px">'+pvLine+'</div>'
+    +'<div style="display:flex;height:12px;border-radius:6px;overflow:hidden;background:var(--surface-2);margin-bottom:9px">'+pvBar+'</div>'
+    +'<div style="display:flex;gap:16px;flex-wrap:wrap">'+pvLegend+'</div></div>';
   // ── Sub-tabs — keep the page short: Summary (exec overview) · Controls (per-scope detail) ·
   // Drift. The Controls tab appears only once you've drilled into a region/entity (or opened a
   // drifted control); Drift is its own tab, kept out of the summary. ──
@@ -5520,8 +5538,8 @@ function c5ContinuousAssessment(host){
     subBody=cadenceBar+'<div class="c5fw-wrap"><div class="c5fw-right">'+tree+'</div><div class="c5fw-left" id="assessDetail">'+detail+'</div></div>';
   }else if(C5_ASSESS_SUBTAB==='drift'){
     subBody=driftPanel||'<div style="border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:14px;background:var(--surface);font-size:12.5px;color:var(--muted)">✓ No control has drifted since the last assessment.</div>';
-  }else{ // summary (default) — the exec overview KPI cards (the scope summary + drill sit above)
-    subBody=cards+peerBox+queuePanel;
+  }else{ // summary (default) — the "can you prove it?" assurance hero, then the exec KPI cards
+    subBody=provHero+cards+peerBox+queuePanel;
   }
   host.innerHTML=c5header()+
     c5shell('Continuous assessment · how is every control assessed?','All '+s.total+' '+c5AssessFwCfg().label+' controls, continuously assessed — never point-in-time.',null,'The <b>method differs by control</b> and Nerion is honest about which it used: live telemetry, a weekly human-confirm, or a scheduled <b>attestation</b> with freshness tracking — a governance outcome has no sensor, so it is not fake-automated. Each control carries three axes never blended into one number — <b>verdict</b>, <b>assurance</b> and <b>freshness</b> — plus <b>coverage</b> (observed vs known). Open a function to see its controls; click one for the detail.')+

@@ -42,8 +42,8 @@ describe('Continuous assessment — Classic-view layout', () => {
     // Controls tab only appears at a region/entity scope (or when a control is open)
     expect(ciso).toContain('var showControls=isEntScope||!!C5_ASSESS_CTRL;');
     expect(ciso).toContain("(showControls?assSubBtn('controls',");
-    // Summary is the exec overview KPI cards; the scope summary/drill sits above the tab bar
-    expect(ciso).toContain('subBody=cards+peerBox+queuePanel;');
+    // Summary leads with the "can you prove it?" assurance hero, then the exec KPI cards
+    expect(ciso).toContain('subBody=provHero+cards+peerBox+queuePanel;');
     expect(ciso).toContain('scopeNavHtml+\n    subBar+');
     // picking a region/entity drills straight into Controls — no extra tab click
     expect(ciso).toContain("C5_ASSESS_SUBTAB=(t&&t!=='enterprise')?'controls':'summary';if(typeof selectScope==='function')selectScope(t);");

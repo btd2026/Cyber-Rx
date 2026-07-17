@@ -3,10 +3,10 @@
 
 var SEATS = {
  ciso:{
-  eyebrow:'CISO · Executive cockpit',
-  verdict:'The plain-language <span class="em">verdict</span> up top, the few things that matter in the middle, one <span class="em">funded decision</span> at the bottom — every number real and traceable to source.',
-  sub:'Every figure opens to its exact formula, inputs, source tools and why it matters.',
-  brief:'Here’s where the business is most exposed, priced and ranked. Your highest-risk crown jewel needs hardening before it becomes an incident — and your identity and access model is the common thread through your capability exposure, your likeliest attack scenarios, and your control gaps. The upside: the fix is scoped and funded, and it returns more risk-removed per dollar than anything else on the table. One decision closes your largest single exposure; it is worth your sign-off today.',
+  eyebrow:'CISO · Provable assurance cockpit',
+  verdict:'Not a green dashboard — the honest split of what you can <span class="em">prove</span> today versus what you are only <span class="em">asserting</span>. Every control says how it is known: proven by a sensor, human-confirmed, or attested on a policy — a number you can defend to a board, an auditor or a regulator.',
+  sub:'Every claim opens to its method, freshness, coverage and the evidence trail behind it.',
+  brief:'Here’s what you can actually prove right now — and what is only asserted on a policy. Your posture is assessed control-by-control, continuously, and honest about method: proven by a sensor, human-confirmed, or attested. Where a crown-jewel control isn’t proven, you see it — which business services it would disrupt, for how long, and whether recovery is tested against the tolerance the board set. The goal isn’t a bigger number; it’s a defensible one — the difference between “we have a policy” and “we can prove it.”',
   body:function(){return (
    sec('01','Program health','','<div id="c5-frameworks"></div>')
    +sec('02','Operations','','<div id="c5-effect"></div>')
