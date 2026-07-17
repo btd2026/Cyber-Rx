@@ -3109,14 +3109,47 @@ function capProvider(capKey,scope){return (scopeCommon(scope).indexOf(capKey)>=0
    the demo regions carry illustrative REGION_SIG so the story is visible offline. */
 function loadOrgStructure(){
   loadEntityModels();
-  try{var raw=localStorage.getItem('cyberrx_org_structure');if(!raw)return;var o=JSON.parse(raw);
+  try{var raw=localStorage.getItem('cyberrx_org_structure');if(raw){var o=JSON.parse(raw);
     if(Array.isArray(o)&&o.length){
       REGIONS=[{id:'enterprise',label:'Enterprise',kind:'rollup',note:'Consolidated across all regions'}].concat(o.map(function(r){
         return {id:r.id,label:r.label,kind:'region',countries:r.countries||'',regime:r.regime||'',entities:(r.entities||[]).map(function(e){if(e.model)ENTITY_MODELS[e.id]=e.model;return {id:e.id,label:e.label};})};
       }));
     }
-  }catch(_){}
+  }}catch(_){}
+  ensureRegionEntities();
 }
+/* Every region must have at least one entity so the Entity → Region → Enterprise rollup is
+   always well-defined and the scope drill is never empty. A region defined without sub-entities
+   gets a single synthetic entity that represents the region as a whole (it inherits the region's
+   own posture). */
+function ensureRegionEntities(){
+  (REGIONS||[]).forEach(function(r){
+    if(r.kind==='region'&&(!r.entities||!r.entities.length)){
+      r.entities=[{id:r.id+'_all',label:'All '+r.label,synthetic:true}];
+    }
+  });
+}
+/* Hierarchical scope score that RECONCILES: an entity is a leaf (scored from its own telemetry),
+   a region is the mean of its entities, and Enterprise is the mean of its regions — equal-weighted
+   so enterprise = aggregate of all regions = aggregate of every entity. Returns {overall, groups}
+   so the 6-function breakdown rolls up the same way. */
+function scopeAggTree(id){
+  function leaf(sid){var savedS=SIGNALS,savedSC=SCOPE;try{
+    SCOPE=sid;var vals=(typeof scopeSignalValues==='function')?scopeSignalValues(sid):{};
+    var s=JSON.parse(JSON.stringify(SIGNALS_BASE||SIGNALS||{}));Object.keys(vals).forEach(function(k){s[k]={key:k,value:vals[k]};});SIGNALS=s;
+    var t=c5fwTree('csf',fwDeployedIds());return {overall:t.overall,groups:(t.groups||[]).map(function(g){return {id:(g.id||g.name),score:g.score};})};
+  }catch(_){return null;}finally{SIGNALS=savedS;SCOPE=savedSC;}}
+  function meanTrees(ts){ts=(ts||[]).filter(Boolean);if(!ts.length)return null;
+    var o=ts.reduce(function(a,t){return a+t.overall;},0)/ts.length;
+    var gk={};ts.forEach(function(t){(t.groups||[]).forEach(function(g){(gk[g.id]=gk[g.id]||[]).push(g.score);});});
+    var groups=Object.keys(gk).map(function(k){var v=gk[k];return {id:k,score:v.reduce(function(a,b){return a+b;},0)/v.length};});
+    return {overall:o,groups:groups};}
+  if(id==='enterprise')return meanTrees(REGIONS.filter(function(r){return r.kind==='region';}).map(function(r){return scopeAggTree(r.id);}));
+  var reg=null;REGIONS.forEach(function(r){if(r.id===id)reg=r;});
+  if(reg&&reg.entities&&reg.entities.length)return meanTrees(reg.entities.map(function(e){return leaf(e.id);}));
+  return leaf(id);   // leaf entity
+}
+function scopeAggScore(id){var t=scopeAggTree(id);return t?t.overall:null;}
 /* Backend parity: in a real (non-demo) workspace, pull the org structure the customer
    saved at onboarding from the API and drive the scope switcher from it. Best-effort and
    non-blocking — localStorage/demo regions are the immediate fallback, so a failure or a
@@ -3209,7 +3242,8 @@ function scopeNav(){
     var reg=null;REGIONS.forEach(function(r){if(r.id===activeRegion)reg=r;});
     function drillCards(title,items,idOf,labelOf,subOf,kind){
       var isEnt=(kind==='entity');
-      items=items.map(function(it){return {it:it,csf:regionCsf(idOf(it))};}).filter(function(x){return x.csf!=null;});
+      // scopeAggScore reconciles: a region card = mean of its entities, an entity card = its leaf.
+      items=items.map(function(it){return {it:it,csf:scopeAggScore(idOf(it))};}).filter(function(x){return x.csf!=null;});
       items.sort(function(a,b){return a.csf-b.csf;});
       if(!items.length)return '';
       // Type badge so a Region card can never be mistaken for an Entity card.

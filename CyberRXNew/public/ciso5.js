@@ -5483,8 +5483,12 @@ function c5ContinuousAssessment(host){
         sumCsf=roll.overall*5;
         sumFns=FN.map(function(F){var fsx=roll.functions[F.k];return {n:F.k,s:(fsx?fsx.score:0)*5};});
       } else {
-        try{ if(typeof c5fwTree==='function'&&typeof fwDeployedIds==='function'){var st=c5fwTree('csf',fwDeployedIds());sumCsf=st.overall;
-          sumFns=st.groups.map(function(g){return {n:String(g.id||g.name).split(' ')[0],s:g.score};}); } }catch(_){}
+        // Use the reconciling hierarchical rollup so the headline number equals the aggregate of
+        // the region/entity cards below (Enterprise = mean of regions = mean of every entity).
+        try{ if(typeof scopeAggTree==='function'){var st=scopeAggTree(c5Scope());
+          if(st){sumCsf=st.overall;sumFns=(st.groups||[]).map(function(g){return {n:String(g.id||g.name).split(' ')[0],s:g.score};});} } }catch(_){}
+        if(sumCsf==null){try{ if(typeof c5fwTree==='function'&&typeof fwDeployedIds==='function'){var st2=c5fwTree('csf',fwDeployedIds());sumCsf=st2.overall;
+          sumFns=st2.groups.map(function(g){return {n:String(g.id||g.name).split(' ')[0],s:g.score};}); } }catch(_){}}
       }
       var scol=function(v){return v>=3.5?'good':v>=2?'blue':v>=1?'warn':'crit';};
       var fnBar=function(f){var w=Math.round(Math.max(0,Math.min(5,f.s))/5*100);return '<div style="min-width:78px"><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--ink-2);margin-bottom:3px"><span style="font-weight:700">'+esc(f.n)+'</span><span style="font-weight:700;color:var(--'+scol(f.s)+')">'+f.s.toFixed(1)+'</span></div><div style="height:5px;background:var(--surface-2);border-radius:3px;overflow:hidden"><i style="display:block;height:100%;width:'+w+'%;background:var(--'+scol(f.s)+')"></i></div></div>';};
