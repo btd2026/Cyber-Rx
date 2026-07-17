@@ -24,7 +24,7 @@ describe('Continuous assessment — Classic-view layout', () => {
   it('each function group is expandable and opens to its control table (keeping the columns)', () => {
     expect(ciso).toContain('data-assessexp="');
     expect(ciso).toContain('var inner=open?(\'<div style="padding:4px 14px 12px 30px">\'+assessTable(F.k)+\'</div>\'):\'\';');
-    expect(ciso).toContain("['Control','Method','Verdict','Assurance · confidence','Coverage','Freshness','Cadence']");
+    expect(ciso).toContain("['Control','Method','Verdict','Score','Assurance · confidence','Coverage','Freshness','Cadence']");
   });
   it('control rows are clickable and open the detail in the left pane', () => {
     expect(ciso).toContain('function assessRow(id){');

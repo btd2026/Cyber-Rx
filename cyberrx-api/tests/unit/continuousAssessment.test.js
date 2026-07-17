@@ -34,8 +34,10 @@ describe('Continuous assessment — the honest model', () => {
 
   it('scores a control on three axes + coverage, never one collapsed number', () => {
     expect(ciso).toContain('function c5ControlAssessment(id){');
-    // verdict is graded (partial is essential), never binary
-    expect(ciso).toContain("verdict=sig>=85?'met':(sig>=55?'partial':'not_met');");
+    // verdict is graded (partial is essential), never binary — and graded on OBSERVED COMPLIANCE,
+    // a separate axis from coverage, so a blind spot is never double-counted as a failure
+    expect(ciso).toContain("verdict=observedPass>=88?'met':(observedPass>=62?'partial':'not_met');");
+    expect(ciso).toContain('observedPass=Math.max(40,Math.min(100,95-((c5hash(c5Scope()+\'|\'+id+\'|pass\'))%14)+Math.round(matAdj/2)));');
     expect(ciso).toContain("if(method==='awaiting')verdict='not_assessed';");
     // freshness decays past TTL — an expired attestation is NOT passing
     expect(ciso).toContain("lastDays>ttl?'expired':(lastDays>ttl*0.75?'expiring':'healthy')");

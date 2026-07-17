@@ -5136,26 +5136,36 @@ function c5ControlAssessment(id){
   // Freshness: deterministic "last assessed" scaled to the EFFECTIVE TTL; some attestations
   // are intentionally stale so "expiring/expired" is visible — that's the honesty.
   var ttl=eff.ttlDays;
-  var lastDays=method==='live'?((hsh%20)/20*0.5)                       // hours
-    :method==='hybrid'?(hsh%9)                                          // days
+  // Last-assessed is TTL-RELATIVE for telemetry so freshness is honest at any cadence: a "live"
+  // control isn't spuriously "expired" just because the continuous TTL is an hour. Attestations
+  // keep a fixed 30–430d age so they intentionally span the 365d review window (expiry is visible).
+  var lastDays=method==='live'?(ttl*((hsh%24)/22))                     // 0..~1.05×TTL → mostly healthy
+    :method==='hybrid'?(ttl*((hsh%20)/22))                             // 0..~0.86×TTL
     :method==='attestation'?(30+hsh%400)                               // 30–430 days
     :null;
   var fresh=(method==='awaiting'||lastDays==null)?'none':(lastDays>ttl?'expired':(lastDays>ttl*0.75?'expiring':'healthy'));
   var nextDays=(ttl>0&&lastDays!=null)?Math.max(0,Math.round(ttl-lastDays)):null;
-  // Coverage (denominator) — only telemetry carries an observed/known population.
-  var coverage=null;
-  if(method==='live'||method==='hybrid'){var known=100;var observed=Math.max(35,Math.min(100,100-(hsh%22)+matAdj));coverage={observed:observed,known:known,pct:Math.round(observed/known*100)};}
-  // Verdict — graded, never binary. Telemetry: from coverage-adjusted signal. Attestation:
+  // Coverage (denominator) — only telemetry carries an observed/known population. This is the
+  // BLIND SPOT: what fraction of the estate the sensor sees. It is NOT whether the control passes.
+  var coverage=null,observedPass=null;
+  if(method==='live'||method==='hybrid'){
+    var known=100;var observed=Math.max(35,Math.min(100,100-(hsh%22)+matAdj));coverage={observed:observed,known:known,pct:Math.round(observed/known*100)};
+    // Compliance ON the observed population — a SEPARATE axis from coverage. Keeping the two apart
+    // is what stops the same gap being counted twice: a 7% blind spot must not read as a failure,
+    // and a healthy, well-covered control should score high (≈ coverage), not collapse to partial.
+    observedPass=Math.max(40,Math.min(100,95-((c5hash(c5Scope()+'|'+id+'|pass'))%14)+Math.round(matAdj/2)));
+  }
+  // Verdict — graded, never binary. Telemetry: from OBSERVED COMPLIANCE (not coverage). Attestation:
   // met only while the artifact is fresh; an expired attestation is NOT passing.
   var verdict;
   if(method==='awaiting')verdict='not_assessed';
   else if(method==='attestation')verdict=(fresh==='expired')?'not_assessed':((hsh%10)<(matAdj<-8?3:1)?'partial':'met');
-  else{var sig=(coverage?coverage.pct:100)-(hsh%15);verdict=sig>=85?'met':(sig>=55?'partial':'not_met');}
+  else verdict=observedPass>=88?'met':(observedPass>=62?'partial':'not_met');
   // Confidence is the assurance axis, surfaced so a dashboard can't show "green, high
   // confidence" for something a person merely asserted.
   var confidence=method==='live'?'high':method==='hybrid'?'medium':method==='attestation'?(fresh==='healthy'?'low':'stale'):'none';
   return {id:id,method:method,assurance:meta.assurance,cadence:eff.label,cadenceKey:eff.key,cadenceSource:eff.source,ttlDays:ttl,
-    lastDays:lastDays,nextDays:nextDays,freshness:fresh,coverage:coverage,verdict:verdict,confidence:confidence};
+    lastDays:lastDays,nextDays:nextDays,freshness:fresh,coverage:coverage,observedPass:observedPass,verdict:verdict,confidence:confidence};
 }
 /* The anti-vanity summary — NOT one blended number. Counts by assurance tier, how many are
    expiring, and how many are unassessed; plus a weighted posture that carries its confidence. */
@@ -5327,10 +5337,14 @@ function c5ContinuousAssessment(host){
     var llmMark=llm?(' <span title="'+(llm.gaps.length?('LLM flagged: '+esc(llm.gaps[0])):('LLM pre-screen — confirm, never auto-pass'))+'" style="cursor:help">'+(llm.gaps.length?'⚠':'🔍')+'</span>'):'';
     var frLabel=a.freshness==='none'?'—':(fmtLast(a)+' · TTL '+fmtTtl(a.ttlDays)+' · '+a.freshness);
     var selRow=(C5_ASSESS_CTRL===id);
+    // Per-control score (0–5) — the three axes multiplied, same number the detail shows.
+    var sc5=(typeof c5ControlScore==='function')?c5ControlScore(a)*5:0;
+    var scCol=(a.verdict==='not_assessed')?'muted':(sc5>=3.5?'good':sc5>=2.5?'warn':'crit');
     return '<tr data-assessctl="'+id+'" style="border-top:1px solid var(--line);cursor:pointer;background:'+(selRow?'color-mix(in srgb,var(--blue) 8%,transparent)':'transparent')+'">'
       +'<td style="padding:6px 12px 6px 0;font-family:ui-monospace,monospace;font-size:11.5px;color:var(--'+(selRow?'blue':'ink')+');white-space:nowrap">'+esc(id)+' ›</td>'
       +'<td style="padding:6px 10px 6px 0">'+pill(m.label,methodColor[a.method])+llmMark+'</td>'
       +'<td style="padding:6px 10px 6px 0">'+pill(verdictLabel[a.verdict],verdictColor[a.verdict])+'</td>'
+      +'<td style="padding:6px 10px 6px 0;white-space:nowrap"><b style="font-size:13px;color:var(--'+scCol+')">'+(a.verdict==='not_assessed'?'—':sc5.toFixed(1))+'</b><span style="font-size:10px;color:var(--muted)">'+(a.verdict==='not_assessed'?'':' / 5')+'</span></td>'
       +'<td style="padding:6px 10px 6px 0;font-size:11px;color:var(--ink-2)">'+a.assurance+' · <b style="color:var(--'+(a.confidence==='high'?'good':a.confidence==='medium'?'blue':a.confidence==='stale'?'crit':'muted')+')">'+a.confidence+'</b></td>'
       +'<td style="padding:6px 10px 6px 0;font-size:11px;color:var(--ink-2)">'+cov+'</td>'
       +'<td style="padding:6px 10px 6px 0;font-size:11px;color:var(--'+freshColor[a.freshness]+')">'+frLabel+'</td>'
@@ -5340,8 +5354,8 @@ function c5ContinuousAssessment(host){
     var cids=ids.filter(function(id){return id.indexOf(fnKey+'.')===0;}).sort();
     if(!cids.length)return '';
     var thin='text-align:left;padding:6px 10px 6px 0;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)';
-    return '<div style="overflow-x:auto;margin-top:6px"><table style="border-collapse:collapse;width:100%;min-width:680px"><thead><tr>'
-      +['Control','Method','Verdict','Assurance · confidence','Coverage','Freshness','Cadence'].map(function(h){return '<th style="'+thin+'">'+h+'</th>';}).join('')
+    return '<div style="overflow-x:auto;margin-top:6px"><table style="border-collapse:collapse;width:100%;min-width:720px"><thead><tr>'
+      +['Control','Method','Verdict','Score','Assurance · confidence','Coverage','Freshness','Cadence'].map(function(h){return '<th style="'+thin+'">'+h+'</th>';}).join('')
       +'</tr></thead><tbody>'+cids.map(assessRow).join('')+'</tbody></table></div>';
   }
   // Full auditor-style Finding & recommendation — same structure & depth as Classic view.
@@ -5355,16 +5369,17 @@ function c5ContinuousAssessment(host){
     var name=c5AssessDesc(id);var nameLc=String(name).replace(/\.$/,'').toLowerCase();
     var meta=(typeof C5_CSF_META!=='undefined'&&C5_CSF_META[id])||{};var domain=String(meta.cat||'control').toLowerCase();
     var pop=a.coverage?a.coverage.pct:null;var gapPct=(pop!=null)?(100-pop):null;
+    var comp=(a.observedPass!=null)?a.observedPass:null;   // compliance ON the observed population
     var proj=(typeof neuronFrameworkProjection==='function')?neuronFrameworkProjection('csf'):{controls:{}};
     var srcNames=((proj.controls&&proj.controls[id])||[]).filter(function(x){return x.evidence!=='none';}).map(function(x){return String(x.name).replace(/ *\(.*/,'');});
     var F={criteria:'Control <b>'+esc(id)+'</b> ('+esc(name)+') is assessed against a maturity target of CMMI 3.5 (Defined+).'};
     if(a.method==='live'){
-      F.condition='Nerion collected '+esc(domain)+' evidence from '+esc(srcNames.length?srcNames.join(', '):'your connected tools')+' to assess whether '+esc(nameLc)+'. Automated continuous monitoring measured '+(pop!=null?pop:'—')+'% effective coverage across the in-scope population'+(gapPct?(' — '+gapPct+'% remains outside the control'):'')+'; assessed at CMMI '+sc5.toFixed(1)+'.';
-      F.conclusion=(a.verdict==='met')?'Nerion noted that all control criteria are functioning as expected.':(a.verdict==='partial')?('The control is largely operating, but '+(gapPct!=null?gapPct:'part of the')+'% of the population is outside coverage — a partial pass, not a full one.'):'The control is not meeting its target across the in-scope population.';
-      F.recommendation=(a.verdict==='met')?'Maintain coverage and retain the tool’s evidence export each cycle.':'Extend enforcement to the unobserved '+(gapPct!=null?gapPct+'%':'population')+' and re-verify on the next telemetry refresh.';
+      F.condition='Nerion collected '+esc(domain)+' evidence from '+esc(srcNames.length?srcNames.join(', '):'your connected tools')+' to assess whether '+esc(nameLc)+'. Automated continuous monitoring measured '+(comp!=null?comp:'—')+'% compliance across the '+(pop!=null?pop:'—')+'% of the population it can observe'+(gapPct?(' ('+gapPct+'% of the estate is not yet observed — a telemetry blind spot, not a failure)'):'')+'; assessed at CMMI '+sc5.toFixed(1)+'.';
+      F.conclusion=(a.verdict==='met')?('The control is <b>met</b> across the observed population'+(comp!=null?(' — '+comp+'% compliant where measured'):'')+(gapPct?('. The unobserved '+gapPct+'% is a telemetry blind spot to close, not a control failure.'):'.')):(a.verdict==='partial')?((comp!=null?comp:'Part of the')+'% of the <b>observed</b> population meets the control — a partial pass, not a full one'+(gapPct?('; a further '+gapPct+'% of the estate is unobserved.'):'.')):('Only '+(comp!=null?comp:'part of the')+'% of the observed population meets the control — it is not meeting its target.');
+      F.recommendation=(a.verdict==='met')?(gapPct?('Extend telemetry to the unobserved '+gapPct+'% to close the blind spot; the observed population is already compliant.'):'Maintain coverage and retain the tool’s evidence export each cycle.'):('Bring the non-compliant '+(comp!=null?(100-comp)+'%':'share')+' of the observed population into policy'+(gapPct?(', then extend telemetry to the unobserved '+gapPct+'%.'):'.'));
       F.evidence=srcBlock('🔌',srcNames[0]||'Connected tool','demo telemetry',pop,meta.name||'');
     } else if(a.method==='hybrid'){
-      F.condition='Nerion pulled '+esc(domain)+' telemetry from '+esc(srcNames.length?srcNames.join(', '):'your connected tools')+' and computed a proposed verdict; because the tool cannot fully prove the outcome on its own, a human validates it. Measured '+(pop!=null?pop:'—')+'% coverage across the population; assessed at CMMI '+sc5.toFixed(1)+'.';
+      F.condition='Nerion pulled '+esc(domain)+' telemetry from '+esc(srcNames.length?srcNames.join(', '):'your connected tools')+' and computed a proposed verdict; because the tool cannot fully prove the outcome on its own, a human validates it. Measured '+(comp!=null?comp:'—')+'% compliance across the '+(pop!=null?pop:'—')+'% it can observe; assessed at CMMI '+sc5.toFixed(1)+'.';
       F.conclusion='Telemetry indicates <b>'+verdictLabel[a.verdict]+'</b> — pending or completed human confirmation in the weekly queue.';
       F.recommendation='Approve or dispute the proposed verdict in the Confirm-queue tab; keep the telemetry live so the next cycle is a one-click pass.';
       F.evidence='<div style="font-size:11.5px;font-weight:700;color:color-mix(in srgb,var(--good) 55%,var(--blue));margin-bottom:6px">HYBRID — telemetry pulled, a human validates</div>'+srcBlock('🔌',srcNames[0]||'Connected tool','demo telemetry',pop,meta.name||'');
