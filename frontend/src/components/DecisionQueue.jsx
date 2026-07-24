@@ -98,6 +98,13 @@ function Card({ card, role, showOwners, onDecide, voice, orgId, apiUrl, authToke
   const e = card.event, lens = card.lens || {};
   const [accepting, setAccepting] = useState(false);
   const [rationale, setRationale] = useState('');
+  const [act, setAct] = useState(null);      // closed-loop actuation state
+  const [ver, setVer] = useState(null);      // verification result
+  const [busy, setBusy] = useState(false);
+  const hdr = () => { const h = { 'Content-Type': 'application/json', 'X-Org-Id': orgId }; if (authToken) h.Authorization = `Bearer ${authToken}`; return h; };
+  const actuate = () => { setBusy(true); fetch(`${apiUrl}/api/actuation`, { method: 'POST', headers: hdr(), body: JSON.stringify({ org_id: orgId, cardId: card.id, optionId: card.recommended, actor: role, role }) }).then((r) => r.json()).then((d) => setAct(d.actuation || d)).catch(() => {}).finally(() => setBusy(false)); };
+  const verify = () => { if (!act) return; setBusy(true); fetch(`${apiUrl}/api/actuation/${act.id}/verify`, { method: 'POST', headers: hdr(), body: JSON.stringify({ org_id: orgId }) }).then((r) => r.json()).then(setVer).catch(() => {}).finally(() => setBusy(false)); };
+  const visColor = (b) => (b === 'High' ? '#1a7f37' : b === 'Low' ? '#cf222e' : '#9a6700');
   const sev = SEV[e.severity] || '#9a6700';
   const decided = card.decision;
   const compound = card.type === 'compound';
@@ -157,6 +164,8 @@ function Card({ card, role, showOwners, onDecide, voice, orgId, apiUrl, authToke
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center', padding: '10px 16px', background: PANEL, borderTop: `1px solid ${HAIR}`, fontSize: 11 }}>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>{e.provenance && <Provenance prov={e.provenance} />}<span title={e.timing.basis}>Exploit likelihood ({e.timing.confidence} conf): <strong>{e.timing.p7}%</strong>/7d · <strong>{e.timing.p30}%</strong>/30d · <strong>{e.timing.p90}%</strong>/90d</span></span>
         <span>Loss: P50 <strong>{usd(e.loss.p50)}</strong> · P90 <strong style={{ color: '#cf222e' }}>{usd(e.loss.p90)}</strong></span>
+        {e.visibility && <span title={e.visibility.basis}>Visibility: <strong style={{ color: visColor(e.visibility.band) }}>{e.visibility.confidence}%</strong> ({e.visibility.band})</span>}
+        {e.peerSignal && <span title={`Cohort ${e.peerSignal.cohort} · n=${e.peerSignal.n}${e.peerSignal.topControl ? ` · best control: ${e.peerSignal.topControl}` : ''}`}>Peers: <strong>{e.peerSignal.baseRate}%</strong> hit rate</span>}
         <CrqDrawer card={{ id: card.id, title: e.title, loss: e.loss, provenance: e.provenance }} orgId={orgId} apiUrl={apiUrl} authToken={authToken} onSaved={onTuned} />
       </div>
       <div style={{ padding: '8px 16px', fontSize: 10.5, color: INK3 }}>
@@ -204,6 +213,28 @@ function Card({ card, role, showOwners, onDecide, voice, orgId, apiUrl, authToke
         {decided && (
           <div style={{ marginTop: 10, fontSize: 11, color: INK2, background: '#f0f7f2', border: '1px solid #cce8d6', borderRadius: 8, padding: '8px 12px' }}>
             <strong style={{ color: '#1a7f37' }}>Logged:</strong> {decided.action === 'accept' ? 'Accepted & monitoring' : 'Option selected'} by {decided.decidedBy || role}{decided.rationale ? ` — "${decided.rationale}"` : ''} ({new Date(decided.at).toLocaleString()}).
+          </div>
+        )}
+
+        {/* closed loop: execute the recommended option, then verify it worked */}
+        {card.recommended && card.recommended !== 'accept' && (
+          <div style={{ marginTop: 10, borderTop: `1px dashed ${HAIR}`, paddingTop: 10 }}>
+            {!act ? (
+              <button onClick={actuate} disabled={busy} style={{ ...btn('#5e6ad2'), width: 'auto', padding: '7px 14px', opacity: busy ? 0.6 : 1 }}>Actuate recommended &amp; verify</button>
+            ) : (
+              <div style={{ fontSize: 11.5, color: INK2 }}>
+                <div>Dispatched <strong style={{ color: INK }}>{act.option || act.action}</strong> · {act.actuator} ref {act.externalRef || act.external_ref}{act.simulated ? ' (simulated — no connected tool)' : ''}.</div>
+                {!ver ? (
+                  <button onClick={verify} disabled={busy} style={{ ...btn('#0b0c0e'), width: 'auto', padding: '6px 12px', marginTop: 7, opacity: busy ? 0.6 : 1 }}>Re-read telemetry &amp; verify</button>
+                ) : (
+                  <div style={{ marginTop: 7, padding: '7px 11px', borderRadius: 8, background: ver.status === 'verified' ? '#f0f7f2' : '#fbf6e9', border: `1px solid ${ver.status === 'verified' ? '#cce8d6' : '#efe2c0'}` }}>
+                    <strong style={{ color: ver.status === 'verified' ? '#1a7f37' : '#9a6700' }}>{String(ver.status || '').toUpperCase()}</strong>
+                    {ver.postResidual != null && <span> — residual {usd(ver.preResidual)} → <strong style={{ color: '#1a7f37' }}>{usd(ver.postResidual)}</strong></span>}
+                    <div style={{ marginTop: 3, color: INK3 }}>{ver.note}</div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>

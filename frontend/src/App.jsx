@@ -30,6 +30,7 @@ import PersonaDashboard from "./components/PersonaDashboard";
 import ControlAssessment from "./components/ControlAssessment";
 import FrameworkScoreStrip from "./components/FrameworkScoreStrip";
 import RemediationPanel from "./components/RemediationPanel";
+import OsConsole from "./components/OsConsole";
 import AuditDash from "./pages/AuditDash";
 import ReviewMappings from "./pages/ReviewMappings";
 import ProcessGraph from "./pages/ProcessGraph";
@@ -150,6 +151,7 @@ var NAV_GROUPS = [
     label: "Strategic",
     items: [
       {id:"home",      label:"Home",                icon:"🏠", mod:""},
+      {id:"os",        label:"Operating System",    icon:"◆",  mod:"OS"},
     ]
   },
   {
@@ -26042,6 +26044,7 @@ function CyberRxApp() {
   // App shell + page router
   function renderPage() {
     if (page==="home")      { return React.createElement(Home,      sharedProps); }
+    if (page==="os")        { return React.createElement(OsConsole, sharedProps); }
     if (page==="hub")       { return React.createElement(CISODash,  sharedProps); }
     if (page==="bizlines")  { return React.createElement(BizLines,  sharedProps); }
     if (page==="appmap")    { return React.createElement(AppMap,    sharedProps); }
