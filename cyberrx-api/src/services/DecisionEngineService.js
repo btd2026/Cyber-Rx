@@ -263,6 +263,9 @@ async function generate(orgId) {
   // how much we actually see on the affected system.
   let vis = null;
   try { vis = await require('./VisibilityService').byName(orgId); } catch (_) {}
+  // Cross-tenant peer base rates for this org's cohort (outcome network).
+  let cohort = null;
+  try { cohort = await require('./OutcomeNetworkService').cohortDigest(orgId); } catch (_) {}
   const assumptions = await loadAssumptions(orgId);
   const ovFor = (id) => assumptions[id] || assumptions._default || null;
   const crown = (c.crownJewels && c.crownJewels[0] && c.crownJewels[0].name)
@@ -356,6 +359,11 @@ async function generate(orgId) {
       e.visibility = match
         ? { confidence: match.confidence, band: match.band, scope: 'asset', asset: match.name, missing: match.missing, basis: `Data completeness on ${match.name}.` }
         : { confidence: vis.summary.mean, band: vis.summary.band, scope: 'org', missing: (vis.summary.weakestSignals || []).map((w) => w.label), basis: vis.summary.total ? 'No asset-level match — org-wide data completeness.' : 'No asset inventory — visibility unknown.' };
+    }
+    // Peer signal: how often this scenario actually happened to comparable orgs.
+    if (cohort && cohort.byScenario) {
+      const ps = cohort.byScenario[c.event.scenarioType];
+      if (ps && ps.n) c.event.peerSignal = { cohort: cohort.cohort, baseRate: ps.baseRate, n: ps.n, topControl: ps.topControl };
     }
   });
   return { organizationId: orgId, generatedAt: new Date().toISOString(), visibility: vis ? vis.summary : null, cards: all };

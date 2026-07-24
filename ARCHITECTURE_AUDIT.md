@@ -17,6 +17,19 @@
 > lens **migration** (audit Step 5): the role *dashboards* still run the legacy
 > per-role compute (`decisionsFor`/`roleLayout`/`applyRoleLens`) alongside the
 > spine.
+>
+> **OS layer (2026-06-21).** Six subsystems now sit on top of the spine to move
+> it past "a very good CRQ dashboard" toward an operating system: a self-scoring
+> **forecast ledger** (`ForecastService`, Brier + calibration at
+> `/api/forecast/accuracy`); **closed-loop actuation** that executes the chosen
+> option and verifies the residual-risk drop against telemetry
+> (`ActuationService`, `/api/actuation`); standing **autonomous role-operators**
+> that act within a per-role mandate (`AgentOperatorService`, `/api/operators`);
+> a **counterfactual simulator** with chain-collapse analysis
+> (`SimulationService`, `/api/simulate`); a **capital-allocation optimizer**
+> (`AllocationService`, `/api/allocation`); and a consent-gated **cross-tenant
+> outcome network** feeding peer base rates back into the spine
+> (`OutcomeNetworkService`, `/api/outcomes`).
 
 **Scope:** read-only audit. No code changed. All claims cite files under
 `cyberrx-api/src` (backend) and `frontend/src` (frontend).

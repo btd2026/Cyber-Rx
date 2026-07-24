@@ -302,6 +302,20 @@ app.use('/api/business-context',  [apiGetLimiter, apiPostLimiter], require('./ro
 // decision & evidence ledger (the cross-role "decisions, not dashboards" surface).
 app.use('/api/decisions',         [apiGetLimiter, apiPostLimiter], require('./routes/decisions'));
 
+// Operating-system layer over the decision spine:
+//  forecast   — self-scoring prediction ledger (Brier + calibration)
+//  actuation  — closed-loop execution + telemetry-verified residual-risk drop
+//  operators  — standing autonomous per-role agents (act within a mandate)
+//  simulate   — counterfactual what-if over the graph (chain-collapse analysis)
+//  allocation — ROI-ranked capital allocation + efficient frontier
+//  outcomes   — cross-tenant anonymized outcome network (peer base rates)
+app.use('/api/forecast',          [apiGetLimiter, apiPostLimiter], require('./routes/forecast'));
+app.use('/api/actuation',         [apiGetLimiter, apiPostLimiter], require('./routes/actuation'));
+app.use('/api/operators',         [apiGetLimiter, apiPostLimiter, apiPutLimiter], require('./routes/operators'));
+app.use('/api/simulate',          [apiGetLimiter, apiPostLimiter], require('./routes/simulate'));
+app.use('/api/allocation',        [apiGetLimiter, apiPostLimiter], require('./routes/allocation'));
+app.use('/api/outcomes',          [apiGetLimiter, apiPostLimiter], require('./routes/outcomes'));
+
 // Per-tenant overridable defaults (appetite, scoring weights, frameworks, taxonomy).
 app.use('/api/tenant-config',     [apiGetLimiter, apiPutLimiter], require('./routes/tenantConfig'));
 
