@@ -259,6 +259,9 @@ function buildCompounds(orgId, cards, crown, dataAtRisk) {
 async function generate(orgId) {
   const Exec = require('./ExecDashboardService');
   const c = await Exec.loadCtx(orgId);
+  // Cross-tenant peer base rates for this org's cohort (outcome network).
+  let cohort = null;
+  try { cohort = await require('./OutcomeNetworkService').cohortDigest(orgId); } catch (_) {}
   const assumptions = await loadAssumptions(orgId);
   const ovFor = (id) => assumptions[id] || assumptions._default || null;
   const crown = (c.crownJewels && c.crownJewels[0] && c.crownJewels[0].name)
@@ -344,6 +347,11 @@ async function generate(orgId) {
     c.event.provenance = prov(liveSignal ? 'live' : 'modeled',
       liveSignal ? `EPSS/KEV · ${(t.cves || []).join(', ') || 'CISA KEV'}` : 'Loss & exploit model',
       { lineage: tuned ? 'User-tuned assumptions' : (liveSignal ? null : 'Monte Carlo loss × modeled likelihood') });
+    // Peer signal: how often this scenario actually happened to comparable orgs.
+    if (cohort && cohort.byScenario) {
+      const ps = cohort.byScenario[c.event.scenarioType];
+      if (ps && ps.n) c.event.peerSignal = { cohort: cohort.cohort, baseRate: ps.baseRate, n: ps.n, topControl: ps.topControl };
+    }
   });
   return { organizationId: orgId, generatedAt: new Date().toISOString(), cards: all };
 }

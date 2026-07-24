@@ -6796,3 +6796,83 @@ function c5fwCtlRow(c){var selc=(C5FW_CTRL===c.id)?' sel':'';
   var mapped=(c.mapped&&c.mapped.length)?('<div class="c5fw-map">mapped ← '+c.mapped.slice(0,6).map(function(id){return id;}).join(' · ')+'</div>'):'';
   return '<div class="c5fw-crow'+selc+'" data-c5fwctl="'+c.id+'"><span class="c5fw-tw"></span><span class="c5fw-dot" style="background:var(--'+col+')"></span><span class="c5fw-id">'+c.id+'</span><span class="c5fw-nm">'+c.name+mapped+'</span><span class="c5fw-lvl">'+c5fwLvl(c.score)+'</span><span class="c5fw-sc" style="color:var(--'+col+')">'+c.score.toFixed(1)+'</span></div>';
 }
+
+/* ============================================================================
+   Operating System layer — the six capabilities that make Nerion an operating
+   system, not a register: a scored forecast track record, closed-loop
+   actuation, autonomous operators, counterfactual simulation, capital
+   allocation, and a cross-tenant outcome network. Reads the live engine; copy
+   is decision-first and plain-spoken, in the cockpit's house voice.
+   ==========================================================================*/
+var C5OSBTN='background:var(--blue);color:#fff;border:none;border-radius:7px;padding:6px 12px;font-size:11.5px;font-weight:700;cursor:pointer';
+function c5osApi(){return (typeof apiBase==='function')?apiBase():'';}
+function c5osOrg(){return (typeof orgId==='function')?orgId():'';}
+function c5osGet(path){var o=c5osOrg();return fetch(c5osApi()+path+(path.indexOf('?')>=0?'&':'?')+'org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json','X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).catch(function(){return null;});}
+function c5osPost(path,body){var o=c5osOrg();return fetch(c5osApi()+path,{method:'POST',headers:{'Content-Type':'application/json','X-Org-Id':o},body:JSON.stringify(Object.assign({org_id:o},body||{}))}).then(function(r){return r.ok?r.json():null;}).catch(function(){return null;});}
+function c5usd(v){var x=Number(v)||0;if(x>=1e9)return '$'+(x/1e9).toFixed(1)+'B';if(x>=1e6)return '$'+(x/1e6).toFixed(1)+'M';if(x>=1e3)return '$'+Math.round(x/1e3)+'K';return '$'+Math.round(x);}
+function c5osNo(){return '<div style="color:var(--muted);font-size:12px">Not available — the engine isn’t reachable from here right now.</div>';}
+function c5osPanel(id,title,sub){return '<div style="border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:16px 18px;margin-top:14px"><div style="font-weight:700;font-size:15px;color:var(--ink)">'+title+'</div><div style="font-size:12px;color:var(--ink-2);margin-top:2px">'+sub+'</div><div id="c5os-'+id+'" style="margin-top:12px;font-size:13px;color:var(--ink-2)">Loading…</div></div>';}
+function c5osBtnRow(pairs){return '<div style="display:flex;gap:8px;margin-top:12px">'+pairs.map(function(p){return '<button class="c5btn" data-c5os="'+p[1]+'" style="'+C5OSBTN+'">'+p[0]+'</button>';}).join('')+'</div>';}
+
+function c5OsLayer(){
+  var host=document.getElementById('c5-oslayer'); if(!host) return;
+  host.innerHTML = c5shell(
+    'The operating system, not the register',
+    'A register records what is true. An operating system <span class="em">acts on it</span> — and proves the action worked.',
+    '',
+    'Six things a compliance tool structurally cannot do: forecast with a scored track record, execute a decision and verify it, run standing operators, simulate the counterfactual, allocate capital by return, and learn from peers’ real outcomes.'
+  )
+  + c5osPanel('track','Track record','Whether our forecasts have actually held up — scored against what happened, not asserted.')
+  + c5osPanel('alloc','Capital allocation','Where the next dollar buys down the most risk — and where the curve flattens.')
+  + c5osPanel('sim','The counterfactual','What the portfolio looks like if you break one link — and which chained scenarios collapse with it.')
+  + c5osPanel('ops','Autonomous operators','What the standing agents handled inside their mandate, and what they escalated to you.')
+  + c5osPanel('act','Closed loop','Decisions that were executed — and whether telemetry has confirmed the risk actually fell.')
+  + c5osPanel('peers','Peer outcomes','What comparable institutions actually experienced, and the control that most often held.');
+  c5osFillTrack(); c5osFillAlloc(); c5osFillSim(); c5osFillOps(); c5osFillAct(); c5osFillPeers();
+}
+
+function c5osFillTrack(){ c5osGet('/api/forecast/accuracy').then(function(d){
+  var el=document.getElementById('c5os-track'); if(!el)return; if(!d){el.innerHTML=c5osNo();return;}
+  if(!d.resolved){ el.innerHTML='<div style="color:var(--ink-2)">No forecast has come due yet. Predictions are recorded now; the track record forms as their horizons elapse and reconcile against what actually happened — no self-grading before the fact.</div>'+c5osBtnRow([['Record today’s forecast','snapshot'],['Reconcile what’s due','reconcile']]); return; }
+  var bcol=d.brier==null?'--muted':d.brier<=0.15?'--good':d.brier<=0.25?'--warn':'--crit';
+  var bars=(d.calibration||[]).map(function(b){return '<div style="display:flex;align-items:center;gap:8px;margin-top:5px"><span style="width:66px;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums">'+b.range+'</span><div style="flex:1;height:14px;background:var(--line);border-radius:4px;position:relative"><div style="position:absolute;left:0;top:0;bottom:0;width:'+b.predicted+'%;background:#8fa9cf;border-radius:4px"></div><div style="position:absolute;left:calc('+b.observed+'% - 1px);top:-2px;bottom:-2px;width:2px;background:var(--crit)"></div></div><span style="width:132px;font-size:10.5px;color:var(--muted)">forecast '+b.predicted+'% · actual '+b.observed+'%</span></div>';}).join('');
+  el.innerHTML='<div style="display:flex;gap:22px;flex-wrap:wrap;align-items:baseline"><div><div style="font-size:28px;font-weight:800;color:var('+bcol+')">'+d.brier+'</div><div style="font-size:11px;color:var(--muted)">Brier score · lower is better; 0.25 is a coin toss</div></div><div style="font-size:12.5px;color:var(--ink-2);max-width:440px;line-height:1.5">'+d.interpretation+'</div></div>'+(bars?('<div style="margin-top:14px"><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:700;margin-bottom:2px">Calibration — forecast vs. actual (aligned = honest)</div>'+bars+'</div>'):'')+c5osBtnRow([['Record today’s forecast','snapshot'],['Reconcile','reconcile']]);
+}); }
+
+function c5osAllocView(d){
+  var max=(d.frontier&&d.frontier.length)?(d.frontier[d.frontier.length-1].riskReduced||1):1;
+  var fr=(d.frontier||[]).map(function(f,i){var funded=i<d.funded;return '<div style="display:flex;align-items:center;gap:8px;margin-top:4px"><span style="width:64px;font-size:10.5px;color:var(--muted);font-variant-numeric:tabular-nums">'+c5usd(f.spend)+'</span><div style="flex:1;height:12px;background:var(--line);border-radius:4px"><div style="width:'+Math.round((f.riskReduced/max)*100)+'%;height:100%;background:var('+(funded?'--good':'--line-2')+');border-radius:4px"></div></div><span style="width:80px;font-size:10.5px;color:var(--muted);font-variant-numeric:tabular-nums">'+c5usd(f.riskReduced)+'</span></div>';}).join('');
+  return '<div style="display:flex;gap:8px;align-items:center;margin-bottom:10px"><span style="font-size:12px;color:var(--ink-2)">Budget</span><input id="c5os-budget" type="number" value="'+(d.budget||2000000)+'" style="width:150px;border:1px solid var(--line-2);border-radius:7px;padding:6px 9px;font-size:13px;font-variant-numeric:tabular-nums"><button class="c5btn" data-c5os="optimize" style="'+C5OSBTN+'">Optimize</button></div><div style="font-size:12.5px;color:var(--ink);margin-bottom:10px;line-height:1.5">'+d.narrative+'</div>'+(fr?('<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:700;margin-bottom:2px">Efficient frontier — risk removed per dollar (green = funded within budget)</div>'+fr):'');
+}
+function c5osFillAlloc(){ c5osGet('/api/allocation/optimize?budget=2000000').then(function(d){ var el=document.getElementById('c5os-alloc'); if(!el)return; el.innerHTML=d?c5osAllocView(d):c5osNo(); }); }
+
+function c5osFillSim(){ c5osGet('/api/decisions').then(function(d){ var el=document.getElementById('c5os-sim'); if(!el)return; if(!d){el.innerHTML=c5osNo();return;}
+  var cards=(d.cards||[]).filter(function(c){return c.type!=='compound';});
+  var rows=cards.map(function(c){return '<label style="display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--ink);padding:3px 0;cursor:pointer"><input type="checkbox" value="'+c.id+'"><span style="flex:1">'+c5esc(c.event.title)+'</span><span style="font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums">'+c5usd(c.event.loss&&c.event.loss.expected)+'</span></label>';}).join('');
+  el.innerHTML=(rows?('<div style="max-height:180px;overflow:auto;border:1px solid var(--line);border-radius:8px;padding:8px 10px">'+rows+'</div>'):'<div style="color:var(--muted);font-size:12px">No open decisions to model.</div>')+'<button class="c5btn" data-c5os="simrun" style="'+C5OSBTN+';margin-top:10px">Model breaking these links</button><div id="c5os-simres" style="margin-top:10px"></div>';
+}); }
+
+function c5osFillOps(){ c5osGet('/api/operators/runs').then(function(d){ var el=document.getElementById('c5os-ops'); if(!el)return; if(!d){el.innerHTML=c5osNo();return;}
+  var runs=(d.runs||[]).slice(0,6).map(function(r){return '<div style="display:flex;gap:12px;font-size:11.5px;color:var(--ink-2);padding:4px 0;border-bottom:1px solid var(--line)"><span style="width:48px;font-weight:700;color:var(--ink)">'+r.role+'</span><span>reviewed '+r.considered+'</span><span>acted '+r.acted+'</span><span>escalated '+r.escalated+'</span></div>';}).join('');
+  el.innerHTML='<button class="c5btn" data-c5os="runops" style="'+C5OSBTN+';margin-bottom:12px">Run the operators now</button>'+(runs||'<div style="color:var(--muted);font-size:12px">No runs yet. Each operator drafts the recommended call, acts on what sits inside its mandate, and escalates the rest to you — every action logged to the ledger.</div>');
+}); }
+
+function c5osFillAct(){ c5osGet('/api/actuation').then(function(d){ var el=document.getElementById('c5os-act'); if(!el)return; if(!d){el.innerHTML=c5osNo();return;}
+  var acts=d.actuations||[]; if(!acts.length){el.innerHTML='<div style="color:var(--muted);font-size:12px">Nothing actuated yet. When a decision is executed it dispatches to the tool of record, then re-reads telemetry to confirm the residual risk actually fell — it never claims a fix on assertion alone.</div>';return;}
+  el.innerHTML=acts.map(function(a){var sc=a.status==='verified'?'--good':a.status==='unverified'?'--warn':'--ink-2';var delta=a.post_residual_risk!=null?(' · '+c5usd(a.pre_residual_risk)+' → <b style="color:var(--good)">'+c5usd(a.post_residual_risk)+'</b>'):'';return '<div style="border-top:1px solid var(--line);padding:9px 0"><div style="display:flex;justify-content:space-between;gap:10px"><span style="font-size:12.5px;color:var(--ink);font-weight:600">'+c5esc(a.action)+'</span><span style="font-size:11.5px;font-weight:800;color:var('+sc+');text-transform:uppercase">'+a.status+'</span></div><div style="font-size:11px;color:var(--muted);margin-top:2px">'+a.actuator+' · '+a.external_ref+(a.simulated?' · simulated':'')+delta+'</div>'+(a.status!=='verified'?('<button class="c5btn" data-c5os="verify" data-id="'+a.id+'" style="'+C5OSBTN+';margin-top:6px">Re-read telemetry &amp; verify</button>'):'')+'</div>';}).join('');
+}); }
+
+function c5osFillPeers(){ c5osGet('/api/outcomes/insights').then(function(d){ var el=document.getElementById('c5os-peers'); if(!el)return; if(!d){el.innerHTML=c5osNo();return;}
+  el.innerHTML='<div style="display:flex;gap:26px;flex-wrap:wrap"><div><div style="font-size:24px;font-weight:800;color:var(--ink)">'+(d.baseRate==null?'—':d.baseRate+'%')+'</div><div style="font-size:11px;color:var(--muted)">how often comparable institutions were hit</div></div><div><div style="font-size:15px;font-weight:700;color:var(--ink)">'+(d.topControl?c5esc(d.topControl.control):'—')+'</div><div style="font-size:11px;color:var(--muted)">the control that most often held'+(d.topControl?(' · '+d.topControl.workedPct+'%'):'')+'</div></div></div><div style="font-size:12px;color:var(--ink-2);margin-top:10px;line-height:1.5">'+d.caveat+'</div><div style="font-size:11px;color:var(--muted);margin-top:4px">Cohort: '+c5esc(d.cohort)+' · '+d.n+' anonymized outcomes · no institution is identifiable</div><button class="c5btn" data-c5os="contribute" style="'+C5OSBTN+';margin-top:10px">Contribute our anonymized outcomes</button>';
+}); }
+
+function c5osAction(a,el){
+  if(a==='snapshot'){c5osPost('/api/forecast/snapshot',{}).then(c5osFillTrack);}
+  else if(a==='reconcile'){c5osPost('/api/forecast/reconcile',{}).then(c5osFillTrack);}
+  else if(a==='optimize'){var v=(document.getElementById('c5os-budget')||{}).value||2000000;c5osGet('/api/allocation/optimize?budget='+encodeURIComponent(v)).then(function(d){var t=document.getElementById('c5os-alloc');if(t&&d)t.innerHTML=c5osAllocView(d);});}
+  else if(a==='runops'){try{el.textContent='Running…';}catch(_){}c5osPost('/api/operators/tick',{}).then(c5osFillOps);}
+  else if(a==='simrun'){var ids=[].slice.call(document.querySelectorAll('#c5os-sim input:checked')).map(function(x){return x.value;});c5osPost('/api/simulate/what-if',{fix:ids}).then(function(r){var t=document.getElementById('c5os-simres');if(!t)return;if(!r){t.innerHTML=c5osNo();return;}var chains=(r.collapsedChains||[]).map(function(c){return '<div style="font-size:12px;color:var(--blue);margin-top:4px">⛓ Chain collapses: <b>'+c5esc(c.title)+'</b> (removes '+c5usd(c.loss)+')</div>';}).join('');t.innerHTML='<div style="font-size:12.5px;color:var(--ink);line-height:1.5">'+r.narrative+'</div>'+chains;});}
+  else if(a==='verify'){var id=el.getAttribute('data-id');try{el.textContent='Verifying…';}catch(_){}c5osPost('/api/actuation/'+encodeURIComponent(id)+'/verify',{}).then(c5osFillAct);}
+  else if(a==='contribute'){c5osPost('/api/outcomes/contribute',{}).then(c5osFillPeers);}
+}
+if(typeof window!=='undefined'&&!window.__c5osWired){window.__c5osWired=true;document.addEventListener('click',function(e){var el=e.target.closest&&e.target.closest('[data-c5os]');if(el){e.preventDefault();c5osAction(el.getAttribute('data-c5os'),el);}});}
