@@ -63,7 +63,23 @@
     'os.peers.control':  { en: 'the control that most often held', fr: 'le contrôle qui a le plus souvent tenu', zh: '最常发挥作用的控制措施', ja: '最も頻繁に有効だった管理策' },
     'os.peers.cohort':   { en: 'Cohort:', fr: 'Cohorte :', zh: '对照组：', ja: 'コホート：' },
     'os.peers.anon':     { en: '{n} anonymized outcomes · no institution is identifiable', fr: '{n} résultats anonymisés · aucune institution identifiable', zh: '{n} 条匿名结果 · 无法识别任何机构', ja: '{n} 件の匿名化された結果 · いかなる機関も特定不可' },
-    'os.peers.contribute': { en: 'Contribute our anonymized outcomes', fr: 'Contribuer nos résultats anonymisés', zh: '贡献我们的匿名结果', ja: '当社の匿名化結果を提供' }
+    'os.peers.contribute': { en: 'Contribute our anonymized outcomes', fr: 'Contribuer nos résultats anonymisés', zh: '贡献我们的匿名结果', ja: '当社の匿名化結果を提供' },
+
+    'os.rib.cal':   { en: 'Forecast calibration', fr: 'Étalonnage des prévisions', zh: '预测校准', ja: '予測較正' },
+    'os.rib.red':   { en: 'Reducible risk', fr: 'Risque réductible', zh: '可降低风险', ja: '削減可能リスク' },
+    'os.rib.ops':   { en: 'Operator actions', fr: 'Actions des opérateurs', zh: '代理执行数', ja: 'オペレーター対応数' },
+    'os.rib.peer':  { en: 'Peer base rate', fr: 'Taux de base des pairs', zh: '同业基准率', ja: '同業基準率' },
+    'os.leg.pred':  { en: 'mean forecast', fr: 'prévision moyenne', zh: '平均预测', ja: '平均予測' },
+    'os.leg.obs':   { en: 'observed', fr: 'observé', zh: '实际观测', ja: '実測' },
+    'os.alloc.reducible': { en: 'reducible', fr: 'réductible', zh: '可降低', ja: '削減可能' },
+    'os.act.ledger':{ en: 'Decision ledger — executed &amp; verified', fr: 'Registre des décisions — exécutées et vérifiées', zh: '决策台账——已执行并核实', ja: '意思決定台帳——実行・検証済み' },
+    'os.act.chain': { en: 'chain intact', fr: 'chaîne intacte', zh: '链完整', ja: 'チェーン正常' },
+    'os.act.pending':{ en: 'pending', fr: 'en attente', zh: '待定', ja: '保留中' },
+    'os.act.c1':    { en: 'Decision', fr: 'Décision', zh: '决策', ja: '意思決定' },
+    'os.act.c2':    { en: 'Dispatched to', fr: 'Transmis à', zh: '下发至', ja: '送信先' },
+    'os.act.c3':    { en: 'Status', fr: 'Statut', zh: '状态', ja: '状態' },
+    'os.act.c4':    { en: 'Residual risk', fr: 'Risque résiduel', zh: '残余风险', ja: '残存リスク' },
+    'os.ops.across':{ en: 'across {n} recent runs', fr: 'sur {n} exécutions récentes', zh: '基于最近 {n} 次运行', ja: '直近 {n} 回の実行に基づく' }
   };
 
   function lang() { try { return localStorage.getItem('cyberrx_lang') || 'en'; } catch (_) { return 'en'; } }
