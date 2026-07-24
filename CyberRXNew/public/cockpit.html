@@ -881,6 +881,7 @@ function buildTabs(){
   tabs.querySelectorAll('.sectab').forEach(function(b){b.onclick=function(){var idx=+b.dataset.sec;secs.forEach(function(sc,i){sc.style.display=i===idx?'':'none';});tabs.querySelectorAll('.sectab').forEach(function(x){x.classList.toggle('on',x===b);});if(typeof saveLastTab==='function'&&typeof CUR!=='undefined'){saveLastTab(CUR,idx);if(typeof pushUiState==='function'){var _t={};_t[CUR]=idx;pushUiState({tabs:_t});}}window.scrollTo({top:0});};});
 }
 </script>
+<script src="i18n.js"></script>
 <script src="cockpit-seats.js"></script>
 <script src="trustLogic.js"></script>
 <script src="execNarrative.js"></script>
