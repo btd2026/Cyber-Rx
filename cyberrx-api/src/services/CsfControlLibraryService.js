@@ -64,6 +64,8 @@ async function getLibrary(orgId) {
       id: c.id, function: c.fn, category: c.cat,
       categoryName: (CATEGORIES.find((x) => x.id === c.cat) || {}).name || c.cat,
       name: c.name,
+      intent: c.intent || null,          // plain-English: the risk this control mitigates
+      type: c.type || null,              // People | Process | Technology
       test: c.test, testLabel: TEST_LABEL[c.test] || c.test,
       automatable: c.test === 'auto' || c.test === 'partial',
       signal: c.signal,
