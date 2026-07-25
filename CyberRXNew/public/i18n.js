@@ -98,13 +98,13 @@
     var el = document.getElementById('nlangbar'); if (!el) return; var cur = lang();
     el.innerHTML = LANGS.map(function (l) {
       var on = l[0] === cur;
-      return '<button data-nlang="' + l[0] + '" style="border:none;background:' + (on ? '#1A5FA0' : 'transparent') + ';color:' + (on ? '#fff' : '#5F5E5A') + ';font-family:inherit;font-weight:600;font-size:11px;line-height:1;border-radius:99px;padding:5px 10px;cursor:pointer">' + l[1] + '</button>';
+      return '<button data-nlang="' + l[0] + '" style="border:none;background:' + (on ? '#E7B24E' : 'transparent') + ';color:' + (on ? '#0b0f16' : '#98A6B8') + ';font-family:inherit;font-weight:600;font-size:11px;line-height:1;border-radius:99px;padding:5px 10px;cursor:pointer">' + l[1] + '</button>';
     }).join('');
   }
   function mount() {
     if (document.getElementById('nlangbar')) return;
     var bar = document.createElement('div'); bar.id = 'nlangbar';
-    bar.style.cssText = 'position:fixed;top:10px;right:12px;z-index:9000;display:flex;gap:2px;background:rgba(255,255,255,.92);backdrop-filter:blur(6px);border:1px solid #E6E4DE;border-radius:99px;padding:3px;box-shadow:0 4px 14px rgba(0,0,0,.08)';
+    bar.style.cssText = 'position:fixed;bottom:16px;right:16px;z-index:9000;display:flex;gap:2px;background:rgba(16,24,39,.92);backdrop-filter:blur(8px);border:1px solid #26344A;border-radius:99px;padding:3px;box-shadow:0 6px 20px rgba(0,0,0,.4)';
     document.body.appendChild(bar); paint();
   }
   document.addEventListener('click', function (e) { var b = e.target.closest && e.target.closest('[data-nlang]'); if (b) setLang(b.getAttribute('data-nlang')); });
