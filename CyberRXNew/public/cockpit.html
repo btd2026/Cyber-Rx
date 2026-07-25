@@ -48,6 +48,12 @@
   /* Scope selector — a secondary filter strip beneath the section tabs. Re-scopes the
      section you're reading; the section tabs above are the primary story drivers. */
   .c5scope{display:flex;align-items:center;gap:5px 6px;flex-wrap:wrap;margin:4px 0 22px;padding:10px 13px;border:1px solid var(--line);border-radius:11px;background:var(--surface-2)}
+  /* Freeze the section tabs + scope selector at the top of the viewport so the navigation
+     never scrolls out of reach while reading a long section. Sticky (not fixed) so it only
+     pins once you scroll past the seat header. Shadow appears once pinned for separation. */
+  .c5navsticky{position:sticky;top:0;z-index:30;background:var(--plane);padding-top:8px;transition:box-shadow .15s}
+  .c5navsticky.pinned{box-shadow:0 8px 20px -12px rgba(20,33,72,.28);border-bottom:1px solid var(--line)}
+  .c5navsticky .c5scope{margin-bottom:14px}
   .c5scope:empty{display:none}
   .c5scope .seatlbl{margin-right:8px}
   #dataModeBar{display:none}
@@ -803,22 +809,39 @@ function sec(no,q,desc,inner){return '<div class="section"><div class="rubric"><
 
 var SEAT_LABEL={board:'Board of Directors',ceo:'CEO',cfo:'CFO',coo:'COO',clo:'Chief Legal Officer',cro:'Chief Risk Officer',cio:'CIO',ciso:'CISO'};
 var CUR='ceo';
+/* When a re-render is a SCOPE change (region/entity click) rather than a fresh section load,
+   we keep the reader where they are instead of yanking them to the top. selectScope sets this. */
+var C5_PRESERVE_SCROLL=false;
 function render(seat){
   CUR=seat;var s=SEATS[seat];
   if(!s){try{console.warn('render(): unknown seat',seat);}catch(_){}return;} // defensive: never crash on an unregistered seat (e.g. latent cpo/audit)
+  var _preserveY=C5_PRESERVE_SCROLL?(window.scrollY||window.pageYOffset||0):null;
   // Seat header (CISO …). The "Now viewing" scope banner is removed — scope switching lives in
   // the top scope bar, and the regions/entity drill lives inside Continuous assessment.
   var h=((typeof c5seatHeader==='function')?c5seatHeader():('<div class="hero"><div class="eyebrow">'+s.eyebrow+'</div></div>'));
   // Section tabs drive the story (primary); the scope selector sits BELOW them as a
   // secondary filter that re-scopes whichever section you're reading.
-  h+='<div id="secTabs" class="sectabs"></div>'
+  h+='<div class="c5navsticky" id="navSticky">'
+    +'<div id="secTabs" class="sectabs"></div>'
     +'<div class="c5scope" id="scopeBar" role="navigation" aria-label="Scope: enterprise, region, entity"></div>'
+    +'</div>'
     +'<div id="secWrap">'+s.body()+'</div>';
   document.getElementById('app').innerHTML=localizeInd(h);
   try{if(typeof wireScopeBanner==='function')wireScopeBanner();}catch(_){}
   buildTabs();
   try{if(typeof renderScopeBar==='function')renderScopeBar();}catch(_){}
-  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderCisoDecisions();try{if(typeof c5SeatViews==='function')c5SeatViews();}catch(_){}c5Health();c5Exposure();c5Effect();try{if(typeof c5Resilience==='function')c5Resilience();}catch(_){}c5Threats();c5Peers();c5Frameworks();c5AiSupply();try{if(typeof c5DecProj==='function')c5DecProj();}catch(_){}try{if(typeof c5Decisions==='function')c5Decisions();}catch(_){}renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderPeerCompare();renderCisoVendors();renderProcBars();renderOversight();renderTrend();renderEarnings();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();try{if(typeof renderDelta==='function')renderDelta();}catch(_){}window.scrollTo({top:0});
+  wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderCisoDecisions();try{if(typeof c5SeatViews==='function')c5SeatViews();}catch(_){}c5Health();c5Exposure();c5Effect();try{if(typeof c5Resilience==='function')c5Resilience();}catch(_){}c5Threats();c5Peers();c5Frameworks();c5AiSupply();try{if(typeof c5DecProj==='function')c5DecProj();}catch(_){}try{if(typeof c5Decisions==='function')c5Decisions();}catch(_){}renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderPeerCompare();renderCisoVendors();renderProcBars();renderOversight();renderTrend();renderEarnings();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();try{if(typeof renderDelta==='function')renderDelta();}catch(_){}
+  // Restore scroll on a scope change; only jump to top on a genuine section/seat load.
+  if(_preserveY!=null){try{window.scrollTo(0,_preserveY);}catch(_){}}else{try{window.scrollTo({top:0});}catch(_){}}
+  C5_PRESERVE_SCROLL=false;
+  try{c5SyncNavPinned();}catch(_){}
+}
+/* Toggle a shadow on the sticky nav once it's actually pinned (scrolled past its origin),
+   so it reads as a floating bar only when overlapping content. */
+function c5SyncNavPinned(){var el=document.getElementById('navSticky');if(!el)return;
+  var pin=function(){try{el.classList.toggle('pinned',el.getBoundingClientRect().top<=0.5);}catch(_){}};
+  if(!window.__c5NavPinListener){window.__c5NavPinListener=true;window.addEventListener('scroll',function(){var e=document.getElementById('navSticky');if(e)e.classList.toggle('pinned',e.getBoundingClientRect().top<=0.5);},{passive:true});}
+  pin();
 }
 /* Turn the seat's stacked sections into tabs — one tab per section, only the
    active section shown. Short tab labels come from a lookup (falls back to a
@@ -3361,11 +3384,11 @@ function fetchEntityEvidence(scope){
       .then(function(d){if(!d||!d.evidence)return;var ev=d.evidence;
         if(ev.signals&&SIGNALS_BASE){var s=JSON.parse(JSON.stringify(SIGNALS_BASE));Object.keys(ev.signals).forEach(function(k){s[k]={key:k,value:ev.signals[k]};});SIGNALS=s;}
         if(ev.doc_scores&&Object.keys(ev.doc_scores).length){try{localStorage.setItem('cyberrx_doc_scores',JSON.stringify(ev.doc_scores));}catch(_){}}
-        try{render('ciso');}catch(_){}})
+        C5_PRESERVE_SCROLL=true;try{render('ciso');}catch(_){}})
       .catch(function(){});
   }catch(_){}
 }
-function selectScope(id){try{applyScope(id);}catch(_){}renderScopeBar();try{render('ciso');}catch(_){}try{fetchEntityEvidence(id);}catch(_){}}
+function selectScope(id){C5_PRESERVE_SCROLL=true;try{applyScope(id);}catch(_){}renderScopeBar();try{render('ciso');}catch(_){}try{fetchEntityEvidence(id);}catch(_){}}
 /* Bulletproof scope navigation: ONE delegated listener on the document catches every click on
    any [data-scope] control — the top scope bar, the "Regions/Entities at a glance" drill cards,
    the region banner — no matter how many times render() rebuilds the DOM. This replaces the old
