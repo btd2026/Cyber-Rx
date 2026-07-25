@@ -63,23 +63,7 @@
     'os.peers.control':  { en: 'the control that most often held', fr: 'le contrôle qui a le plus souvent tenu', zh: '最常发挥作用的控制措施', ja: '最も頻繁に有効だった管理策' },
     'os.peers.cohort':   { en: 'Cohort:', fr: 'Cohorte :', zh: '对照组：', ja: 'コホート：' },
     'os.peers.anon':     { en: '{n} anonymized outcomes · no institution is identifiable', fr: '{n} résultats anonymisés · aucune institution identifiable', zh: '{n} 条匿名结果 · 无法识别任何机构', ja: '{n} 件の匿名化された結果 · いかなる機関も特定不可' },
-    'os.peers.contribute': { en: 'Contribute our anonymized outcomes', fr: 'Contribuer nos résultats anonymisés', zh: '贡献我们的匿名结果', ja: '当社の匿名化結果を提供' },
-
-    'os.rib.cal':   { en: 'Forecast calibration', fr: 'Étalonnage des prévisions', zh: '预测校准', ja: '予測較正' },
-    'os.rib.red':   { en: 'Reducible risk', fr: 'Risque réductible', zh: '可降低风险', ja: '削減可能リスク' },
-    'os.rib.ops':   { en: 'Operator actions', fr: 'Actions des opérateurs', zh: '代理执行数', ja: 'オペレーター対応数' },
-    'os.rib.peer':  { en: 'Peer base rate', fr: 'Taux de base des pairs', zh: '同业基准率', ja: '同業基準率' },
-    'os.leg.pred':  { en: 'mean forecast', fr: 'prévision moyenne', zh: '平均预测', ja: '平均予測' },
-    'os.leg.obs':   { en: 'observed', fr: 'observé', zh: '实际观测', ja: '実測' },
-    'os.alloc.reducible': { en: 'reducible', fr: 'réductible', zh: '可降低', ja: '削減可能' },
-    'os.act.ledger':{ en: 'Decision ledger — executed &amp; verified', fr: 'Registre des décisions — exécutées et vérifiées', zh: '决策台账——已执行并核实', ja: '意思決定台帳——実行・検証済み' },
-    'os.act.chain': { en: 'chain intact', fr: 'chaîne intacte', zh: '链完整', ja: 'チェーン正常' },
-    'os.act.pending':{ en: 'pending', fr: 'en attente', zh: '待定', ja: '保留中' },
-    'os.act.c1':    { en: 'Decision', fr: 'Décision', zh: '决策', ja: '意思決定' },
-    'os.act.c2':    { en: 'Dispatched to', fr: 'Transmis à', zh: '下发至', ja: '送信先' },
-    'os.act.c3':    { en: 'Status', fr: 'Statut', zh: '状态', ja: '状態' },
-    'os.act.c4':    { en: 'Residual risk', fr: 'Risque résiduel', zh: '残余风险', ja: '残存リスク' },
-    'os.ops.across':{ en: 'across {n} recent runs', fr: 'sur {n} exécutions récentes', zh: '基于最近 {n} 次运行', ja: '直近 {n} 回の実行に基づく' }
+    'os.peers.contribute': { en: 'Contribute our anonymized outcomes', fr: 'Contribuer nos résultats anonymisés', zh: '贡献我们的匿名结果', ja: '当社の匿名化結果を提供' }
   };
 
   function lang() { try { return localStorage.getItem('cyberrx_lang') || 'en'; } catch (_) { return 'en'; } }
@@ -98,13 +82,13 @@
     var el = document.getElementById('nlangbar'); if (!el) return; var cur = lang();
     el.innerHTML = LANGS.map(function (l) {
       var on = l[0] === cur;
-      return '<button data-nlang="' + l[0] + '" style="border:none;background:' + (on ? '#E7B24E' : 'transparent') + ';color:' + (on ? '#0b0f16' : '#98A6B8') + ';font-family:inherit;font-weight:600;font-size:11px;line-height:1;border-radius:99px;padding:5px 10px;cursor:pointer">' + l[1] + '</button>';
+      return '<button data-nlang="' + l[0] + '" style="border:none;background:' + (on ? '#1A5FA0' : 'transparent') + ';color:' + (on ? '#fff' : '#5F5E5A') + ';font-family:inherit;font-weight:600;font-size:11px;line-height:1;border-radius:99px;padding:5px 10px;cursor:pointer">' + l[1] + '</button>';
     }).join('');
   }
   function mount() {
     if (document.getElementById('nlangbar')) return;
     var bar = document.createElement('div'); bar.id = 'nlangbar';
-    bar.style.cssText = 'position:fixed;bottom:16px;right:16px;z-index:9000;display:flex;gap:2px;background:rgba(16,24,39,.92);backdrop-filter:blur(8px);border:1px solid #26344A;border-radius:99px;padding:3px;box-shadow:0 6px 20px rgba(0,0,0,.4)';
+    bar.style.cssText = 'position:fixed;top:10px;right:12px;z-index:9000;display:flex;gap:2px;background:rgba(255,255,255,.92);backdrop-filter:blur(6px);border:1px solid #E6E4DE;border-radius:99px;padding:3px;box-shadow:0 4px 14px rgba(0,0,0,.08)';
     document.body.appendChild(bar); paint();
   }
   document.addEventListener('click', function (e) { var b = e.target.closest && e.target.closest('[data-nlang]'); if (b) setLang(b.getAttribute('data-nlang')); });

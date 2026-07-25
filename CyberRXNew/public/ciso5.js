@@ -59,7 +59,7 @@
     '.c5ask-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}',
     '.c5ask-btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:12.5px;font-weight:600;padding:7px 14px;border-radius:9px;cursor:pointer;transition:border-color .12s,background .12s}',
     '.c5ask-btn:hover{border-color:var(--blue)}',
-    '.c5ask-btn.primary{background:var(--blue);border-color:var(--blue);color:var(--plane)}',
+    '.c5ask-btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}',
     '.c5ask-done{font-size:13px;font-weight:600;color:var(--good)}.c5ask-done .c5ask-when{font-weight:400;color:var(--muted);font-size:11.5px}',
     '.c5ask-sampletag{font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);background:var(--surface-2);border:1px solid var(--line);border-radius:20px;padding:1px 7px;margin-left:6px}',
     '.c5phwrap{margin-top:2px}',
@@ -130,7 +130,7 @@
     '.c5bl-k{font-size:12px;color:var(--blue);font-weight:500}',
     '.c5bl-h{font-size:15px;font-weight:500;margin-top:3px;color:var(--ink)}',
     '.c5bl-p{font-size:13px;color:var(--ink-2);margin-top:3px;line-height:1.5;max-width:560px}',
-    '.c5btn{margin-top:12px;font-size:13.5px;font-weight:500;padding:9px 15px;border-radius:8px;border:0;background:var(--blue-fill);color:var(--plane);cursor:pointer}',
+    '.c5btn{margin-top:12px;font-size:13.5px;font-weight:500;padding:9px 15px;border-radius:8px;border:0;background:var(--blue-fill);color:#fff;cursor:pointer}',
     '.c5btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink);margin-left:8px}',
     '.c5foot{font-size:11px;color:var(--muted);margin-top:14px}',
     '.c5mc{background:var(--surface-2);border-radius:8px;padding:12px 14px;cursor:pointer}',
@@ -3860,7 +3860,7 @@ function c5productInventory(){
   '.c5fw-controls{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px}',
   '.c5fw-cad{display:flex;gap:4px;align-items:center;flex-wrap:wrap}',
   '.c5fw-cadb{font-size:11px;font-weight:500;padding:5px 11px;border-radius:20px;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);cursor:pointer}',
-  '.c5fw-cadb.on{background:var(--blue);color:var(--plane);border-color:var(--blue)}',
+  '.c5fw-cadb.on{background:var(--blue);color:#fff;border-color:var(--blue)}',
   '.c5fw-pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}',
   '.c5fw-pill{font-size:12px;font-weight:500;padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);cursor:pointer}',
   '.c5fw-pill.on{background:var(--ink);color:#fff;border-color:var(--ink)}',
@@ -5887,7 +5887,7 @@ function c5Frameworks(){
     '<div class="subwrap c5phwrap"><div class="subtabs">'+
       '<button class="subtab'+(tab==='assess'?' on':'')+'" data-phtab="assess">Continuous assessment</button>'+
       '<button class="subtab'+(tab==='ai'?' on':'')+'" data-phtab="ai">AI frameworks</button>'+
-      '<button class="subtab'+(tab==='queue'?' on':'')+'" data-phtab="queue">Confirm queue'+(qN?(' <span style="font-size:10px;font-weight:800;color:var(--plane);background:var(--blue);border-radius:20px;padding:1px 6px">'+qN+'</span>'):'')+'</button>'+
+      '<button class="subtab'+(tab==='queue'?' on':'')+'" data-phtab="queue">Confirm queue'+(qN?(' <span style="font-size:10px;font-weight:800;color:#fff;background:var(--blue);border-radius:20px;padding:1px 6px">'+qN+'</span>'):'')+'</button>'+
       '<button class="subtab'+(tab==='neuron'?' on':'')+'" data-phtab="neuron">Neuron Controls</button>'+
       '<button class="subtab'+(tab==='nerion'?' on':'')+'" data-phtab="nerion">Nerion’s View</button>'+
       (internal?('<button class="subtab'+(tab==='nmap'?' on':'')+'" data-phtab="nmap" style="color:var(--warn)">◆ Nerion Map · internal</button>'):'')+
@@ -6478,7 +6478,7 @@ function c5ViewDoc(fname){
     matched.forEach(function(mm,j){ if(_kw[j]!=null){matchedLoc.push({mm:mm,ann:_kw[j]});} else {matchedUnloc.push(mm);} });
     function matchLocItem(o){var mm=o.mm,ann=o.ann;
       return '<div class="c5annp" id="c5annp-'+ann+'" data-annidx="'+ann+'" style="border:1px solid var(--line);border-left:3px solid var(--blue);border-radius:8px;padding:8px 11px;margin-bottom:7px;background:var(--surface);cursor:pointer">'+
-        '<div style="display:flex;align-items:center;gap:7px"><span style="flex:none;width:18px;height:18px;border-radius:50%;background:var(--blue);color:var(--plane);font-size:10px;font-weight:800;display:inline-flex;align-items:center;justify-content:center">'+(ann+1)+'</span><b style="font-size:12.5px;color:var(--ink)">'+c5esc(mm.label)+'</b></div>'+
+        '<div style="display:flex;align-items:center;gap:7px"><span style="flex:none;width:18px;height:18px;border-radius:50%;background:var(--blue);color:#fff;font-size:10px;font-weight:800;display:inline-flex;align-items:center;justify-content:center">'+(ann+1)+'</span><b style="font-size:12.5px;color:var(--ink)">'+c5esc(mm.label)+'</b></div>'+
         '<div style="font-size:11px;color:var(--muted);margin-top:3px">located for '+mm.items.map(c5esc).join(' · ')+' · <span style="color:var(--blue)">click to see it in the document →</span></div></div>';
     }
     function matchUnlocItem(mm){
@@ -6798,183 +6798,77 @@ function c5fwCtlRow(c){var selc=(C5FW_CTRL===c.id)?' sel':'';
 }
 
 /* ============================================================================
-   Operating System — "Command": a live operational console (dark, single-theme
-   by intent) embedded as the CISO seat's OS surface. Situation hero (portfolio
-   loss distribution + a reducible-risk gauge), instruments (forecast track
-   record, decision queue, attack path), the capital frontier, and a telemetry
-   strip with the live ledger-integrity check. Wired to the engine; logic/IDs/
-   numbers stay English, translatable chrome via nt().
+   Operating System layer — the six capabilities that make Nerion an operating
+   system, not a register. UI strings come from nt() (see i18n.js); logic,
+   endpoints, IDs and numbers stay English. Reads the live engine.
+   (Backend-generated prose — d.interpretation / d.narrative / d.caveat — is
+   returned by the API in English; translating that is a backend concern.)
    ==========================================================================*/
+var C5OSBTN='background:var(--blue);color:#fff;border:none;border-radius:7px;padding:6px 12px;font-size:11.5px;font-weight:700;cursor:pointer';
 function c5osApi(){return (typeof apiBase==='function')?apiBase():'';}
 function c5osOrg(){return (typeof orgId==='function')?orgId():'';}
 function c5osT(k,p){return (typeof nt==='function')?nt(k,p):k;}
 function c5osGet(path){var o=c5osOrg();return fetch(c5osApi()+path+(path.indexOf('?')>=0?'&':'?')+'org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json','X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).catch(function(){return null;});}
 function c5osPost(path,body){var o=c5osOrg();return fetch(c5osApi()+path,{method:'POST',headers:{'Content-Type':'application/json','X-Org-Id':o},body:JSON.stringify(Object.assign({org_id:o},body||{}))}).then(function(r){return r.ok?r.json():null;}).catch(function(){return null;});}
 function c5usd(v){var x=Number(v)||0;if(x>=1e9)return '$'+(x/1e9).toFixed(1)+'B';if(x>=1e6)return '$'+(x/1e6).toFixed(1)+'M';if(x>=1e3)return '$'+Math.round(x/1e3)+'K';return '$'+Math.round(x);}
-
-function c5osStyle(){ if(document.getElementById('c5os-style'))return;
-  var css=[
-  '#c5-oslayer{--bg:#090D14;--panel:#101827;--panel2:#0D1420;--line:#1B2534;--line2:#26344A;--line3:#334562;--tx:#E9EEF5;--tx2:#98A6B8;--tx3:#5C6A7C;--gold:#E7B24E;--golddim:#7C6836;--goldwash:rgba(231,178,78,.10);--good:#41C08C;--warn:#E38C3E;--crit:#E85F5C;--osmono:"SFMono-Regular","SF Mono",ui-monospace,"JetBrains Mono",Menlo,monospace;color:var(--tx);position:relative;margin:0 -26px;padding:0 26px 30px;background:radial-gradient(120% 60% at 50% 0%,rgba(231,178,78,.045),transparent 55%),radial-gradient(80% 50% at 88% 0%,rgba(43,74,120,.13),transparent 60%),#090D14;border-top:1px solid #1B2534;font-family:var(--sans)}',
-  '#c5-oslayer *{box-sizing:border-box}',
-  '#c5-oslayer .osm{font-family:var(--osmono);font-variant-numeric:tabular-nums}',
-  '#c5-oslayer .os-cmd{display:flex;align-items:center;gap:18px;height:52px;border-bottom:1px solid var(--line);margin:0 -26px 0;padding:0 26px}',
-  '#c5-oslayer .os-brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:14px;letter-spacing:.02em;color:var(--tx)}',
-  '#c5-oslayer .os-brand .d{width:8px;height:8px;background:var(--gold);transform:rotate(45deg);box-shadow:0 0 10px rgba(231,178,78,.7)}',
-  '#c5-oslayer .os-brand small{font-family:var(--osmono);font-size:9px;letter-spacing:.2em;color:var(--tx3);text-transform:uppercase;margin-left:2px}',
-  '#c5-oslayer .os-stat{margin-left:auto;display:flex;align-items:center;gap:16px;font-family:var(--osmono);font-size:10.5px;color:var(--tx2)}',
-  '#c5-oslayer .os-stat .s{display:flex;align-items:center;gap:6px}#c5-oslayer .os-stat b{color:var(--tx);font-weight:500}',
-  '#c5-oslayer .live{width:7px;height:7px;border-radius:50%;background:var(--good);animation:c5pulse 2.4s infinite}',
-  '@keyframes c5pulse{0%{box-shadow:0 0 0 0 rgba(65,192,140,.5)}70%{box-shadow:0 0 0 7px rgba(65,192,140,0)}100%{box-shadow:0 0 0 0 rgba(65,192,140,0)}}',
-  '#c5-oslayer .os-ban{display:flex;align-items:center;gap:14px;padding:26px 0 16px}',
-  '#c5-oslayer .os-ban .t{font-family:var(--osmono);font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--gold)}',
-  '#c5-oslayer .os-ban .l{height:1px;flex:1;background:linear-gradient(90deg,var(--line2),transparent)}',
-  '#c5-oslayer .os-ban .r{font-family:var(--osmono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--tx3)}',
-  '#c5-oslayer .p{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:14px}',
-  '#c5-oslayer .p .h{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:14px 18px;border-bottom:1px solid var(--line)}',
-  '#c5-oslayer .p .h .k{font-family:var(--osmono);font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--tx2);min-width:0}',
-  '#c5-oslayer .tag{font-family:var(--osmono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border-radius:5px;border:1px solid;white-space:nowrap}',
-  '#c5-oslayer .tag.g{color:var(--gold);border-color:rgba(231,178,78,.35);background:var(--goldwash)}',
-  '#c5-oslayer .tag.w{color:var(--warn);border-color:rgba(227,140,62,.35);background:rgba(227,140,62,.07)}',
-  '#c5-oslayer .tag.o{color:var(--good);border-color:rgba(65,192,140,.35);background:rgba(65,192,140,.07)}',
-  '#c5-oslayer .p .b{padding:18px}',
-  '#c5-oslayer .os-hero{display:grid;grid-template-columns:1.7fr 1fr;gap:16px}',
-  '#c5-oslayer .big{font-family:var(--osmono);font-size:clamp(2.6rem,5.5vw,3.9rem);font-weight:500;letter-spacing:-.03em;line-height:1;color:var(--tx)}#c5-oslayer .big .u{color:var(--gold)}',
-  '#c5-oslayer .sub{margin-top:9px;color:var(--tx2);font-size:13px}#c5-oslayer .sub b{color:var(--tx);font-weight:500}',
-  '#c5-oslayer .dist svg{width:100%;height:auto;display:block;margin-top:14px}',
-  '#c5-oslayer .distcap{display:flex;gap:18px;margin-top:8px;font-family:var(--osmono);font-size:10px;color:var(--tx3)}#c5-oslayer .distcap b{color:var(--tx2)}',
-  '#c5-oslayer .gauge{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%}',
-  '#c5-oslayer .gauge svg{width:100%;max-width:250px;height:auto}',
-  '#c5-oslayer .gauge .vd{font-family:var(--osmono);font-size:13px;color:var(--gold);margin-top:2px}',
-  '#c5-oslayer .gauge .row{display:flex;gap:22px;margin-top:16px;width:100%;justify-content:center;border-top:1px solid var(--line);padding-top:14px}',
-  '#c5-oslayer .gauge .row .c{text-align:center}#c5-oslayer .gauge .row .c .v{font-family:var(--osmono);font-size:15px;color:var(--tx)}#c5-oslayer .gauge .row .c .l{font-family:var(--osmono);font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--tx3);margin-top:4px}',
-  '#c5-oslayer .g3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}',
-  '#c5-oslayer .brier{font-family:var(--osmono);font-size:2.4rem;font-weight:500;color:var(--good);line-height:1}',
-  '#c5-oslayer .brier.warn{color:var(--warn)}#c5-oslayer .brier.crit{color:var(--crit)}',
-  '#c5-oslayer .brm{font-family:var(--osmono);font-size:10px;color:var(--tx3);margin-top:6px;letter-spacing:.05em}',
-  '#c5-oslayer .cal{margin-top:14px;display:flex;flex-direction:column;gap:6px}',
-  '#c5-oslayer .cal .r{display:grid;grid-template-columns:42px 1fr;gap:9px;align-items:center}#c5-oslayer .cal .r .bd{font-family:var(--osmono);font-size:9px;color:var(--tx3)}',
-  '#c5-oslayer .cal .tr{position:relative;height:10px;background:var(--panel2);border:1px solid var(--line);border-radius:4px;overflow:hidden}',
-  '#c5-oslayer .cal .tr .pr{position:absolute;top:0;bottom:0;left:0;background:linear-gradient(90deg,var(--golddim),var(--gold));opacity:.55}#c5-oslayer .cal .tr .ob{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--tx)}',
-  '#c5-oslayer .q .it{display:flex;gap:11px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line)}#c5-oslayer .q .it:last-child{border-bottom:none}',
-  '#c5-oslayer .q .dot{width:7px;height:7px;border-radius:50%;margin-top:5px;flex:none;background:var(--warn);box-shadow:0 0 8px rgba(227,140,62,.5)}',
-  '#c5-oslayer .q .t{font-size:12px;color:var(--tx);line-height:1.35}#c5-oslayer .q .m{font-family:var(--osmono);font-size:9.5px;color:var(--tx3);margin-top:3px}#c5-oslayer .q .cost{margin-left:auto;font-family:var(--osmono);font-size:11.5px;color:var(--gold);white-space:nowrap}',
-  '#c5-oslayer .path .nd{display:flex;align-items:center;gap:11px;padding:7px 0}',
-  '#c5-oslayer .path .ic{width:26px;height:26px;border-radius:7px;border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;font-family:var(--osmono);font-size:10px;color:var(--tx2);flex:none;background:var(--panel2)}',
-  '#c5-oslayer .path .nd.obj .ic{border-color:var(--crit);color:var(--crit);box-shadow:0 0 12px rgba(232,95,92,.25)}',
-  '#c5-oslayer .path .tx{font-size:12px;color:var(--tx)}#c5-oslayer .path .st{font-family:var(--osmono);font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--tx3)}',
-  '#c5-oslayer .path .cn{width:26px;display:flex;justify-content:center}#c5-oslayer .path .cn i{width:1px;height:13px;background:linear-gradient(var(--line3),var(--line2))}',
-  '#c5-oslayer .path .ft{margin-top:11px;padding-top:11px;border-top:1px solid var(--line);font-size:11.5px;color:var(--tx2)}#c5-oslayer .path .ft b{color:var(--crit)}',
-  '#c5-oslayer .fr svg{width:100%;height:auto;display:block}#c5-oslayer .fr .cap{margin-top:11px;font-size:12px;color:var(--tx2);display:flex;gap:20px;flex-wrap:wrap}#c5-oslayer .fr .cap b{color:var(--tx)}',
-  '#c5-oslayer .bud{display:flex;gap:8px;align-items:center;margin-bottom:14px}#c5-oslayer .bud input{width:140px;border:1px solid var(--line2);border-radius:8px;padding:6px 10px;font-family:var(--osmono);font-size:12.5px;background:var(--panel2);color:var(--tx)}',
-  '#c5-oslayer .obtn{font-family:inherit;background:var(--gold);color:#0b0f16;border:none;border-radius:8px;padding:7px 13px;font-size:12px;font-weight:700;cursor:pointer}#c5-oslayer .obtn.ghost{background:transparent;color:var(--tx2);border:1px solid var(--line2)}',
-  '#c5-oslayer .oact{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}',
-  '#c5-oslayer .telem{margin-top:18px;border:1px solid var(--line);border-radius:12px;background:var(--panel2);display:flex;gap:22px;flex-wrap:wrap;padding:13px 18px;font-family:var(--osmono);font-size:10.5px;color:var(--tx2)}#c5-oslayer .telem .s{display:flex;gap:7px;align-items:center}#c5-oslayer .telem b{color:var(--good)}',
-  '#c5-oslayer .osfoot{padding:22px 2px 4px;color:var(--tx3);font-family:var(--osmono);font-size:10px;letter-spacing:.03em}',
-  '#c5-oslayer .msg{color:var(--tx3);font-size:12px}',
-  '#c5-oslayer path.dr{stroke-dasharray:1600;stroke-dashoffset:1600;animation:c5draw 1.5s .15s cubic-bezier(.3,.7,.2,1) forwards}',
-  '@keyframes c5draw{to{stroke-dashoffset:0}}',
-  '@media(prefers-reduced-motion:reduce){#c5-oslayer path.dr{animation:none;stroke-dashoffset:0}#c5-oslayer .live{animation:none}}',
-  '@media(max-width:900px){#c5-oslayer .os-hero{grid-template-columns:1fr}#c5-oslayer .g3{grid-template-columns:1fr}}'
-  ].join('');
-  var s=document.createElement('style'); s.id='c5os-style'; s.textContent=css; document.head.appendChild(s);
-}
-
-function c5osDistSvg(){ // illustrative right-skew density; markers carry the real numbers
-  return '<svg viewBox="0 0 620 172" preserveAspectRatio="none" aria-label="Modeled annual-loss distribution"><defs><linearGradient id="c5dg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E7B24E" stop-opacity=".24"/><stop offset="1" stop-color="#E7B24E" stop-opacity="0"/></linearGradient></defs><g stroke="#18212E" stroke-width="1"><line x1="0" y1="142" x2="620" y2="142"/><line x1="0" y1="98" x2="620" y2="98"/><line x1="0" y1="54" x2="620" y2="54"/></g><path d="M6,142 C70,142 120,52 170,34 C250,6 330,82 440,112 C520,132 575,138 614,140 L614,142 Z" fill="url(#c5dg)"/><path class="dr" d="M6,142 C70,142 120,52 170,34 C250,6 330,82 440,112 C520,132 575,138 614,140" fill="none" stroke="#E7B24E" stroke-width="2.2" stroke-linecap="round"/><line x1="170" y1="14" x2="170" y2="142" stroke="#98A6B8" stroke-width="1" stroke-dasharray="2 4"/><line x1="440" y1="60" x2="440" y2="142" stroke="#E85F5C" stroke-width="1" stroke-dasharray="2 4"/><text id="c5p50" x="176" y="24" fill="#98A6B8" font-family="monospace" font-size="11"></text><text id="c5p90" x="446" y="72" fill="#E85F5C" font-family="monospace" font-size="11"></text></svg>';
-}
-function c5osGauge(frac){ // reducible-risk gauge (0..1 of total exposure that is addressable)
-  var cx=125,cy=112,R=88,f=Math.max(0,Math.min(1,frac||0));
-  function pt(fr){var a=Math.PI-fr*Math.PI;return [cx+R*Math.cos(a),cy-R*Math.sin(a)];}
-  function arc(a0,a1){var A=pt(a0),B=pt(a1);return 'M'+A[0].toFixed(1)+','+A[1].toFixed(1)+' A'+R+','+R+' 0 0 1 '+B[0].toFixed(1)+','+B[1].toFixed(1);}
-  return '<svg viewBox="0 0 250 150"><defs><linearGradient id="c5gg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7C6836"/><stop offset="1" stop-color="#E7B24E"/></linearGradient></defs><path d="'+arc(0,1)+'" fill="none" stroke="#26344A" stroke-width="13" stroke-linecap="round"/><path class="dr" d="'+arc(0,f)+'" fill="none" stroke="url(#c5gg)" stroke-width="13" stroke-linecap="round"/><text x="125" y="106" text-anchor="middle" fill="#E9EEF5" font-family="monospace" font-size="27" font-weight="500">'+Math.round(f*100)+'%</text><text x="125" y="124" text-anchor="middle" fill="#5C6A7C" font-family="monospace" font-size="9" letter-spacing="1.4">ADDRESSABLE</text></svg>';
-}
-function c5osFrontier(d){
-  var f=(d&&d.frontier)||[]; if(!f.length)return '<div class="msg">No fundable actions modeled yet.</div>';
-  var W=1120,H=210,PL=6,PR=8,PT=12,PB=10, maxS=f[f.length-1].spend||1, maxR=f[f.length-1].riskReduced||1;
-  var X=function(s){return PL+(s/maxS)*(W-PL-PR);}, Y=function(r){return PT+(1-r/maxR)*(H-PT-PB);};
-  var line='M'+f.map(function(p){return X(p.spend).toFixed(1)+','+Y(p.riskReduced).toFixed(1);}).join(' L');
-  var area=line+' L'+X(maxS).toFixed(1)+','+(H-PB)+' L'+PL+','+(H-PB)+' Z';
-  var bx=(d.budget!=null)?X(Math.min(Number(d.budget),maxS)):null;
-  var fund=(bx!=null)?('<rect x="'+PL+'" y="'+PT+'" width="'+Math.max(0,bx-PL).toFixed(1)+'" height="'+(H-PT-PB)+'" fill="rgba(231,178,78,.06)"/><line x1="'+bx.toFixed(1)+'" y1="'+PT+'" x2="'+bx.toFixed(1)+'" y2="'+(H-PB)+'" stroke="#E7B24E" stroke-dasharray="3 5" opacity=".5"/>'):'';
-  return '<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" aria-label="Efficient frontier"><defs><linearGradient id="c5fg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E7B24E" stop-opacity=".15"/><stop offset="1" stop-color="#E7B24E" stop-opacity="0"/></linearGradient></defs><g stroke="#18212E"><line x1="0" y1="'+(H-PB)+'" x2="'+W+'" y2="'+(H-PB)+'"/></g>'+fund+'<path d="'+area+'" fill="url(#c5fg)"/><path class="dr" d="'+line+'" fill="none" stroke="#E7B24E" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-}
+function c5osNo(){return '<div style="color:var(--muted);font-size:12px">'+c5osT('common.unavailable')+'</div>';}
+function c5osPanel(id,titleKey,subKey){return '<div style="border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:16px 18px;margin-top:14px"><div style="font-weight:700;font-size:15px;color:var(--ink)">'+c5osT(titleKey)+'</div><div style="font-size:12px;color:var(--ink-2);margin-top:2px">'+c5osT(subKey)+'</div><div id="c5os-'+id+'" style="margin-top:12px;font-size:13px;color:var(--ink-2)">'+c5osT('common.loading')+'</div></div>';}
+function c5osBtn(labelKey,action){return '<button class="c5btn" data-c5os="'+action+'" style="'+C5OSBTN+'">'+c5osT(labelKey)+'</button>';}
 
 function c5OsLayer(){
-  var host=document.getElementById('c5-oslayer'); if(!host) return; c5osStyle();
-  var org=(typeof orgName==='function'?orgName():'')||'Your organization';
-  host.innerHTML=
-   '<div class="os-cmd"><div class="os-brand"><span class="d"></span>NERION<small>Command</small></div>'
-    +'<div class="os-stat"><span class="s"><span class="live"></span> <b>OPERATIONAL</b></span><span class="s" id="c5os-clock">—</span><span class="s">'+c5esc(org)+' · <b>CISO</b></span></div></div>'
-   +'<div class="os-ban"><span class="t">Situation</span><span class="l"></span><span class="r">01 / Exposure & appetite</span></div>'
-   +'<div class="os-hero">'
-     +'<div class="p"><div class="h"><span class="k">Material exposure · modeled annual loss</span><span class="tag g">FAIR · Monte-Carlo</span></div><div class="b"><div class="big" id="c5os-expo">'+c5osT('common.loading')+'</div><div class="sub" id="c5os-exposub"></div><div class="dist">'+c5osDistSvg()+'</div><div class="distcap"><span><b>Loss density</b> · seeded</span><span id="c5os-lossnote"></span></div></div></div>'
-     +'<div class="p"><div class="h"><span class="k">Addressable risk</span><span class="tag g">Allocation</span></div><div class="b gauge" id="c5os-gauge"><div class="msg">'+c5osT('common.loading')+'</div></div></div>'
-   +'</div>'
-   +'<div class="os-ban"><span class="t">Instruments</span><span class="l"></span><span class="r">02 / Predict · decide · trace</span></div>'
-   +'<div class="g3">'
-     +'<div class="p"><div class="h"><span class="k">'+c5osT('os.track.t')+'</span><span class="tag o" id="c5os-caltag">·</span></div><div class="b" id="c5os-forecast"><div class="msg">'+c5osT('common.loading')+'</div></div></div>'
-     +'<div class="p"><div class="h"><span class="k">Decision queue</span><span class="tag w" id="c5os-qtag">·</span></div><div class="b q" id="c5os-queue"><div class="msg">'+c5osT('common.loading')+'</div></div></div>'
-     +'<div class="p"><div class="h"><span class="k">Attack path · blast radius</span><span class="tag w" id="c5os-ptag">·</span></div><div class="b path" id="c5os-path"><div class="msg">'+c5osT('common.loading')+'</div></div></div>'
-   +'</div>'
-   +'<div class="os-ban"><span class="t">'+c5osT('os.alloc.t')+'</span><span class="l"></span><span class="r">03 / Capital</span></div>'
-   +'<div class="p fr"><div class="h"><span class="k">'+c5osT('os.alloc.frontier')+'</span><span class="tag g" id="c5os-frtag">·</span></div><div class="b" id="c5os-frontier"><div class="msg">'+c5osT('common.loading')+'</div></div></div>'
-   +'<div class="telem" id="c5os-telem"><span class="s"><span class="live"></span> ENGINE LIVE</span><span class="s">EPSS / KEV FEED CURRENT</span><span class="s" id="c5os-chain">LEDGER · verifying…</span></div>'
-   +'<div class="osfoot">NERION · every figure traces to its source — modeled where labeled, measured where a tool is connected. No number without a lineage.</div>';
-  c5osClock();
-  Promise.all([c5osGet('/api/decisions?role=CISO'), c5osGet('/api/allocation/optimize?budget=2000000'), c5osGet('/api/forecast/accuracy'), c5osGet('/api/decisions/ledger/verify')])
-    .then(function(r){ c5osRenderSituation(r[0],r[1]); c5osRenderForecast(r[2]); c5osRenderQueue(r[0]); c5osRenderPath(r[0]); c5osRenderFrontier(r[1]); c5osRenderTelem(r[3]); });
+  var host=document.getElementById('c5-oslayer'); if(!host) return;
+  host.innerHTML = c5shell(c5osT('os.kick'), c5osT('os.verdict'), '', c5osT('os.intro'))
+  + c5osPanel('track','os.track.t','os.track.sub')
+  + c5osPanel('alloc','os.alloc.t','os.alloc.sub')
+  + c5osPanel('sim','os.sim.t','os.sim.sub')
+  + c5osPanel('ops','os.ops.t','os.ops.sub')
+  + c5osPanel('act','os.act.t','os.act.sub')
+  + c5osPanel('peers','os.peers.t','os.peers.sub');
+  c5osFillTrack(); c5osFillAlloc(); c5osFillSim(); c5osFillOps(); c5osFillAct(); c5osFillPeers();
 }
 
-function c5osClock(){ var el=document.getElementById('c5os-clock'); if(!el)return; function t(){try{el.textContent=new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});}catch(_){}} t(); if(!window.__c5osClk){window.__c5osClk=setInterval(function(){var e=document.getElementById('c5os-clock');if(e){try{e.textContent=new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});}catch(_){}}},1000);} }
+function c5osFillTrack(){ c5osGet('/api/forecast/accuracy').then(function(d){
+  var el=document.getElementById('c5os-track'); if(!el)return; if(!d){el.innerHTML=c5osNo();return;}
+  if(!d.resolved){ el.innerHTML='<div style="color:var(--ink-2)">'+c5osT('os.track.pending')+'</div><div style="display:flex;gap:8px;margin-top:12px">'+c5osBtn('os.track.snapshot','snapshot')+c5osBtn('os.track.reconcile','reconcile')+'</div>'; return; }
+  var bcol=d.brier==null?'--muted':d.brier<=0.15?'--good':d.brier<=0.25?'--warn':'--crit';
+  var bars=(d.calibration||[]).map(function(b){return '<div style="display:flex;align-items:center;gap:8px;margin-top:5px"><span style="width:66px;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums">'+b.range+'</span><div style="flex:1;height:14px;background:var(--line);border-radius:4px;position:relative"><div style="position:absolute;left:0;top:0;bottom:0;width:'+b.predicted+'%;background:#8fa9cf;border-radius:4px"></div><div style="position:absolute;left:calc('+b.observed+'% - 1px);top:-2px;bottom:-2px;width:2px;background:var(--crit)"></div></div><span style="width:150px;font-size:10.5px;color:var(--muted)">'+c5osT('os.track.fa',{p:b.predicted,o:b.observed})+'</span></div>';}).join('');
+  el.innerHTML='<div style="display:flex;gap:22px;flex-wrap:wrap;align-items:baseline"><div><div style="font-size:28px;font-weight:800;color:var('+bcol+')">'+d.brier+'</div><div style="font-size:11px;color:var(--muted)">'+c5osT('os.track.brier')+'</div></div><div style="font-size:12.5px;color:var(--ink-2);max-width:440px;line-height:1.5">'+(d.interpretation||'')+'</div></div>'+(bars?('<div style="margin-top:14px"><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:700;margin-bottom:2px">'+c5osT('os.track.calib')+'</div>'+bars+'</div>'):'')+'<div style="display:flex;gap:8px;margin-top:12px">'+c5osBtn('os.track.snapshot','snapshot')+c5osBtn('os.track.reconcileShort','reconcile')+'</div>';
+}); }
 
-function c5osRenderSituation(dec,alloc){
-  var cards=(dec&&dec.cards)||[];
-  var total=cards.reduce(function(s,c){return s+((c.event&&c.event.loss&&c.event.loss.expected)||0);},0);
-  var p90=cards.reduce(function(m,c){var v=(c.event&&c.event.loss&&c.event.loss.p90)||0;return Math.max(m,v);},0);
-  var reducible=(alloc&&alloc.frontier&&alloc.frontier.length)?alloc.frontier[alloc.frontier.length-1].riskReduced:0;
-  var expo=document.getElementById('c5os-expo'); if(expo){ if(!total){expo.textContent='—';} else { var m=(total/1e6); expo.innerHTML='$'+(m>=100?Math.round(m):m.toFixed(1))+'<span class="u">M</span>'; } }
-  var sub=document.getElementById('c5os-exposub'); if(sub)sub.innerHTML=total?('Across <b>'+cards.length+'</b> live decisions · largest single-loss tail <b>'+c5usd(p90)+'</b> (P90)'):'No open decisions.';
-  var ln=document.getElementById('c5os-lossnote'); if(ln)ln.innerHTML=total?('Expected '+c5usd(total)+' · addressable '+c5usd(reducible)):'';
-  var p50=document.getElementById('c5p50'); if(p50)p50.textContent='P50 · '+c5usd(total);
-  var pp90=document.getElementById('c5p90'); if(pp90)pp90.textContent='P90 · '+c5usd(p90||total*2.6);
-  var g=document.getElementById('c5os-gauge');
-  if(g){ if(!total){g.innerHTML='<div class="msg">No exposure modeled.</div>'; }
-    else { var frac=reducible/Math.max(1,total);
-      g.innerHTML=c5osGauge(frac)+'<div class="vd">'+c5usd(reducible)+' addressable</div><div class="row"><div class="c"><div class="v">'+c5usd(total)+'</div><div class="l">Modeled loss</div></div><div class="c"><div class="v">'+c5usd(reducible)+'</div><div class="l">Reducible</div></div><div class="c"><div class="v">'+c5usd(Math.max(0,total-reducible))+'</div><div class="l">Retained</div></div></div>'; } }
+function c5osAllocView(d){
+  var max=(d.frontier&&d.frontier.length)?(d.frontier[d.frontier.length-1].riskReduced||1):1;
+  var fr=(d.frontier||[]).map(function(f,i){var funded=i<d.funded;return '<div style="display:flex;align-items:center;gap:8px;margin-top:4px"><span style="width:64px;font-size:10.5px;color:var(--muted);font-variant-numeric:tabular-nums">'+c5usd(f.spend)+'</span><div style="flex:1;height:12px;background:var(--line);border-radius:4px"><div style="width:'+Math.round((f.riskReduced/max)*100)+'%;height:100%;background:var('+(funded?'--good':'--line-2')+');border-radius:4px"></div></div><span style="width:80px;font-size:10.5px;color:var(--muted);font-variant-numeric:tabular-nums">'+c5usd(f.riskReduced)+'</span></div>';}).join('');
+  return '<div style="display:flex;gap:8px;align-items:center;margin-bottom:10px"><span style="font-size:12px;color:var(--ink-2)">'+c5osT('os.alloc.budget')+'</span><input id="c5os-budget" type="number" value="'+(d.budget||2000000)+'" style="width:150px;border:1px solid var(--line-2);border-radius:7px;padding:6px 9px;font-size:13px;font-variant-numeric:tabular-nums"><button class="c5btn" data-c5os="optimize" style="'+C5OSBTN+'">'+c5osT('os.alloc.optimize')+'</button></div><div style="font-size:12.5px;color:var(--ink);margin-bottom:10px;line-height:1.5">'+(d.narrative||'')+'</div>'+(fr?('<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:700;margin-bottom:2px">'+c5osT('os.alloc.frontier')+'</div>'+fr):'');
 }
-function c5osRenderForecast(d){ var el=document.getElementById('c5os-forecast'),tag=document.getElementById('c5os-caltag'); if(!el)return; if(!d){el.innerHTML='<div class="msg">'+c5osT('common.unavailable')+'</div>';if(tag)tag.textContent='—';return;}
-  if(!d.resolved){ if(tag){tag.textContent='forming';tag.className='tag w';} el.innerHTML='<div class="msg">'+c5osT('os.track.pending')+'</div><div class="oact">'+'<button class="obtn" data-c5os="snapshot">'+c5osT('os.track.snapshot')+'</button><button class="obtn ghost" data-c5os="reconcile">'+c5osT('os.track.reconcileShort')+'</button></div>'; return; }
-  if(tag){tag.textContent='calibrated';tag.className='tag o';}
-  var cls=d.brier<=0.15?'':d.brier<=0.25?'warn':'crit';
-  var bars=(d.calibration||[]).map(function(b){return '<div class="r"><span class="bd">'+b.range.replace('%','')+'</span><div class="tr"><span class="pr" style="width:'+b.predicted+'%"></span><span class="ob" style="left:'+b.observed+'%"></span></div></div>';}).join('');
-  el.innerHTML='<div class="brier '+cls+'">'+d.brier+'</div><div class="brm">BRIER · '+d.resolved+' RESOLVED</div><div class="cal">'+bars+'</div><div class="oact"><button class="obtn ghost" data-c5os="snapshot">'+c5osT('os.track.snapshot')+'</button></div>';
-}
-function c5osRenderQueue(dec){ var el=document.getElementById('c5os-queue'),tag=document.getElementById('c5os-qtag'); if(!el)return; if(!dec){el.innerHTML='<div class="msg">'+c5osT('common.unavailable')+'</div>';return;}
-  var cards=(dec.cards||[]).filter(function(c){return c.relevant&&!c.decision;}).slice(0,4);
-  if(!cards.length){el.innerHTML='<div class="msg">No decisions awaiting sign-off.</div>';if(tag)tag.textContent='clear';return;}
-  if(tag)tag.textContent=cards.length+' pending';
-  el.innerHTML=cards.map(function(c){var o=(c.options||[]).find(function(x){return x.id===c.recommended;})||{};var hl=(c.lens&&c.lens.headline)||c.event.title;return '<div class="it"><span class="dot"></span><div><div class="t">'+c5esc(hl)+'</div><div class="m">'+c5esc((c.decisionRoles||['CISO'])[0])+' · '+c5esc((o.friction||'')+'')+'</div></div><span class="cost">'+(o.costLabel||c5usd(o.cost||0))+'</span></div>';}).join('');
-}
-function c5osRenderPath(dec){ var el=document.getElementById('c5os-path'),tag=document.getElementById('c5os-ptag'); if(!el)return; if(!dec){el.innerHTML='<div class="msg">'+c5osT('common.unavailable')+'</div>';return;}
-  var cards=(dec.cards||[]); var card=cards.find(function(c){return c.type==='compound';})||cards[0];
-  if(!card||!card.event||!card.event.attackPath){el.innerHTML='<div class="msg">No attack path modeled.</div>';return;}
-  var steps=card.event.attackPath, t=card.event.timing||{};
-  if(tag)tag.textContent=(t.p30!=null?t.p30+'% · 30d':'chain');
-  var last=steps.length-1;
-  var html=steps.map(function(s,i){var obj=i===last;return (i>0?'<div class="cn"><i></i></div>':'')+'<div class="nd'+(obj?' obj':'')+'"><span class="ic">'+(obj?'◎':('0'+(i+1)))+'</span><div><div class="tx">'+c5esc(s.label)+'</div><div class="st">'+c5esc(s.step)+'</div></div></div>';}).join('');
-  var reaches=(card.event.blastRadius&&card.event.blastRadius.reaches)||card.event.crownJewel||'crown-jewel processes';
-  html+='<div class="ft"><b>'+c5usd(card.event.exposure||(card.event.loss&&card.event.loss.expected))+'</b> reaches '+c5esc(reaches)+(card.type==='compound'?' — break either link and the chain collapses.':'.');
-  el.innerHTML=html;
-}
-function c5osRenderFrontier(d){ var el=document.getElementById('c5os-frontier'),tag=document.getElementById('c5os-frtag'); if(!el)return; if(!d){el.innerHTML='<div class="msg">'+c5osT('common.unavailable')+'</div>';return;}
-  var red=(d.frontier&&d.frontier.length)?d.frontier[d.frontier.length-1].riskReduced:0; if(tag)tag.textContent=c5usd(red)+' reducible';
-  el.innerHTML='<div class="bud"><span style="font-size:12px;color:var(--tx2)">'+c5osT('os.alloc.budget')+'</span><input id="c5os-budget" type="number" value="'+(d.budget||2000000)+'"><button class="obtn" data-c5os="optimize">'+c5osT('os.alloc.optimize')+'</button></div>'+c5osFrontier(d)+'<div class="cap"><span><b>'+(d.narrative||'')+'</b></span></div>';
-}
-function c5osRenderTelem(v){ var el=document.getElementById('c5os-chain'); if(!el)return; if(v&&v.valid){el.innerHTML='<b>LEDGER CHAIN VALID</b> · SHA-256 · '+(v.entries||0)+' entries';} else if(v){el.innerHTML='LEDGER · '+(v.entries||0)+' entries';} else {el.textContent='LEDGER · —';} }
+function c5osFillAlloc(){ c5osGet('/api/allocation/optimize?budget=2000000').then(function(d){ var el=document.getElementById('c5os-alloc'); if(!el)return; el.innerHTML=d?c5osAllocView(d):c5osNo(); }); }
+
+function c5osFillSim(){ c5osGet('/api/decisions').then(function(d){ var el=document.getElementById('c5os-sim'); if(!el)return; if(!d){el.innerHTML=c5osNo();return;}
+  var cards=(d.cards||[]).filter(function(c){return c.type!=='compound';});
+  var rows=cards.map(function(c){return '<label style="display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--ink);padding:3px 0;cursor:pointer"><input type="checkbox" value="'+c.id+'"><span style="flex:1">'+c5esc(c.event.title)+'</span><span style="font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums">'+c5usd(c.event.loss&&c.event.loss.expected)+'</span></label>';}).join('');
+  el.innerHTML=(rows?('<div style="max-height:180px;overflow:auto;border:1px solid var(--line);border-radius:8px;padding:8px 10px">'+rows+'</div>'):'<div style="color:var(--muted);font-size:12px">'+c5osT('os.sim.none')+'</div>')+'<button class="c5btn" data-c5os="simrun" style="'+C5OSBTN+';margin-top:10px">'+c5osT('os.sim.run')+'</button><div id="c5os-simres" style="margin-top:10px"></div>';
+}); }
+
+function c5osFillOps(){ c5osGet('/api/operators/runs').then(function(d){ var el=document.getElementById('c5os-ops'); if(!el)return; if(!d){el.innerHTML=c5osNo();return;}
+  var runs=(d.runs||[]).slice(0,6).map(function(r){return '<div style="display:flex;gap:12px;font-size:11.5px;color:var(--ink-2);padding:4px 0;border-bottom:1px solid var(--line)"><span style="width:48px;font-weight:700;color:var(--ink)">'+r.role+'</span><span>'+c5osT('os.ops.reviewed')+' '+r.considered+'</span><span>'+c5osT('os.ops.acted')+' '+r.acted+'</span><span>'+c5osT('os.ops.escalated')+' '+r.escalated+'</span></div>';}).join('');
+  el.innerHTML='<button class="c5btn" data-c5os="runops" style="'+C5OSBTN+';margin-bottom:12px">'+c5osT('os.ops.run')+'</button>'+(runs||'<div style="color:var(--muted);font-size:12px">'+c5osT('os.ops.none')+'</div>');
+}); }
+
+function c5osFillAct(){ c5osGet('/api/actuation').then(function(d){ var el=document.getElementById('c5os-act'); if(!el)return; if(!d){el.innerHTML=c5osNo();return;}
+  var acts=d.actuations||[]; if(!acts.length){el.innerHTML='<div style="color:var(--muted);font-size:12px">'+c5osT('os.act.none')+'</div>';return;}
+  el.innerHTML=acts.map(function(a){var sc=a.status==='verified'?'--good':a.status==='unverified'?'--warn':'--ink-2';var delta=a.post_residual_risk!=null?(' · '+c5usd(a.pre_residual_risk)+' → <b style="color:var(--good)">'+c5usd(a.post_residual_risk)+'</b>'):'';return '<div style="border-top:1px solid var(--line);padding:9px 0"><div style="display:flex;justify-content:space-between;gap:10px"><span style="font-size:12.5px;color:var(--ink);font-weight:600">'+c5esc(a.action)+'</span><span style="font-size:11.5px;font-weight:800;color:var('+sc+');text-transform:uppercase">'+a.status+'</span></div><div style="font-size:11px;color:var(--muted);margin-top:2px">'+a.actuator+' · '+a.external_ref+(a.simulated?' · simulated':'')+delta+'</div>'+(a.status!=='verified'?('<button class="c5btn" data-c5os="verify" data-id="'+a.id+'" style="'+C5OSBTN+';margin-top:6px">'+c5osT('os.act.verify')+'</button>'):'')+'</div>';}).join('');
+}); }
+
+function c5osFillPeers(){ c5osGet('/api/outcomes/insights').then(function(d){ var el=document.getElementById('c5os-peers'); if(!el)return; if(!d){el.innerHTML=c5osNo();return;}
+  el.innerHTML='<div style="display:flex;gap:26px;flex-wrap:wrap"><div><div style="font-size:24px;font-weight:800;color:var(--ink)">'+(d.baseRate==null?'—':d.baseRate+'%')+'</div><div style="font-size:11px;color:var(--muted)">'+c5osT('os.peers.hit')+'</div></div><div><div style="font-size:15px;font-weight:700;color:var(--ink)">'+(d.topControl?c5esc(d.topControl.control):'—')+'</div><div style="font-size:11px;color:var(--muted)">'+c5osT('os.peers.control')+(d.topControl?(' · '+d.topControl.workedPct+'%'):'')+'</div></div></div><div style="font-size:12px;color:var(--ink-2);margin-top:10px;line-height:1.5">'+(d.caveat||'')+'</div><div style="font-size:11px;color:var(--muted);margin-top:4px">'+c5osT('os.peers.cohort')+' '+c5esc(d.cohort)+' · '+c5osT('os.peers.anon',{n:d.n})+'</div><button class="c5btn" data-c5os="contribute" style="'+C5OSBTN+';margin-top:10px">'+c5osT('os.peers.contribute')+'</button>';
+}); }
 
 function c5osAction(a,el){
-  if(a==='snapshot'){c5osPost('/api/forecast/snapshot',{}).then(function(){c5osGet('/api/forecast/accuracy').then(c5osRenderForecast);});}
-  else if(a==='reconcile'){c5osPost('/api/forecast/reconcile',{}).then(function(){c5osGet('/api/forecast/accuracy').then(c5osRenderForecast);});}
-  else if(a==='optimize'){var vv=(document.getElementById('c5os-budget')||{}).value||2000000;c5osGet('/api/allocation/optimize?budget='+encodeURIComponent(vv)).then(c5osRenderFrontier);}
+  if(a==='snapshot'){c5osPost('/api/forecast/snapshot',{}).then(c5osFillTrack);}
+  else if(a==='reconcile'){c5osPost('/api/forecast/reconcile',{}).then(c5osFillTrack);}
+  else if(a==='optimize'){var v=(document.getElementById('c5os-budget')||{}).value||2000000;c5osGet('/api/allocation/optimize?budget='+encodeURIComponent(v)).then(function(d){var t=document.getElementById('c5os-alloc');if(t&&d)t.innerHTML=c5osAllocView(d);});}
+  else if(a==='runops'){try{el.textContent='…';}catch(_){}c5osPost('/api/operators/tick',{}).then(c5osFillOps);}
+  else if(a==='simrun'){var ids=[].slice.call(document.querySelectorAll('#c5os-sim input:checked')).map(function(x){return x.value;});c5osPost('/api/simulate/what-if',{fix:ids}).then(function(r){var t=document.getElementById('c5os-simres');if(!t)return;if(!r){t.innerHTML=c5osNo();return;}var chains=(r.collapsedChains||[]).map(function(c){return '<div style="font-size:12px;color:var(--blue);margin-top:4px">⛓ '+c5esc(c.title)+' ('+c5usd(c.loss)+')</div>';}).join('');t.innerHTML='<div style="font-size:12.5px;color:var(--ink);line-height:1.5">'+(r.narrative||'')+'</div>'+chains;});}
+  else if(a==='verify'){var id=el.getAttribute('data-id');try{el.textContent='…';}catch(_){}c5osPost('/api/actuation/'+encodeURIComponent(id)+'/verify',{}).then(c5osFillAct);}
+  else if(a==='contribute'){c5osPost('/api/outcomes/contribute',{}).then(c5osFillPeers);}
 }
 if(typeof window!=='undefined'&&!window.__c5osWired){window.__c5osWired=true;document.addEventListener('click',function(e){var el=e.target.closest&&e.target.closest('[data-c5os]');if(el){e.preventDefault();c5osAction(el.getAttribute('data-c5os'),el);}});}
