@@ -3136,7 +3136,14 @@ function ensureRegionEntities(){
    so the 6-function breakdown rolls up the same way. */
 function scopeAggTree(id){
   function leaf(sid){var savedS=SIGNALS,savedSC=SCOPE;try{
-    SCOPE=sid;var vals=(typeof scopeSignalValues==='function')?scopeSignalValues(sid):{};
+    SCOPE=sid;
+    // Framework-aware: on the AI frameworks tab, score each scope with the AI RMF
+    // rollup (scope-sensitive via c5Scope) so region cards show AI posture, not CSF.
+    if(typeof C5_ASSESS_FW!=='undefined'&&C5_ASSESS_FW==='ai'&&typeof c5AssessmentRollup==='function'){
+      var r=c5AssessmentRollup();
+      return {overall:(r.overall||0)*5,groups:Object.keys(r.functions||{}).map(function(fn){return {id:fn,score:(r.functions[fn].score||0)*5};})};
+    }
+    var vals=(typeof scopeSignalValues==='function')?scopeSignalValues(sid):{};
     var s=JSON.parse(JSON.stringify(SIGNALS_BASE||SIGNALS||{}));Object.keys(vals).forEach(function(k){s[k]={key:k,value:vals[k]};});SIGNALS=s;
     var t=c5fwTree('csf',fwDeployedIds());return {overall:t.overall,groups:(t.groups||[]).map(function(g){return {id:(g.id||g.name),score:g.score};})};
   }catch(_){return null;}finally{SIGNALS=savedS;SCOPE=savedSC;}}
@@ -3262,13 +3269,15 @@ function scopeNav(){
       }).join('');
       return '<div style="flex-basis:100%;margin-top:14px;border-top:1px solid var(--line);padding-top:12px"><div style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">'+esc(title)+'</div><div style="display:flex;gap:10px;flex-wrap:wrap'+(isEnt?';padding-left:14px;border-left:2px solid var(--line)':'')+'">'+cards+'</div></div>';
     }
+    // Label the strip with whatever framework is active, so AI scores are never mislabeled CSF.
+    var fwLbl=(typeof C5_ASSESS_FW!=='undefined'&&C5_ASSESS_FW==='ai')?'AI RMF':'NIST CSF';
     // The regions strip is ALWAYS shown so you can hop between regions from any scope.
-    var out=drillCards('Regions at a glance · NIST CSF, weakest first',
+    var out=drillCards('Regions at a glance · '+fwLbl+', weakest first',
       REGIONS.filter(function(r){return r.kind==='region';}),
       function(r){return r.id;},function(r){return r.label;},function(r){return r.regime;},'region');
     // Inside a region (or an entity within it), also show that region's entities below it.
     if(reg&&reg.entities&&reg.entities.length){
-      out+=drillCards(reg.entities.length+' entities in '+reg.label+' · NIST CSF, weakest first',
+      out+=drillCards(reg.entities.length+' entities in '+reg.label+' · '+fwLbl+', weakest first',
         reg.entities,function(e){return e.id;},function(e){return e.label;},
         function(e){return (typeof scopeMeta==='function'&&scopeMeta(e.id)&&scopeMeta(e.id).regime)||'';},'entity');
     }

@@ -5461,7 +5461,7 @@ function c5ContinuousAssessment(host){
   // (Enterprise = mean of regions = mean of entities), the same number the
   // composition card and region cards below show. Falls back to the flat rollup.
   var overall5=(roll.overall*5);
-  try{ if(C5_ASSESS_FW!=='ai'&&typeof scopeAggTree==='function'&&typeof c5Scope==='function'){var _aggO=scopeAggTree(c5Scope());if(_aggO&&_aggO.overall!=null)overall5=_aggO.overall;} }catch(_){}
+  try{ if(typeof scopeAggTree==='function'&&typeof c5Scope==='function'){var _aggO=scopeAggTree(c5Scope());if(_aggO&&_aggO.overall!=null)overall5=_aggO.overall;} }catch(_){}
   var evidenced=s.total-s.notAssessed;var covPct=s.total?Math.round(evidenced/s.total*100):0;
   var net=drift.improvements.length-drift.regressions.length;var tdir=net>0?'up':(net<0?'down':'flat');var tcol=tdir==='up'?'good':(tdir==='down'?'crit':'muted');var tarrow=tdir==='up'?'▲':(tdir==='down'?'▼':'▬');
   var failing=s.notMet+s.notAssessed;
@@ -5498,16 +5498,15 @@ function c5ContinuousAssessment(host){
       // aggregate of all regions) plus the 6 CSF functions only. Same basis as the region
       // cards below, so it re-computes as you pick a region/entity.
       var sumCsf=null,sumFns=[];
-      if(C5_ASSESS_FW==='ai'){
-        // AI framework has no c5fwTree — derive the overall + 4 functions from the AI rollup.
-        sumCsf=roll.overall*5;
-        sumFns=FN.map(function(F){var fsx=roll.functions[F.k];return {n:F.k,s:(fsx?fsx.score:0)*5};});
-      } else {
-        // Use the reconciling hierarchical rollup so the headline number equals the aggregate of
-        // the region/entity cards below (Enterprise = mean of regions = mean of every entity).
-        try{ if(typeof scopeAggTree==='function'){var st=scopeAggTree(c5Scope());
-          if(st){sumCsf=st.overall;sumFns=(st.groups||[]).map(function(g){return {n:String(g.id||g.name).split(' ')[0],s:g.score};});} } }catch(_){}
-        if(sumCsf==null){try{ if(typeof c5fwTree==='function'&&typeof fwDeployedIds==='function'){var st2=c5fwTree('csf',fwDeployedIds());sumCsf=st2.overall;
+      // The reconciling hierarchical aggregate (now framework-aware: CSF or AI RMF), so the
+      // headline equals the mean of the region/entity cards below for either framework.
+      try{ if(typeof scopeAggTree==='function'){var st=scopeAggTree(c5Scope());
+        if(st){sumCsf=st.overall;sumFns=(st.groups||[]).map(function(g){return {n:String(g.id||g.name).split(' ')[0],s:g.score};});} } }catch(_){}
+      if(sumCsf==null){
+        if(C5_ASSESS_FW==='ai'){ // fallback: derive the overall + functions straight from the AI rollup.
+          sumCsf=roll.overall*5;
+          sumFns=FN.map(function(F){var fsx=roll.functions[F.k];return {n:F.k,s:(fsx?fsx.score:0)*5};});
+        } else { try{ if(typeof c5fwTree==='function'&&typeof fwDeployedIds==='function'){var st2=c5fwTree('csf',fwDeployedIds());sumCsf=st2.overall;
           sumFns=st2.groups.map(function(g){return {n:String(g.id||g.name).split(' ')[0],s:g.score};}); } }catch(_){}}
       }
       vFns=sumFns; // hoist so the verdict headline cites the SAME function scores as the bars
