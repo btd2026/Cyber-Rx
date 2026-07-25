@@ -3366,6 +3366,21 @@ function fetchEntityEvidence(scope){
   }catch(_){}
 }
 function selectScope(id){try{applyScope(id);}catch(_){}renderScopeBar();try{render('ciso');}catch(_){}try{fetchEntityEvidence(id);}catch(_){}}
+/* Bulletproof scope navigation: ONE delegated listener on the document catches every click on
+   any [data-scope] control — the top scope bar, the "Regions/Entities at a glance" drill cards,
+   the region banner — no matter how many times render() rebuilds the DOM. This replaces the old
+   per-element onclick re-wiring (three separate sites), any one of which going stale after a
+   re-render is exactly how a region/entity button ends up dead. Installed once. */
+if(typeof window!=='undefined'&&!window.__c5ScopeDelegated){
+  window.__c5ScopeDelegated=true;
+  document.addEventListener('click',function(e){
+    var el=e.target&&e.target.closest?e.target.closest('[data-scope]'):null;if(!el)return;
+    var id=el.getAttribute('data-scope');if(!id)return;
+    // Capture-phase + stopPropagation means the element's own onclick never double-fires;
+    // it stays as a harmless fallback should this delegated handler ever not be installed.
+    e.preventDefault();e.stopPropagation();try{selectScope(id);}catch(_){}
+  },true);
+}
 /* Offline demo sample — a realistic, self-consistent workspace so every figure and every
    answer reads fully populated without a backend. Used ONLY in demo/trial mode and only when
    the backend returns nothing; a real backend always overrides it. Cyber is deliberately OVER

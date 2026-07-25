@@ -5891,6 +5891,7 @@ function c5ConfirmQueueView(host){
    modeled, and whether that beats the impact tolerance the board set. This is the operational-
    resilience currency (UK Op-Res impact tolerances / DORA), not a Monte-Carlo ALE nobody
    trusts. Built on the shared c5CriticalServices() recovery records. */
+var C5_RESIL_FILTER=null;
 function c5Resilience(){
   var host=document.getElementById('c5-resilience');if(!host)return;
   var esc=(typeof c5esc==='function')?c5esc:function(s){return s;};
@@ -5903,15 +5904,21 @@ function c5Resilience(){
   var noFailover=svcs.filter(function(s){return /no failover/i.test(s.failover);}).length;
   var verdict=over>0?(over+' critical service'+(over>1?'s':'')+' can’t be recovered within tolerance'):(proven<svcs.length?'Recovery holds on paper — but not all of it is proven':'Every critical service recovers within tolerance — and it’s proven');
   var vcol=over>0?'crit':(proven<svcs.length?'warn':'good');
-  function card(n,l,c,sub){return '<div class="c5card"><div class="c5card-top"><span class="c5card-l">'+l+'</span><span class="c5chip c5-computed">computed</span></div><div class="c5card-v" style="color:var(--'+c+')">'+n+'</div><div class="cn">'+sub+'</div></div>';}
+  // Each card filters the service table below to its subset — click to see exactly which
+  // services drive the number, click again (or "clear") to show all. This is the "see details"
+  // drill the cards were missing.
+  var resFilterFn={within:function(s){return s.rto<=s.tgt;},over:function(s){return s.rto>s.tgt;},proven:function(s){return !!s.live;},nofailover:function(s){return /no failover/i.test(s.failover);}}[C5_RESIL_FILTER];
+  var shown=resFilterFn?svcs.filter(resFilterFn):svcs;
+  function card(n,l,c,sub,fk){var active=(C5_RESIL_FILTER===fk);
+    return '<div class="c5card c5card-go'+(active?' on':'')+'" data-resfilter="'+fk+'" role="button" tabindex="0" title="Show the '+esc(l)+' services"><div class="c5card-top"><span class="c5card-l">'+l+'</span><span class="c5card-go-lbl">'+(active?'showing ›':'view ›')+'</span></div><div class="c5card-v" style="color:var(--'+c+')">'+n+'</div><div class="cn">'+sub+'</div></div>';}
   var cards='<div class="c5cards">'
-    +card(within+' / '+svcs.length,'Within tolerance',within===svcs.length?'good':'warn','recover inside the board’s limit')
-    +card(over,'Over tolerance',over>0?'crit':'good','can’t recover in time — the real exposure')
-    +card(proven+' / '+svcs.length,'Recovery proven',proven===svcs.length?'good':'warn','tested / telemetry — not just modeled')
-    +card(noFailover,'No failover',noFailover>0?'crit':'good','single points of failure')
+    +card(within+' / '+svcs.length,'Within tolerance',within===svcs.length?'good':'warn','recover inside the board’s limit','within')
+    +card(over,'Over tolerance',over>0?'crit':'good','can’t recover in time — the real exposure','over')
+    +card(proven+' / '+svcs.length,'Recovery proven',proven===svcs.length?'good':'warn','tested / telemetry — not just modeled','proven')
+    +card(noFailover,'No failover',noFailover>0?'crit':'good','single points of failure','nofailover')
     +'</div>';
   var th='text-align:left;padding:7px 12px 7px 0;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);border-bottom:1px solid var(--line);white-space:nowrap';
-  var rows=svcs.map(function(s){
+  var rows=shown.map(function(s){
     var ok=s.rto<=s.tgt;var overBy=ok?0:(s.rto-s.tgt);
     var statusPill=ok
       ?'<span style="font-size:10px;font-weight:700;color:var(--good);background:color-mix(in srgb,var(--good) 12%,transparent);border:1px solid color-mix(in srgb,var(--good) 30%,transparent);border-radius:20px;padding:2px 8px;white-space:nowrap">within tolerance</span>'
@@ -5929,9 +5936,11 @@ function c5Resilience(){
       +'<td style="'+td+'">'+proof+'</td>'
       +'<td style="'+td+';color:var(--'+(nf?'crit':'ink-2')+');white-space:nowrap">'+(nf?'⚠ ':'')+esc(s.failover)+'</td></tr>';
   }).join('');
-  var table='<div style="overflow-x:auto;margin-top:14px"><table style="border-collapse:collapse;width:100%;min-width:720px"><thead><tr>'
+  var filterLbl={within:'within tolerance',over:'over tolerance',proven:'recovery proven',nofailover:'no failover'}[C5_RESIL_FILTER];
+  var filterBar=C5_RESIL_FILTER?('<div style="display:flex;align-items:center;gap:8px;margin-top:14px;font-size:12px;flex-wrap:wrap"><span style="color:var(--muted)">Showing</span><b style="color:var(--ink)">'+shown.length+'</b><span style="color:var(--muted)">of '+svcs.length+' services &middot;</span><span style="font-weight:700;color:var(--blue)">'+filterLbl+'</span><button data-resclear="1" style="font-size:11px;font-weight:600;color:var(--blue);background:none;border:1px solid var(--line);border-radius:20px;padding:2px 10px;cursor:pointer">clear &times;</button></div>'):'';
+  var table='<div style="overflow-x:auto;margin-top:'+(C5_RESIL_FILTER?'8':'14')+'px"><table style="border-collapse:collapse;width:100%;min-width:720px"><thead><tr>'
     +['Important business service','Impact tolerance','Recovers in','Status','Recovery proof','Failover'].map(function(h){return '<th style="'+th+'">'+h+'</th>';}).join('')
-    +'</tr></thead><tbody>'+rows+'</tbody></table></div>';
+    +'</tr></thead><tbody>'+(rows||('<tr><td colspan="6" style="padding:14px 0;font-size:12px;color:var(--muted)">No services in this slice.</td></tr>'))+'</tbody></table></div>';
   var intro='Impact here is measured in what you can verify — <b>hours of downtime and services lost</b>, not a modeled dollar. For each important business service: the <b>impact tolerance</b> the board set, how long it actually takes to recover, whether that recovery is <b>proven by a test</b> or only modeled, and whether a failover exists. A service that can’t be recovered inside tolerance — or whose recovery has never been tested — is your real exposure.';
   var foot='<div class="c5foot">Impact tolerance and recovery come from your resilience telemetry and DR-test records where connected (<b>proven</b>); the rest are modeled sample rows until per-service recovery telemetry connects — labelled <b style="color:var(--warn)">modeled</b>, never presented as tested. This is the operational-resilience read (UK Operational Resilience impact tolerances · EU DORA) — the impact currency a regulator recognizes.</div>';
   // ── Blend presentation: editorial finding → recovery-vs-tolerance instrument → detail ──
@@ -5949,7 +5958,12 @@ function c5Resilience(){
     +'</div>'
   +'</div>';
   host.innerHTML=(typeof c5header==='function'?c5header():'')
-    +paHero+cards+table+foot;
+    +paHero+cards+filterBar+table+foot;
+  // Wire the KPI cards → filter the service table to the clicked subset (toggle + clear).
+  host.querySelectorAll('[data-resfilter]').forEach(function(cd){
+    var go=function(){var k=cd.getAttribute('data-resfilter');C5_RESIL_FILTER=(C5_RESIL_FILTER===k)?null:k;c5Resilience();};
+    cd.onclick=go;cd.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}};});
+  var _rc=host.querySelector('[data-resclear]');if(_rc)_rc.onclick=function(){C5_RESIL_FILTER=null;c5Resilience();};
 }
 /* The Neuron Controls lens — capability × (adversarial + 5 non-adversarial lanes)
    × framework projection, in one view. Read-only; renders into the panel passed in. */
