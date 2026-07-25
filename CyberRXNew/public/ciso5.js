@@ -59,7 +59,7 @@
     '.c5ask-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}',
     '.c5ask-btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:12.5px;font-weight:600;padding:7px 14px;border-radius:9px;cursor:pointer;transition:border-color .12s,background .12s}',
     '.c5ask-btn:hover{border-color:var(--blue)}',
-    '.c5ask-btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}',
+    '.c5ask-btn.primary{background:var(--blue);border-color:var(--blue);color:var(--plane)}',
     '.c5ask-done{font-size:13px;font-weight:600;color:var(--good)}.c5ask-done .c5ask-when{font-weight:400;color:var(--muted);font-size:11.5px}',
     '.c5ask-sampletag{font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);background:var(--surface-2);border:1px solid var(--line);border-radius:20px;padding:1px 7px;margin-left:6px}',
     '.c5phwrap{margin-top:2px}',
@@ -130,7 +130,7 @@
     '.c5bl-k{font-size:12px;color:var(--blue);font-weight:500}',
     '.c5bl-h{font-size:15px;font-weight:500;margin-top:3px;color:var(--ink)}',
     '.c5bl-p{font-size:13px;color:var(--ink-2);margin-top:3px;line-height:1.5;max-width:560px}',
-    '.c5btn{margin-top:12px;font-size:13.5px;font-weight:500;padding:9px 15px;border-radius:8px;border:0;background:var(--blue-fill);color:#fff;cursor:pointer}',
+    '.c5btn{margin-top:12px;font-size:13.5px;font-weight:500;padding:9px 15px;border-radius:8px;border:0;background:var(--blue-fill);color:var(--plane);cursor:pointer}',
     '.c5btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink);margin-left:8px}',
     '.c5foot{font-size:11px;color:var(--muted);margin-top:14px}',
     '.c5mc{background:var(--surface-2);border-radius:8px;padding:12px 14px;cursor:pointer}',
@@ -3860,7 +3860,7 @@ function c5productInventory(){
   '.c5fw-controls{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px}',
   '.c5fw-cad{display:flex;gap:4px;align-items:center;flex-wrap:wrap}',
   '.c5fw-cadb{font-size:11px;font-weight:500;padding:5px 11px;border-radius:20px;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);cursor:pointer}',
-  '.c5fw-cadb.on{background:var(--blue);color:#fff;border-color:var(--blue)}',
+  '.c5fw-cadb.on{background:var(--blue);color:var(--plane);border-color:var(--blue)}',
   '.c5fw-pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}',
   '.c5fw-pill{font-size:12px;font-weight:500;padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);cursor:pointer}',
   '.c5fw-pill.on{background:var(--ink);color:#fff;border-color:var(--ink)}',
@@ -5887,7 +5887,7 @@ function c5Frameworks(){
     '<div class="subwrap c5phwrap"><div class="subtabs">'+
       '<button class="subtab'+(tab==='assess'?' on':'')+'" data-phtab="assess">Continuous assessment</button>'+
       '<button class="subtab'+(tab==='ai'?' on':'')+'" data-phtab="ai">AI frameworks</button>'+
-      '<button class="subtab'+(tab==='queue'?' on':'')+'" data-phtab="queue">Confirm queue'+(qN?(' <span style="font-size:10px;font-weight:800;color:#fff;background:var(--blue);border-radius:20px;padding:1px 6px">'+qN+'</span>'):'')+'</button>'+
+      '<button class="subtab'+(tab==='queue'?' on':'')+'" data-phtab="queue">Confirm queue'+(qN?(' <span style="font-size:10px;font-weight:800;color:var(--plane);background:var(--blue);border-radius:20px;padding:1px 6px">'+qN+'</span>'):'')+'</button>'+
       '<button class="subtab'+(tab==='neuron'?' on':'')+'" data-phtab="neuron">Neuron Controls</button>'+
       '<button class="subtab'+(tab==='nerion'?' on':'')+'" data-phtab="nerion">Nerion’s View</button>'+
       (internal?('<button class="subtab'+(tab==='nmap'?' on':'')+'" data-phtab="nmap" style="color:var(--warn)">◆ Nerion Map · internal</button>'):'')+
@@ -6478,7 +6478,7 @@ function c5ViewDoc(fname){
     matched.forEach(function(mm,j){ if(_kw[j]!=null){matchedLoc.push({mm:mm,ann:_kw[j]});} else {matchedUnloc.push(mm);} });
     function matchLocItem(o){var mm=o.mm,ann=o.ann;
       return '<div class="c5annp" id="c5annp-'+ann+'" data-annidx="'+ann+'" style="border:1px solid var(--line);border-left:3px solid var(--blue);border-radius:8px;padding:8px 11px;margin-bottom:7px;background:var(--surface);cursor:pointer">'+
-        '<div style="display:flex;align-items:center;gap:7px"><span style="flex:none;width:18px;height:18px;border-radius:50%;background:var(--blue);color:#fff;font-size:10px;font-weight:800;display:inline-flex;align-items:center;justify-content:center">'+(ann+1)+'</span><b style="font-size:12.5px;color:var(--ink)">'+c5esc(mm.label)+'</b></div>'+
+        '<div style="display:flex;align-items:center;gap:7px"><span style="flex:none;width:18px;height:18px;border-radius:50%;background:var(--blue);color:var(--plane);font-size:10px;font-weight:800;display:inline-flex;align-items:center;justify-content:center">'+(ann+1)+'</span><b style="font-size:12.5px;color:var(--ink)">'+c5esc(mm.label)+'</b></div>'+
         '<div style="font-size:11px;color:var(--muted);margin-top:3px">located for '+mm.items.map(c5esc).join(' · ')+' · <span style="color:var(--blue)">click to see it in the document →</span></div></div>';
     }
     function matchUnlocItem(mm){
