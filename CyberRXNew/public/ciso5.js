@@ -6833,14 +6833,17 @@ function c5osBtn(labelKey,action){return '<button class="c5btn" data-c5os="'+act
 
 function c5OsLayer(){
   var host=document.getElementById('c5-oslayer'); if(!host) return;
+  // Decision-first reading order: what to fund, what's fragile, whether actions
+  // worked, whether the operators are acting, then the forecast track record and
+  // peer context. Leads with the actionable panel, not the empty forecast ledger.
   host.innerHTML = c5shell(c5osT('os.kick'), c5osT('os.verdict'), '', c5osT('os.intro'))
-  + c5osPanel('track','os.track.t','os.track.sub')
   + c5osPanel('alloc','os.alloc.t','os.alloc.sub')
   + c5osPanel('sim','os.sim.t','os.sim.sub')
-  + c5osPanel('ops','os.ops.t','os.ops.sub')
   + c5osPanel('act','os.act.t','os.act.sub')
+  + c5osPanel('ops','os.ops.t','os.ops.sub')
+  + c5osPanel('track','os.track.t','os.track.sub')
   + c5osPanel('peers','os.peers.t','os.peers.sub');
-  c5osFillTrack(); c5osFillAlloc(); c5osFillSim(); c5osFillOps(); c5osFillAct(); c5osFillPeers();
+  c5osFillAlloc(); c5osFillSim(); c5osFillAct(); c5osFillOps(); c5osFillTrack(); c5osFillPeers();
 }
 
 function c5osFillTrack(){ c5osGet('/api/forecast/accuracy').then(function(d){
