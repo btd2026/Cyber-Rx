@@ -5326,6 +5326,8 @@ function c5paStyle(){
    +'.c5pa-gaugewrap .read small{font-family:var(--sans);font-size:15px;color:var(--muted);font-weight:400}'
    +'.c5pa-gaugewrap .sub{font-family:var(--mono);font-size:11px;color:var(--ink-2)}'
    +'.c5pa svg{display:block;max-width:100%;height:auto;margin:0 auto}'
+   +'.c5pa-fn{cursor:pointer}.c5pa-fn text{transition:fill .12s,font-weight .12s}'
+   +'.c5pa-fn:hover text{fill:var(--blue);font-weight:700}.c5pa-fn:focus-visible{outline:none}.c5pa-fn:focus-visible text{fill:var(--blue);font-weight:700}'
    +'.c5pa-thin{margin-top:26px}'
    +'.c5pa-ledger{border-top:1px solid var(--line)}'
    +'.c5pa-lrow{display:grid;grid-template-columns:24px 1fr minmax(90px,1.4fr) 46px 16px;align-items:center;gap:14px;padding:10px 6px;margin:0 -6px;border-bottom:1px solid var(--line);cursor:pointer;border-radius:7px;transition:background .12s}'
@@ -5390,12 +5392,21 @@ function c5paRadar(fns){
   fns=(fns||[]).filter(Boolean);var N=fns.length;if(N<3)return '';
   var cx=150,cy=134,R=92;
   function pt(i,rad){var a=(-90+i*360/N)*Math.PI/180;return [cx+rad*Math.cos(a),cy+rad*Math.sin(a)];}
-  var s='<svg viewBox="0 0 300 268" width="300" height="268" role="img" aria-label="Function profile radar">';
+  var s='<svg viewBox="0 0 300 268" width="300" height="268" role="img" aria-label="Function profile radar — click a function for its controls">';
+  // rings + spokes (structural, non-interactive)
   [0.25,0.5,0.75,1].forEach(function(g){var pts=fns.map(function(_,i){var p=pt(i,R*g);return p[0].toFixed(1)+','+p[1].toFixed(1);}).join(' ');s+='<polygon points="'+pts+'" fill="none" style="stroke:var(--line)" stroke-width="1"/>';});
-  fns.forEach(function(f,i){var p=pt(i,R),lp=pt(i,R+16);s+='<line x1="'+cx+'" y1="'+cy+'" x2="'+p[0].toFixed(1)+'" y2="'+p[1].toFixed(1)+'" style="stroke:var(--line)" stroke-width="1"/>';var an=Math.abs(lp[0]-cx)<8?'middle':(lp[0]<cx?'end':'start');s+='<text x="'+lp[0].toFixed(1)+'" y="'+(lp[1]+3).toFixed(1)+'" style="fill:var(--ink-2);font-family:ui-monospace,monospace" font-size="10" text-anchor="'+an+'">'+esc(String(f.n))+'</text>';});
+  fns.forEach(function(f,i){var p=pt(i,R);s+='<line x1="'+cx+'" y1="'+cy+'" x2="'+p[0].toFixed(1)+'" y2="'+p[1].toFixed(1)+'" style="stroke:var(--line)" stroke-width="1"/>';});
+  // filled profile
   var dp=fns.map(function(f,i){var p=pt(i,R*(Math.max(0,Math.min(5,f.s))/5));return p[0].toFixed(1)+','+p[1].toFixed(1);}).join(' ');
-  s+='<polygon points="'+dp+'" style="fill:var(--blue);stroke:var(--blue)" fill-opacity="0.15" stroke-width="2"/>';
-  fns.forEach(function(f,i){var p=pt(i,R*(Math.max(0,Math.min(5,f.s))/5));var z=(f.s<=0.05);s+='<circle cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="'+(z?3.2:2.6)+'" style="fill:var('+(z?'--crit':'--blue')+')"/>';});
+  s+='<polygon points="'+dp+'" style="fill:var(--blue);stroke:var(--blue);pointer-events:none" fill-opacity="0.15" stroke-width="2"/>';
+  // per-function interactive group: a hit area at the vertex + the label + the data point
+  fns.forEach(function(f,i){var vp=pt(i,R),lp=pt(i,R+16),dpt=pt(i,R*(Math.max(0,Math.min(5,f.s))/5)),z=(f.s<=0.05);
+    var an=Math.abs(lp[0]-cx)<8?'middle':(lp[0]<cx?'end':'start');
+    s+='<g class="c5pa-fn" data-pafn="'+esc(String(f.n))+'" role="button" tabindex="0"><title>View the '+esc(String(f.n))+' controls</title>';
+    s+='<circle cx="'+vp[0].toFixed(1)+'" cy="'+vp[1].toFixed(1)+'" r="19" fill="transparent"/>';
+    s+='<text x="'+lp[0].toFixed(1)+'" y="'+(lp[1]+3).toFixed(1)+'" style="fill:var(--ink-2);font-family:ui-monospace,monospace" font-size="10" text-anchor="'+an+'">'+esc(String(f.n))+'</text>';
+    s+='<circle cx="'+dpt[0].toFixed(1)+'" cy="'+dpt[1].toFixed(1)+'" r="'+(z?3.4:2.8)+'" style="fill:var('+(z?'--crit':'--blue')+')"/>';
+    s+='</g>';});
   return s+'</svg>';
 }
 /* The honest continuous-assessment view — the anti-vanity summary + every one of the 106
