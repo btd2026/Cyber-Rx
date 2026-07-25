@@ -5457,11 +5457,16 @@ function c5ContinuousAssessment(host){
   // NOTE: no control is auto-selected — the Controls sub-tab stays hidden at Enterprise until
   // you drill into a region/entity (or click a drifted control), keeping the Summary short.
   function card(l,v,vc,cn){return '<div class="c5card"><div class="c5card-top"><span class="c5card-l">'+l+'</span><span class="c5chip c5-computed">computed</span></div><div class="c5card-v" style="color:var(--'+vc+')">'+v+'</div><div class="cn">'+cn+'</div></div>';}
-  var overall5=(roll.overall*5);var evidenced=s.total-s.notAssessed;var covPct=s.total?Math.round(evidenced/s.total*100):0;
+  // Single source of truth for maturity: the reconciling hierarchical aggregate
+  // (Enterprise = mean of regions = mean of entities), the same number the
+  // composition card and region cards below show. Falls back to the flat rollup.
+  var overall5=(roll.overall*5);
+  try{ if(C5_ASSESS_FW!=='ai'&&typeof scopeAggTree==='function'&&typeof c5Scope==='function'){var _aggO=scopeAggTree(c5Scope());if(_aggO&&_aggO.overall!=null)overall5=_aggO.overall;} }catch(_){}
+  var evidenced=s.total-s.notAssessed;var covPct=s.total?Math.round(evidenced/s.total*100):0;
   var net=drift.improvements.length-drift.regressions.length;var tdir=net>0?'up':(net<0?'down':'flat');var tcol=tdir==='up'?'good':(tdir==='down'?'crit':'muted');var tarrow=tdir==='up'?'▲':(tdir==='down'?'▼':'▬');
   var failing=s.notMet+s.notAssessed;
   var cards='<div class="c5cards">'
-    +card('Overall maturity',overall5.toFixed(1)+' / 5',scoreCol(roll.overall),((typeof c5fwLvl==='function')?c5fwLvl(overall5):'')+' · target 3.5 · confidence '+Math.round(roll.confidence*100)+'%')
+    +card('Overall maturity',overall5.toFixed(1)+' / 5',scoreCol(overall5/5),((typeof c5fwLvl==='function')?c5fwLvl(overall5):'')+' · target 3.5 · confidence '+Math.round(roll.confidence*100)+'%')
     +card('Coverage',covPct+'%',covPct>=75?'good':covPct>=50?'warn':'crit',evidenced+' of '+s.total+' controls assessed')
     +card('Trend · vs last cycle',tarrow+' '+(net>0?'+':'')+net,tcol,drift.improvements.length+' improved · '+drift.regressions.length+' regressed')
     +card('Controls failing',failing,failing>0?'crit':'good','deficiencies (not met / not assessed)')
