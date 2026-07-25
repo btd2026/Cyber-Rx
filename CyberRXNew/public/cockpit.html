@@ -3326,11 +3326,11 @@ function scopeNav(){
     // entity within it) you compare that region's entities — you do not see the regions again.
     var out='';
     if(SCOPE==='enterprise'){
-      out=drillCards('Regions at a glance · '+fwLbl+', weakest first',
+      out=drillCards('Regions at a glance · '+fwLbl+' · Enterprise is their average · weakest first',
         REGIONS.filter(function(r){return r.kind==='region';}),
         function(r){return r.id;},function(r){return r.label;},function(r){return r.regime;},'region');
     } else if(reg&&reg.entities&&reg.entities.length){
-      out=drillCards(reg.entities.length+' entities in '+reg.label+' · '+fwLbl+', weakest first',
+      out=drillCards(reg.entities.length+' entities in '+reg.label+' · '+fwLbl+' · '+reg.label+' is their average · weakest first',
         reg.entities,function(e){return e.id;},function(e){return e.label;},
         function(e){return (typeof scopeMeta==='function'&&scopeMeta(e.id)&&scopeMeta(e.id).regime)||'';},'entity');
     }

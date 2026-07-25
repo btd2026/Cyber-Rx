@@ -5333,6 +5333,8 @@ function c5paStyle(){
    +'.c5pa-finding{font-family:var(--c5serif);font-weight:600;font-size:clamp(22px,3vw,32px);line-height:1.22;letter-spacing:-.01em;color:var(--ink);margin:12px 0 0;max-width:22ch;text-wrap:balance}'
    +'.c5pa-finding em{font-style:normal;color:var(--blue)}.c5pa-finding .bad{color:var(--crit)}'
    +'.c5pa-dek{color:var(--ink-2);font-size:15px;line-height:1.55;margin-top:14px;max-width:64ch}.c5pa-dek b{color:var(--ink)}'
+   +'.c5pa-basis{display:flex;align-items:center;gap:9px;margin-top:12px;font-size:12px;color:var(--ink-2);line-height:1.5}.c5pa-basis b{color:var(--ink);font-weight:700}'
+   +'.c5pa-basis-tag{flex:none;font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);border-radius:20px;padding:2px 9px}'
    +'.c5pa-inst{display:grid;grid-template-columns:1fr 1.05fr;border:1px solid var(--line);border-radius:14px;background:var(--surface);overflow:hidden;margin-top:26px}'
    +'@media(max-width:720px){.c5pa-inst{grid-template-columns:1fr}}'
    +'.c5pa-cell{padding:22px 24px}.c5pa-cell + .c5pa-cell{border-left:1px solid var(--line)}'
@@ -5801,10 +5803,30 @@ function c5ContinuousAssessment(host){
   var paReadCol=overall5>=3?'--good':overall5>=2?'--blue':overall5>=1?'--warn':'--crit';
   var paFinding='Your '+paFwName+' program'+(paScopeLbl?(' for <b>'+esc(paScopeLbl)+'</b>'):'')+' sits at <em>'+(vLevel||'&mdash;')+'</em> (CMMI Level '+vCmmi+') &mdash; '+overall5.toFixed(1)+' of 5, '+(vBelow?'<span class="bad">below the 3.5 target</span>':'at the 3.5 target')+'.';
   var paEyebrow=(isAiFw?'Program health · AI frameworks':'Program health · '+(c5AssessFwCfg().label))+' · as of '+new Date().toLocaleDateString();
+  // Scope basis — state the hierarchy explicitly so Enterprise is never read as a place:
+  // Enterprise = equal-weighted mean of regions; a region = mean of its entities; an entity
+  // = a leaf scored from its own telemetry. Keeps the roll-up honest in the UI, not just the code.
+  var paBasis='';try{
+    var _bsc=(typeof c5Scope==='function')?c5Scope():'enterprise';
+    if(_bsc==='enterprise'){
+      var _nr=(typeof REGIONS!=='undefined')?REGIONS.filter(function(r){return r.kind==='region';}).length:0;
+      paBasis='<b>Enterprise</b> is the equal-weighted average of your '+_nr+' region'+(_nr===1?'':'s')+' &mdash; a consolidated roll-up, not any one region.';
+    } else {
+      var _breg=(typeof scopeRegion==='function')?scopeRegion(_bsc):null,_ro=null;
+      if(typeof REGIONS!=='undefined')REGIONS.forEach(function(r){if(r.id===_breg)_ro=r;});
+      if(_ro&&_ro.id===_bsc){
+        paBasis='<b>'+esc(_ro.label)+'</b> is the equal-weighted average of its '+((_ro.entities||[]).length)+' entities &mdash; itself one of '+((typeof REGIONS!=='undefined')?REGIONS.filter(function(r){return r.kind==='region';}).length:'')+' regions rolling up to Enterprise.';
+      } else {
+        paBasis='This is a single <b>entity</b>, scored directly from its own telemetry &amp; evidence'+(_ro?(' &mdash; one of '+((_ro.entities||[]).length)+' in <b>'+esc(_ro.label)+'</b>'):'')+'.';
+      }
+    }
+  }catch(_){}
+  var paBasisHtml=paBasis?('<div class="c5pa-basis"><span class="c5pa-basis-tag">Scope</span><span>'+paBasis+'</span></div>'):'';
   var paLedger=(vFns||[]).slice().sort(function(a,b){return a.s-b.s;}).map(function(f,i){var col=f.s>=3?'--good':f.s>=2?'--blue':f.s>=1?'--warn':'--crit';var w=Math.max(2,(f.s/5)*100);return '<div class="c5pa-lrow'+(i===0?' weak':'')+'" data-pafn="'+esc(String(f.n))+'" role="button" tabindex="0" title="View the '+esc(String(f.n))+' controls"><span class="ix">'+String(i+1).padStart(2,'0')+'</span><span class="nm">'+esc(String(f.n))+'</span><span class="bar"><i style="width:'+w+'%;background:var('+col+')"></i></span><span class="val" style="color:var('+col+')">'+f.s.toFixed(1)+'</span><span class="go">&rsaquo;</span></div>';}).join('');
   var paHero='<div class="c5pa">'
     +'<div class="c5pa-eyebrow">'+paEyebrow+'</div>'
     +'<h1 class="c5pa-finding">'+paFinding+'</h1>'
+    +paBasisHtml
     +'<div class="c5pa-dek">'+vLede+'</div>'
     +'<div class="c5pa-inst">'
       +'<div class="c5pa-cell"><div class="c5pa-ct">Maturity vs 3.5 target</div><div class="c5pa-gaugewrap">'+c5paGauge(overall5,3.5)+'<div class="read" style="color:var('+paReadCol+')">'+overall5.toFixed(1)+'<small> / 5</small></div><div class="sub">CMMI Level '+vCmmi+' · '+esc(vLevel||'')+' · target 3.5 · gap '+Math.max(0,3.5-overall5).toFixed(1)+'</div></div></div>'
