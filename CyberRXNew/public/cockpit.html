@@ -2015,10 +2015,25 @@ var DEMO_DOC_REGION={
   apac:{'GV.OC-01':[2,'APAC Security Policy (draft)'],'PR.AA-01':[2,'APAC Access Control Policy (draft)'],'RS.MA-01':[1,'APAC IR Plan (not finalized)']}
 };
 function demoDocFromProfile(spec){var cmmi=spec[0],docName=spec[1];var attrs=demoDocAttrs(cmmi);var matched=attrs.filter(function(a){return a.found;}).length;return {cmmi:cmmi,doc:docName,matched:matched,total:attrs.length,attrs:attrs};}
-function seedDemoDocScores(){if(!demoActive()||Object.keys(docScoresBase()).length)return;
-  var sample={'GV.OC-01':4,'GV.OC-03':3,'GV.RM-01':3,'GV.PO-01':4,'GV.PO-02':3,'PR.AA-01':4,'PR.AA-05':3,'PR.AT-01':3,'ID.RA-01':3,'ID.RA-05':2,'DE.CM-01':2,'RS.MA-01':3};
-  Object.keys(sample).forEach(function(id){var attrs=demoDocAttrs(sample[id]);var matched=attrs.filter(function(a){return a.found;}).length;
-    saveDocScore(id,{cmmi:sample[id],doc:'Information Security Policy (sample).pdf',matched:matched,total:attrs.length,attrs:attrs});});}
+function seedDemoDocScores(){if((!demoActive()&&!isDemoOrg())||Object.keys(docScoresBase()).length)return;
+  if(typeof CSF_RAW==='undefined')return;
+  /* Healthy, mostly-proven baseline across the whole CSF 2.0 catalog: ~90% of controls
+     documented at CMMI 3-4 (a mature program), with a deterministic ~10% left unassessed
+     as visible gaps — plus a few named laggards (supply-chain, deep asset-risk) held low
+     so the picture reads mature-with-headroom, not perfect. Telemetry-scored controls
+     (EDR/MFA/patch…) keep their higher sensor score via best-wins; this only lifts the
+     policy/attestation-graded functions the sensors can't see. Deterministic (hashed on
+     the control id) so the demo is identical on every load. */
+  function h(s){var n=0;for(var i=0;i<s.length;i++){n=((n<<5)-n+s.charCodeAt(i))|0;}return Math.abs(n);}
+  var laggards={'GV.SC-09':1,'GV.SC-10':1,'ID.RA-09':1,'ID.RA-10':1,'DE.CM-03':1,'RS.AN-08':1,'GV.OV-03':2};
+  Object.keys(CSF_RAW).forEach(function(fn){var cats=CSF_RAW[fn];Object.keys(cats).forEach(function(cat){cats[cat].forEach(function(row){
+    var id=row[0],hv=h(id),cmmi;
+    if(laggards[id]!=null)cmmi=laggards[id];
+    else if(hv%100<10)return;                 // ~10% left unassessed → deliberate gaps
+    else {var r=hv%10;cmmi=(r<1)?2:(r<6)?3:4;} // ~10% at 2, ~50% at 3, ~40% at 4
+    var attrs=demoDocAttrs(cmmi),matched=attrs.filter(function(a){return a.found;}).length;
+    saveDocScore(id,{cmmi:cmmi,doc:'Information Security Policy (sample).pdf',matched:matched,total:attrs.length,attrs:attrs});
+  });});});}
 /* ---- Business → cyber value chain (Framework report) ----------------------------
    Joins the two halves the platform already computes into one line:
      Function ($/yr,$/day) → Process (fraction) → Technology → Cyber risk ($ stop) →
@@ -3008,7 +3023,7 @@ function demoSignals(){
   if(has(['servicenow_grc','auditboard'])){set('audit_findings_open',14);set('audit_findings_repeat',3);}
   return any?s:null;
 }
-function applyDemoSignals(){if(!demoActive()||SIGNALS)return;var s=demoSignals();if(s){SIGNALS=s;try{SIGNALS_BASE=JSON.parse(JSON.stringify(s));if(typeof SCOPE!=='undefined'&&SCOPE!=='enterprise')applyScope(SCOPE);}catch(_){}renderSignals();}}
+function applyDemoSignals(){if((!demoActive()&&!isDemoOrg())||SIGNALS)return;var s=demoSignals();if(s){SIGNALS=s;try{SIGNALS_BASE=JSON.parse(JSON.stringify(s));if(typeof SCOPE!=='undefined'&&SCOPE!=='enterprise')applyScope(SCOPE);}catch(_){}renderSignals();}}
 function signalsAreDemo(){try{return !!(SIGNALS&&Object.keys(SIGNALS).some(function(k){return SIGNALS[k]&&SIGNALS[k].demo;}));}catch(_){return false;}}
 function liveTag(){return signalsAreDemo()?'<span class="pill warn" style="font-size:9px">demo</span>':'<span class="pill good" style="font-size:9px">live</span>';}
 /* The full-width "Demo data" banner is retired — every card already carries its own
@@ -5176,7 +5191,7 @@ function selectSeat(seat){document.querySelectorAll('.seat').forEach(function(x)
 document.querySelectorAll('.seat').forEach(function(b){b.addEventListener('click',function(){selectSeat(b.dataset.seat);});});
 // Boot: the cockpit opens at Enterprise scope on the CISO engine (the seat personas
 // are retired in favour of regional representation). Scope is applied once data loads.
-CUR='ciso';try{loadOrgStructure();}catch(_){}try{applyScope('enterprise');}catch(_){}try{renderScopeBar();}catch(_){}render('ciso');try{fetchOrgStructure();}catch(_){}loadLive();loadSignals();fetchReadiness();
+CUR='ciso';try{loadOrgStructure();}catch(_){}try{seedDemoDocScores();}catch(_){}try{applyScope('enterprise');}catch(_){}try{renderScopeBar();}catch(_){}render('ciso');try{fetchOrgStructure();}catch(_){}loadLive();loadSignals();fetchReadiness();
 /* Auto-poll live signals so the "Are we under attack?" tile surfaces a new SIEM
    incident on its own (~every 60s) — no manual refresh needed. The War Room's own
    incidents flip it instantly via triggerIncident/containIncident. */
@@ -5282,8 +5297,12 @@ function sysCard(s){var metric=s.live?(180+Math.floor(Math.random()*70))+' '+s.m
    fallback so "Enable demo mode" always shows a fully-connected cockpit, even if
    the tools were not persisted to cyberrx_tools (e.g. demo enabled without go-live). */
 var DEMO_TOOLSET=['okta','defender','qualys','splunk','cyberark','firewall','knowbe4','proofpoint','wiz','sap','servicenow','salesforce','whistic','securityscorecard','onetrust','recordedfuture','rubrik','github','servicenow_grc'];
+// The seeded flagship/sample orgs are fully-connected demos: even with an orgId set (so the
+// banner reads "Live · <org>"), give them the healthy connected-tool baseline so the cockpit
+// shows a mature, mostly-proven program instead of an empty one.
+function isDemoOrg(){try{var o=(typeof orgId==='function'?(orgId()||''):'').toLowerCase();if(!o)return false;var known={'blue-cross-blue-shield-of-massachusetts':1,'cigna-healthcare':1,'meridian-health-plan-demo':1};return !!known[o]||/-demo$/.test(o);}catch(_){return false;}}
 function connectedTools(){try{var t=JSON.parse(localStorage.getItem('cyberrx_tools')||'{}');if(!t||typeof t!=='object')t={};
-  if(!Object.keys(t).length&&demoActive()){var d={};DEMO_TOOLSET.forEach(function(k){d[k]={on:true,demo:true,vendor:'Demo'};});return d;}
+  if(!Object.keys(t).length&&(demoActive()||isDemoOrg())){var d={};DEMO_TOOLSET.forEach(function(k){d[k]={on:true,demo:true,vendor:'Demo'};});return d;}
   return t;}catch(_){return {};}}
 var WR_TOOLMAP={splunk:'SIEM',sentinel:'SIEM',defender:'EDR',crowdstrike:'EDR',okta:'Identity',entra:'Identity',qualys:'Vulnerability mgmt',tenable:'Vulnerability mgmt',cyberark:'Privileged access',knowbe4:'Email / Awareness',servicenow:'ITSM / Ticketing'};
 var WR_CAT_STATE={

@@ -5264,11 +5264,13 @@ function c5AssessmentRollup(){
    Compares the current verdict to the prior snapshot — here deterministic for the demo; in
    production the evidence store's last record. */
 var VERDICT_RANK={not_assessed:0,not_met:1,partial:2,met:3};
-function c5AssessmentPrior(a){var h=c5hash(c5Scope()+'|'+a.id+'|prior');
-  if(h%13===0)return 'met';                          // was met, now worse → regression
-  if(h%13===1)return 'not_met';                      // was worse, now better → improvement
-  if(h%13===2&&a.verdict==='met')return 'partial';   // partial regression
-  return a.verdict;}
+function c5AssessmentPrior(a){var h=c5hash(c5Scope()+'|'+a.id+'|prior');var v=a.verdict;
+  // Demo posture is a healthy program trending UP: several controls climbed since the last
+  // cycle, with only the occasional real drift (kept visible so the drift panel stays honest).
+  if(v==='met')return (h%37===0)?'partial':'met';             // rare regression from met
+  if(v==='partial')return (h%3===0)?'not_met':'partial';      // many partials climbed from not-met
+  if(v==='not_met')return (h%2===0)?'not_assessed':'not_met'; // and some from unassessed
+  return v;}                                                  // not-assessed: stable
 function c5DriftAlerts(){
   var ids=Object.keys(c5AssessMethods());var cw=c5CrownControlWeights();
   var out={regressions:[],improvements:[],expired:[]};
@@ -5667,10 +5669,14 @@ function c5ContinuousAssessment(host){
   try{ if(typeof scopeAggTree==='function'&&typeof c5Scope==='function'){var _aggO=scopeAggTree(c5Scope());if(_aggO&&_aggO.overall!=null)overall5=_aggO.overall;} }catch(_){}
   var evidenced=s.total-s.notAssessed;var covPct=s.total?Math.round(evidenced/s.total*100):0;
   var net=drift.improvements.length-drift.regressions.length;var tdir=net>0?'up':(net<0?'down':'flat');var tcol=tdir==='up'?'good':(tdir==='down'?'crit':'muted');var tarrow=tdir==='up'?'▲':(tdir==='down'?'▼':'▬');
-  var failing=s.notMet+s.notAssessed;
+  // A control a sensor / attestation actively marks FAILING is a real deficiency; a control
+  // simply not yet evidenced is a COVERAGE gap, not a failure — the two are kept apart so a
+  // healthy program isn't slandered by its own unmonitored surface (that story is the Coverage
+  // card + the "Can you prove it?" split below).
+  var notMet=s.notMet;
   // Overall maturity is the gauge above, so it's not repeated here. The rest drill to detail.
   var cards='<div class="c5cards">'
-    +card('Controls failing',failing,failing>0?'crit':'good','deficiencies (not met / not assessed)','controls')
+    +card('Controls not met',notMet,notMet>0?'crit':'good',notMet>0?'a sensor or attestation marks these failing':'nothing a sensor or attestation marks as failing','controls')
     +card('Coverage',covPct+'%',covPct>=75?'good':covPct>=50?'warn':'crit',evidenced+' of '+s.total+' controls assessed','controls')
     +card('Trend · vs last cycle',tarrow+' '+(net>0?'+':'')+net,tcol,drift.improvements.length+' improved · '+drift.regressions.length+' regressed','drift')
     +'</div>';
@@ -5730,14 +5736,21 @@ function c5ContinuousAssessment(host){
   // wedge — the defensible read a board / auditor / regulator can trust. On the AI tab it is the
   // "AI proof gap": governance is not assurance. ──
   var isAiFw=(C5_ASSESS_FW==='ai');
-  var pvProven=s.live,pvHuman=s.hybrid,pvAsserted=s.attestation,pvUnproven=s.awaiting+s.notAssessed;
+  // Clean partition that sums to the control total (no double-count): Proven (live sensor) +
+  // Human-confirmed (telemetry, human-verified) + Asserted (fresh attestation) + Unproven
+  // (no valid proof now = awaiting a connector or an expired attestation). Asserted is derived
+  // as the remainder so the four segments always total s.total exactly.
+  var pvProven=s.live,pvHuman=s.hybrid,pvUnproven=s.notAssessed;
+  var pvAsserted=Math.max(0,s.total-pvProven-pvHuman-pvUnproven);
+  var pvEvidenced=pvProven+pvHuman;                                  // observed today, not on file
+  var pvEvPct=s.total?Math.round(pvEvidenced/s.total*100):0;
   var pvPct=s.total?Math.round(pvProven/s.total*100):0;
   var pvSegs=[['Proven',pvProven,'good'],['Human-confirmed',pvHuman,'blue'],['Asserted',pvAsserted,'warn'],['Unproven',pvUnproven,'muted']];
   var pvBar=pvSegs.map(function(x){var w=s.total?(x[1]/s.total*100):0;return w>0?('<div title="'+esc(x[0]+': '+x[1])+'" style="width:'+w+'%;background:var(--'+x[2]+')"></div>'):'';}).join('');
   var pvLegend=pvSegs.map(function(x){return '<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--ink-2)"><i style="width:9px;height:9px;border-radius:2px;background:var(--'+x[2]+');display:inline-block"></i><b style="color:var(--ink)">'+x[1]+'</b> '+x[0]+'</span>';}).join('');
   var pvLine=isAiFw
-    ?('You operate <b>'+s.total+'</b> AI-governance controls — but only <b style="color:var(--good)">'+pvPct+'%</b> are continuously <b>proven</b>. The rest are <b>attested</b> (a policy says so) or <b>awaiting</b> an AI-monitoring connector. Governance is not assurance: this is the gap between “we have a policy” and “we can prove it.”')
-    :('<b style="color:var(--good)">'+pvPct+'%</b> of your posture is <b>proven by a sensor right now</b>; the rest is human-confirmed, <b>asserted</b> on a policy, or unproven. Green here means <b>observed today</b> — not a document on file. This is the number you can defend to a board, an auditor or a regulator.');
+    ?('You operate <b>'+s.total+'</b> AI-governance controls; <b style="color:var(--good)">'+pvEvPct+'%</b> are <b>evidenced today</b>, not merely on file. The rest are <b>attested</b> (a policy says so) or <b>awaiting</b> an AI-monitoring connector. Governance is not assurance: this is the gap between “we have a policy” and “we can prove it.”')
+    :('<b style="color:var(--good)">'+pvEvPct+'%</b> of your '+s.total+' controls are <b>evidenced today</b> — proven by a live sensor or telemetry-backed and human-confirmed, not a document on file. The rest sit on a current attestation or await a connector to light up. This is the number you can defend to a board, an auditor or a regulator.');
   var provHero='<div style="border:1px solid var(--blue);border-radius:14px;padding:15px 17px;margin-top:14px;background:color-mix(in srgb,var(--blue) 4%,var(--surface))">'
     +'<div style="font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--blue)">'+(isAiFw?'The AI proof gap':'Can you prove it?')+'</div>'
     +'<div style="font-size:12px;color:var(--ink-2);line-height:1.55;margin:4px 0 10px;max-width:880px">'+pvLine+'</div>'
@@ -5776,7 +5789,12 @@ function c5ContinuousAssessment(host){
   var vTitle=(isAiFw?'Your AI-governance program is ':'Your NIST CSF 2.0 program is ')+(vLevel?vLevel+' — ':'')+overall5.toFixed(1)+' of 5'+(vBelow?', below the 3.5 target.':' — at target.');
   var paScope=(typeof c5Scope==='function')?c5Scope():'enterprise';
   var paScopeLbl=(paScope==='enterprise')?'':((typeof scopeLabel==='function')?scopeLabel(paScope):paScope);
-  var vLede=failing+' of '+s.total+' controls are failing'+(vWeakFn?(', and the weakest function is <b>'+((typeof FNL!=='undefined'&&FNL[vWeakFn.k])||vWeakFn.k)+'</b> at '+vWeakFn.s.toFixed(1)+'.'):'.')+' Below: what the score is built on, whether you can prove it, and the moves that raise it.';
+  var vWeakLbl=vWeakFn?(((typeof FNL!=='undefined'&&FNL[vWeakFn.k])||vWeakFn.k)):'';
+  var vLede=(s.notMet>0
+      ?('<b>'+s.notMet+'</b> control'+(s.notMet===1?' is':'s are')+' not met and <b>'+s.notAssessed+'</b> still await evidence')
+      :('No control is failing outright &mdash; <b>'+s.notAssessed+'</b> await a sensor or fresh attestation to prove'))
+    +(vWeakFn?(', with <b>'+vWeakLbl+'</b> the weakest function at '+vWeakFn.s.toFixed(1)+'.'):'.')
+    +' Below: what the score is built on, whether you can prove it, and the moves that raise it.';
   // ── Blend presentation: editorial finding → focal instrument → supporting detail ──
   c5paStyle();
   var paFwName=isAiFw?'AI-governance':(c5AssessFwCfg().label);
