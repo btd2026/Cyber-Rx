@@ -6025,7 +6025,7 @@ function nerionInternal(){try{return (typeof localStorage!=='undefined'&&localSt
 function c5Frameworks(){
   var host=document.getElementById('c5-frameworks');if(!host)return;
   var internal=nerionInternal();
-  var tab=(C5_PH_TAB==='nerion')?'nerion':(C5_PH_TAB==='ai')?'ai':(C5_PH_TAB==='queue')?'queue':(C5_PH_TAB==='neuron')?'neuron':(C5_PH_TAB==='nmap'&&internal)?'nmap':'assess';
+  var tab=(C5_PH_TAB==='ai')?'ai':(C5_PH_TAB==='queue')?'queue':(C5_PH_TAB==='neuron')?'neuron':(C5_PH_TAB==='nmap'&&internal)?'nmap':'assess';
   var qN=(typeof c5ReviewQueue==='function')?c5ReviewQueue().filter(function(q){return !q.confirmed;}).length:0;
   host.innerHTML=c5header()+
     '<div class="subwrap c5phwrap"><div class="subtabs">'+
@@ -6033,7 +6033,6 @@ function c5Frameworks(){
       '<button class="subtab'+(tab==='ai'?' on':'')+'" data-phtab="ai">AI frameworks</button>'+
       '<button class="subtab'+(tab==='queue'?' on':'')+'" data-phtab="queue">Confirm queue'+(qN?(' <span style="font-size:10px;font-weight:800;color:#fff;background:var(--blue);border-radius:20px;padding:1px 6px">'+qN+'</span>'):'')+'</button>'+
       '<button class="subtab'+(tab==='neuron'?' on':'')+'" data-phtab="neuron">Neuron Controls</button>'+
-      '<button class="subtab'+(tab==='nerion'?' on':'')+'" data-phtab="nerion">Nerion’s View</button>'+
       (internal?('<button class="subtab'+(tab==='nmap'?' on':'')+'" data-phtab="nmap" style="color:var(--warn)">◆ Nerion Map · internal</button>'):'')+
     '</div></div><div id="c5ph-body"></div>';
   host.querySelectorAll('[data-phtab]').forEach(function(b){b.onclick=function(){var nt=b.getAttribute('data-phtab');
@@ -6042,8 +6041,7 @@ function c5Frameworks(){
     if((nt==='assess'||nt==='ai')&&nt!==C5_PH_TAB){C5_ASSESS_CTRL=null;C5_ASSESS_EXP=null;C5_ASSESS_SUBTAB='summary';}
     C5_PH_TAB=nt;c5Frameworks();};});
   var body=document.getElementById('c5ph-body');
-  if(tab==='nerion'){c5MountCrownTree(body);}
-  else if(tab==='ai'){C5_ASSESS_FW='ai';c5ContinuousAssessment(body);}
+  if(tab==='ai'){C5_ASSESS_FW='ai';c5ContinuousAssessment(body);}
   else if(tab==='queue'){c5ConfirmQueueView(body);}
   else if(tab==='neuron'){c5NeuronControls(body);}
   else if(tab==='nmap'&&internal){c5NeuronMap(body);}
