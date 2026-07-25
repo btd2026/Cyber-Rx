@@ -28,7 +28,7 @@
   .head{padding:34px 0 6px}
   .eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--blue);font-weight:600;margin-bottom:11px}
   h1{font-family:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,"Times New Roman",serif;font-size:31px;font-weight:600;letter-spacing:-.01em;line-height:1.2;text-wrap:balance;max-width:20ch}
-  .lede{color:var(--ink-2);font-size:14.5px;margin-top:10px;max-width:680px}
+  .lede{color:var(--ink-2);font-size:14px;margin-top:10px;max-width:680px}
   .lede b{color:var(--ink)}
   .obhead{position:sticky;top:0;z-index:20;margin-top:8px;background:var(--plane);border-bottom:1px solid var(--line);padding-bottom:11px}
   .obtabs{display:flex;gap:8px;flex-wrap:wrap;padding:12px 0 9px}
@@ -36,8 +36,8 @@
   .obprog-bar{flex:1;height:6px;background:var(--surface-2,#E8F0FB);border-radius:99px;overflow:hidden}
   .obprog-bar i{display:block;height:100%;width:0;background:var(--blue);border-radius:99px;transition:width .3s ease}
   .obprog.done .obprog-bar i{background:var(--good)}
-  .obprog-lbl{font-size:11.5px;font-weight:600;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
-  .obtab{font-size:12.5px;font-weight:600;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:7px 15px;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:7px}
+  .obprog-lbl{font-size:11px;font-weight:600;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+  .obtab{font-size:12px;font-weight:600;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:7px 15px;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:7px}
   .obtab:hover{color:var(--ink,#fff)}
   .obtab.on{color:#fff;border-color:var(--ink);background:var(--ink)}
   .obtab .obn{font-size:10px;font-weight:700;opacity:.6}
@@ -48,7 +48,7 @@
   .ob-uploadflash{animation:obUploadFlash 2.6s ease-out}
   .sh{display:flex;align-items:flex-start;gap:14px;margin-bottom:18px}
   .sn{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--blue);background:var(--blue-soft);border:1px solid rgba(57,135,229,.35);border-radius:9px;padding:6px 10px;line-height:1}
-  .st{font-size:16px;font-weight:700}.sd{font-size:12.5px;color:var(--muted);margin-top:3px}
+  .st{font-size:16px;font-weight:700}.sd{font-size:12px;color:var(--muted);margin-top:3px}
   .badge{margin-left:auto;font-size:11px;font-weight:700;color:var(--muted)}
   .badge.done{color:var(--good)}
   .row{display:grid;gap:14px}.row.c2{grid-template-columns:1fr 1fr}.row.c3{grid-template-columns:1fr 1fr 1fr}.row.c4{grid-template-columns:1fr 1fr 1fr 1fr}
@@ -56,7 +56,7 @@
   .field{display:flex;flex-direction:column}
   label{font-size:12px;color:var(--ink-2);margin-bottom:6px;font-weight:600}
   label .h{color:var(--muted);font-weight:400}
-  input,select{width:100%;background:var(--plane);border:1px solid var(--line-2);border-radius:9px;padding:10px 12px;color:var(--ink);font-family:inherit;font-size:13.5px;outline:none}
+  input,select{width:100%;background:var(--plane);border:1px solid var(--line-2);border-radius:9px;padding:10px 12px;color:var(--ink);font-family:inherit;font-size:13px;outline:none}
   input:focus,select:focus{border-color:var(--blue)}
   input::placeholder{color:var(--muted)}
   /* dark-mode date picker: make the native calendar affordance visible + clickable */
@@ -64,35 +64,35 @@
   input[type=date]::-webkit-calendar-picker-indicator{opacity:.7;cursor:pointer;font-size:16px}
   input[type=date]::-webkit-calendar-picker-indicator:hover{opacity:1}
   .chips{display:flex;flex-wrap:wrap;gap:8px}
-  .chip{font-size:12.5px;font-weight:600;color:var(--ink-2);background:var(--plane);border:1px solid var(--line-2);border-radius:99px;padding:7px 13px;cursor:pointer}
+  .chip{font-size:12px;font-weight:600;color:var(--ink-2);background:var(--plane);border:1px solid var(--line-2);border-radius:99px;padding:7px 13px;cursor:pointer}
   .chip.on{color:#fff;background:var(--blue);border-color:var(--blue)}
   /* Compact upload button (matches the register cards' "Upload CSV" style) instead of a
      big dashed drop-zone — consistent document-upload UI across onboarding. Drag-and-drop
      still works (wired by wireDrop); the label carries the section-specific text. */
   .drop{display:inline-flex;align-items:center;gap:8px;border:none;border-radius:8px;padding:10px 16px;cursor:pointer;transition:filter .12s,box-shadow .12s;background:var(--blue);color:#fff;box-shadow:0 1px 2px rgba(16,24,40,.08)}
   .drop:hover{filter:brightness(1.06);box-shadow:0 3px 8px -3px rgba(16,24,40,.28)}
-  .drop .ic{font-size:15px;color:#fff;margin:0}.drop .t{font-weight:700;font-size:12.5px;color:#fff;margin:0}.drop .s{display:none}
+  .drop .ic{font-size:15px;color:#fff;margin:0}.drop .t{font-weight:700;font-size:12px;color:#fff;margin:0}.drop .s{display:none}
   .tmpl{font-family:var(--mono);font-size:11px;color:var(--muted);background:var(--plane);border:1px solid var(--line);border-radius:7px;padding:7px 10px;margin-top:10px;overflow-x:auto;white-space:nowrap}
   .tmpl b{color:var(--ink-2)}
-  .result{margin-top:12px;font-size:12.5px}
+  .result{margin-top:12px;font-size:12px}
   .result .ok{color:var(--good);font-weight:600}
   .moneyf{display:flex;align-items:stretch;border:1px solid var(--line-2);border-radius:9px;overflow:hidden;background:var(--plane)}
   .moneyf:focus-within{border-color:var(--blue)}
-  .moneyf .cur{display:flex;align-items:center;padding:0 11px;color:var(--muted);font-weight:600;font-size:13.5px;border-right:1px solid var(--line)}
+  .moneyf .cur{display:flex;align-items:center;padding:0 11px;color:var(--muted);font-weight:600;font-size:13px;border-right:1px solid var(--line)}
   .moneyf input{border:none;border-radius:0;flex:1;background:transparent}
   .moneyf select{border:none;border-radius:0;width:64px;background:var(--surface-2);color:var(--ink-2);border-left:1px solid var(--line)}
   .money-eq{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:5px;min-height:14px}
   .money-eq b{color:var(--ink-2)}
   .certgrid{display:flex;flex-wrap:wrap;gap:6px}
-  .ckchip{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;color:var(--ink-2);background:var(--plane);border:1px solid var(--line);border-radius:7px;padding:5px 9px;cursor:pointer}
+  .ckchip{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--ink-2);background:var(--plane);border:1px solid var(--line);border-radius:7px;padding:5px 9px;cursor:pointer}
   .ckchip input{accent-color:var(--good);margin:0}
   /* connect-a-system */
   .srcchoice{display:flex;gap:10px;margin-bottom:12px}
   .srcopt{flex:1;border:1px solid var(--line-2);border-radius:10px;padding:12px 14px;cursor:pointer}
   .srcopt.sel{border-color:var(--blue);background:var(--blue-soft)}
-  .srcopt .so-h{font-weight:600;font-size:13px}.srcopt .so-d{font-size:11.5px;color:var(--muted);margin-top:3px}
+  .srcopt .so-h{font-weight:600;font-size:13px}.srcopt .so-d{font-size:11px;color:var(--muted);margin-top:3px}
   .conn-row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-top:10px}
-  .conn-go{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px 16px;font-weight:700;font-size:12.5px;cursor:pointer}
+  .conn-go{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px 16px;font-weight:700;font-size:12px;cursor:pointer}
   .conn-go.done{background:var(--good)}
   .conn-msg{font-size:12px;color:var(--muted);margin-top:8px}
   .aiup{display:flex;gap:12px;align-items:flex-start;padding:14px;border:1px solid var(--line-2);border-radius:10px;background:var(--surface,#fafafa);margin-top:10px}
@@ -107,47 +107,47 @@
   .toolcard input{font-size:12px;padding:7px 9px}
   .toolcard .tb{background:var(--blue);color:#fff;border:none;border-radius:7px;padding:7px 12px;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap}
   .xlist{margin-top:10px;max-height:150px;overflow-y:auto;border:1px solid var(--line);border-radius:9px}
-  .xrow{display:flex;gap:10px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line);font-size:12.5px}.xrow:last-child{border:none}
+  .xrow{display:flex;gap:10px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line);font-size:12px}.xrow:last-child{border:none}
   .xrow .nm{font-weight:600}.xrow .mt{color:var(--muted);margin-left:auto;font-size:12px}
   .maprow{display:flex;gap:14px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--line)}.maprow:last-child{border:none}
-  .mapapp{min-width:160px;font-weight:700;font-size:13px;padding-top:3px}.mapapp .mapv{display:block;font-weight:500;color:var(--muted);font-size:11.5px;margin-top:1px}
+  .mapapp{min-width:160px;font-weight:700;font-size:13px;padding-top:3px}.mapapp .mapv{display:block;font-weight:500;color:var(--muted);font-size:11px;margin-top:1px}
   .mapchips{display:flex;flex-wrap:wrap;gap:6px;flex:1}
-  .mchip{font-size:11.5px;font-weight:600;color:var(--muted);background:var(--plane);border:1px dashed var(--line-2);border-radius:99px;padding:5px 11px;cursor:pointer}
+  .mchip{font-size:11px;font-weight:600;color:var(--muted);background:var(--plane);border:1px dashed var(--line-2);border-radius:99px;padding:5px 11px;cursor:pointer}
   .mchip.on{color:#fff;background:var(--blue);border:1px solid var(--blue)}
-  .mapempty{font-size:12.5px;color:var(--muted)}
+  .mapempty{font-size:12px;color:var(--muted)}
   /* crown-jewel column graph (process → application → crown jewel) */
   .cjmap{position:relative;display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;margin-bottom:8px}
   .colh{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:11px;text-align:center;font-weight:700}
   .cjcol{display:flex;flex-direction:column;gap:10px}
   .node{background:var(--surface);border:1px solid var(--line-2);border-radius:8px;padding:8px 10px;position:relative;z-index:2}
-  .node .nn{font-size:11.5px;font-weight:700;line-height:1.2}.node .nd{font-size:9.5px;color:var(--muted);margin-top:3px}
-  .colh-h{text-transform:none;letter-spacing:0;font-weight:500;color:var(--muted);font-size:9.5px}
+  .node .nn{font-size:11px;font-weight:700;line-height:1.2}.node .nd{font-size:9px;color:var(--muted);margin-top:3px}
+  .colh-h{text-transform:none;letter-spacing:0;font-weight:500;color:var(--muted);font-size:9px}
   .node .procfn{width:100%;margin-top:6px;font-size:10px;padding:3px 6px;border:1px dashed var(--line-2);border-radius:6px;background:var(--plane);color:var(--ink-2)}
   .node .procfn:focus{border-color:var(--blue);border-style:solid;outline:none}
   .node.proc{border-left:3px solid var(--muted)}.node.proc.h{border-left-color:var(--crit)}.node.proc.m{border-left-color:var(--warn)}.node.proc.l{border-left-color:var(--good)}
   .node.cjwel{border-color:var(--gold);background:var(--gold-soft)}
   .node.cjwel .badge{font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);margin-bottom:4px;font-weight:700}
   .node.cjwel .score{font-size:10px;color:var(--gold);float:right;font-weight:700}
-  .node.cjwel .why{font-size:10.5px;color:var(--ink-2);margin-top:5px;line-height:1.4}
-  .crit{font-size:9.5px;padding:2px 7px;border-radius:5px;font-weight:700}
+  .node.cjwel .why{font-size:10px;color:var(--ink-2);margin-top:5px;line-height:1.4}
+  .crit{font-size:9px;padding:2px 7px;border-radius:5px;font-weight:700}
   .crit.h{color:var(--crit);background:var(--crit-soft)}.crit.m{color:var(--warn);background:var(--warn-soft)}.crit.l{color:var(--good);background:var(--good-soft)}
   .cjsvg{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;overflow:visible}
   .ln{fill:none;stroke:var(--blue);opacity:.32;stroke-width:1.5}.ln.id{stroke-dasharray:4 4;opacity:.22}.ln.cj{stroke:var(--gold);opacity:.6;stroke-width:2}
   .mapedit{margin-top:18px;border-top:1px solid var(--line);padding-top:14px}
-  .mapedit-toggle{width:auto;background:var(--surface);border:1px solid var(--line-2);color:var(--ink-2);border-radius:8px;padding:8px 14px;font-weight:600;font-size:12.5px;cursor:pointer}
+  .mapedit-toggle{width:auto;background:var(--surface);border:1px solid var(--line-2);color:var(--ink-2);border-radius:8px;padding:8px 14px;font-weight:600;font-size:12px;cursor:pointer}
   .mapedit-toggle.open{color:var(--blue);border-color:var(--blue)}
   .mapedit-body{margin-top:12px;max-height:340px;overflow-y:auto;padding-right:4px}
   .maprow2{display:flex;gap:14px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line)}.maprow2:last-child{border:none}
   .maptags{display:flex;flex-wrap:wrap;gap:6px;flex:1;align-items:center}
-  .mtag{font-size:11.5px;font-weight:600;color:#fff;background:var(--blue);border:1px solid var(--blue);border-radius:99px;padding:4px 10px;cursor:pointer}
+  .mtag{font-size:11px;font-weight:600;color:#fff;background:var(--blue);border:1px solid var(--blue);border-radius:99px;padding:4px 10px;cursor:pointer}
   .mtag b{color:rgba(255,255,255,.72);font-weight:700}
-  .mapadd{width:auto;font-size:11.5px;padding:5px 8px;background:var(--plane);border:1px dashed var(--line-2);border-radius:8px;color:var(--muted)}
+  .mapadd{width:auto;font-size:11px;padding:5px 8px;background:var(--plane);border:1px dashed var(--line-2);border-radius:8px;color:var(--muted)}
   @media (max-width:680px){.cjmap{grid-template-columns:1fr;gap:14px}.cjsvg{display:none}}
   /* tool connectors + demo mode + credibility meter */
   .demo-bar{display:flex;align-items:center;gap:12px;margin-bottom:14px;padding:12px 16px;background:linear-gradient(90deg,rgba(57,135,229,.10),rgba(57,135,229,.03));border:1px solid rgba(57,135,229,.28);border-radius:10px}
   .demo-bar .demo-label{flex:1;font-size:13px;color:var(--ink);font-weight:700}
-  .demo-bar .demo-sub{display:block;font-size:11.5px;color:var(--muted);font-weight:400;margin-top:2px}
-  .demo-btn{font-weight:700;font-size:12.5px;color:var(--blue);background:var(--blue-soft);border:1px solid rgba(57,135,229,.35);border-radius:8px;padding:8px 16px;cursor:pointer;white-space:nowrap;width:auto}
+  .demo-bar .demo-sub{display:block;font-size:11px;color:var(--muted);font-weight:400;margin-top:2px}
+  .demo-btn{font-weight:700;font-size:12px;color:var(--blue);background:var(--blue-soft);border:1px solid rgba(57,135,229,.35);border-radius:8px;padding:8px 16px;cursor:pointer;white-space:nowrap;width:auto}
   .demo-btn:hover{background:var(--blue);color:#fff}
   .demo-btn.active{background:var(--good-soft);color:var(--good);border-color:var(--good)}
   .demo-btn.loading{opacity:.6;pointer-events:none}
@@ -162,7 +162,7 @@
   .conn{background:var(--surface);border:1px solid var(--line-2);border-radius:12px;padding:14px 16px}
   .conn-h{display:flex;align-items:center;gap:12px}
   .conn-ic{width:34px;height:34px;border-radius:9px;background:var(--blue-soft);color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:15px;flex:none}
-  .conn-t{flex:1;min-width:0}.conn-t .cn{font-size:14px;font-weight:700}.conn-t .cc{font-size:10.5px;color:var(--muted);margin-top:1px}
+  .conn-t{flex:1;min-width:0}.conn-t .cn{font-size:14px;font-weight:700}.conn-t .cc{font-size:10px;color:var(--muted);margin-top:1px}
   .conn-st{font-size:11px;padding:4px 10px;border-radius:6px;white-space:nowrap;font-weight:600}
   .conn-st.no{color:var(--muted);background:var(--line)}.conn-st.on{color:var(--good);background:var(--good-soft)}
   .conn-toggle{font-size:11px;color:var(--blue);cursor:pointer;margin-left:2px;white-space:nowrap}
@@ -175,18 +175,18 @@
   .tb:hover{filter:brightness(1.08)}.tb.done{background:var(--good-soft);color:var(--good);cursor:default}.tb.amber{background:var(--warn-soft);color:var(--warn);cursor:default}
   .conn-info{margin-top:12px;font-size:12px;line-height:1.55;color:var(--muted)}.conn-info .pl{color:var(--ink);font-weight:700}.conn-info .an{color:var(--blue);font-weight:700}
   .livedot{width:6px;height:6px;border-radius:50%;background:var(--good);display:inline-block;margin-right:6px;vertical-align:middle}
-  .note{font-size:12.5px;color:var(--muted);line-height:1.6}
+  .note{font-size:12px;color:var(--muted);line-height:1.6}
   .note b{color:var(--ink-2)}
   .foot{position:sticky;bottom:0;background:linear-gradient(180deg,transparent,var(--plane) 30%);padding:22px 0 26px;margin-top:24px}
   .foot-in{display:flex;align-items:center;gap:16px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 20px}
-  .foot .sum{font-size:12.5px;color:var(--muted)}.foot .sum b{color:var(--ink)}
+  .foot .sum{font-size:12px;color:var(--muted)}.foot .sum b{color:var(--ink)}
   .golive{margin-left:auto;background:var(--blue);color:#fff;border:none;border-radius:10px;padding:12px 24px;font-weight:700;font-size:14px;cursor:pointer}
   .golive:hover{filter:brightness(1.08)}.golive:disabled{opacity:.5;cursor:not-allowed}
-  .glmsg{font-size:12.5px}
+  .glmsg{font-size:12px}
 </style>
 </head>
 <body>
-<div class="top"><div class="wrap top-in"><div class="logo" role="img" aria-label="Nerion"><svg viewBox="0 0 32 32" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" style="width:27px;height:auto;display:block"><path d="M8 25V7l16 18V7" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="8" cy="7" r="2.4" fill="#38BDF8"/><circle cx="24" cy="25" r="2.4" fill="#38BDF8"/></svg></div><div class="brand">Nerion <span>Setup</span></div><div class="top-r">Only what your executive cockpit needs — nothing more.</div></div></div>
+<div class="top"><div class="wrap top-in"><div class="logo" role="img" aria-label="Nerion"><svg viewBox="0 0 32 32" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" style="width:27px;height:auto;display:block"><path d="M8 25V7l16 18V7" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="8" cy="7" r="2.4" fill="#1A5FA0"/><circle cx="24" cy="25" r="2.4" fill="#1A5FA0"/></svg></div><div class="brand">Nerion <span>Setup</span></div><div class="top-r">Only what your executive cockpit needs — nothing more.</div></div></div>
 
 <div class="wrap">
   <div class="head">
@@ -200,8 +200,8 @@
   <div id="chainSpine" style="margin:4px 0 16px"></div>
 
   <div style="border:1px solid var(--line);border-radius:12px;padding:13px 16px;margin:6px 0 18px;background:var(--surface,transparent);display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start">
-    <div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#2563eb;white-space:nowrap;padding-top:2px">Not another Vanta</div>
-    <div style="font-size:12.5px;color:var(--muted);line-height:1.6;flex:1;min-width:260px">A compliance-automation tool collects <b>point-in-time</b> evidence for one framework at one entity. Nerion is built for a <b>global enterprise</b>: multi-region scope with <b>10+ entities per region</b>, <b>control inheritance</b> (corporate common controls vs what each unit runs), <b>continuous telemetry-driven</b> scoring of all 106 NIST CSF controls, and <b>materiality-first triage</b> across 1000s of systems. You define the structure once; the rest is discovered, risk-mapped and scored continuously.</div>
+    <div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#1A5FA0;white-space:nowrap;padding-top:2px">Not another Vanta</div>
+    <div style="font-size:12px;color:var(--muted);line-height:1.6;flex:1;min-width:260px">A compliance-automation tool collects <b>point-in-time</b> evidence for one framework at one entity. Nerion is built for a <b>global enterprise</b>: multi-region scope with <b>10+ entities per region</b>, <b>control inheritance</b> (corporate common controls vs what each unit runs), <b>continuous telemetry-driven</b> scoring of all 106 NIST CSF controls, and <b>materiality-first triage</b> across 1000s of systems. You define the structure once; the rest is discovered, risk-mapped and scored continuously.</div>
   </div>
 
   <div class="obhead">
@@ -267,7 +267,7 @@
   <div class="sec">
     <div class="sh"><div class="sn">✦</div><div><div class="st">Systems <span style="color:var(--muted)">— discover, don’t type</span></div><div class="sd">A global estate is <b>thousands of systems</b> — you don’t enumerate them by hand. Three ways to bring them in: <b>connect a discovery source</b> (enter its instance URL &amp; API token — Nerion pulls the inventory read-only), <b>upload a CSV / spreadsheet</b> if you don’t run a CMDB, or <b>paste</b> a short list. Each system is placed in its <b>region</b> and <b>asset class</b> so controls score per system and roll up to the region. <span style="color:var(--muted)">This is the discovery layer that fills the structure skeleton you defined above.</span></div></div><div class="badge" id="bdisc">optional</div></div>
 
-    <div style="margin-top:6px;font-size:12.5px;color:var(--ink);font-weight:700">1 · Connect a discovery source <span style="color:var(--muted);font-weight:500">— pick one, then enter its connection details</span></div>
+    <div style="margin-top:6px;font-size:12px;color:var(--ink);font-weight:700">1 · Connect a discovery source <span style="color:var(--muted);font-weight:500">— pick one, then enter its connection details</span></div>
     <div class="chips" id="discSources" style="margin-top:8px">
       <span class="chip" data-src="cmdb" data-n="1240" data-l="ServiceNow CMDB">ServiceNow CMDB</span>
       <span class="chip" data-src="cloud" data-n="640" data-l="Cloud (AWS · Azure · GCP)">Cloud (AWS · Azure · GCP)</span>
@@ -276,11 +276,11 @@
     </div>
     <div id="discConn"></div>
 
-    <div style="margin-top:20px;font-size:12.5px;color:var(--ink);font-weight:700">2 · No CMDB? Upload your system list <span style="color:var(--muted);font-weight:500">— export your asset register to CSV and drop it here</span></div>
-    <div style="margin-top:8px"><input type="file" id="sysFile" accept=".csv,.tsv,.txt" style="font-size:12.5px"></div>
-    <div style="margin-top:6px;font-size:11.5px;color:var(--muted)">Columns: <code>name, class, owner, process, criticality</code> — <b>owner</b> is the entity id (e.g. <code>emea_uk</code>) or <code>corporate</code> for a shared system inherited by all; <b>class</b> is one of saas / iaas / server / endpoint / identity / data / network. Nerion derives the chain <b>Entity → Process → System</b> from it.</div>
+    <div style="margin-top:20px;font-size:12px;color:var(--ink);font-weight:700">2 · No CMDB? Upload your system list <span style="color:var(--muted);font-weight:500">— export your asset register to CSV and drop it here</span></div>
+    <div style="margin-top:8px"><input type="file" id="sysFile" accept=".csv,.tsv,.txt" style="font-size:12px"></div>
+    <div style="margin-top:6px;font-size:11px;color:var(--muted)">Columns: <code>name, class, owner, process, criticality</code> — <b>owner</b> is the entity id (e.g. <code>emea_uk</code>) or <code>corporate</code> for a shared system inherited by all; <b>class</b> is one of saas / iaas / server / endpoint / identity / data / network. Nerion derives the chain <b>Entity → Process → System</b> from it.</div>
 
-    <div style="margin-top:20px;font-size:12.5px;color:var(--ink);font-weight:700">3 · …or paste a few <span style="color:var(--muted);font-weight:500">(one per line: <code>name, class, owner, process, criticality</code>)</span></div>
+    <div style="margin-top:20px;font-size:12px;color:var(--ink);font-weight:700">3 · …or paste a few <span style="color:var(--muted);font-weight:500">(one per line: <code>name, class, owner, process, criticality</code>)</span></div>
     <textarea id="sysBulk" placeholder="Global identity (Okta), identity, corporate, Identity &amp; access, Critical&#10;UK billing platform, saas, emea_uk, Order-to-cash, Critical&#10;LATAM fulfilment, server, americas_latam, Order-to-cash, High" style="width:100%;min-height:90px;margin-top:8px;padding:10px;border:1px solid var(--line);border-radius:8px;font-family:ui-monospace,monospace;font-size:12px"></textarea>
     <div style="margin-top:8px"><button class="conn-go" id="sysImport" type="button">Import systems</button></div>
     <div id="discResult" style="margin-top:14px"></div>
@@ -459,7 +459,7 @@
   <!-- 5 · Systems -->
   <div class="sec">
     <div class="sh"><div class="sn">5</div><div><div class="st">Systems &amp; applications</div><div class="sd">Derived automatically from your <b>discovery import</b> in <b>Processes &amp; systems</b> above — no need to connect or upload again. Your imported systems, mapped to the revenue processes they run, are what Nerion uses to deduce your crown jewels.</div></div><div class="badge" id="b5">auto-derived</div></div>
-    <div id="appDerived" style="font-size:12.5px;color:var(--muted);margin-top:6px">Bring systems in once, under <b>Processes &amp; systems</b> — they appear here mapped to your processes. No second connection needed.</div>
+    <div id="appDerived" style="font-size:12px;color:var(--muted);margin-top:6px">Bring systems in once, under <b>Processes &amp; systems</b> — they appear here mapped to your processes. No second connection needed.</div>
     <div id="appLegacyHidden" style="display:none" aria-hidden="true">
     <div class="srcchoice"><div class="srcopt sel" data-choice="app" data-mode="connect"><div class="so-h">⚡ Connect &amp; pull</div><div class="so-d">ServiceNow CMDB / discovery — no upload</div></div><div class="srcopt" data-choice="app" data-mode="upload"><div class="so-h">⤓ Upload a file</div><div class="so-d">CSV / CMDB export — fallback</div></div></div>
     <div id="appUpload" style="display:none">
@@ -842,7 +842,7 @@
     if(total>0){
       if(!head){head=document.createElement('div');head.id=headId;head.style.cssText='margin:2px 0 8px';wrap.parentNode.insertBefore(head,wrap);}
       var collapsed=wrap.getAttribute('data-coll')==='1';
-      head.innerHTML='<button type="button" class="rl-collapse" title="Show / hide the '+plural+'" style="background:none;border:none;cursor:pointer;font-weight:700;font-size:12.5px;color:var(--ink);display:inline-flex;align-items:center;gap:7px;padding:0"><span style="font-size:11px">'+(collapsed?'▸':'▾')+'</span>'+total+' '+(total>1?plural:singular)+'</button>';
+      head.innerHTML='<button type="button" class="rl-collapse" title="Show / hide the '+plural+'" style="background:none;border:none;cursor:pointer;font-weight:700;font-size:12px;color:var(--ink);display:inline-flex;align-items:center;gap:7px;padding:0"><span style="font-size:11px">'+(collapsed?'▸':'▾')+'</span>'+total+' '+(total>1?plural:singular)+'</button>';
       head.querySelector('.rl-collapse').onclick=function(){var c=wrap.getAttribute('data-coll')==='1';wrap.setAttribute('data-coll',c?'0':'1');wrap.style.display=c?'':'none';obRowCollapse(wrapId,rowCls,singular,plural);};
       wrap.style.display=collapsed?'none':'';
     } else if(head){head.remove();}
@@ -907,7 +907,7 @@
   function orgSlug(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'')||'x';}
   function addOrgEntity(entWrap,v){v=v||{};var row=document.createElement('div');row.className='ent-row';row.style.cssText='display:grid;grid-template-columns:1fr auto auto;gap:8px;margin-top:6px;align-items:center';
     row.innerHTML='<input class="e-name" placeholder="Entity / branch — e.g. UK &amp; Ireland" style="padding:7px 9px;border:1px solid var(--line);border-radius:8px">'+
-      '<label style="display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--muted);white-space:nowrap;cursor:pointer" title="On: this branch connects its OWN systems and uploads its OWN documents. Off: it inherits the region / enterprise policies and tools.">'+
+      '<label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);white-space:nowrap;cursor:pointer" title="On: this branch connects its OWN systems and uploads its OWN documents. Off: it inherits the region / enterprise policies and tools.">'+
         '<input type="checkbox" class="e-own"> own systems &amp; docs</label>'+
       '<button class="e-del" type="button" title="Remove" style="border:1px solid var(--line);background:#fff;border-radius:8px;cursor:pointer;color:var(--muted);width:34px">✕</button>';
     entWrap.appendChild(row);
@@ -1027,7 +1027,7 @@
     var host=document.getElementById('discResult');if(!host)return;
     var srcLines=Object.keys(DISCOVERED).map(function(k){return '<div style="font-size:12px;color:var(--ink-2)">✓ <b>'+DISCOVERED[k].toLocaleString()+'</b> from '+esc(k)+'</div>';}).join('');
     var imp=IMPORTED.length?('<div style="font-size:12px;color:var(--ink-2)">✓ <b>'+IMPORTED.length+'</b> bulk-imported</div>'+
-      '<div style="overflow-x:auto;margin-top:8px"><table style="border-collapse:collapse;font-size:11.5px"><thead><tr>'+['System','Owner (entity)','Process','Criticality'].map(function(h){return '<th style="text-align:left;padding:4px 12px 4px 0;color:var(--muted);font-weight:700">'+h+'</th>';}).join('')+'</tr></thead><tbody>'+
+      '<div style="overflow-x:auto;margin-top:8px"><table style="border-collapse:collapse;font-size:11px"><thead><tr>'+['System','Owner (entity)','Process','Criticality'].map(function(h){return '<th style="text-align:left;padding:4px 12px 4px 0;color:var(--muted);font-weight:700">'+h+'</th>';}).join('')+'</tr></thead><tbody>'+
       IMPORTED.slice(0,6).map(function(r){return '<tr>'+[r.name,(r.owner==='corporate'?'◆ Corporate (shared)':(r.owner||'—')),r.process||'—',r.criticality||'—'].map(function(c){return '<td style="padding:3px 12px 3px 0;color:var(--ink-2)">'+esc(c)+'</td>';}).join('')+'</tr>';}).join('')+'</tbody></table>'+(IMPORTED.length>6?('<div style="font-size:11px;color:var(--muted);margin-top:4px">+ '+(IMPORTED.length-6)+' more</div>'):'')+'</div>'):'';
     var t=discTotal();
     // Materiality triage — you don't assess 1000s equally. Systems the import marks
@@ -1039,13 +1039,13 @@
     // (GSS) system inherited by every entity. This is the Entity→Systems edge + inheritance.
     var shared=IMPORTED.filter(function(r){return r.owner==='corporate';}).length;
     var entityOwned=IMPORTED.length-shared;
-    var ownLine=IMPORTED.length?('<div style="font-size:11.5px;color:var(--ink-2);margin-top:8px">'
+    var ownLine=IMPORTED.length?('<div style="font-size:11px;color:var(--ink-2);margin-top:8px">'
       +'<b>'+entityOwned+'</b> entity-owned · <b>'+shared+'</b> corporate-shared '
       +'<span style="color:var(--muted)">(GSS — inherited by every entity when centralized)</span></div>'):'';
     // Derive the chain Entity → Process → System from the import: distinct owning entities,
     // distinct processes, and the systems that run them.
     var ents={},procs={};IMPORTED.forEach(function(r){if(r.owner&&r.owner!=='corporate')ents[r.owner]=1;if(r.process)procs[(r.owner||'')+'|'+r.process.toLowerCase()]=1;});
-    var chainLine=IMPORTED.length?('<div style="font-size:11.5px;color:var(--ink-2);margin-top:8px;padding-top:8px;border-top:1px solid var(--line)"><span style="font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#2563eb">Chain derived</span> &nbsp;Corporate → Region → <b>'+Object.keys(ents).length+'</b> entit'+(Object.keys(ents).length===1?'y':'ies')+' → <b>'+Object.keys(procs).length+'</b> process'+(Object.keys(procs).length===1?'':'es')+' → <b>'+IMPORTED.length+'</b> system'+(IMPORTED.length===1?'':'s')+' → risks → controls</div>'):'';
+    var chainLine=IMPORTED.length?('<div style="font-size:11px;color:var(--ink-2);margin-top:8px;padding-top:8px;border-top:1px solid var(--line)"><span style="font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#1A5FA0">Chain derived</span> &nbsp;Corporate → Region → <b>'+Object.keys(ents).length+'</b> entit'+(Object.keys(ents).length===1?'y':'ies')+' → <b>'+Object.keys(procs).length+'</b> process'+(Object.keys(procs).length===1?'':'es')+' → <b>'+IMPORTED.length+'</b> system'+(IMPORTED.length===1?'':'s')+' → risks → controls</div>'):'';
     var triage='<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">'
       +'<div style="flex:1;min-width:150px;border:1px solid var(--crit,#c0392b);border-radius:8px;padding:9px 12px"><div style="font-size:18px;font-weight:800;color:var(--crit,#c0392b)">'+material.toLocaleString()+'</div><div style="font-size:11px;color:var(--muted)">◆ material — triage first</div></div>'
       +'<div style="flex:1;min-width:150px;border:1px solid var(--line);border-radius:8px;padding:9px 12px"><div style="font-size:18px;font-weight:800;color:var(--ink)">'+standard.toLocaleString()+'</div><div style="font-size:11px;color:var(--muted)">auto-classified standard</div></div></div>';
@@ -1072,8 +1072,8 @@
       var meta=SRC_FIELDS[src]||{ic:'🔌',api:'inventory',fields:[]};var connected=DISCOVERED[label]!=null;
       var fields=meta.fields.map(function(f){return '<div class="field" style="flex:1;min-width:190px"><label style="font-size:11px;color:var(--muted)">'+esc(f.l)+'</label><input data-cf="'+src+'.'+f.k+'" type="'+(f.pw?'password':'text')+'" placeholder="'+esc(f.ph)+'"'+(connected?' disabled':'')+' style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font-size:12px"></div>';}).join('');
       return '<div style="border:1px solid '+(connected?'var(--good)':'var(--blue)')+';border-radius:10px;padding:12px 14px;margin-top:10px;background:var(--surface,transparent)">'
-        +'<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><b style="font-size:12.5px;color:var(--ink)">'+meta.ic+' '+esc(label)+'</b>'
-        +(connected?('<span style="font-size:11px;font-weight:700;color:var(--good)">✓ connected · '+n.toLocaleString()+' systems pulled</span>'):('<span style="font-size:10.5px;color:var(--muted)">reads '+esc(meta.api)+'</span>'))+'</div>'
+        +'<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><b style="font-size:12px;color:var(--ink)">'+meta.ic+' '+esc(label)+'</b>'
+        +(connected?('<span style="font-size:11px;font-weight:700;color:var(--good)">✓ connected · '+n.toLocaleString()+' systems pulled</span>'):('<span style="font-size:10px;color:var(--muted)">reads '+esc(meta.api)+'</span>'))+'</div>'
         +'<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">'+fields+'</div>'
         +(connected
           ?'<div style="font-size:11px;color:var(--muted);margin-top:8px">The live '+esc(label)+' API syncs your real inventory on go-live. <span data-disc-edit="'+src+'" style="color:var(--blue);cursor:pointer;font-weight:600">Edit connection</span></div>'
@@ -1132,12 +1132,12 @@
     var federated=ALL_CAPS.filter(function(c){return common.indexOf(c)<0;});
     var entities=[];struct.forEach(function(r){(r.entities||[]).forEach(function(e){entities.push(e);});});
     if(!entities.length){host.innerHTML='<div style="font-size:12px;color:var(--muted)">Define your regions &amp; entities above first, then build the plan.</div>';return;}
-    var commonNote='<div style="font-size:11.5px;color:var(--ink-2);margin-bottom:12px;padding:8px 11px;border:1px solid var(--line);border-radius:8px">◆ <b>Corporate (common, inherited by all):</b> '+(common.length?common.map(function(c){return CAP_LABEL[c]||c;}).join(' · '):'none — everything is federated')+' <span style="color:var(--muted)">— connected once, not per entity.</span></div>';
+    var commonNote='<div style="font-size:11px;color:var(--ink-2);margin-bottom:12px;padding:8px 11px;border:1px solid var(--line);border-radius:8px">◆ <b>Corporate (common, inherited by all):</b> '+(common.length?common.map(function(c){return CAP_LABEL[c]||c;}).join(' · '):'none — everything is federated')+' <span style="color:var(--muted)">— connected once, not per entity.</span></div>';
     var rows=entities.map(function(e){
       var have=ENT_CONN[e.id]||[];
       var chips=federated.map(function(c){var on=have.indexOf(c)>=0;
-        return '<button type="button" class="entcap'+(on?' on':'')+'" data-ent="'+e.id+'" data-cap="'+c+'" style="font-size:11px;padding:3px 9px;border-radius:14px;border:1px solid '+(on?'#2563eb':'var(--line)')+';background:'+(on?'#2563eb':'transparent')+';color:'+(on?'#fff':'var(--ink-2)')+';cursor:pointer">'+esc(CAP_LABEL[c]||c)+'</button>';}).join('');
-      return '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid var(--line)"><div style="min-width:150px;font-size:12.5px;font-weight:700;color:var(--ink)">'+esc(e.label)+'</div><div style="display:flex;gap:6px;flex-wrap:wrap">'+(federated.length?chips:'<span style="font-size:11px;color:var(--muted)">all controls are common — fully inherited</span>')+'</div></div>';
+        return '<button type="button" class="entcap'+(on?' on':'')+'" data-ent="'+e.id+'" data-cap="'+c+'" style="font-size:11px;padding:3px 9px;border-radius:14px;border:1px solid '+(on?'#1A5FA0':'var(--line)')+';background:'+(on?'#1A5FA0':'transparent')+';color:'+(on?'#fff':'var(--ink-2)')+';cursor:pointer">'+esc(CAP_LABEL[c]||c)+'</button>';}).join('');
+      return '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid var(--line)"><div style="min-width:150px;font-size:12px;font-weight:700;color:var(--ink)">'+esc(e.label)+'</div><div style="display:flex;gap:6px;flex-wrap:wrap">'+(federated.length?chips:'<span style="font-size:11px;color:var(--muted)">all controls are common — fully inherited</span>')+'</div></div>';
     }).join('');
     host.innerHTML=commonNote+rows;
     host.querySelectorAll('.entcap').forEach(function(btn){btn.addEventListener('click',function(){var ent=btn.getAttribute('data-ent'),cap=btn.getAttribute('data-cap');ENT_CONN[ent]=ENT_CONN[ent]||[];var i=ENT_CONN[ent].indexOf(cap);if(i>=0)ENT_CONN[ent].splice(i,1);else ENT_CONN[ent].push(cap);entConnSave();renderEntConn();});});
@@ -1165,7 +1165,7 @@
       if(total>0){
         if(!head){head=document.createElement('div');head.id=headId;head.style.cssText='margin:2px 0 8px';wrap.parentNode.insertBefore(head,wrap);}
         var collapsed=wrap.getAttribute('data-coll')==='1';
-        head.innerHTML='<button type="button" class="rl-collapse" title="Show / hide the '+singular+'s" style="background:none;border:none;cursor:pointer;font-weight:700;font-size:12.5px;color:var(--ink);display:inline-flex;align-items:center;gap:7px;padding:0"><span style="font-size:11px">'+(collapsed?'▸':'▾')+'</span>'+total+' '+(total>1?singular+'s':singular)+'</button>';
+        head.innerHTML='<button type="button" class="rl-collapse" title="Show / hide the '+singular+'s" style="background:none;border:none;cursor:pointer;font-weight:700;font-size:12px;color:var(--ink);display:inline-flex;align-items:center;gap:7px;padding:0"><span style="font-size:11px">'+(collapsed?'▸':'▾')+'</span>'+total+' '+(total>1?singular+'s':singular)+'</button>';
         head.querySelector('.rl-collapse').onclick=function(){var c=wrap.getAttribute('data-coll')==='1';wrap.setAttribute('data-coll',c?'0':'1');wrap.style.display=c?'':'none';upd();};
         wrap.style.display=collapsed?'none':'';
       } else if(head){head.remove();}
@@ -1284,7 +1284,7 @@
     host.innerHTML=
       '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px">'+
         '<button type="button" id="obDocToggle" title="Show / hide the uploaded documents" style="background:none;border:none;cursor:pointer;font-weight:700;font-size:13px;color:var(--ink);display:inline-flex;align-items:center;gap:7px;padding:0"><span style="font-size:11px">'+(collapsed?'▸':'▾')+'</span>'+docs.length+' document'+(docs.length>1?'s':'')+' uploaded</button>'+
-        '<button class="conn-go" id="obDocClear" type="button" style="padding:6px 12px;font-size:11.5px">Clear all</button>'+
+        '<button class="conn-go" id="obDocClear" type="button" style="padding:6px 12px;font-size:11px">Clear all</button>'+
       '</div>'+
       '<div id="obDocRows" style="margin-top:8px;display:'+(collapsed?'none':'block')+'">'+rows+'</div>';
     var t=document.getElementById('obDocToggle');if(t)t.addEventListener('click',function(){window.__obDocCollapsed=!window.__obDocCollapsed;obRenderDocList();});
@@ -1298,7 +1298,7 @@
     var docs=obDocDocs();
     var rows=types.map(function(t){
       var d=docs.filter(function(x){return x.type===t.l;})[0]; // most recent (docs are unshifted)
-      var base='display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;font-size:12.5px';
+      var base='display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;font-size:12px';
       if(d){return '<div style="'+base+';background:var(--surface-2,#f6f8fb)">'+
         '<span style="color:var(--good,#0ca30c);font-weight:700;flex:0 0 auto">✓</span>'+
         '<span style="font-weight:600;flex:0 0 auto">'+t.l+'</span>'+
@@ -1470,18 +1470,18 @@
       var confirmed=!!p.criticalityConfirmed,yes=confirmed&&p.bringsMoney;
       var stateChip=confirmed?('<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:'+(yes?'rgba(12,163,12,.12);color:var(--good)':'var(--surface-2);color:var(--muted)')+'">'+(yes?'✓ brings money':'not revenue')+'</span>'):('<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(250,178,25,.14);color:var(--warn)">provisional</span>');
       return '<div class="revrow" data-i="'+o.i+'" style="display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--line)">'+
-        '<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:13.5px">'+String(p.name||'—')+(o.r.suggested&&!confirmed?' <span style="font-size:10.5px;font-weight:700;color:var(--blue)">· suggested: revenue</span>':'')+'</div>'+
+        '<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:13px">'+String(p.name||'—')+(o.r.suggested&&!confirmed?' <span style="font-size:10px;font-weight:700;color:var(--blue)">· suggested: revenue</span>':'')+'</div>'+
           '<div style="display:flex;align-items:center;gap:8px;margin-top:4px"><div style="width:120px;height:5px;background:var(--surface-2);border-radius:3px;overflow:hidden"><i style="display:block;height:100%;width:'+pc+'%;background:'+barCol+'"></i></div><span style="font-size:11px;color:var(--muted)">advisory '+pc+'%</span></div></div>'+
         stateChip+
         '<div style="display:flex;gap:6px;flex:none">'+
           '<button type="button" class="revyes" data-i="'+o.i+'" style="font-size:12px;font-weight:600;padding:6px 12px;border-radius:8px;border:1px solid '+(yes?'var(--good)':'var(--line)')+';background:'+(yes?'rgba(12,163,12,.1)':'var(--surface)')+';color:'+(yes?'var(--good)':'var(--ink)')+';cursor:pointer">Brings money</button>'+
           '<button type="button" class="revno" data-i="'+o.i+'" style="font-size:12px;font-weight:600;padding:6px 12px;border-radius:8px;border:1px solid '+(confirmed&&!yes?'var(--muted)':'var(--line)')+';background:var(--surface);color:var(--ink);cursor:pointer">No</button>'+
         '</div>'+
-        '<input class="revamt" data-i="'+o.i+'" placeholder="annual $" value="'+String(p.confirmedFinancialImpact||'').replace(/"/g,'&quot;')+'" style="width:96px;flex:none;font-size:12.5px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);visibility:'+(yes?'visible':'hidden')+'">'+
+        '<input class="revamt" data-i="'+o.i+'" placeholder="annual $" value="'+String(p.confirmedFinancialImpact||'').replace(/"/g,'&quot;')+'" style="width:96px;flex:none;font-size:12px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);visibility:'+(yes?'visible':'hidden')+'">'+
       '</div>';
     }).join('');
     document.getElementById('revBody').innerHTML=summary+'<div>'+rows+'</div>'+
-      '<div style="font-size:11.5px;color:var(--muted);margin-top:10px">The advisory % is a suggestion from your entered revenue, the process\'s function and its name — never an automatic decision. Only the processes you mark <b>Brings money</b> become confirmed revenue processes that promote their applications to crown jewels.</div>';
+      '<div style="font-size:11px;color:var(--muted);margin-top:10px">The advisory % is a suggestion from your entered revenue, the process\'s function and its name — never an automatic decision. Only the processes you mark <b>Brings money</b> become confirmed revenue processes that promote their applications to crown jewels.</div>';
     function setConf(i,money){if(!PROC[i])return;PROC[i].criticalityConfirmed=true;PROC[i].bringsMoney=!!money;if(!money)PROC[i].confirmedFinancialImpact='';renderRevConfirm();try{updateSummary();}catch(_){}try{renderMap();}catch(_){}}
     document.querySelectorAll('#revBody .revyes').forEach(function(b){b.addEventListener('click',function(){setConf(+b.dataset.i,true);});});
     document.querySelectorAll('#revBody .revno').forEach(function(b){b.addEventListener('click',function(){setConf(+b.dataset.i,false);});});
@@ -1843,9 +1843,9 @@
   var OB_SPINE=[{k:'Corporate',t:['corp']},{k:'Region',t:['struct']},{k:'Entity',t:['struct']},{k:'Process',t:['sys']},{k:'System',t:['sys','connect']},{k:'Risk',t:['risk']},{k:'Control',t:['control']}];
   function renderSpine(active){
     var host=document.getElementById('chainSpine');if(!host)return;
-    host.innerHTML='<div style="display:flex;align-items:center;gap:2px;flex-wrap:wrap;font-size:11.5px;font-weight:700">'
+    host.innerHTML='<div style="display:flex;align-items:center;gap:2px;flex-wrap:wrap;font-size:11px;font-weight:700">'
       +OB_SPINE.map(function(n,i){var on=n.t.indexOf(active)>=0;
-        var node='<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:20px;white-space:nowrap;border:1px solid '+(on?'#2563eb':'var(--line)')+';background:'+(on?'color-mix(in srgb,#2563eb 12%,transparent)':'transparent')+';color:'+(on?'#2563eb':'var(--muted)')+'">'+(on?'<span style="width:6px;height:6px;border-radius:50%;background:#2563eb"></span>':'')+n.k+'</span>';
+        var node='<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:20px;white-space:nowrap;border:1px solid '+(on?'#1A5FA0':'var(--line)')+';background:'+(on?'color-mix(in srgb,#1A5FA0 12%,transparent)':'transparent')+';color:'+(on?'#1A5FA0':'var(--muted)')+'">'+(on?'<span style="width:6px;height:6px;border-radius:50%;background:#1A5FA0"></span>':'')+n.k+'</span>';
         return node+(i<OB_SPINE.length-1?'<span style="color:var(--line);padding:0 1px">→</span>':'');
       }).join('')+'</div>';
   }
@@ -1889,27 +1889,27 @@
       var cur=obEntityModel(OB_ACTIVE_ENTITY);
       var chips=OB_MODES.map(function(m){return '<span class="chip'+(m[0]===cur?' on':'')+'" data-emode="'+m[0]+'" title="'+esc(m[2])+'">'+m[1]+'</span>';}).join('');
       var desc=(OB_MODES.filter(function(m){return m[0]===cur;})[0]||[])[2]||'';
-      modelRow='<div style="margin-top:11px;padding-top:11px;border-top:1px solid color-mix(in srgb,#2563eb 20%,transparent)">'
-        +'<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span style="font-size:11.5px;font-weight:700;color:var(--ink)">Operating model for this entity</span>'
+      modelRow='<div style="margin-top:11px;padding-top:11px;border-top:1px solid color-mix(in srgb,#1A5FA0 20%,transparent)">'
+        +'<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span style="font-size:11px;font-weight:700;color:var(--ink)">Operating model for this entity</span>'
         +'<div class="chips" style="gap:6px">'+chips+'</div>'
-        +'<button type="button" id="emodeAll" style="font-size:11px;color:#2563eb;background:none;border:1px solid color-mix(in srgb,#2563eb 35%,transparent);border-radius:7px;padding:5px 9px;cursor:pointer">Apply to all '+ents.length+' entities</button></div>'
+        +'<button type="button" id="emodeAll" style="font-size:11px;color:#1A5FA0;background:none;border:1px solid color-mix(in srgb,#1A5FA0 35%,transparent);border-radius:7px;padding:5px 9px;cursor:pointer">Apply to all '+ents.length+' entities</button></div>'
         +'<div style="font-size:11px;color:var(--muted);margin-top:6px">'+esc(desc)+'</div></div>';
     } else if(OB_ACTIVE_ENTITY==='corporate'){
       var inh=ents.filter(function(e){return obEntityModel(e.id)!=='federated';}).length;
-      modelRow='<div style="margin-top:11px;padding-top:11px;border-top:1px solid color-mix(in srgb,#2563eb 20%,transparent);font-size:11.5px;color:var(--ink-2)">'
+      modelRow='<div style="margin-top:11px;padding-top:11px;border-top:1px solid color-mix(in srgb,#1A5FA0 20%,transparent);font-size:11px;color:var(--ink-2)">'
         +'This is the <b>Corporate baseline</b> (set the common controls under <b>Regions &amp; entities → Security operating model</b>). '
         +(ents.length?('<b>'+inh+'</b> of <b>'+ents.length+'</b> entit'+(ents.length===1?'y':'ies')+' currently inherit it; the rest are federated.'):'')+'</div>';
     }
     var hint=ents.length
       ?('You defined <b>'+ents.length+'</b> '+(ents.length===1?'entity':'entities')+'. Everything on this tab is captured for the selected one, and each entity sets <b>its own operating model</b> — centralized entities inherit the Corporate baseline, federated ones run their own.')
       :('No entities yet — add them under <b>Regions & entities</b> and each will appear here with its own operating model. Configuring at <b>Corporate</b> for now (applies to all).');
-    host.innerHTML='<div style="border:1px solid #2563eb;border-radius:12px;padding:12px 15px;margin:0 0 16px;background:color-mix(in srgb,#2563eb 6%,transparent)">'
+    host.innerHTML='<div style="border:1px solid #1A5FA0;border-radius:12px;padding:12px 15px;margin:0 0 16px;background:color-mix(in srgb,#1A5FA0 6%,transparent)">'
       +'<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">'
-      +'<span style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#2563eb;white-space:nowrap">Configuring for</span>'
+      +'<span style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#1A5FA0;white-space:nowrap">Configuring for</span>'
       +'<select id="entityCtxSel" style="padding:8px 12px;border:1px solid var(--line);border-radius:8px;font-size:13px;font-weight:600;background:#fff;min-width:250px">'+opts+'</select>'
-      +'<span style="font-size:12.5px;color:var(--ink)">'+obEntityPath(OB_ACTIVE_ENTITY)+'</span></div>'
+      +'<span style="font-size:12px;color:var(--ink)">'+obEntityPath(OB_ACTIVE_ENTITY)+'</span></div>'
       +modelRow
-      +'<div style="font-size:11.5px;color:var(--muted);margin-top:8px;line-height:1.5">'+hint+'</div></div>';
+      +'<div style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5">'+hint+'</div></div>';
     var sel=document.getElementById('entityCtxSel');
     if(sel)sel.addEventListener('change',function(){OB_ACTIVE_ENTITY=sel.value;renderEntityCtx(key);
       try{if(typeof obSaveState==='function')obSaveState();}catch(_){}});

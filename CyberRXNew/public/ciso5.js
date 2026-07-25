@@ -36,32 +36,32 @@
     '.c5tile-h.c5muted{color:var(--muted)}',
     '.c5ic svg{width:18px;height:18px;display:block}',
     '.c5tile-ic{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:8px;flex:none;background:var(--surface-2);background:color-mix(in srgb,var(--ac,var(--muted)) 16%,var(--surface));color:var(--ink-2);color:var(--ac,var(--ink-2))}.c5tile-ic svg{width:16px;height:16px;display:block}',
-    '.c5tile-s{font-size:12.5px;color:var(--ink-2);margin-top:3px}',
+    '.c5tile-s{font-size:12px;color:var(--ink-2);margin-top:3px}',
     '.c5aigrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-top:16px}',
     '.c5aic{display:flex;align-items:center;gap:14px;padding:16px;border-radius:14px;border:1px solid var(--line);background:var(--surface);cursor:pointer;transition:border-color .12s,box-shadow .12s,transform .12s;position:relative;overflow:hidden}',
     '.c5aic::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--ac,var(--muted));opacity:.85}',
     '.c5aic:hover{border-color:color-mix(in srgb,var(--ac,var(--muted)) 55%,var(--line));box-shadow:0 6px 20px -8px color-mix(in srgb,var(--ac,var(--muted)) 45%,transparent);transform:translateY(-1px)}',
-    '.c5aic-t{font-size:13.5px;font-weight:650;color:var(--ink);line-height:1.25}',
+    '.c5aic-t{font-size:13px;font-weight:650;color:var(--ink);line-height:1.25}',
     '.c5aic-v{font-size:12px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;margin-top:3px}',
-    '.c5aic-s{font-size:12.5px;color:var(--ink-2);margin-top:3px;line-height:1.4;overflow-wrap:anywhere}',
+    '.c5aic-s{font-size:12px;color:var(--ink-2);margin-top:3px;line-height:1.4;overflow-wrap:anywhere}',
     '.c5briefhead{border:1px solid var(--line);border-left:3px solid var(--blue);background:var(--surface-2);border-radius:12px;padding:14px 16px;margin:6px 0 18px}',
     '.c5briefhead .k{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--blue)}',
-    '.c5briefhead .t{font-size:13.5px;color:var(--ink-2);line-height:1.6;margin-top:5px}',
+    '.c5briefhead .t{font-size:13px;color:var(--ink-2);line-height:1.6;margin-top:5px}',
     '.c5asks-intro{font-size:13px;color:var(--ink-2);line-height:1.55;margin:2px 0 14px}',
     '.c5asks-empty{font-size:13px;color:var(--muted);border:1px dashed var(--line);border-radius:12px;padding:16px;text-align:center}',
     '.c5ask-card{border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:14px;background:var(--surface);position:relative;overflow:hidden}',
     '.c5ask-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--ac,var(--blue));opacity:.9}',
     '.c5ask-card[data-kind="accept"]{--ac:var(--warn)}.c5ask-card[data-kind="fund"]{--ac:var(--good)}.c5ask-card[data-kind="attest"]{--ac:var(--blue)}',
-    '.c5ask-k{font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ac,var(--blue))}',
+    '.c5ask-k{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ac,var(--blue))}',
     '.c5ask-t{font-size:15px;font-weight:650;color:var(--ink);margin-top:3px}',
-    '.c5ask-why{font-size:12.5px;color:var(--ink-2);line-height:1.55;margin-top:7px}',
-    '.c5ask-ask{font-size:12.5px;color:var(--ink);line-height:1.55;margin-top:8px}',
+    '.c5ask-why{font-size:12px;color:var(--ink-2);line-height:1.55;margin-top:7px}',
+    '.c5ask-ask{font-size:12px;color:var(--ink);line-height:1.55;margin-top:8px}',
     '.c5ask-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}',
-    '.c5ask-btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:12.5px;font-weight:600;padding:7px 14px;border-radius:9px;cursor:pointer;transition:border-color .12s,background .12s}',
+    '.c5ask-btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:12px;font-weight:600;padding:7px 14px;border-radius:9px;cursor:pointer;transition:border-color .12s,background .12s}',
     '.c5ask-btn:hover{border-color:var(--blue)}',
     '.c5ask-btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}',
-    '.c5ask-done{font-size:13px;font-weight:600;color:var(--good)}.c5ask-done .c5ask-when{font-weight:400;color:var(--muted);font-size:11.5px}',
-    '.c5ask-sampletag{font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);background:var(--surface-2);border:1px solid var(--line);border-radius:20px;padding:1px 7px;margin-left:6px}',
+    '.c5ask-done{font-size:13px;font-weight:600;color:var(--good)}.c5ask-done .c5ask-when{font-weight:400;color:var(--muted);font-size:11px}',
+    '.c5ask-sampletag{font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);background:var(--surface-2);border:1px solid var(--line);border-radius:20px;padding:1px 7px;margin-left:6px}',
     '.c5phwrap{margin-top:2px}',
     '.c5cjt-note{font-size:12px;color:var(--ink-2);background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:9px 13px;margin:10px 0}',
     '.c5cjt-prov{font-size:12px;color:var(--ink-2);line-height:1.55;background:color-mix(in srgb,var(--blue) 5%,var(--surface));border:1px solid color-mix(in srgb,var(--blue) 20%,var(--line));border-radius:10px;padding:11px 14px;margin:10px 0}',
@@ -107,7 +107,7 @@
     '.c5att-h{display:flex;align-items:center;gap:9px;margin-bottom:10px}',
     '.c5att-ic{display:inline-flex;align-items:center;justify-content:center;width:27px;height:27px;border-radius:8px;flex:none;background:var(--surface-2);background:color-mix(in srgb,var(--ac,var(--muted)) 15%,var(--surface));color:var(--ink-2);color:var(--ac,var(--ink-2))}',
     '.c5att-ic svg{width:15px;height:15px}',
-    '.c5att-n{font-size:12.5px;font-weight:600;line-height:1.2;color:var(--ink)}',
+    '.c5att-n{font-size:12px;font-weight:600;line-height:1.2;color:var(--ink)}',
     '.c5att-bar{height:6px;border-radius:4px;background:var(--surface-2);overflow:hidden;margin:0 0 8px}',
     '.c5att-bar i{display:block;height:100%;background:var(--ac,var(--muted));border-radius:4px}',
     '.c5att-c{font-size:11px;font-weight:600;color:var(--ink-2);color:var(--ac,var(--ink-2))}',
@@ -130,14 +130,14 @@
     '.c5bl-k{font-size:12px;color:var(--blue);font-weight:500}',
     '.c5bl-h{font-size:15px;font-weight:500;margin-top:3px;color:var(--ink)}',
     '.c5bl-p{font-size:13px;color:var(--ink-2);margin-top:3px;line-height:1.5;max-width:560px}',
-    '.c5btn{margin-top:12px;font-size:13.5px;font-weight:500;padding:9px 15px;border-radius:8px;border:0;background:var(--blue-fill);color:#fff;cursor:pointer}',
+    '.c5btn{margin-top:12px;font-size:13px;font-weight:500;padding:9px 15px;border-radius:8px;border:0;background:var(--blue-fill);color:#fff;cursor:pointer}',
     '.c5btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink);margin-left:8px}',
     '.c5foot{font-size:11px;color:var(--muted);margin-top:14px}',
     '.c5mc{background:var(--surface-2);border-radius:8px;padding:12px 14px;cursor:pointer}',
     '.c5mc-l{font-size:12px;color:var(--ink-2)}',
     '.c5mc-v{font-size:22px;font-weight:500;margin-top:2px;color:var(--ink)}',
     '.c5statgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-top:18px;margin-bottom:20px}',
-    '.c5seclab{font-size:11.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}',
+    '.c5seclab{font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}',
     '.c5erow{display:flex;align-items:center;gap:13px;padding:12px 10px;margin:0 -10px;border-radius:10px;border-bottom:.5px solid var(--line);cursor:pointer;transition:background .14s ease,box-shadow .14s ease}',
     '.c5erow:hover{background:var(--surface-2);box-shadow:inset 3px 0 0 var(--blue)}',
     '.c5erow:last-child{border-bottom:none}',
@@ -146,7 +146,7 @@
     '.c5etrack{width:104px;height:7px;background:var(--surface-2);border-radius:6px;overflow:hidden;flex-shrink:0;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--line) 60%,transparent)}',
     '.c5etrack>div{border-radius:6px;transition:width .5s cubic-bezier(.2,.7,.3,1)}',
     '.c5emult{font-size:15px;font-weight:700;width:58px;text-align:right;color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:-.01em}',
-    '.c5rank{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:7px;background:var(--surface-2);color:var(--muted);font-size:11.5px;font-weight:700;flex:none;font-variant-numeric:tabular-nums}',
+    '.c5rank{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:7px;background:var(--surface-2);color:var(--muted);font-size:11px;font-weight:700;flex:none;font-variant-numeric:tabular-nums}',
     '.c5rank.top{background:color-mix(in srgb,var(--good) 16%,var(--surface));color:var(--good)}',
     '.c5opgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px;margin-bottom:6px}',
     '.c5opc{position:relative;background:linear-gradient(155deg,var(--surface) 0%,var(--surface-2) 100%);border-radius:16px;padding:17px 19px 17px;cursor:pointer;border:1px solid var(--line);box-shadow:0 1px 2px rgba(16,24,40,.05),0 8px 20px -14px rgba(16,24,40,.18);transition:transform .18s cubic-bezier(.2,.7,.3,1),box-shadow .18s ease,border-color .18s ease;overflow:hidden}',
@@ -168,7 +168,7 @@
     '.c5warbar-l{display:flex;align-items:center;gap:11px;min-width:0}',
     '.c5warbar-ic{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:10px;flex:none;font-size:17px;background:var(--surface)}',
     '.c5warbar.active .c5warbar-ic{background:var(--crit);color:#fff}',
-    '.c5warbar-t{font-size:13.5px;font-weight:700;color:var(--ink)}',
+    '.c5warbar-t{font-size:13px;font-weight:700;color:var(--ink)}',
     '.c5warbar-s{font-size:12px;color:var(--ink-2);margin-top:1px}',
     '.c5drow{display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:.5px solid var(--line);cursor:pointer}',
     '.c5drow:hover{background:var(--surface-2)}',
@@ -180,7 +180,7 @@
     '@media(max-width:720px){.c5tiles{grid-template-columns:1fr}.c5aigrid{grid-template-columns:1fr}.c5attgrid{grid-template-columns:repeat(2,1fr)}.c5prow-n{width:120px}.c5statgrid{grid-template-columns:1fr}.c5opgrid{grid-template-columns:1fr}}',
     /* Collapsed accordions in the executive detail drawer — deeper evidence, closed by default. */
     '.c5acc{margin-top:10px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);overflow:hidden}',
-    '.c5acc>summary{cursor:pointer;list-style:none;padding:10px 14px;font-size:12.5px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:9px}',
+    '.c5acc>summary{cursor:pointer;list-style:none;padding:10px 14px;font-size:12px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:9px}',
     '.c5acc>summary::-webkit-details-marker{display:none}',
     '.c5acc>summary .c5acc-mk{color:var(--muted);font-size:11px;transition:transform .15s;flex:none}',
     '.c5acc[open]>summary .c5acc-mk{transform:rotate(90deg)}',
@@ -307,8 +307,8 @@ function c5IdFixResolves(seat){var M={
    of this seat's risks", one column per analytical tab in the seat's language. Reuses the
    card/token chrome; empty string when the seat has no mapping. */
 function c5convergeStrip(seat){var r=(typeof c5IdFixResolves==='function')?c5IdFixResolves(seat):[];if(!r.length)return '';var IDF=c5IdFix();
-  var cols=r.map(function(x,i){return '<div style="flex:1 1 150px;min-width:130px;padding:2px 12px'+(i?';border-left:1px solid var(--line)':'')+'"><div style="font-size:11px;font-weight:700;color:var(--blue)">'+c5esc(x.tab)+'</div><div style="font-size:11.5px;color:var(--ink-2);margin-top:2px">'+c5esc(x.note)+'</div></div>';}).join('');
-  return '<div class="c5card" style="margin-bottom:14px;padding:14px 16px"><div style="font-size:12.5px;font-weight:600;color:var(--ink);margin-bottom:8px">One fix — '+IDF.short+' — resolves '+r.length+' of this seat’s risks'+(IDF.usd?(' ('+IDF.usd+' · '+IDF.owner+' · '+IDF.timeline+')'):'')+':</div><div style="display:flex;flex-wrap:wrap;align-items:stretch;margin:0 -12px">'+cols+'</div></div>';}
+  var cols=r.map(function(x,i){return '<div style="flex:1 1 150px;min-width:130px;padding:2px 12px'+(i?';border-left:1px solid var(--line)':'')+'"><div style="font-size:11px;font-weight:700;color:var(--blue)">'+c5esc(x.tab)+'</div><div style="font-size:11px;color:var(--ink-2);margin-top:2px">'+c5esc(x.note)+'</div></div>';}).join('');
+  return '<div class="c5card" style="margin-bottom:14px;padding:14px 16px"><div style="font-size:12px;font-weight:600;color:var(--ink);margin-bottom:8px">One fix — '+IDF.short+' — resolves '+r.length+' of this seat’s risks'+(IDF.usd?(' ('+IDF.usd+' · '+IDF.owner+' · '+IDF.timeline+')'):'')+':</div><div style="display:flex;flex-wrap:wrap;align-items:stretch;margin:0 -12px">'+cols+'</div></div>';}
 /* Shared principal-risk register — the single source the CRO (rank/appetite/trend), Board and
    CLO read, so inherent/residual/appetite/direction/confidence/owner/cadence never drift.
    Cyber inherent = residual + the expected-loss controls buy down (control effectiveness);
@@ -1607,7 +1607,7 @@ function c5CrownWhy(name){
     }
     var mfa=dep('mfa'),pam=dep('pam');
     var body=
-      '<p style="margin:0 0 12px;font-size:13.5px;line-height:1.6;color:var(--ink)"><b>'+c5esc(name)+'</b> is flagged <b style="color:var(--warn)">At risk</b> because the <b>identity &amp; access path</b> that reaches it is exposed right now.</p>'+
+      '<p style="margin:0 0 12px;font-size:13px;line-height:1.6;color:var(--ink)"><b>'+c5esc(name)+'</b> is flagged <b style="color:var(--warn)">At risk</b> because the <b>identity &amp; access path</b> that reaches it is exposed right now.</p>'+
       '<p style="margin:0 0 9px;font-size:13px;line-height:1.6;color:var(--ink-2)">Identity is how people — and attackers — get to this system. The two controls that guard that path still have deployment gaps, so not every account is protected:</p>'+
       '<ul style="margin:0 0 12px;padding-left:20px;font-size:13px;line-height:1.55;color:var(--ink-2)">'+gapLi('Multi-factor authentication (MFA)',mfa)+gapLi('Privileged-access management (PAM)',pam)+'</ul>'+
       '<p style="margin:0 0 12px;font-size:13px;line-height:1.6;color:var(--ink-2)">That leaves a credible route: compromise one unprotected account and there is a path straight to this crown jewel — which is why it stands out while every other one shows no active detection and adequate coverage.</p>'+
@@ -1616,7 +1616,7 @@ function c5CrownWhy(name){
     var wrap=document.createElement('div');wrap.id='c5whyOverlay';
     wrap.style.cssText='position:fixed;inset:0;z-index:86;display:flex;align-items:center;justify-content:center;background:rgba(20,33,72,.5)';
     wrap.innerHTML='<div style="width:min(560px,94vw);max-height:88vh;display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 24px 60px rgba(20,33,72,.45);overflow:hidden">'+
-      '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line);background:var(--surface-2)"><b style="font-family:var(--serif);font-size:15px;min-width:0">Why is this at risk?</b><button type="button" id="c5whyClose" style="flex:none;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 13px;font-weight:600;font-size:12.5px;cursor:pointer">Close</button></div>'+
+      '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line);background:var(--surface-2)"><b style="font-family:var(--serif);font-size:15px;min-width:0">Why is this at risk?</b><button type="button" id="c5whyClose" style="flex:none;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 13px;font-weight:600;font-size:12px;cursor:pointer">Close</button></div>'+
       '<div style="padding:16px 20px;overflow:auto">'+body+'</div>'+
     '</div>';
     document.body.appendChild(wrap);
@@ -1951,7 +1951,7 @@ function c5whyRanked(m){
 function c5riskCard(r){
   var sv=String(r.severity||'').toLowerCase(),sc=/crit/.test(sv)?'crit':/high/.test(sv)?'warn':'muted';
   var meta=[r.service?c5esc(r.service):'',r.owner?('owner '+c5esc(r.owner)):'',r.status?c5esc(r.status):''].filter(Boolean).join(' · ');
-  return '<div style="border-left:2px solid var(--warn);padding:2px 0 2px 9px;font-size:11.5px;line-height:1.45"><b>'+c5esc(r.name||r.title||'Risk')+'</b>'+(r.severity?(' <b style="color:var(--'+sc+')">'+c5esc(r.severity)+'</b>'):'')+((r.exposure!=null&&r.exposure!=='')?(' <span style="color:var(--muted)">· '+c5esc(String(r.exposure))+'</span>'):'')+(meta?('<div style="color:var(--muted)">'+meta+'</div>'):'')+(r.action?('<div style="color:var(--ink-2)">→ '+c5esc(r.action)+'</div>'):'')+'</div>';
+  return '<div style="border-left:2px solid var(--warn);padding:2px 0 2px 9px;font-size:11px;line-height:1.45"><b>'+c5esc(r.name||r.title||'Risk')+'</b>'+(r.severity?(' <b style="color:var(--'+sc+')">'+c5esc(r.severity)+'</b>'):'')+((r.exposure!=null&&r.exposure!=='')?(' <span style="color:var(--muted)">· '+c5esc(String(r.exposure))+'</span>'):'')+(meta?('<div style="color:var(--muted)">'+meta+'</div>'):'')+(r.action?('<div style="color:var(--ink-2)">→ '+c5esc(r.action)+'</div>'):'')+'</div>';
 }
 /* The ranking / comparison table — modeled exposure, open gaps and open risks kept as
    SEPARATE columns (never merged), plus the main driver. Long risk lists collapse behind
@@ -2020,7 +2020,7 @@ function c5keyEvidence(m){
 function c5keyEvHtml(m){
   var ke=c5keyEvidence(m);if(!ke.length)return '';
   return '<div style="display:grid;grid-template-columns:auto 1fr;gap:5px 16px;margin-top:4px">'+ke.map(function(e){
-    return '<div style="font-size:12px;color:var(--muted)">'+c5esc(e.k)+'</div><div style="font-size:12.5px;color:var(--'+(e.color||'ink')+');font-weight:600">'+c5esc(e.v)+'</div>';
+    return '<div style="font-size:12px;color:var(--muted)">'+c5esc(e.k)+'</div><div style="font-size:12px;color:var(--'+(e.color||'ink')+');font-weight:600">'+c5esc(e.v)+'</div>';
   }).join('')+'</div>';
 }
 /* ── Executive-first framing: the facts a leader asks for the moment a number alarms
@@ -2175,8 +2175,8 @@ function c5InspectObj(m){
   if(m.visual)h+=m.visual;
   var why=c5why(m);
   var _xcol=(m.color==='crit'?'crit':m.color==='warn'?'warn':'blue');
-  function _xr(label,txt,c){return txt?('<div style="margin-bottom:11px"><div style="font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--'+(c||'muted')+')">'+label+'</div><div style="font-size:12.5px;color:var(--ink-2);line-height:1.5;margin-top:2px">'+txt+'</div></div>'):'';}
-  function _chip(label,val,c,title){return '<div'+(title?(' title="'+c5esc(title)+'"'):'')+' style="border:1px solid var(--line);border-radius:9px;padding:6px 11px;background:var(--surface-2)"><div style="font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)">'+label+'</div><div style="font-size:12.5px;font-weight:600;color:var(--'+(c||'ink')+');margin-top:1px">'+c5esc(val)+'</div></div>';}
+  function _xr(label,txt,c){return txt?('<div style="margin-bottom:11px"><div style="font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--'+(c||'muted')+')">'+label+'</div><div style="font-size:12px;color:var(--ink-2);line-height:1.5;margin-top:2px">'+txt+'</div></div>'):'';}
+  function _chip(label,val,c,title){return '<div'+(title?(' title="'+c5esc(title)+'"'):'')+' style="border:1px solid var(--line);border-radius:9px;padding:6px 11px;background:var(--surface-2)"><div style="font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)">'+label+'</div><div style="font-size:12px;font-weight:600;color:var(--'+(c||'ink')+');margin-top:1px">'+c5esc(val)+'</div></div>';}
   // ── HEADER FACTS — what a leader asks first: severity · owner · ETA · evidence confidence.
   var _eta=c5etaOf(m);
   h+='<div style="display:flex;flex-wrap:wrap;gap:8px;margin:11px 0 2px">'+
@@ -2186,7 +2186,7 @@ function c5InspectObj(m){
     _chip('Evidence confidence',ev.level,((ev.level==='Not Enough Evidence'||ev.level==='Demo')?'muted':'ink'))+
   '</div>';
   // BUSINESS IMPACT — the consequence, one line.
-  h+='<div style="margin-top:9px;font-size:12.5px;color:var(--ink-2);line-height:1.5"><b style="color:var(--ink)">Business impact:</b> '+c5impactText(m)+'</div>';
+  h+='<div style="margin-top:9px;font-size:12px;color:var(--ink-2);line-height:1.5"><b style="color:var(--ink)">Business impact:</b> '+c5impactText(m)+'</div>';
   // EXECUTIVE SUMMARY — what this means · who/what is affected · why it matters now.
   var _summ=[_xr('What this means',c5foundText(m),'good'),_xr('Who / what is affected',c5affected(m),'muted'),_xr('Why it matters now',c5whyNow(m),_xcol)].join('');
   if(_summ)h+='<div style="margin-top:11px;padding:13px 16px 2px;border:1px solid var(--line);border-radius:12px;background:var(--surface)">'+_summ+'</div>';
@@ -3268,7 +3268,7 @@ function c5NonAdversarialLane(){
   var L=(typeof LIVE!=='undefined'&&LIVE&&Array.isArray(LIVE.crown_jewel_residual))?LIVE.crown_jewel_residual:[];
   var withNA=L.filter(function(j){return Array.isArray(j.non_adversarial)&&j.non_adversarial.length;});
   if(!withNA.length)return '';
-  var rows=withNA.map(function(j){var chips=j.non_adversarial.map(function(id){var c=C5_NONADV[id];return c?('<span style="font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--surface-2);color:var(--ink-2)">'+c5esc(c.l)+'</span>'):'';}).join(' ');
+  var rows=withNA.map(function(j){var chips=j.non_adversarial.map(function(id){var c=C5_NONADV[id];return c?('<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--surface-2);color:var(--ink-2)">'+c5esc(c.l)+'</span>'):'';}).join(' ');
     return '<div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-top:1px solid var(--line)"><div style="flex:1.2;min-width:0;font-size:13px;font-weight:600">'+c5esc(j.name)+'</div><div style="flex:2;display:flex;flex-wrap:wrap;gap:5px">'+chips+'</div></div>';}).join('');
   return '<div class="c5seclab" style="margin-top:18px">Non-adversarial risk lane · loss without an attacker</div>'+
     '<div>'+rows+'</div>'+
@@ -3287,7 +3287,7 @@ function c5PreventDetect(){
       '<div style="flex:1.4;min-width:0;font-size:13px;font-weight:600">'+c5esc(x.name)+'</div>'+
       '<div style="flex:2;display:flex;align-items:center;gap:8px"><span style="font-size:10px;font-weight:700;color:var(--good);width:74px">CONTROL PRESENT</span>'+bar(pp,'var(--good)')+'<span style="font-size:11px;color:var(--muted);width:34px;text-align:right">'+pp+'%</span></div>'+
       '<div style="flex:2;display:flex;align-items:center;gap:8px"><span style="font-size:10px;font-weight:700;color:var(--blue);width:58px">DETECTION</span>'+bar(dp,'var(--blue)')+'<span style="font-size:11px;color:var(--muted);width:34px;text-align:right">'+dp+'%</span></div>'+
-      '<span style="font-size:10.5px;font-weight:700;color:var(--'+bc+');width:58px;text-align:right">'+x.residual+' '+x.band+'</span>'+
+      '<span style="font-size:10px;font-weight:700;color:var(--'+bc+');width:58px;text-align:right">'+x.residual+' '+x.band+'</span>'+
     '</div>';}).join('');
   return '<div class="c5seclab" style="margin-top:18px">Control presence / detection coverage by crown jewel</div>'+
     '<div>'+rows+'</div>'+
@@ -3358,7 +3358,7 @@ function c5Peers(){
     c5shell('Peer benchmark · how do we compare?',(live?'Ahead of your peers overall — with one domain you trail.':'Sample benchmark — a preview of how you’ll compare to your same-size peers.'),null,(live?('Benchmarked against same-size, same-industry peers, your maturity sits in the top third. Your weakest domain versus peers is the one behind '+TD.phrase+' — the same gap driving your exposure. Each domain carries its full comparison.'):('This previews the peer benchmark you’ll get once your cohort is live. The medians and position shown are a representative sample; your live comparison against your actual same-size, same-industry peers unlocks at '+pmin+' clients. Each domain carries its full comparison.')))+
     sampleBanner+
     '<div class="c5statgrid">'+c5mc('peer_maturity','Your maturity',(mat.connected?mat.displayValue:'—'),null)+c5mc('peer_median','Peer median'+sampleTag,(med.connected?med.displayValue:'—'),'ink-2')+c5mc('peer_position','Your position'+sampleTag,(pos.connected?pos.displayValue:'—'),pos.connected?'good':null)+'</div>'+
-    '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px"><span class="c5seclab" style="margin:0">By domain · your score vs. peer median'+sampleTag+'</span><span style="font-size:11.5px;color:var(--muted)">▏ peer median</span></div>'+
+    '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px"><span class="c5seclab" style="margin:0">By domain · your score vs. peer median'+sampleTag+'</span><span style="font-size:11px;color:var(--muted)">▏ peer median</span></div>'+
     '<div>'+rows+'</div>'+
     kanon+
     c5bl('Bottom line','Close the one domain where peers beat you.',null,'Your largest exposure driver — '+TD.phrase+' — is also where you trail peers most. Closing it moves you toward top-quartile in that domain and reduces your single largest exposure.',{mid:TD.mid,txt:'Close the '+c5esc(TD.short)+' gap'})+
@@ -3424,7 +3424,7 @@ function c5ovQBlock(title,qs){
     return '<div class="c5prow c5bdbox" data-c5bd="'+f.id+'" style="align-items:flex-start;gap:11px;padding:14px 4px">'
       +'<span style="flex:0 0 auto;width:22px;height:22px;border-radius:50%;background:var(--surface-2);border:1px solid var(--line);display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--ink-2);margin-top:1px">'+(i+1)+'</span>'
       +'<div style="flex:1;min-width:0"><div class="c5row-t" style="margin-bottom:3px">'+c5esc(f.question)+'</div>'
-      +'<div style="font-size:12.5px;color:var(--ink-2);line-height:1.55">'+f.detail+'</div>'
+      +'<div style="font-size:12px;color:var(--ink-2);line-height:1.55">'+f.detail+'</div>'
       +'<div style="font-size:11px;color:var(--muted);margin-top:4px">Owner: '+c5esc(f.owner)+'</div></div>'
       +'<span class="c5pill '+(f.pill||'n')+'" style="flex:none;margin-top:1px">'+c5esc(f.status)+'</span></div>';
   }).join('');
@@ -3441,7 +3441,7 @@ function c5ovDo(data){
   c5regFigs(F);
   host.innerHTML=c5header()
     +'<div class="c5verdict"'+(data.headColor?(' style="color:var(--'+data.headColor+')"'):'')+'>'+data.headline+'</div>'
-    +'<div class="c5intro" style="margin-top:5px;color:var(--muted);font-size:12.5px">Each answer is traced to its source — click any box to see it.</div>'
+    +'<div class="c5intro" style="margin-top:5px;color:var(--muted);font-size:12px">Each answer is traced to its source — click any box to see it.</div>'
     +'<div class="c5cards">'+data.cards.map(c5ovCard).join('')+'</div>'
     +c5ovQBlock(data.qTitle||'Your key questions — answered',data.questions)
     +(data.decision?c5ovDecision(data.decision,data.tabIdx,data.decisionBtn):'')
@@ -3753,7 +3753,7 @@ function c5bdInspect(id){
     '<div style="text-align:right;flex:none"><span class="c5pill '+pc+'">'+c5esc(f.status||'')+'</span><div style="font-size:10px;color:var(--muted);margin-top:5px;text-transform:uppercase;letter-spacing:.05em">'+(demo?'Demo':c5esc(slabel))+'</div></div>'+
   '</div>';
   // 2) HEADER FACTS — severity · owner · ETA · evidence confidence.
-  function _chip(label,val,c){return '<div style="border:1px solid var(--line);border-radius:9px;padding:6px 11px;background:var(--surface-2)"><div style="font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)">'+label+'</div><div style="font-size:12.5px;font-weight:600;color:var(--'+(c||'ink')+');margin-top:1px">'+c5esc(val)+'</div></div>';}
+  function _chip(label,val,c){return '<div style="border:1px solid var(--line);border-radius:9px;padding:6px 11px;background:var(--surface-2)"><div style="font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)">'+label+'</div><div style="font-size:12px;font-weight:600;color:var(--'+(c||'ink')+');margin-top:1px">'+c5esc(val)+'</div></div>';}
   h+='<div style="display:flex;flex-wrap:wrap;gap:8px;margin:11px 0 2px">'+
     _chip('Severity',sev.t,sev.c)+
     _chip('Owner',(f.owner||'Accountable owner'),'ink')+
@@ -3761,9 +3761,9 @@ function c5bdInspect(id){
     _chip('Evidence confidence',(demo?'Demo':(f.confidence||'—')),(demo?'muted':confCol))+
   '</div>';
   // 3) BUSINESS IMPACT — the consequence, one line.
-  h+='<div style="margin-top:9px;font-size:12.5px;color:var(--ink-2);line-height:1.5"><b style="color:var(--ink)">Business impact:</b> '+(f.impact||c5bdImpact(pc))+'</div>';
+  h+='<div style="margin-top:9px;font-size:12px;color:var(--ink-2);line-height:1.5"><b style="color:var(--ink)">Business impact:</b> '+(f.impact||c5bdImpact(pc))+'</div>';
   // 4) EXECUTIVE SUMMARY — what this means · who/what is affected · why it matters now.
-  function _xr(label,txt,c){return txt?('<div style="margin-bottom:11px"><div style="font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--'+(c||'muted')+')">'+label+'</div><div style="font-size:12.5px;color:var(--ink-2);line-height:1.5;margin-top:2px">'+txt+'</div></div>'):'';}
+  function _xr(label,txt,c){return txt?('<div style="margin-bottom:11px"><div style="font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--'+(c||'muted')+')">'+label+'</div><div style="font-size:12px;color:var(--ink-2);line-height:1.5;margin-top:2px">'+txt+'</div></div>'):'';}
   var means=f.means||f.detail||f.body||'';
   var affected=f.affected||'The systems, services and people this measure covers — traced to the sources below.';
   var whyNow=f.whyNow||c5bdWhyNow(pc);
@@ -3795,7 +3795,7 @@ function c5bdInspect(id){
     _src=f.sources.map(function(s){
       var meta=[];if(s.detail)meta.push(c5esc(s.detail));if(s.syncedAt)meta.push('synced '+c5esc(s.syncedAt));if(s.coverage)meta.push(c5esc(s.coverage)+' coverage');
       return '<div style="border:1px solid var(--line);border-radius:10px;padding:11px 13px;margin-bottom:8px;background:var(--surface)"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><b style="font-size:13px;color:var(--ink)">'+c5esc(s.name||'Source')+'</b>'+c5bdProvBadge(s.type)+'</div>'+(meta.length?('<div style="font-size:12px;color:var(--ink-2);line-height:1.5;margin-top:4px">'+meta.join(' · ')+'</div>'):'')+'</div>';
-    }).join('')+(f.sources.length>1?'<div style="font-size:11.5px;color:var(--muted);margin-top:2px">Combined from the sources above.</div>':'');
+    }).join('')+(f.sources.length>1?'<div style="font-size:11px;color:var(--muted);margin-top:2px">Combined from the sources above.</div>':'');
   }
   h+=c5acc('View sources',_src);
   // Compact footer.
@@ -3892,7 +3892,7 @@ function c5productInventory(){
   '.c5fw-tw{width:11px;font-size:10px;color:var(--muted);flex:0 0 auto}',
   '.c5fw-dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto}',
   '.c5fw-id{font-size:12px;font-weight:500;font-family:var(--serif);flex:0 0 auto}',
-  '.c5fw-nm{flex:1;min-width:0;font-size:12.5px;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+  '.c5fw-nm{flex:1;min-width:0;font-size:12px;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
   '.c5fw-lvl{font-size:9px;font-weight:500;padding:1px 6px;border-radius:20px;background:var(--surface);border:1px solid var(--line);flex:0 0 auto}',
   '.c5fw-sc{font-size:13px;font-weight:500;width:30px;text-align:right;flex:0 0 auto}',
   '.c5fw-map{font-size:10px;color:var(--muted);margin-top:3px}',
@@ -4175,7 +4175,7 @@ function c5fwSource(node){
     var hpct=(node.toolPct!=null)?(' · '+node.toolPct+'% coverage'):'';
     var hceil=(htool&&typeof capAutoCeil==='function')?capAutoCeil(htool):(node.ceil||4);
     var hwhy=hceil===3?'manual capability — telemetry informs it, a human confirms':'semi-automated — telemetry is pulled, a human validates the rest';
-    h+='<div style="font-size:11.5px;font-weight:700;color:color-mix(in srgb,var(--good) 55%,var(--blue));margin-bottom:6px">HYBRID — telemetry pulled, a human validates ('+hwhy+')</div>';
+    h+='<div style="font-size:11px;font-weight:700;color:color-mix(in srgb,var(--good) 55%,var(--blue));margin-bottom:6px">HYBRID — telemetry pulled, a human validates ('+hwhy+')</div>';
     h+='<div class="c5fw-src"><span class="c5fw-srcic">🔌</span><div><b>'+c5esc(hvend)+'</b> — '+c5esc(hlive)+hpct+(htool?('<div class="c5fw-srcsub">'+c5esc(htool.name.replace(/ *\(.*\)/,''))+' capability · caps at CMMI '+hceil+' until a human validates</div>'):'')+'</div></div>';
     if(node.doc&&node.doc.doc){var hattrs=(Array.isArray(node.doc.attrs))?node.doc.attrs:[];var hatt=hattrs.length?(' · '+hattrs.filter(function(a){return a.found;}).length+' of '+hattrs.length+' attributes present'):'';
       h+='<div class="c5fw-src"><span class="c5fw-srcic">📄</span><div style="flex:1;min-width:0"><b>'+c5esc(node.doc.doc)+'</b>'+hatt+'<div class="c5fw-srcsub">Governing policy also on file · <button type="button" class="c5fw-jump" data-c5docopen="'+c5esc(node.doc.doc)+'" title="Open and read the uploaded document">→ open</button></div></div></div>';}
@@ -4191,9 +4191,9 @@ function c5fwSource(node){
     var annos=attrs.length?('<div class="c5fw-annos" style="margin-top:10px;display:flex;flex-direction:column;gap:8px">'+attrs.map(function(a){
       var ok=!!a.found,cc=ok?'good':'crit';
       var detail=(ok&&a.evidence)
-        ?('<div style="font-size:11.5px;color:var(--ink-2);font-style:italic;line-height:1.5;margin-top:2px;border-left:2px solid color-mix(in srgb,var(--good) 55%,var(--line));padding-left:9px">“'+c5esc(String(a.evidence).slice(0,240))+(String(a.evidence).length>240?'…':'')+'”</div>')
+        ?('<div style="font-size:11px;color:var(--ink-2);font-style:italic;line-height:1.5;margin-top:2px;border-left:2px solid color-mix(in srgb,var(--good) 55%,var(--line));padding-left:9px">“'+c5esc(String(a.evidence).slice(0,240))+(String(a.evidence).length>240?'…':'')+'”</div>')
         :(!ok?('<div style="font-size:11px;color:var(--muted);margin-top:2px">'+c5esc(a.reasoning?String(a.reasoning).slice(0,180):'Not found in the analyzed policy — complete this in the document and re-score.')+'</div>'):'');
-      return '<div><span style="font-size:10.5px;font-weight:700;color:var(--'+cc+')">'+(ok?'✓ ':'✗ ')+c5esc(a.label)+'</span>'+detail+'</div>';
+      return '<div><span style="font-size:10px;font-weight:700;color:var(--'+cc+')">'+(ok?'✓ ':'✗ ')+c5esc(a.label)+'</span>'+detail+'</div>';
     }).join('')+'</div>'):'';
     h+='<div class="c5fw-src"><span class="c5fw-srcic">📄</span><div style="flex:1;min-width:0"><b>'+c5esc(fn)+'</b>'+att+
       '<div class="c5fw-srcsub">Document review <button type="button" class="c5fw-jump" data-c5docopen="'+c5esc(fn)+'" title="Open and read the uploaded document">→ open the uploaded document</button></div>'+
@@ -4487,7 +4487,7 @@ function c5Asks(seat){
   var KIND={accept:'Risk acceptance',attest:'Attestation',fund:'Funding'};
   host.innerHTML=intro+asks.map(function(a){
     var st=store[a.id],acts;
-    if(st&&st.status){acts='<div class="c5ask-done">✓ '+c5esc(st.status)+'<span class="c5ask-when"> · recorded'+(c5AskEditable(st)?' · change within 24h':'')+'</span>'+(c5AskEditable(st)?' <button class="c5ask-btn" data-askreset="'+a.id+'" style="margin-left:8px;padding:4px 10px;font-size:11.5px">Change</button>':'')+'</div>';}
+    if(st&&st.status){acts='<div class="c5ask-done">✓ '+c5esc(st.status)+'<span class="c5ask-when"> · recorded'+(c5AskEditable(st)?' · change within 24h':'')+'</span>'+(c5AskEditable(st)?' <button class="c5ask-btn" data-askreset="'+a.id+'" style="margin-left:8px;padding:4px 10px;font-size:11px">Change</button>':'')+'</div>';}
     else{acts=a.opts.map(function(o,i){return '<button class="c5ask-btn'+(i===0?' primary':'')+'" data-ask="'+a.id+'" data-askval="'+c5esc(o)+'">'+c5esc(o)+'</button>';}).join('');}
     return '<div class="c5ask-card" data-kind="'+a.kind+'"><div class="c5ask-k">'+(KIND[a.kind]||'Action')+(a.sample?' <span class="c5ask-sampletag">sample</span>':'')+'</div>'+
       '<div class="c5ask-t">'+c5esc(a.title)+'</div>'+
@@ -5326,16 +5326,16 @@ function c5AttestationInsight(){
 function c5paStyle(){
   if(document.getElementById('c5pa-style'))return;
   var css=''
-   +'.c5pa{--c5serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,"Times New Roman",serif;margin:6px 0 2px}'
+   +'.c5pa{--c5serif:var(--serif);margin:6px 0 2px}'
    +'.c5pa-eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);font-weight:600}'
    +'.c5pa-finding{font-family:var(--c5serif);font-weight:600;font-size:clamp(22px,3vw,32px);line-height:1.22;letter-spacing:-.01em;color:var(--ink);margin:12px 0 0;max-width:22ch;text-wrap:balance}'
    +'.c5pa-finding em{font-style:normal;color:var(--blue)}.c5pa-finding .bad{color:var(--crit)}'
-   +'.c5pa-dek{color:var(--ink-2);font-size:15.5px;line-height:1.55;margin-top:14px;max-width:64ch}.c5pa-dek b{color:var(--ink)}'
+   +'.c5pa-dek{color:var(--ink-2);font-size:15px;line-height:1.55;margin-top:14px;max-width:64ch}.c5pa-dek b{color:var(--ink)}'
    +'.c5pa-inst{display:grid;grid-template-columns:1fr 1.05fr;border:1px solid var(--line);border-radius:14px;background:var(--surface);overflow:hidden;margin-top:26px}'
    +'@media(max-width:720px){.c5pa-inst{grid-template-columns:1fr}}'
    +'.c5pa-cell{padding:22px 24px}.c5pa-cell + .c5pa-cell{border-left:1px solid var(--line)}'
    +'@media(max-width:720px){.c5pa-cell + .c5pa-cell{border-left:none;border-top:1px solid var(--line)}}'
-   +'.c5pa-ct{font-family:var(--mono);font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:12px}'
+   +'.c5pa-ct{font-family:var(--mono);font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:12px}'
    +'.c5pa-gaugewrap{display:flex;flex-direction:column;align-items:center;gap:5px}'
    +'.c5pa-gaugewrap .read{font-family:var(--c5serif);font-size:42px;font-weight:600;line-height:1}'
    +'.c5pa-gaugewrap .read small{font-family:var(--sans);font-size:15px;color:var(--muted);font-weight:400}'
@@ -5347,7 +5347,7 @@ function c5paStyle(){
    +'.c5card-go{cursor:pointer;transition:border-color .12s,background .12s,box-shadow .12s}'
    +'.c5card-go:hover{border-color:var(--blue);background:var(--surface-2);box-shadow:0 1px 6px -3px rgba(0,0,0,.2)}'
    +'.c5card-go:focus-visible{outline:2px solid var(--blue);outline-offset:2px}'
-   +'.c5card-go-lbl{font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);transition:color .12s}'
+   +'.c5card-go-lbl{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);transition:color .12s}'
    +'.c5card-go:hover .c5card-go-lbl{color:var(--blue)}'
    +'.c5pa-thin{margin-top:26px}'
    +'.c5pa-ledger{border-top:1px solid var(--line)}'
@@ -5364,7 +5364,7 @@ function c5paStyle(){
    +'.c5rec{border-top:1px solid var(--line)}'
    +'.c5rec-row{display:grid;grid-template-columns:180px 1fr 118px;align-items:center;gap:16px;padding:13px 0;border-bottom:1px solid var(--line)}'
    +'@media(max-width:640px){.c5rec-row{grid-template-columns:116px 1fr 88px;gap:10px}}'
-   +'.c5rec-nm{font-size:13.5px;font-weight:600;color:var(--ink)}.c5rec-nm small{display:block;font-weight:400;font-size:10.5px;color:var(--muted)}'
+   +'.c5rec-nm{font-size:13px;font-weight:600;color:var(--ink)}.c5rec-nm small{display:block;font-weight:400;font-size:10px;color:var(--muted)}'
    +'.c5rec-track{position:relative;height:24px}'
    +'.c5rec-base{position:absolute;left:0;right:0;top:10px;height:4px;border-radius:3px;background:var(--surface-2)}'
    +'.c5rec-bar{position:absolute;top:8px;left:0;height:8px;border-radius:3px}'
@@ -5385,7 +5385,7 @@ function c5paStyle(){
    +'@media(max-width:640px){.c5dec-row{grid-template-columns:78px 1fr;gap:11px}.c5dec-imp{display:none}}'
    +'.c5dec-delta{font-family:var(--c5serif);font-size:23px;font-weight:600;color:var(--good);line-height:1}.c5dec-delta small{display:block;font-family:var(--mono);font-size:9px;color:var(--muted);font-weight:400;text-transform:uppercase;letter-spacing:.06em;margin-top:2px}'
    +'.c5dec-t{font-size:15px;font-weight:600;color:var(--ink)}'
-   +'.c5dec-s{font-size:12.5px;color:var(--ink-2);margin-top:3px;font-family:var(--mono)}'
+   +'.c5dec-s{font-size:12px;color:var(--ink-2);margin-top:3px;font-family:var(--mono)}'
    +'.c5dec-imp{font-family:var(--mono);font-size:18px;font-weight:600;text-align:right}.c5dec-imp small{display:block;font-size:9px;color:var(--muted);font-weight:400}';
   var st=document.createElement('style');st.id='c5pa-style';st.textContent=css;document.head.appendChild(st);
 }
@@ -5489,10 +5489,10 @@ function c5paRadar(fns){
   [0.25,0.5,0.75,1].forEach(function(g){var pts=fns.map(function(_,i){var p=pt(i,R*g);return p[0].toFixed(1)+','+p[1].toFixed(1);}).join(' ');s+='<polygon points="'+pts+'" fill="none" style="stroke:var(--line)" stroke-width="1"/>';});
   fns.forEach(function(f,i){var p=pt(i,R);s+='<line x1="'+cx+'" y1="'+cy+'" x2="'+p[0].toFixed(1)+'" y2="'+p[1].toFixed(1)+'" style="stroke:var(--line)" stroke-width="1"/>';});
   // filled profile
-  var dp=fns.map(function(f,i){var p=pt(i,R*(Math.max(0,Math.min(5,f.s))/5));return p[0].toFixed(1)+','+p[1].toFixed(1);}).join(' ');
+  var dp=fns.map(function(f,i){var p=pt(i,R*(0.07+0.93*Math.max(0,Math.min(5,f.s))/5));return p[0].toFixed(1)+','+p[1].toFixed(1);}).join(' ');
   s+='<polygon points="'+dp+'" style="fill:var(--blue);stroke:var(--blue);pointer-events:none" fill-opacity="0.15" stroke-width="2"/>';
   // per-function interactive group: a hit area at the vertex + the label + the data point
-  fns.forEach(function(f,i){var vp=pt(i,R),lp=pt(i,R+16),dpt=pt(i,R*(Math.max(0,Math.min(5,f.s))/5)),z=(f.s<=0.05);
+  fns.forEach(function(f,i){var vp=pt(i,R),lp=pt(i,R+16),dpt=pt(i,R*(0.07+0.93*Math.max(0,Math.min(5,f.s))/5)),z=(f.s<=0.05);
     var an=Math.abs(lp[0]-cx)<8?'middle':(lp[0]<cx?'end':'start');
     s+='<g class="c5pa-fn" data-pafn="'+esc(String(f.n))+'" role="button" tabindex="0"><title>View the '+esc(String(f.n))+' controls</title>';
     s+='<circle cx="'+vp[0].toFixed(1)+'" cy="'+vp[1].toFixed(1)+'" r="19" fill="transparent"/>';
@@ -5544,7 +5544,7 @@ function c5ContinuousAssessment(host){
     var sc5=(typeof c5ControlScore==='function')?c5ControlScore(a)*5:0;
     var scCol=(a.verdict==='not_assessed')?'muted':(sc5>=3.5?'good':sc5>=2.5?'warn':'crit');
     return '<tr data-assessctl="'+id+'" style="border-top:1px solid var(--line);cursor:pointer;background:'+(selRow?'color-mix(in srgb,var(--blue) 8%,transparent)':'transparent')+'">'
-      +'<td style="padding:6px 12px 6px 0;font-family:ui-monospace,monospace;font-size:11.5px;color:var(--'+(selRow?'blue':'ink')+');white-space:nowrap">'+esc(id)+' ›</td>'
+      +'<td style="padding:6px 12px 6px 0;font-family:ui-monospace,monospace;font-size:11px;color:var(--'+(selRow?'blue':'ink')+');white-space:nowrap">'+esc(id)+' ›</td>'
       +'<td style="padding:6px 10px 6px 0">'+pill(m.label,methodColor[a.method])+llmMark+'</td>'
       +'<td style="padding:6px 10px 6px 0">'+pill(verdictLabel[a.verdict],verdictColor[a.verdict])+'</td>'
       +'<td style="padding:6px 10px 6px 0;white-space:nowrap"><b style="font-size:13px;color:var(--'+scCol+')">'+(a.verdict==='not_assessed'?'—':sc5.toFixed(1))+'</b><span style="font-size:10px;color:var(--muted)">'+(a.verdict==='not_assessed'?'':' / 5')+'</span></td>'
@@ -5556,7 +5556,7 @@ function c5ContinuousAssessment(host){
   function assessTable(fnKey){
     var cids=ids.filter(function(id){return id.indexOf(fnKey+'.')===0;}).sort();
     if(!cids.length)return '';
-    var thin='text-align:left;padding:6px 10px 6px 0;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)';
+    var thin='text-align:left;padding:6px 10px 6px 0;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)';
     return '<div style="overflow-x:auto;margin-top:6px"><table style="border-collapse:collapse;width:100%;min-width:720px"><thead><tr>'
       +['Control','Method','Verdict','Score','Assurance · confidence','Coverage','Freshness','Cadence'].map(function(h){return '<th style="'+thin+'">'+h+'</th>';}).join('')
       +'</tr></thead><tbody>'+cids.map(assessRow).join('')+'</tbody></table></div>';
@@ -5585,7 +5585,7 @@ function c5ContinuousAssessment(host){
       F.condition='Nerion pulled '+esc(domain)+' telemetry from '+esc(srcNames.length?srcNames.join(', '):'your connected tools')+' and computed a proposed verdict; because the tool cannot fully prove the outcome on its own, a human validates it. Measured '+(comp!=null?comp:'—')+'% compliance across the '+(pop!=null?pop:'—')+'% it can observe; assessed at CMMI '+sc5.toFixed(1)+'.';
       F.conclusion='Telemetry indicates <b>'+verdictLabel[a.verdict]+'</b> — pending or completed human confirmation in the weekly queue.';
       F.recommendation='Approve or dispute the proposed verdict in the Confirm-queue tab; keep the telemetry live so the next cycle is a one-click pass.';
-      F.evidence='<div style="font-size:11.5px;font-weight:700;color:color-mix(in srgb,var(--good) 55%,var(--blue));margin-bottom:6px">HYBRID — telemetry pulled, a human validates</div>'+srcBlock('🔌',srcNames[0]||'Connected tool','demo telemetry',pop,meta.name||'');
+      F.evidence='<div style="font-size:11px;font-weight:700;color:color-mix(in srgb,var(--good) 55%,var(--blue));margin-bottom:6px">HYBRID — telemetry pulled, a human validates</div>'+srcBlock('🔌',srcNames[0]||'Connected tool','demo telemetry',pop,meta.name||'');
     } else if(a.method==='attestation'){var llm=c5LlmPrescreen(id);var ind=c5IndirectSignal(id);
       F.condition='This is a governance outcome with no sensor, so it is evidenced by a scheduled <b>attestation</b>. Nerion verified the artifact exists and is within its review period, and an LLM pre-screened the policy against the outcome. Last reviewed '+llm.reviewDaysAgo+' days ago on a '+eff.label.toLowerCase()+' cadence; assessed at CMMI '+sc5.toFixed(1)+'.';
       F.conclusion=(a.freshness==='expired')?'The attestation has lapsed past its review period — it is no longer valid evidence, so the control reads not assessed until it is re-attested.':(llm.gaps.length?('The artifact is on file and current, but the LLM flagged a gap for an analyst to confirm: '+esc(llm.gaps[0])+'.'):'The artifact is on file, current, and the LLM pre-screen found it addresses the outcome.');
@@ -5605,7 +5605,7 @@ function c5ContinuousAssessment(host){
     if(a.coverage)rows.push(['Coverage',a.coverage.pct+'% observed · <span style="color:var(--warn)">'+(a.coverage.known-a.coverage.observed)+'% unobserved</span> (blind spot)']);
     var confRow='';
     if(a.method==='hybrid'){var conf=c5Confirmations()[id];
-      confRow=conf?('<div style="font-size:11.5px;color:var(--'+(conf.decision==='dispute'?'crit':'good')+');margin-top:8px">'+(conf.decision==='dispute'?'✗ disputed':'✓ confirmed')+' · <span data-confirm="clear:'+id+'" style="color:var(--muted);cursor:pointer">undo</span></div>')
+      confRow=conf?('<div style="font-size:11px;color:var(--'+(conf.decision==='dispute'?'crit':'good')+');margin-top:8px">'+(conf.decision==='dispute'?'✗ disputed':'✓ confirmed')+' · <span data-confirm="clear:'+id+'" style="color:var(--muted);cursor:pointer">undo</span></div>')
         :('<div style="margin-top:8px;display:flex;gap:8px"><button data-confirm="approve:'+id+'" style="font-size:11px;font-weight:700;color:#fff;background:var(--good);border:none;border-radius:6px;padding:4px 12px;cursor:pointer">Approve</button><button data-confirm="dispute:'+id+'" style="font-size:11px;font-weight:700;color:var(--crit);background:none;border:1px solid var(--crit);border-radius:6px;padding:4px 12px;cursor:pointer">Dispute</button></div>');
     }
     var descHtml='<div style="font-size:12px;color:var(--ink-2);margin-top:3px;line-height:1.4">'+esc(name)+'</div>';
@@ -5634,15 +5634,15 @@ function c5ContinuousAssessment(host){
     var dRows=shown.map(function(d){var sev=d.severity==='high'?'crit':'warn';
       return '<div data-assessctl="'+esc(d.id)+'" style="display:flex;gap:9px;align-items:center;flex-wrap:wrap;padding:7px 4px;border-top:1px solid var(--line);cursor:pointer">'
         +'<span style="font-size:9px;font-weight:800;letter-spacing:.04em;color:var(--'+sev+');text-transform:uppercase;width:52px;flex:none">'+d.severity+'</span>'
-        +'<span style="font-family:ui-monospace,monospace;font-size:11.5px;color:var(--ink);width:70px;flex:none">'+esc(d.id)+'</span>'
-        +'<span style="font-size:11.5px;color:var(--ink-2);flex:1;min-width:130px">'+verdLbl[d.from]+' <span style="color:var(--muted)">→</span> <b style="color:var(--'+sev+')">'+verdLbl[d.to]+'</b></span>'
+        +'<span style="font-family:ui-monospace,monospace;font-size:11px;color:var(--ink);width:70px;flex:none">'+esc(d.id)+'</span>'
+        +'<span style="font-size:11px;color:var(--ink-2);flex:1;min-width:130px">'+verdLbl[d.from]+' <span style="color:var(--muted)">→</span> <b style="color:var(--'+sev+')">'+verdLbl[d.to]+'</b></span>'
         +(d.ticket?'<span style="font-size:10px;font-weight:700;color:var(--crit);background:color-mix(in srgb,var(--crit) 10%,transparent);border-radius:6px;padding:2px 8px;white-space:nowrap">🎫 ticket auto-raised</span>':'')
         +(d.weight>1?'<span style="font-size:10px;color:var(--muted);white-space:nowrap">crown-jewel</span>':'')+'</div>';}).join('');
-    var more=(drift.regressions.length>8)?('<div style="border-top:1px solid var(--line);padding-top:8px;margin-top:2px"><span data-driftmore="1" style="font-size:11.5px;font-weight:600;color:var(--blue);cursor:pointer">'+(C5_ASSESS_DRIFT_ALL?('▲ Show fewer'):('▼ Show all '+drift.regressions.length))+'</span></div>'):'';
+    var more=(drift.regressions.length>8)?('<div style="border-top:1px solid var(--line);padding-top:8px;margin-top:2px"><span data-driftmore="1" style="font-size:11px;font-weight:600;color:var(--blue);cursor:pointer">'+(C5_ASSESS_DRIFT_ALL?('▲ Show fewer'):('▼ Show all '+drift.regressions.length))+'</span></div>'):'';
     driftPanel='<div style="border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:14px;background:var(--surface)">'
       +'<div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px"><div style="font-weight:600;font-size:13px;color:var(--ink)"><span style="color:var(--warn)">⚠</span> '+drift.regressions.length+' control'+(drift.regressions.length>1?'s':'')+' drifted since last assessment</div>'
-      +'<div style="font-size:11.5px;color:var(--muted)">'+drift.improvements.length+' improved · '+drift.expired.length+' evidence expired</div></div>'
-      +'<div style="font-size:11.5px;color:var(--muted);margin:5px 0 8px;line-height:1.5">The score is the lagging summary; this is what to act on now. A <b>met → not-met</b> flip raises a finding and an automatic ticket on your connected ITSM (Jira / ServiceNow). Click any row to open its finding.</div>'
+      +'<div style="font-size:11px;color:var(--muted)">'+drift.improvements.length+' improved · '+drift.expired.length+' evidence expired</div></div>'
+      +'<div style="font-size:11px;color:var(--muted);margin:5px 0 8px;line-height:1.5">The score is the lagging summary; this is what to act on now. A <b>met → not-met</b> flip raises a finding and an automatic ticket on your connected ITSM (Jira / ServiceNow). Click any row to open its finding.</div>'
       +dRows+more+'</div>';
   }
   // Compact link to the confirm-queue tab (the queue itself lives in c5ConfirmQueueView).
@@ -5653,7 +5653,7 @@ function c5ContinuousAssessment(host){
   var globalCad=c5CadenceOverrides().global||'';
   var cadenceBar='<div style="border:1px solid var(--line);border-radius:11px;padding:11px 14px;margin:12px 0 0;background:var(--surface);display:flex;gap:12px;align-items:center;flex-wrap:wrap">'
     +'<span style="font-size:11px;font-weight:700;color:var(--ink)">Assessment cadence</span>'
-    +'<span style="font-size:11.5px;color:var(--muted)">Global floor '+cadSelect('global',globalCad,!!globalCad)+'</span>'
+    +'<span style="font-size:11px;color:var(--muted)">Global floor '+cadSelect('global',globalCad,!!globalCad)+'</span>'
     +'<span style="font-size:11px;color:var(--muted);flex:1;min-width:220px">Control-aware: live re-checks continuously, attestations on their review cycle. Set a global floor, tune per control in its detail below — nobody is forced to rubber-stamp weekly.</span></div>';
   // ── Summary cards, classic .c5cards chrome ──
   if(C5_ASSESS_EXP==null){C5_ASSESS_EXP={PR:true};}
@@ -5690,7 +5690,7 @@ function c5ContinuousAssessment(host){
     var inner=open?('<div style="padding:4px 14px 12px 30px">'+assessTable(F.k)+'</div>'):'';
     return '<div class="c5fw-g"><div class="c5fw-grow" data-assessexp="'+F.k+'"><span class="c5fw-tw">'+(open?'▾':'▸')+'</span><span class="c5fw-dot" style="background:var(--'+gc+')"></span><span class="c5fw-id">'+F.k+'</span><span class="c5fw-nm">'+F.l+'</span><span class="c5fw-lvl">'+cids.length+' controls</span><span class="c5fw-sc" style="color:var(--'+gc+')">'+(v*5).toFixed(1)+'</span></div>'+inner+'</div>';
   }).join('')+'</div>';
-  var detail=C5_ASSESS_CTRL?c5AssessDetail(C5_ASSESS_CTRL):'<div class="c5fw-detail"><div style="font-size:12.5px;color:var(--muted)">Open a function and click a control to see its method, the three axes, freshness, cadence and evidence.</div></div>';
+  var detail=C5_ASSESS_CTRL?c5AssessDetail(C5_ASSESS_CTRL):'<div class="c5fw-detail"><div style="font-size:12px;color:var(--muted)">Open a function and click a control to see its method, the three axes, freshness, cadence and evidence.</div></div>';
   // ── Scope switcher — the same Enterprise → Region → Entity navigation as the top banner,
   // dropped in here so you can move scope without leaving Continuous assessment. Each scope
   // has its OWN continuous scores, so switching one updates every card/tree/detail below. ──
@@ -5740,7 +5740,7 @@ function c5ContinuousAssessment(host){
     :('<b style="color:var(--good)">'+pvPct+'%</b> of your posture is <b>proven by a sensor right now</b>; the rest is human-confirmed, <b>asserted</b> on a policy, or unproven. Green here means <b>observed today</b> — not a document on file. This is the number you can defend to a board, an auditor or a regulator.');
   var provHero='<div style="border:1px solid var(--blue);border-radius:14px;padding:15px 17px;margin-top:14px;background:color-mix(in srgb,var(--blue) 4%,var(--surface))">'
     +'<div style="font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--blue)">'+(isAiFw?'The AI proof gap':'Can you prove it?')+'</div>'
-    +'<div style="font-size:12.5px;color:var(--ink-2);line-height:1.55;margin:4px 0 10px;max-width:880px">'+pvLine+'</div>'
+    +'<div style="font-size:12px;color:var(--ink-2);line-height:1.55;margin:4px 0 10px;max-width:880px">'+pvLine+'</div>'
     +'<div style="display:flex;height:12px;border-radius:6px;overflow:hidden;background:var(--surface-2);margin-bottom:9px">'+pvBar+'</div>'
     +'<div style="display:flex;gap:16px;flex-wrap:wrap">'+pvLegend+'</div></div>';
   // ── Sub-tabs — keep the page short: Summary (exec overview) · Controls (per-scope detail) ·
@@ -5761,7 +5761,7 @@ function c5ContinuousAssessment(host){
   if(C5_ASSESS_SUBTAB==='controls'){
     subBody=cadenceBar+'<div class="c5fw-wrap"><div class="c5fw-right">'+tree+'</div><div class="c5fw-left" id="assessDetail">'+detail+'</div></div>';
   }else if(C5_ASSESS_SUBTAB==='drift'){
-    subBody=driftPanel||'<div style="border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:14px;background:var(--surface);font-size:12.5px;color:var(--muted)">✓ No control has drifted since the last assessment.</div>';
+    subBody=driftPanel||'<div style="border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:14px;background:var(--surface);font-size:12px;color:var(--muted)">✓ No control has drifted since the last assessment.</div>';
   }else{ // summary (default) — assurance hero, then peer benchmark + queue.
     // The KPI cards move UP into the verdict band; method drops to the footnote.
     subBody=provHero+peerBox+queuePanel;
@@ -5849,9 +5849,9 @@ function c5ConfirmQueueView(host){
       ?('<span style="font-size:11px;font-weight:700;color:var(--'+(q.decision==='dispute'?'crit':'good')+')">'+(q.decision==='dispute'?'✗ disputed':'✓ confirmed')+'</span> <span data-confirm="clear:'+q.id+'" style="font-size:10px;color:var(--muted);cursor:pointer">undo</span>')
       :('<button data-confirm="approve:'+q.id+'" style="font-size:11px;font-weight:700;color:#fff;background:var(--good);border:none;border-radius:6px;padding:4px 12px;cursor:pointer">Approve</button> <button data-confirm="dispute:'+q.id+'" style="font-size:11px;font-weight:700;color:var(--crit);background:none;border:1px solid var(--crit);border-radius:6px;padding:4px 12px;cursor:pointer">Dispute</button>');
     return '<div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap;padding:7px 0;border-top:1px solid var(--line)">'
-      +'<span style="font-family:ui-monospace,monospace;font-size:11.5px;color:var(--ink);min-width:74px">'+esc(q.id)+'</span>'
+      +'<span style="font-family:ui-monospace,monospace;font-size:11px;color:var(--ink);min-width:74px">'+esc(q.id)+'</span>'
       +'<span style="font-size:11px;color:var(--muted)">proposed</span><span style="font-size:11px;font-weight:700;color:var(--'+pc+')">'+pv+'</span>'
-      +(q.coverage?('<span style="font-size:10.5px;color:var(--muted)">'+q.coverage.pct+'% cov</span>'):'')
+      +(q.coverage?('<span style="font-size:10px;color:var(--muted)">'+q.coverage.pct+'% cov</span>'):'')
       +'<span style="flex:1;min-width:120px">'+chips+'</span>'+act+'</div>';
   }
   if(typeof c5paStyle==='function')c5paStyle();
@@ -5878,7 +5878,7 @@ function c5Resilience(){
   var esc=(typeof c5esc==='function')?c5esc:function(s){return s;};
   var svcs=(typeof c5CriticalServices==='function')?c5CriticalServices():[];
   function hrs(h){if(h==null)return '—';return h>=48?(Math.round(h/24)+'d'):(h+'h');}
-  if(!svcs.length){host.innerHTML=(typeof c5header==='function'?c5header():'')+'<div style="font-size:12.5px;color:var(--muted);border:1px dashed var(--line);border-radius:12px;padding:16px">No critical business services mapped yet — add them at onboarding so their impact tolerance and proven recovery surface here.</div>';return;}
+  if(!svcs.length){host.innerHTML=(typeof c5header==='function'?c5header():'')+'<div style="font-size:12px;color:var(--muted);border:1px dashed var(--line);border-radius:12px;padding:16px">No critical business services mapped yet — add them at onboarding so their impact tolerance and proven recovery surface here.</div>';return;}
   var within=svcs.filter(function(s){return s.rto<=s.tgt;}).length;
   var over=svcs.length-within;
   var proven=svcs.filter(function(s){return s.live;}).length;              // recovery tested / telemetry-proven
@@ -5892,7 +5892,7 @@ function c5Resilience(){
     +card(proven+' / '+svcs.length,'Recovery proven',proven===svcs.length?'good':'warn','tested / telemetry — not just modeled')
     +card(noFailover,'No failover',noFailover>0?'crit':'good','single points of failure')
     +'</div>';
-  var th='text-align:left;padding:7px 12px 7px 0;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);border-bottom:1px solid var(--line);white-space:nowrap';
+  var th='text-align:left;padding:7px 12px 7px 0;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);border-bottom:1px solid var(--line);white-space:nowrap';
   var rows=svcs.map(function(s){
     var ok=s.rto<=s.tgt;var overBy=ok?0:(s.rto-s.tgt);
     var statusPill=ok
@@ -5904,7 +5904,7 @@ function c5Resilience(){
     var nf=/no failover/i.test(s.failover);
     var td='padding:9px 12px 9px 0;border-top:1px solid var(--line);font-size:12px;vertical-align:top';
     return '<tr>'
-      +'<td style="'+td+'"><b style="color:var(--ink)">'+esc(s.n)+'</b><div style="font-size:10.5px;color:var(--muted)">depends on '+esc(s.dep)+'</div></td>'
+      +'<td style="'+td+'"><b style="color:var(--ink)">'+esc(s.n)+'</b><div style="font-size:10px;color:var(--muted)">depends on '+esc(s.dep)+'</div></td>'
       +'<td style="'+td+';white-space:nowrap">'+hrs(s.tgt)+'</td>'
       +'<td style="'+td+';white-space:nowrap;color:var(--'+(ok?'ink':'crit')+');font-weight:700">'+hrs(s.rto)+'</td>'
       +'<td style="'+td+'">'+statusPill+'</td>'
@@ -5965,14 +5965,14 @@ function c5NeuronControls(host){
       +'<div style="flex:1;height:6px;background:var(--surface-2);border-radius:4px;overflow:hidden"><i style="display:block;height:100%;width:'+w+'%;background:var(--'+col+')"></i></div>'
       +'<span style="width:34px;text-align:right;font-weight:700;color:var(--'+col+')">'+w+'%</span></div>';
   }
-  function laneChip(id){return '<span style="font-size:10.5px;color:var(--ink-2);background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:2px 7px;white-space:nowrap">'+esc(NEURON_LANE_LABEL[id]||id)+'</span>';}
+  function laneChip(id){return '<span style="font-size:10px;color:var(--ink-2);background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:2px 7px;white-space:nowrap">'+esc(NEURON_LANE_LABEL[id]||id)+'</span>';}
   // ── capability cards, grouped by domain ──
   var domains={},order=[];
   nc.forEach(function(n){if(!domains[n.domain]){domains[n.domain]=[];order.push(n.domain);}domains[n.domain].push(n);});
   var cardsHtml=order.map(function(dom){
     var cards=domains[dom].map(function(n){
       var xw=n.crosswalk;
-      var proj=FW.map(function(f){var ids=xw[f.k]||[];return ids.length?('<span title="'+esc(ids.join(', '))+'" style="font-size:10.5px;color:var(--ink-2)"><b style="color:var(--ink)">'+f.l+'</b> '+ids.length+'</span>'):'';}).filter(Boolean).join('<span style="color:var(--line)"> · </span>');
+      var proj=FW.map(function(f){var ids=xw[f.k]||[];return ids.length?('<span title="'+esc(ids.join(', '))+'" style="font-size:10px;color:var(--ink-2)"><b style="color:var(--ink)">'+f.l+'</b> '+ids.length+'</span>'):'';}).filter(Boolean).join('<span style="color:var(--line)"> · </span>');
       // Prevent graduates to PROVEN where a BAS / purple-team reading exists; otherwise
       // it stays presence-only. The proven bar is the measured block rate; presence is
       // shown alongside (muted) so the difference between "deployed" and "works" is visible.
@@ -5987,7 +5987,7 @@ function c5NeuronControls(host){
         ? (axisBar('Detect · proven',eff.detected,'good')+'<div style="height:5px"></div>'+axisBar('Detect · coverage',n.attack.detect,'muted'))
         : axisBar('Detect · coverage',n.attack.detect,'good');
       return '<div style="border:1px solid var(--line);border-radius:12px;padding:14px 15px;background:var(--surface)">'
-        +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:3px"><b style="font-size:13.5px;color:var(--ink)">'+esc(n.name)+'</b><div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end">'+evPill(n.evidence)+effPill+'</div></div>'
+        +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:3px"><b style="font-size:13px;color:var(--ink)">'+esc(n.name)+'</b><div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end">'+evPill(n.evidence)+effPill+'</div></div>'
         +'<div style="font-size:11px;color:var(--muted);margin-bottom:8px">'+esc(n.tool||'')+'</div>'
         +'<div style="margin-bottom:10px">'+provBadge(n.provider)+'</div>'
         +(typeof capBar==='function'?('<div style="margin-bottom:10px">'+capBar(n.telemetry)+'</div>'):'')
@@ -5995,7 +5995,7 @@ function c5NeuronControls(host){
         +'<div style="height:5px"></div>'
         +detectBlock
         +'<div style="display:flex;flex-wrap:wrap;gap:5px;margin:11px 0 9px">'+n.lanes.map(laneChip).join('')+'</div>'
-        +'<div style="border-top:1px solid var(--line);padding-top:8px;line-height:1.7">'+(proj||'<span style="font-size:10.5px;color:var(--muted)">no external mapping</span>')+'</div>'
+        +'<div style="border-top:1px solid var(--line);padding-top:8px;line-height:1.7">'+(proj||'<span style="font-size:10px;color:var(--muted)">no external mapping</span>')+'</div>'
         +'</div>';
     }).join('');
     return '<div style="margin-top:16px"><div style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:9px">'+esc(dom)+'</div>'
@@ -6006,17 +6006,17 @@ function c5NeuronControls(host){
   var laneRows=lanes.map(function(L){
     var col=(typeof capColor==='function')?capColor(L.deployed?L.coverage:null):'muted';
     return '<div style="display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)">'
-      +'<div style="width:210px;flex:none"><b style="font-size:12.5px;color:var(--ink)">'+esc(L.label)+'</b><div style="font-size:10.5px;color:var(--muted)">'+esc(L.owner)+' · '+L.deployed+' of '+L.total+' defenders live</div></div>'
+      +'<div style="width:210px;flex:none"><b style="font-size:12px;color:var(--ink)">'+esc(L.label)+'</b><div style="font-size:10px;color:var(--muted)">'+esc(L.owner)+' · '+L.deployed+' of '+L.total+' defenders live</div></div>'
       +'<div style="flex:1;height:7px;background:var(--surface-2);border-radius:4px;overflow:hidden;min-width:80px"><i style="display:block;height:100%;width:'+Math.max(0,Math.min(100,L.coverage))+'%;background:var(--'+col+')"></i></div>'
-      +'<span style="width:42px;text-align:right;font-size:12.5px;font-weight:700;color:var(--'+col+')">'+L.coverage+'%</span>'
-      +'<div style="width:230px;flex:none;font-size:10.5px;color:var(--ink-2);text-align:right">'+esc(L.defenders.join(' · ')||'—')+'</div></div>';
+      +'<span style="width:42px;text-align:right;font-size:12px;font-weight:700;color:var(--'+col+')">'+L.coverage+'%</span>'
+      +'<div style="width:230px;flex:none;font-size:10px;color:var(--ink-2);text-align:right">'+esc(L.defenders.join(' · ')||'—')+'</div></div>';
   }).join('');
   // ── framework projection strip ──
   var fwStrip=FW.map(function(f){var pj=neuronFrameworkProjection(f.k);
     return '<div style="border:1px solid var(--line);border-radius:10px;padding:11px 13px;background:var(--surface);min-width:120px">'
       +'<div style="font-size:11px;color:var(--muted);margin-bottom:3px">'+esc(f.l)+'</div>'
       +'<div style="font-size:19px;font-weight:800;color:var(--ink)">'+pj.evidenced+'<span style="font-size:12px;font-weight:600;color:var(--muted)"> controls</span></div>'
-      +'<div style="font-size:10.5px;color:var(--ink-2)">projected from telemetry</div></div>';
+      +'<div style="font-size:10px;color:var(--ink-2)">projected from telemetry</div></div>';
   }).join('');
   // ── risk-driver matrix: framework × (adversarial + 5 non-adversarial lanes) ──
   var DRV_SHORT={adversarial:'ATT&CK',outage_dr:'Outage/DR',data_corruption:'Data integ.',insider:'Insider',third_party_supply_chain:'Supply-chain',privacy_regulatory:'Privacy'};
@@ -6027,7 +6027,7 @@ function c5NeuronControls(host){
     var cells=DRV.map(function(d){var r=m[d.id];
       if(!r)return '<td style="text-align:center;color:var(--line);padding:6px 9px">—</td>';
       var col=r.evidenced>0?(d.id==='adversarial'?'ink':'good'):'muted';
-      return '<td style="text-align:center;padding:6px 9px;font-size:12px" title="'+r.evidenced+' of '+r.controls+' mapped '+esc(f.l)+' controls evidenced by deployed telemetry"><b style="color:var(--'+col+')">'+r.evidenced+'</b><span style="color:var(--muted);font-size:10.5px">/'+r.controls+'</span></td>';
+      return '<td style="text-align:center;padding:6px 9px;font-size:12px" title="'+r.evidenced+' of '+r.controls+' mapped '+esc(f.l)+' controls evidenced by deployed telemetry"><b style="color:var(--'+col+')">'+r.evidenced+'</b><span style="color:var(--muted);font-size:10px">/'+r.controls+'</span></td>';
     }).join('');
     return '<tr><td style="padding:6px 12px 6px 0;font-size:12px;font-weight:700;color:var(--ink);white-space:nowrap">'+esc(f.l)+'</td>'+cells+'</tr>';
   }).join('');
@@ -6035,8 +6035,8 @@ function c5NeuronControls(host){
   // ── telemetry provenance by asset: which tools can ACTUALLY evidence each asset ──
   var cjs=(typeof LIVE!=='undefined'&&LIVE&&LIVE.crown_jewels)||[];
   function shortCap(n){return String(n).replace(/ *\(.*/,'').replace(/ ?[/&].*/,'').trim();}
-  function okChip(a){return '<span title="'+esc((a.tool||'')+' — valid evidence for this asset class')+'" style="font-size:10.5px;color:var(--good);background:color-mix(in srgb,var(--good) 12%,transparent);border:1px solid color-mix(in srgb,var(--good) 30%,transparent);border-radius:6px;padding:2px 7px;white-space:nowrap">'+esc(shortCap(a.name))+' '+a.pct+'%</span>';}
-  function noChip(a){return '<span title="'+esc((a.tool||a.name)+' does not cover this asset class — not credited as evidence')+'" style="font-size:10.5px;color:var(--crit);background:color-mix(in srgb,var(--crit) 10%,transparent);border:1px solid color-mix(in srgb,var(--crit) 28%,transparent);border-radius:6px;padding:2px 7px;white-space:nowrap;text-decoration:line-through">'+esc(shortCap(a.name))+' ✕</span>';}
+  function okChip(a){return '<span title="'+esc((a.tool||'')+' — valid evidence for this asset class')+'" style="font-size:10px;color:var(--good);background:color-mix(in srgb,var(--good) 12%,transparent);border:1px solid color-mix(in srgb,var(--good) 30%,transparent);border-radius:6px;padding:2px 7px;white-space:nowrap">'+esc(shortCap(a.name))+' '+a.pct+'%</span>';}
+  function noChip(a){return '<span title="'+esc((a.tool||a.name)+' does not cover this asset class — not credited as evidence')+'" style="font-size:10px;color:var(--crit);background:color-mix(in srgb,var(--crit) 10%,transparent);border:1px solid color-mix(in srgb,var(--crit) 28%,transparent);border-radius:6px;padding:2px 7px;white-space:nowrap;text-decoration:line-through">'+esc(shortCap(a.name))+' ✕</span>';}
   // Per-system risk → control chips (System → Risk → Control, from assetRisks).
   function ctrlChip(c){
     if(!c.applies)return '<span title="'+esc(c.name+' does not cover this asset class — not a valid control here')+'" style="font-size:10px;color:var(--muted);border:1px dashed var(--line);border-radius:6px;padding:1px 6px;white-space:nowrap;text-decoration:line-through">'+esc(shortCap(c.name))+'</span>';
@@ -6051,29 +6051,29 @@ function c5NeuronControls(host){
         ?'<span title="Adversarial risk — a threat actor (MITRE ATT&CK)" style="font-size:9px;font-weight:700;color:var(--crit);white-space:nowrap">⚔ ADVERSARIAL</span>'
         :'<span title="Non-adversarial risk — outage, corruption, insider error, supply-chain, privacy" style="font-size:9px;font-weight:700;color:var(--blue);white-space:nowrap">⚙ OPERATIONAL</span>';
       var mit=r.mitigated
-        ?'<span style="font-size:9.5px;font-weight:700;color:var(--good);white-space:nowrap">mitigated</span>'
-        :'<span style="font-size:9.5px;font-weight:700;color:var(--crit);white-space:nowrap">open</span>';
+        ?'<span style="font-size:9px;font-weight:700;color:var(--good);white-space:nowrap">mitigated</span>'
+        :'<span style="font-size:9px;font-weight:700;color:var(--crit);white-space:nowrap">open</span>';
       return '<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:5px 0;border-top:1px solid var(--line)">'
         +tag+'<span style="font-size:11px;color:var(--ink);flex:0 1 auto">'+esc(r.risk)+'</span>'
         +'<span style="color:var(--muted);font-size:10px">→</span>'
         +r.controls.map(ctrlChip).join(' ')+mit+'</div>';
     }).join('');
-    return '<div style="margin-top:9px"><div style="font-size:10.5px;font-weight:700;color:var(--ink-2);margin-bottom:2px">Risks this system carries '
+    return '<div style="margin-top:9px"><div style="font-size:10px;font-weight:700;color:var(--ink-2);margin-bottom:2px">Risks this system carries '
       +(ar.open>0?('<span style="color:var(--crit)">· '+ar.open+' open</span>'):'<span style="color:var(--good)">· all mitigated</span>')
       +' <span style="color:var(--muted);font-weight:600">— System → Risk → Control</span></div>'+rows+'</div>';
   }
   var provRows=cjs.map(function(cj){var pr=assetProvenance(cj);
     return '<div style="border:1px solid var(--line);border-radius:10px;padding:11px 13px;margin-bottom:9px;background:var(--surface)">'
-      +'<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap"><b style="font-size:12.5px;color:var(--ink)">'+esc(cj.name)+(cj.tool?(' <span style="color:var(--muted);font-weight:600">· '+esc(cj.tool)+'</span>'):'')+'</b>'
+      +'<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap"><b style="font-size:12px;color:var(--ink)">'+esc(cj.name)+(cj.tool?(' <span style="color:var(--muted);font-weight:600">· '+esc(cj.tool)+'</span>'):'')+'</b>'
       +'<span style="font-size:10px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--blue)">'+esc(pr.label)+'</span></div>'
-      +'<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;align-items:center"><span style="font-size:10.5px;color:var(--muted);margin-right:2px">Evidenced by</span>'+(pr.applicable.length?pr.applicable.map(okChip).join(''):'<span style="font-size:10.5px;color:var(--muted)">— nothing applicable connected</span>')+'</div>'
-      +(pr.inapplicable.length?('<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;align-items:center"><span style="font-size:10.5px;color:var(--muted);margin-right:2px">Not valid here</span>'+pr.inapplicable.map(noChip).join('')+'</div>'):'')
+      +'<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;align-items:center"><span style="font-size:10px;color:var(--muted);margin-right:2px">Evidenced by</span>'+(pr.applicable.length?pr.applicable.map(okChip).join(''):'<span style="font-size:10px;color:var(--muted)">— nothing applicable connected</span>')+'</div>'
+      +(pr.inapplicable.length?('<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;align-items:center"><span style="font-size:10px;color:var(--muted);margin-right:2px">Not valid here</span>'+pr.inapplicable.map(noChip).join('')+'</div>'):'')
       +(pr.gap?('<div style="font-size:11px;color:var(--crit);margin-top:8px;line-height:1.5">⚠ '+esc(pr.gap)+'</div>'):'')
       +riskBlock(cj)
       +'</div>';
   }).join('');
-  var provPanel=cjs.length?('<div style="margin-top:24px"><div style="font-size:12.5px;font-weight:800;color:var(--ink);margin-bottom:4px">Telemetry provenance by asset <span style="color:var(--muted);font-weight:600">— "prove it"</span></div>'
-    +'<div style="font-size:11.5px;color:var(--muted);margin-bottom:10px">Each asset is only evidenced by tools that actually cover its <b>class</b>. A tool that can’t see the asset (EDR on a SaaS app, CSPM on SaaS) is shown <span style="color:var(--crit)">struck through</span> and <b>not credited</b> — this is how Nerion refuses to claim Defender covers Salesforce.</div>'
+  var provPanel=cjs.length?('<div style="margin-top:24px"><div style="font-size:12px;font-weight:800;color:var(--ink);margin-bottom:4px">Telemetry provenance by asset <span style="color:var(--muted);font-weight:600">— "prove it"</span></div>'
+    +'<div style="font-size:11px;color:var(--muted);margin-bottom:10px">Each asset is only evidenced by tools that actually cover its <b>class</b>. A tool that can’t see the asset (EDR on a SaaS app, CSPM on SaaS) is shown <span style="color:var(--crit)">struck through</span> and <b>not credited</b> — this is how Nerion refuses to claim Defender covers Salesforce.</div>'
     +'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:12px;align-items:start">'+provRows+'</div></div>'):'';
   if(typeof c5paStyle==='function')c5paStyle();
   var ncFinding='<em>'+live+'</em> of '+nc.length+' capabilities run on live telemetry'+(off>0?(', and <span class="bad">'+off+'</span> '+(off===1?'is':'are')+' not deployed.'):' &mdash; full coverage.');
@@ -6089,15 +6089,15 @@ function c5NeuronControls(host){
     // the boxes themselves are unchanged, only their arrangement. Left: non-adversarial lanes;
     // right: framework projection stacked over the risk-driver matrix.
     +'<div style="display:flex;flex-wrap:wrap;gap:24px;margin-top:24px;align-items:flex-start">'
-    +'<div style="flex:1 1 500px;min-width:0"><div style="font-size:12.5px;font-weight:800;color:var(--ink);margin-bottom:4px">Non-adversarial risk lanes</div>'
-    +'<div style="font-size:11.5px;color:var(--muted);margin-bottom:8px">The exposures that are not an intrusion — outage, corruption, insider, supply-chain, privacy — each covered by the same telemetry, so the whole estate is answered, not just crown jewels.</div>'
+    +'<div style="flex:1 1 500px;min-width:0"><div style="font-size:12px;font-weight:800;color:var(--ink);margin-bottom:4px">Non-adversarial risk lanes</div>'
+    +'<div style="font-size:11px;color:var(--muted);margin-bottom:8px">The exposures that are not an intrusion — outage, corruption, insider, supply-chain, privacy — each covered by the same telemetry, so the whole estate is answered, not just crown jewels.</div>'
     +'<div style="overflow-x:auto">'+laneRows+'</div></div>'
     +'<div style="flex:1 1 420px;min-width:0;display:flex;flex-direction:column;gap:22px">'
-    +'<div><div style="font-size:12.5px;font-weight:800;color:var(--ink);margin-bottom:4px">Framework projection</div>'
-    +'<div style="font-size:11.5px;color:var(--muted);margin-bottom:10px">The same measurements, reported into each framework by control ID. One control model, six frameworks.</div>'
+    +'<div><div style="font-size:12px;font-weight:800;color:var(--ink);margin-bottom:4px">Framework projection</div>'
+    +'<div style="font-size:11px;color:var(--muted);margin-bottom:10px">The same measurements, reported into each framework by control ID. One control model, six frameworks.</div>'
     +'<div style="display:flex;flex-wrap:wrap;gap:10px">'+fwStrip+'</div></div>'
-    +'<div><div style="font-size:12.5px;font-weight:800;color:var(--ink);margin-bottom:4px">Risk-driver coverage by framework</div>'
-    +'<div style="font-size:11.5px;color:var(--muted);margin-bottom:10px">Every framework, split by <b>why</b> each control matters — the adversarial lens (ATT&amp;CK) and the five non-adversarial lanes. Cells show controls <b>evidenced by deployed telemetry</b> / controls mapped. The dual-lens view: compliance is not only about stopping attackers — it is also uptime, integrity, insider, supply-chain and privacy.</div>'
+    +'<div><div style="font-size:12px;font-weight:800;color:var(--ink);margin-bottom:4px">Risk-driver coverage by framework</div>'
+    +'<div style="font-size:11px;color:var(--muted);margin-bottom:10px">Every framework, split by <b>why</b> each control matters — the adversarial lens (ATT&amp;CK) and the five non-adversarial lanes. Cells show controls <b>evidenced by deployed telemetry</b> / controls mapped. The dual-lens view: compliance is not only about stopping attackers — it is also uptime, integrity, insider, supply-chain and privacy.</div>'
     +driverMatrix+'</div></div>'
     +'</div>'
     +provPanel
@@ -6126,7 +6126,7 @@ function c5NeuronMap(host){
     return '<tr>'
       +'<td style="'+td+'"><b style="font-size:12px;color:var(--ink)">'+esc(c.name)+'</b><div style="font-size:10px;color:var(--muted)">'+esc(c.k)+' · '+esc(c.tool||'')+'</div></td>'
       +'<td style="'+td+';font-size:11px;color:var(--ink-2);white-space:nowrap">'+esc(x.role)+((fw&&fw.weight)?(' · <span style="color:var(--muted)">w'+fw.weight+'</span>'):'')+'</td>'
-      +'<td style="'+td+';font-size:10.5px;color:var(--ink-2);max-width:150px">'+esc(lanes||'—')+'</td>'
+      +'<td style="'+td+';font-size:10px;color:var(--ink-2);max-width:150px">'+esc(lanes||'—')+'</td>'
       +cells+'</tr>';
   }).join('');
   var thBase='text-align:left;padding:8px 10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);border-bottom:2px solid var(--line);white-space:nowrap';
@@ -6135,8 +6135,8 @@ function c5NeuronMap(host){
   host.innerHTML=
     '<div style="border:1px solid var(--warn);background:color-mix(in srgb,var(--warn) 8%,transparent);border-radius:12px;padding:12px 16px;margin-bottom:14px">'
     +'<div style="font-size:13px;font-weight:800;color:var(--warn)">◆ INTERNAL — Nerion IP · not for client distribution</div>'
-    +'<div style="font-size:11.5px;color:var(--ink-2);line-height:1.6;margin-top:4px">The proprietary crosswalk that turns one telemetry pull into six-framework coverage — Nerion’s core mapping. This tab is gated (<code>localStorage.cyberrx_internal=\'1\'</code>) and never shown to a client. <b style="color:var(--warn)">Caveat:</b> gating hides the view, not the data — this map still ships inside <code>ciso5.js</code> and is readable in devtools. To truly protect it, the crosswalk must move server-side behind auth (backend parity).</div></div>'
-    +'<div style="font-size:12.5px;color:var(--ink-2);margin-bottom:10px"><b style="color:var(--ink)">'+rows.length+'</b> Neuron Controls · projecting onto <b style="color:var(--ink)">'+FW.reduce(function(a,f){return a+totals[f.k];},0)+'</b> control mappings across '+FW.length+' frameworks.</div>'
+    +'<div style="font-size:11px;color:var(--ink-2);line-height:1.6;margin-top:4px">The proprietary crosswalk that turns one telemetry pull into six-framework coverage — Nerion’s core mapping. This tab is gated (<code>localStorage.cyberrx_internal=\'1\'</code>) and never shown to a client. <b style="color:var(--warn)">Caveat:</b> gating hides the view, not the data — this map still ships inside <code>ciso5.js</code> and is readable in devtools. To truly protect it, the crosswalk must move server-side behind auth (backend parity).</div></div>'
+    +'<div style="font-size:12px;color:var(--ink-2);margin-bottom:10px"><b style="color:var(--ink)">'+rows.length+'</b> Neuron Controls · projecting onto <b style="color:var(--ink)">'+FW.reduce(function(a,f){return a+totals[f.k];},0)+'</b> control mappings across '+FW.length+' frameworks.</div>'
     +'<div style="overflow-x:auto;border:1px solid var(--line);border-radius:12px"><table style="border-collapse:collapse;width:100%;min-width:1000px"><thead>'+head+'</thead><tbody>'+rows+'</tbody></table></div>'
     +'<div style="font-size:11px;color:var(--muted);margin-top:10px">CSF + 800-53 come from <code>CAP_FRAMEWORK</code> (with weights); CIS / ISO 27001 / SOC 2 / PCI from <code>NEURON_XWALK</code>. External frameworks are referenced by control ID only — no requirement prose is stored.</div>';
 }
@@ -6239,7 +6239,7 @@ function c5FrameworksClassic(host){
     '<input type="file" id="c5fwFinalFile" accept=".pptx,.ppt,.pdf,.key" style="display:none">';
   // Last-assessed line with a "N documents reviewed" link that opens the review.
   var docN=(typeof c5DocCount==='function')?c5DocCount():0;
-  var lastAssessed='<div style="font-size:12.5px;color:var(--ink-2)">Last assessed <b>'+fmt(now)+'</b> · next refresh <b>'+fmt(nextD)+'</b>'+(docN?(' · <a id="c5docsLink" style="color:var(--blue);font-weight:600;cursor:pointer">'+docN+' documents reviewed</a>'):'')+'</div>';
+  var lastAssessed='<div style="font-size:12px;color:var(--ink-2)">Last assessed <b>'+fmt(now)+'</b> · next refresh <b>'+fmt(nextD)+'</b>'+(docN?(' · <a id="c5docsLink" style="color:var(--blue);font-weight:600;cursor:pointer">'+docN+' documents reviewed</a>'):'')+'</div>';
   // Peer-benchmark box — sits inside the top card, in the empty space to the right
   // of the Reassess row. Its eyebrow names the selected framework so it reads e.g.
   // "Peer benchmark · NIST CSF 2.0 · sample preview" and re-titles on pill switch.
@@ -6268,7 +6268,7 @@ function c5FrameworksClassic(host){
       '<div style="font-weight:600;font-size:13px;color:var(--ink);margin-bottom:4px">Continuous monitoring · all '+_tot+' NIST CSF 2.0 controls</div>'+
       // Continuous assessment = every control a connected tool pulls telemetry for (live + hybrid),
       // re-scored on each refresh — not point-in-time evidence collection.
-      '<div style="font-size:11.5px;color:var(--muted);margin-bottom:11px"><b style="color:var(--good)">'+(_sc.sys+_sc.hybrid)+' of '+_tot+'</b> are continuously assessed from your connected tools — <b>'+_sc.sys+'</b> fully automated (re-scored on every telemetry refresh), <b>'+_sc.hybrid+'</b> hybrid (telemetry pulled, a human validates). <b>'+_sc.doc+'</b> are policy-governed — attested from an analyzed document, inherently not automatable'+(_sc.none?(', and <b>'+_sc.none+'</b> await a source (the plan is on the right)'):'')+'. Continuous, not a point-in-time audit.</div>'+
+      '<div style="font-size:11px;color:var(--muted);margin-bottom:11px"><b style="color:var(--good)">'+(_sc.sys+_sc.hybrid)+' of '+_tot+'</b> are continuously assessed from your connected tools — <b>'+_sc.sys+'</b> fully automated (re-scored on every telemetry refresh), <b>'+_sc.hybrid+'</b> hybrid (telemetry pulled, a human validates). <b>'+_sc.doc+'</b> are policy-governed — attested from an analyzed document, inherently not automatable'+(_sc.none?(', and <b>'+_sc.none+'</b> await a source (the plan is on the right)'):'')+'. Continuous, not a point-in-time audit.</div>'+
       '<div style="display:flex;height:10px;border-radius:6px;overflow:hidden;background:var(--line)">'+
         '<div style="width:'+_w(_sc.sys)+';background:var(--good)"></div>'+
         (_sc.hybrid?('<div style="width:'+_w(_sc.hybrid)+';background:color-mix(in srgb,var(--good) 50%,var(--blue))"></div>'):'')+
@@ -6286,7 +6286,7 @@ function c5FrameworksClassic(host){
     '</div>'+
     '<div>'+
       '<div style="font-weight:600;font-size:13px;color:var(--ink);margin-bottom:9px">Bring more under continuous monitoring</div>'+
-      (_gaps.length?_gaps.map(function(g){return '<div style="font-size:12.5px;color:var(--ink-2);margin-bottom:6px">'+(g.kind==='d'?'↥ Upload':'⚡ Connect')+' <b>'+c5esc(g.label)+'</b>'+(g.n>1?(' ('+g.n+')'):'')+(g.kind==='d'?(' <a class="c5gap-up" data-c5gapup="'+c5esc(g.s||g.label)+'" title="Go to onboarding and upload this document" style="color:var(--blue);font-weight:600;cursor:pointer">upload now →</a>'):(' <a class="c5gap-up" data-c5gapconn="'+c5esc(g.label)+'" title="Go to onboarding and connect this tool" style="color:var(--blue);font-weight:600;cursor:pointer">connect now →</a>'))+'</div>';}).join(''):'<div style="font-size:12.5px;color:var(--good);margin-bottom:6px">All controls evidenced.</div>')+
+      (_gaps.length?_gaps.map(function(g){return '<div style="font-size:12px;color:var(--ink-2);margin-bottom:6px">'+(g.kind==='d'?'↥ Upload':'⚡ Connect')+' <b>'+c5esc(g.label)+'</b>'+(g.n>1?(' ('+g.n+')'):'')+(g.kind==='d'?(' <a class="c5gap-up" data-c5gapup="'+c5esc(g.s||g.label)+'" title="Go to onboarding and upload this document" style="color:var(--blue);font-weight:600;cursor:pointer">upload now →</a>'):(' <a class="c5gap-up" data-c5gapconn="'+c5esc(g.label)+'" title="Go to onboarding and connect this tool" style="color:var(--blue);font-weight:600;cursor:pointer">connect now →</a>'))+'</div>';}).join(''):'<div style="font-size:12px;color:var(--good);margin-bottom:6px">All controls evidenced.</div>')+
       '<button id="c5reanalyzeBtn" type="button" style="margin-top:4px;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);font-weight:600;font-size:12px;padding:6px 12px;border-radius:8px;cursor:pointer">↻ Re-score documents</button>'+
     '</div>'+
   '</div>');
@@ -6457,7 +6457,7 @@ function c5DocXwalk(id){
 function c5DocChips(x){
   var FW=[['csf','CSF 2.0'],['r53','800-53'],['cis','CIS v8'],['soc2','SOC 2'],['hipaa','HIPAA'],['iso','ISO 27001']];
   var parts=FW.map(function(f){var ids=x[f[0]]||[];if(!ids.length)return '';
-    return '<span style="display:inline-flex;align-items:center;gap:5px;font-size:10.5px"><span style="color:var(--muted);font-weight:600">'+f[1]+'</span>'+ids.map(function(i){return '<span class="c5fw-chip" style="cursor:default">'+c5esc(i)+'</span>';}).join('')+'</span>';
+    return '<span style="display:inline-flex;align-items:center;gap:5px;font-size:10px"><span style="color:var(--muted);font-weight:600">'+f[1]+'</span>'+ids.map(function(i){return '<span class="c5fw-chip" style="cursor:default">'+c5esc(i)+'</span>';}).join('')+'</span>';
   }).filter(Boolean);
   return parts.length?('<div style="display:flex;flex-wrap:wrap;gap:10px 14px;margin-top:8px">'+parts.join('')+'</div>'):'';
 }
@@ -6468,7 +6468,7 @@ function c5DocsReviewHtml(){
   if(!docs.length&&!Object.keys(scores).length){
     return '<div style="padding:8px 2px"><div style="font-size:15px;font-weight:600;color:var(--ink)">No policies analyzed yet</div>'+
       '<p style="color:var(--ink-2);font-size:13px;line-height:1.55;max-width:640px">Upload your security policies during onboarding and Nerion reads each one control-by-control against NIST CSF 2.0 and NIST SP 800-53, then carries every finding across CIS, SOC 2 and HIPAA. The full review appears here, mapped to the controls in this tab.</p>'+
-      '<button data-c5onb="document review" style="margin-top:6px;border:1px solid var(--line);background:var(--surface);color:var(--blue);font-weight:600;font-size:12.5px;padding:8px 14px;border-radius:8px;cursor:pointer">Go to document review →</button></div>';
+      '<button data-c5onb="document review" style="margin-top:6px;border:1px solid var(--line);background:var(--surface);color:var(--blue);font-weight:600;font-size:12px;padding:8px 14px;border-radius:8px;cursor:pointer">Go to document review →</button></div>';
   }
   // Index the per-control review by the document that produced it.
   var byDoc={};Object.keys(scores).forEach(function(cid){var s=scores[cid]||{};var dn=s.doc||'Uploaded policy';(byDoc[dn]=byDoc[dn]||[]).push({id:cid,s:s});});
@@ -6499,27 +6499,27 @@ function c5DocsReviewHtml(){
         var attrs=Array.isArray(r.s.attrs)?r.s.attrs:[];
         var present=attrs.filter(function(a){return a.found;}),missing=attrs.filter(function(a){return !a.found;});
         function chip(a,ok){var rn=(a.reasoning?(' title="'+c5esc(a.reasoning)+'"'):'');var cc=ok?'good':'crit';
-          return '<span'+rn+' style="font-size:10.5px;padding:2px 8px;border-radius:20px;background:color-mix(in srgb,var(--'+cc+') '+(ok?'14':'10')+'%,var(--surface));color:var(--'+cc+');border:1px solid color-mix(in srgb,var(--'+cc+') '+(ok?'30':'26')+'%,transparent)">'+(ok?'✓ ':'✗ ')+c5esc(a.label)+'</span>';}
+          return '<span'+rn+' style="font-size:10px;padding:2px 8px;border-radius:20px;background:color-mix(in srgb,var(--'+cc+') '+(ok?'14':'10')+'%,var(--surface));color:var(--'+cc+');border:1px solid color-mix(in srgb,var(--'+cc+') '+(ok?'30':'26')+'%,transparent)">'+(ok?'✓ ':'✗ ')+c5esc(a.label)+'</span>';}
         var attrHtml=attrs.length?('<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">'+
           present.map(function(a){return chip(a,true);}).join('')+missing.map(function(a){return chip(a,false);}).join('')+'</div>'):'';
         // Verbatim evidence quotes — the auditor workpaper proof (LLM review only).
         var evRows=present.filter(function(a){return a.evidence;});
         var evHtml=evRows.length?('<div style="margin-top:8px;display:flex;flex-direction:column;gap:5px">'+evRows.map(function(a){
-          return '<div style="border-left:2px solid color-mix(in srgb,var(--good) 55%,var(--line));padding:2px 0 2px 9px"><div style="font-size:10px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--good)">'+c5esc(a.label)+'</div><div style="font-size:11.5px;color:var(--ink-2);font-style:italic;line-height:1.5">“'+c5esc(String(a.evidence).slice(0,260))+'”</div></div>';
+          return '<div style="border-left:2px solid color-mix(in srgb,var(--good) 55%,var(--line));padding:2px 0 2px 9px"><div style="font-size:10px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--good)">'+c5esc(a.label)+'</div><div style="font-size:11px;color:var(--ink-2);font-style:italic;line-height:1.5">“'+c5esc(String(a.evidence).slice(0,260))+'”</div></div>';
         }).join('')+'</div>'):'';
         // Prefer the assessor's own narrative (LLM); otherwise compute one from coverage.
         var narr=(r.s.narrative&&String(r.s.narrative).trim())?c5esc(r.s.narrative):
           ((attrs.length?('The policy addresses this control with <b>'+present.length+' of '+attrs.length+'</b> expected attribute'+(attrs.length>1?'s':'')+' present'+(missing.length?(' — missing '+missing.map(function(a){return a.label.toLowerCase();}).join(', ')):', all reviewed attributes present')+'. '):'')+
           'Assessed at <b>CMMI '+c+' — '+(CMMI_LBL[c]||'')+'</b>'+(c<3?', below the target of 3.5; strengthen the policy language above to raise maturity.':c<4?', meeting baseline; tighten the remaining attributes to reach optimized.':', a mature, well-evidenced control.'));
-        var gapHtml=(r.s.gap&&String(r.s.gap).trim())?('<div style="font-size:11.5px;color:var(--crit);margin-top:6px"><b>To raise maturity:</b> '+c5esc(r.s.gap)+'</div>'):'';
+        var gapHtml=(r.s.gap&&String(r.s.gap).trim())?('<div style="font-size:11px;color:var(--crit);margin-top:6px"><b>To raise maturity:</b> '+c5esc(r.s.gap)+'</div>'):'';
         var x=c5DocXwalk(r.id);
         return '<div id="c5doc-'+c5esc(r.id)+'" style="padding:12px 0;border-top:1px solid var(--line)">'+
           '<div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">'+
             '<span style="font-size:11px;font-weight:700;color:#fff;background:var(--'+col+');border-radius:6px;padding:1px 7px">CMMI '+c+'</span>'+
-            '<b style="font-family:var(--serif);font-size:13.5px">'+c5esc(r.id)+'</b>'+
-            (nm?('<span style="color:var(--ink-2);font-size:12.5px">'+c5esc(nm)+'</span>'):'')+
+            '<b style="font-family:var(--serif);font-size:13px">'+c5esc(r.id)+'</b>'+
+            (nm?('<span style="color:var(--ink-2);font-size:12px">'+c5esc(nm)+'</span>'):'')+
           '</div>'+
-          '<div style="font-size:12.5px;color:var(--ink-2);line-height:1.55;margin-top:6px">'+narr+'</div>'+
+          '<div style="font-size:12px;color:var(--ink-2);line-height:1.55;margin-top:6px">'+narr+'</div>'+
           attrHtml+evHtml+gapHtml+c5DocChips(x)+
         '</div>';
       }).join('');
@@ -6529,7 +6529,7 @@ function c5DocsReviewHtml(){
       '<div style="padding:16px 20px;background:var(--surface-2);border-bottom:1px solid var(--line)">'+
         '<div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><span style="font-size:18px">📄</span><b style="font-family:var(--serif);font-size:17px;color:var(--ink)">'+c5esc(dn)+'</b>'+(meta.type?('<span style="font-size:12px;color:var(--ink-2)">'+c5esc(meta.type)+'</span>'):'')+
           ((meta.engine==='llm'||rows.some(function(r){return r.s&&(r.s.narrative||(Array.isArray(r.s.attrs)&&r.s.attrs.some(function(a){return a.evidence;})));}))?'<span style="font-size:10px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--blue);background:color-mix(in srgb,var(--blue) 12%,var(--surface));border:1px solid color-mix(in srgb,var(--blue) 30%,transparent);border-radius:20px;padding:2px 9px">✦ AI-reviewed</span>':'')+
-          (textMap[dn]?('<button type="button" data-c5docview="'+c5esc(dn)+'" title="Open and read the uploaded document" style="margin-left:auto;flex:none;border:1px solid color-mix(in srgb,var(--blue) 40%,var(--line));background:var(--surface);color:var(--blue);font-family:inherit;font-size:11.5px;font-weight:600;padding:5px 12px;border-radius:8px;cursor:pointer">📄 Open document</button>'):'')+'</div>'+
+          (textMap[dn]?('<button type="button" data-c5docview="'+c5esc(dn)+'" title="Open and read the uploaded document" style="margin-left:auto;flex:none;border:1px solid color-mix(in srgb,var(--blue) 40%,var(--line));background:var(--surface);color:var(--blue);font-family:inherit;font-size:11px;font-weight:600;padding:5px 12px;border-radius:8px;cursor:pointer">📄 Open document</button>'):'')+'</div>'+
         '<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:10px">'+
           '<div><span style="font-size:22px;font-weight:700;font-family:var(--serif);color:var(--'+stColor(mean)+')">'+mean.toFixed(1)+'</span><span style="font-size:12px;color:var(--muted)"> / 5 mean CMMI</span></div>'+
           '<div style="font-size:12px;color:var(--ink-2)"><b style="color:var(--ink)">'+rows.length+'</b> control'+(rows.length!==1?'s':'')+' evidenced · <b style="color:var(--ink)">'+matched+'</b> of '+total+' attributes present</div>'+
@@ -6722,16 +6722,16 @@ function c5ViewDoc(fname){
       var ctrls=m.items.map(function(x){return c5esc(x.control);}).filter(function(v,ix,arr){return arr.indexOf(v)===ix;}).join(' · ');
       var labels=m.items.map(function(x){return x.label;}).filter(function(v,ix,arr){return arr.indexOf(v)===ix;}).map(c5esc).join(', ');
       return '<div class="c5annp" id="c5annp-'+i+'" data-annidx="'+i+'" style="border:1px solid var(--line);border-left:3px solid var(--good);border-radius:8px;padding:9px 11px;margin-bottom:8px;cursor:pointer;background:var(--surface)">'+
-        '<div style="display:flex;align-items:center;gap:7px"><span style="flex:none;width:18px;height:18px;border-radius:50%;background:var(--good);color:#fff;font-size:10px;font-weight:800;display:inline-flex;align-items:center;justify-content:center">'+(i+1)+'</span><b style="font-size:12.5px;color:var(--ink)">'+labels+'</b></div>'+
+        '<div style="display:flex;align-items:center;gap:7px"><span style="flex:none;width:18px;height:18px;border-radius:50%;background:var(--good);color:#fff;font-size:10px;font-weight:800;display:inline-flex;align-items:center;justify-content:center">'+(i+1)+'</span><b style="font-size:12px;color:var(--ink)">'+labels+'</b></div>'+
         '<div style="font-size:11px;color:var(--muted);margin-top:3px">satisfies '+ctrls+'</div>'+
-        '<div style="font-size:11.5px;color:var(--ink-2);font-style:italic;line-height:1.5;margin-top:5px;border-left:2px solid color-mix(in srgb,var(--good) 45%,var(--line));padding-left:8px">“'+c5esc(String(m.quote).slice(0,220))+(String(m.quote).length>220?'…':'')+'”</div>'+
+        '<div style="font-size:11px;color:var(--ink-2);font-style:italic;line-height:1.5;margin-top:5px;border-left:2px solid color-mix(in srgb,var(--good) 45%,var(--line));padding-left:8px">“'+c5esc(String(m.quote).slice(0,220))+(String(m.quote).length>220?'…':'')+'”</div>'+
       '</div>';
     }
     function gapItem(g){
       return '<div style="border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:8px;padding:8px 11px;margin-bottom:7px;background:var(--surface)">'+
-        '<div style="display:flex;align-items:center;gap:7px"><span style="color:var(--warn);font-weight:800">⚠</span><b style="font-size:12.5px;color:var(--ink)">'+c5esc(g.label)+'</b></div>'+
+        '<div style="display:flex;align-items:center;gap:7px"><span style="color:var(--warn);font-weight:800">⚠</span><b style="font-size:12px;color:var(--ink)">'+c5esc(g.label)+'</b></div>'+
         '<div style="font-size:11px;color:var(--muted);margin-top:3px">expected for '+c5esc(g.control)+'</div>'+
-        (g.reason?('<div style="font-size:11.5px;color:var(--ink-2);line-height:1.5;margin-top:4px">'+c5esc(g.reason.slice(0,200))+'</div>'):'')+
+        (g.reason?('<div style="font-size:11px;color:var(--ink-2);line-height:1.5;margin-top:4px">'+c5esc(g.reason.slice(0,200))+'</div>'):'')+
       '</div>';
     }
     // Split keyword-matched requirements by whether we could actually LOCATE them in this
@@ -6744,22 +6744,22 @@ function c5ViewDoc(fname){
     matched.forEach(function(mm,j){ if(_kw[j]!=null){matchedLoc.push({mm:mm,ann:_kw[j]});} else {matchedUnloc.push(mm);} });
     function matchLocItem(o){var mm=o.mm,ann=o.ann;
       return '<div class="c5annp" id="c5annp-'+ann+'" data-annidx="'+ann+'" style="border:1px solid var(--line);border-left:3px solid var(--blue);border-radius:8px;padding:8px 11px;margin-bottom:7px;background:var(--surface);cursor:pointer">'+
-        '<div style="display:flex;align-items:center;gap:7px"><span style="flex:none;width:18px;height:18px;border-radius:50%;background:var(--blue);color:#fff;font-size:10px;font-weight:800;display:inline-flex;align-items:center;justify-content:center">'+(ann+1)+'</span><b style="font-size:12.5px;color:var(--ink)">'+c5esc(mm.label)+'</b></div>'+
+        '<div style="display:flex;align-items:center;gap:7px"><span style="flex:none;width:18px;height:18px;border-radius:50%;background:var(--blue);color:#fff;font-size:10px;font-weight:800;display:inline-flex;align-items:center;justify-content:center">'+(ann+1)+'</span><b style="font-size:12px;color:var(--ink)">'+c5esc(mm.label)+'</b></div>'+
         '<div style="font-size:11px;color:var(--muted);margin-top:3px">located for '+mm.items.map(c5esc).join(' · ')+' · <span style="color:var(--blue)">click to see it in the document →</span></div></div>';
     }
     function matchUnlocItem(mm){
       return '<div style="border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:8px;padding:7px 11px;margin-bottom:6px;background:var(--surface);opacity:.9"><div style="display:flex;align-items:center;gap:7px"><span style="color:var(--warn);font-weight:800">⚠</span><b style="font-size:12px;color:var(--ink)">'+c5esc(mm.label)+'</b></div><div style="font-size:11px;color:var(--muted);margin-top:2px">'+mm.items.map(c5esc).join(' · ')+' — <b>not located in this document</b></div></div>';
     }
     var panel='<div style="font-size:12px;color:var(--ink-2);margin-bottom:12px;line-height:1.5"><b style="color:var(--good)">'+(met.length+matchedLoc.length)+'</b> requirement'+((met.length+matchedLoc.length)===1?'':'s')+' evidenced in this text'+(met.length?(' ('+met.length+' with a quoted passage)'):'')+' · <b style="color:var(--warn)">'+gaps.length+'</b> gap'+(gaps.length===1?'':'s')+(matchedUnloc.length?(' · <b style="color:var(--warn)">'+matchedUnloc.length+'</b> scored elsewhere, not found here'):'')+'.</div>'+
-      (met.length?('<div style="font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--good);margin:4px 0 8px">✓ Evidenced — quoted in the text</div>'+met.map(metItem).join('')):'')+
-      (matchedLoc.length?('<div style="font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--blue);margin:14px 0 6px">✓ Located — sentence match</div><div style="font-size:11px;color:var(--muted);margin-bottom:8px">Found in <b>this</b> document and highlighted in <b style="color:var(--blue)">blue</b> on the sentence carrying the most of the requirement’s language — click one to jump to it.</div>'+matchedLoc.map(matchLocItem).join('')):'')+
-      (matchedUnloc.length?('<div style="font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--warn);margin:14px 0 6px">⚠ Scored elsewhere — not found in this document</div><div style="font-size:11px;color:var(--muted);margin-bottom:8px">The control score credited these, but Nerion could <b>not</b> locate them in this document’s text. That is expected when the file is a <b>data export</b> (e.g. a risk-register CSV) rather than a policy or procedure — a list of risks is not the same as documenting the control. They are <b>not</b> evidenced here; verify against the document that actually describes the control.</div>'+matchedUnloc.map(matchUnlocItem).join('')):'')+
-      (gaps.length?('<div style="font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--warn);margin:14px 0 8px">⚠ Gaps — expected, not found</div>'+gaps.map(gapItem).join('')):'')+
-      ((!met.length&&!gaps.length&&!matched.length)?('<div style="font-size:12.5px;color:var(--ink-2);line-height:1.6">No attribute-level review is on file for this document, so it isn’t contributing to any control score. This happens when a policy was uploaded but not analysed. Run the review to score it against the control catalog.</div>'+((typeof window!=='undefined'&&typeof window.reanalyzeStoredDocs==='function')?('<button type="button" id="c5annReanalyze" style="margin-top:12px;border:1px solid var(--line);background:var(--surface);color:var(--blue);font-weight:600;font-size:12.5px;padding:8px 14px;border-radius:8px;cursor:pointer">↻ Run document review</button>'):'<div style="margin-top:10px;font-size:11.5px;color:var(--muted)">Re-upload and analyse this policy in onboarding to score it.</div>')):'');
+      (met.length?('<div style="font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--good);margin:4px 0 8px">✓ Evidenced — quoted in the text</div>'+met.map(metItem).join('')):'')+
+      (matchedLoc.length?('<div style="font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--blue);margin:14px 0 6px">✓ Located — sentence match</div><div style="font-size:11px;color:var(--muted);margin-bottom:8px">Found in <b>this</b> document and highlighted in <b style="color:var(--blue)">blue</b> on the sentence carrying the most of the requirement’s language — click one to jump to it.</div>'+matchedLoc.map(matchLocItem).join('')):'')+
+      (matchedUnloc.length?('<div style="font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--warn);margin:14px 0 6px">⚠ Scored elsewhere — not found in this document</div><div style="font-size:11px;color:var(--muted);margin-bottom:8px">The control score credited these, but Nerion could <b>not</b> locate them in this document’s text. That is expected when the file is a <b>data export</b> (e.g. a risk-register CSV) rather than a policy or procedure — a list of risks is not the same as documenting the control. They are <b>not</b> evidenced here; verify against the document that actually describes the control.</div>'+matchedUnloc.map(matchUnlocItem).join('')):'')+
+      (gaps.length?('<div style="font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--warn);margin:14px 0 8px">⚠ Gaps — expected, not found</div>'+gaps.map(gapItem).join('')):'')+
+      ((!met.length&&!gaps.length&&!matched.length)?('<div style="font-size:12px;color:var(--ink-2);line-height:1.6">No attribute-level review is on file for this document, so it isn’t contributing to any control score. This happens when a policy was uploaded but not analysed. Run the review to score it against the control catalog.</div>'+((typeof window!=='undefined'&&typeof window.reanalyzeStoredDocs==='function')?('<button type="button" id="c5annReanalyze" style="margin-top:12px;border:1px solid var(--line);background:var(--surface);color:var(--blue);font-weight:600;font-size:12px;padding:8px 14px;border-radius:8px;cursor:pointer">↻ Run document review</button>'):'<div style="margin-top:10px;font-size:11px;color:var(--muted)">Re-upload and analyse this policy in onboarding to score it.</div>')):'');
     wrap.innerHTML='<div style="width:min(1160px,96vw);max-height:92vh;display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 24px 60px rgba(20,33,72,.45);overflow:hidden">'+
       '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line);background:var(--surface-2)">'+
         '<div style="min-width:0;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><b style="font-family:var(--serif);font-size:15px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📄 '+c5esc(fname)+'</b><span style="font-size:10px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--blue);background:color-mix(in srgb,var(--blue) 12%,var(--surface));border:1px solid color-mix(in srgb,var(--blue) 30%,transparent);border-radius:20px;padding:2px 9px">✦ Nauditor-annotated</span></div>'+
-        '<button type="button" id="c5docViewerClose" style="flex:none;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 13px;font-weight:600;font-size:12.5px;cursor:pointer">Close</button>'+
+        '<button type="button" id="c5docViewerClose" style="flex:none;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 13px;font-weight:600;font-size:12px;cursor:pointer">Close</button>'+
       '</div>'+
       '<div style="display:flex;flex:1 1 auto;min-height:0">'+
         '<div style="flex:1.7 1 0;min-width:0;min-height:0;overflow-y:auto;padding:16px 20px;border-right:1px solid var(--line)">'+docCol+'</div>'+
@@ -6776,7 +6776,7 @@ function c5ViewDoc(fname){
     var _rz=document.getElementById('c5annReanalyze');
     if(_rz)_rz.onclick=function(){
       var host=_rz.parentNode;_rz.disabled=true;_rz.textContent='↻ Reviewing…';
-      function fail(msg){if(host)host.innerHTML='<div style="font-size:12.5px;color:var(--ink-2);line-height:1.6">'+msg+'</div>';}
+      function fail(msg){if(host)host.innerHTML='<div style="font-size:12px;color:var(--ink-2);line-height:1.6">'+msg+'</div>';}
       if(typeof window.reanalyzeStoredDocs!=='function'){fail('The document-review engine isn’t available here. Re-upload and analyse this policy in onboarding to generate its annotations.');return;}
       try{
         window.reanalyzeStoredDocs(function(nScores,nDocs){
@@ -6980,7 +6980,7 @@ function c5fwPeerSampleHTML(fwName){
   var order=['Govern','Identify','Protect','Detect','Respond','Recover'],snf=snap.functions||{};
   order.forEach(function(fn){if(S.functions[fn]&&typeof peerBar==='function')bars+=peerBar(fn,snf[fn],S.functions[fn]);});
   bars+='</div>';
-  var legend='<div class="peer-legend" style="margin-top:6px"><span><i style="background:var(--blue-soft);border:1px solid rgba(37,99,235,.35)"></i>cohort band (p25–p75)</span><span><i style="background:var(--blue);width:2px"></i>cohort median</span><span><i style="background:var(--good);border-radius:50%;border:1.5px solid var(--card,#fff);box-shadow:0 1px 2px rgba(0,0,0,.3)"></i><b style="color:var(--ink-2)">the ● dot = My Organization</b></span><span style="color:var(--muted)">its colour: green ≥ median · amber ≥ 25th · red below 25th</span></div>';
+  var legend='<div class="peer-legend" style="margin-top:6px"><span><i style="background:var(--blue-soft);border:1px solid rgba(26,95,160,.35)"></i>cohort band (p25–p75)</span><span><i style="background:var(--blue);width:2px"></i>cohort median</span><span><i style="background:var(--good);border-radius:50%;border:1.5px solid var(--card,#fff);box-shadow:0 1px 2px rgba(0,0,0,.3)"></i><b style="color:var(--ink-2)">the ● dot = My Organization</b></span><span style="color:var(--muted)">its colour: green ≥ median · amber ≥ 25th · red below 25th</span></div>';
   return banner+hero+bars+legend;
 }
 /* Open the full community benchmark (preview → verify → compare) in the drill
@@ -7031,7 +7031,7 @@ function c5fwPeerRender(){
       var fns=C5FW_PEER.functions||{},snap=(window.FW_SNAPSHOT&&window.FW_SNAPSHOT.functions)||{},order=['Govern','Identify','Protect','Detect','Respond','Recover'];
       order.forEach(function(fn){if(fns[fn]&&typeof peerBar==='function')bars+=peerBar(fn,snap[fn],fns[fn]);});
       bars+='</div>';
-      var legend='<div class="peer-legend" style="margin-top:6px"><span><i style="background:var(--blue-soft);border:1px solid rgba(37,99,235,.35)"></i>cohort band (p25–p75)</span><span><i style="background:var(--blue);width:2px"></i>cohort median</span><span><i style="background:var(--good);border-radius:50%;border:1.5px solid var(--card,#fff);box-shadow:0 1px 2px rgba(0,0,0,.3)"></i><b style="color:var(--ink-2)">the ● dot = My Organization</b></span><span style="color:var(--muted)">its colour: green ≥ median · amber ≥ 25th · red below 25th</span></div>';
+      var legend='<div class="peer-legend" style="margin-top:6px"><span><i style="background:var(--blue-soft);border:1px solid rgba(26,95,160,.35)"></i>cohort band (p25–p75)</span><span><i style="background:var(--blue);width:2px"></i>cohort median</span><span><i style="background:var(--good);border-radius:50%;border:1.5px solid var(--card,#fff);box-shadow:0 1px 2px rgba(0,0,0,.3)"></i><b style="color:var(--ink-2)">the ● dot = My Organization</b></span><span style="color:var(--muted)">its colour: green ≥ median · amber ≥ 25th · red below 25th</span></div>';
       cmp=hero+bars+legend;
     }
     body='<div class="cn" style="margin-top:6px">Comparing <b>My Organization</b>’s '+fwName+' maturity against the DTNKShield community. Pick a cohort:</div>'+cats+
@@ -7070,7 +7070,7 @@ function c5fwCtlRow(c){var selc=(C5FW_CTRL===c.id)?' sel':'';
    (Backend-generated prose — d.interpretation / d.narrative / d.caveat — is
    returned by the API in English; translating that is a backend concern.)
    ==========================================================================*/
-var C5OSBTN='background:var(--blue);color:#fff;border:none;border-radius:7px;padding:6px 12px;font-size:11.5px;font-weight:700;cursor:pointer';
+var C5OSBTN='background:var(--blue);color:#fff;border:none;border-radius:7px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer';
 function c5osApi(){return (typeof apiBase==='function')?apiBase():'';}
 function c5osOrg(){return (typeof orgId==='function')?orgId():'';}
 function c5osT(k,p){return (typeof nt==='function')?nt(k,p):k;}
@@ -7103,31 +7103,31 @@ function c5osFillTrack(){ c5osGet('/api/forecast/accuracy').then(function(d){
   var el=document.getElementById('c5os-track'); if(!el)return; if(!d){el.innerHTML=c5osNo();return;}
   if(!d.resolved){ el.innerHTML='<div style="color:var(--ink-2)">'+c5osT('os.track.pending')+'</div><div style="display:flex;gap:8px;margin-top:12px">'+c5osBtn('os.track.snapshot','snapshot')+c5osBtn('os.track.reconcile','reconcile')+'</div>'; return; }
   var bcol=d.brier==null?'--muted':d.brier<=0.15?'--good':d.brier<=0.25?'--warn':'--crit';
-  var bars=(d.calibration||[]).map(function(b){return '<div style="display:flex;align-items:center;gap:8px;margin-top:5px"><span style="width:66px;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums">'+b.range+'</span><div style="flex:1;height:14px;background:var(--line);border-radius:4px;position:relative"><div style="position:absolute;left:0;top:0;bottom:0;width:'+b.predicted+'%;background:#8fa9cf;border-radius:4px"></div><div style="position:absolute;left:calc('+b.observed+'% - 1px);top:-2px;bottom:-2px;width:2px;background:var(--crit)"></div></div><span style="width:150px;font-size:10.5px;color:var(--muted)">'+c5osT('os.track.fa',{p:b.predicted,o:b.observed})+'</span></div>';}).join('');
-  el.innerHTML='<div style="display:flex;gap:22px;flex-wrap:wrap;align-items:baseline"><div><div style="font-size:28px;font-weight:800;color:var('+bcol+')">'+d.brier+'</div><div style="font-size:11px;color:var(--muted)">'+c5osT('os.track.brier')+'</div></div><div style="font-size:12.5px;color:var(--ink-2);max-width:440px;line-height:1.5">'+(d.interpretation||'')+'</div></div>'+(bars?('<div style="margin-top:14px"><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:700;margin-bottom:2px">'+c5osT('os.track.calib')+'</div>'+bars+'</div>'):'')+'<div style="display:flex;gap:8px;margin-top:12px">'+c5osBtn('os.track.snapshot','snapshot')+c5osBtn('os.track.reconcileShort','reconcile')+'</div>';
+  var bars=(d.calibration||[]).map(function(b){return '<div style="display:flex;align-items:center;gap:8px;margin-top:5px"><span style="width:66px;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums">'+b.range+'</span><div style="flex:1;height:14px;background:var(--line);border-radius:4px;position:relative"><div style="position:absolute;left:0;top:0;bottom:0;width:'+b.predicted+'%;background:#8fa9cf;border-radius:4px"></div><div style="position:absolute;left:calc('+b.observed+'% - 1px);top:-2px;bottom:-2px;width:2px;background:var(--crit)"></div></div><span style="width:150px;font-size:10px;color:var(--muted)">'+c5osT('os.track.fa',{p:b.predicted,o:b.observed})+'</span></div>';}).join('');
+  el.innerHTML='<div style="display:flex;gap:22px;flex-wrap:wrap;align-items:baseline"><div><div style="font-size:28px;font-weight:800;color:var('+bcol+')">'+d.brier+'</div><div style="font-size:11px;color:var(--muted)">'+c5osT('os.track.brier')+'</div></div><div style="font-size:12px;color:var(--ink-2);max-width:440px;line-height:1.5">'+(d.interpretation||'')+'</div></div>'+(bars?('<div style="margin-top:14px"><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:700;margin-bottom:2px">'+c5osT('os.track.calib')+'</div>'+bars+'</div>'):'')+'<div style="display:flex;gap:8px;margin-top:12px">'+c5osBtn('os.track.snapshot','snapshot')+c5osBtn('os.track.reconcileShort','reconcile')+'</div>';
 }); }
 
 function c5osAllocView(d){
   var max=(d.frontier&&d.frontier.length)?(d.frontier[d.frontier.length-1].riskReduced||1):1;
-  var fr=(d.frontier||[]).map(function(f,i){var funded=i<d.funded;return '<div style="display:flex;align-items:center;gap:8px;margin-top:4px"><span style="width:64px;font-size:10.5px;color:var(--muted);font-variant-numeric:tabular-nums">'+c5usd(f.spend)+'</span><div style="flex:1;height:12px;background:var(--line);border-radius:4px"><div style="width:'+Math.round((f.riskReduced/max)*100)+'%;height:100%;background:var('+(funded?'--good':'--line-2')+');border-radius:4px"></div></div><span style="width:80px;font-size:10.5px;color:var(--muted);font-variant-numeric:tabular-nums">'+c5usd(f.riskReduced)+'</span></div>';}).join('');
-  return '<div style="display:flex;gap:8px;align-items:center;margin-bottom:10px"><span style="font-size:12px;color:var(--ink-2)">'+c5osT('os.alloc.budget')+'</span><input id="c5os-budget" type="number" value="'+(d.budget||2000000)+'" style="width:150px;border:1px solid var(--line-2);border-radius:7px;padding:6px 9px;font-size:13px;font-variant-numeric:tabular-nums"><button class="c5btn" data-c5os="optimize" style="'+C5OSBTN+'">'+c5osT('os.alloc.optimize')+'</button></div><div style="font-size:12.5px;color:var(--ink);margin-bottom:10px;line-height:1.5">'+(d.narrative||'')+'</div>'+(fr?('<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:700;margin-bottom:2px">'+c5osT('os.alloc.frontier')+'</div>'+fr):'');
+  var fr=(d.frontier||[]).map(function(f,i){var funded=i<d.funded;return '<div style="display:flex;align-items:center;gap:8px;margin-top:4px"><span style="width:64px;font-size:10px;color:var(--muted);font-variant-numeric:tabular-nums">'+c5usd(f.spend)+'</span><div style="flex:1;height:12px;background:var(--line);border-radius:4px"><div style="width:'+Math.round((f.riskReduced/max)*100)+'%;height:100%;background:var('+(funded?'--good':'--line-2')+');border-radius:4px"></div></div><span style="width:80px;font-size:10px;color:var(--muted);font-variant-numeric:tabular-nums">'+c5usd(f.riskReduced)+'</span></div>';}).join('');
+  return '<div style="display:flex;gap:8px;align-items:center;margin-bottom:10px"><span style="font-size:12px;color:var(--ink-2)">'+c5osT('os.alloc.budget')+'</span><input id="c5os-budget" type="number" value="'+(d.budget||2000000)+'" style="width:150px;border:1px solid var(--line-2);border-radius:7px;padding:6px 9px;font-size:13px;font-variant-numeric:tabular-nums"><button class="c5btn" data-c5os="optimize" style="'+C5OSBTN+'">'+c5osT('os.alloc.optimize')+'</button></div><div style="font-size:12px;color:var(--ink);margin-bottom:10px;line-height:1.5">'+(d.narrative||'')+'</div>'+(fr?('<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:700;margin-bottom:2px">'+c5osT('os.alloc.frontier')+'</div>'+fr):'');
 }
 function c5osFillAlloc(){ c5osGet('/api/allocation/optimize?budget=2000000').then(function(d){ var el=document.getElementById('c5os-alloc'); if(!el)return; el.innerHTML=d?c5osAllocView(d):c5osNo(); }); }
 
 function c5osFillSim(){ c5osGet('/api/decisions').then(function(d){ var el=document.getElementById('c5os-sim'); if(!el)return; if(!d){el.innerHTML=c5osNo();return;}
   var cards=(d.cards||[]).filter(function(c){return c.type!=='compound';});
-  var rows=cards.map(function(c){return '<label style="display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--ink);padding:3px 0;cursor:pointer"><input type="checkbox" value="'+c.id+'"><span style="flex:1">'+c5esc(c.event.title)+'</span><span style="font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums">'+c5usd(c.event.loss&&c.event.loss.expected)+'</span></label>';}).join('');
+  var rows=cards.map(function(c){return '<label style="display:flex;gap:8px;align-items:center;font-size:12px;color:var(--ink);padding:3px 0;cursor:pointer"><input type="checkbox" value="'+c.id+'"><span style="flex:1">'+c5esc(c.event.title)+'</span><span style="font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums">'+c5usd(c.event.loss&&c.event.loss.expected)+'</span></label>';}).join('');
   el.innerHTML=(rows?('<div style="max-height:180px;overflow:auto;border:1px solid var(--line);border-radius:8px;padding:8px 10px">'+rows+'</div>'):'<div style="color:var(--muted);font-size:12px">'+c5osT('os.sim.none')+'</div>')+'<button class="c5btn" data-c5os="simrun" style="'+C5OSBTN+';margin-top:10px">'+c5osT('os.sim.run')+'</button><div id="c5os-simres" style="margin-top:10px"></div>';
 }); }
 
 function c5osFillOps(){ c5osGet('/api/operators/runs').then(function(d){ var el=document.getElementById('c5os-ops'); if(!el)return; if(!d){el.innerHTML=c5osNo();return;}
-  var runs=(d.runs||[]).slice(0,6).map(function(r){return '<div style="display:flex;gap:12px;font-size:11.5px;color:var(--ink-2);padding:4px 0;border-bottom:1px solid var(--line)"><span style="width:48px;font-weight:700;color:var(--ink)">'+r.role+'</span><span>'+c5osT('os.ops.reviewed')+' '+r.considered+'</span><span>'+c5osT('os.ops.acted')+' '+r.acted+'</span><span>'+c5osT('os.ops.escalated')+' '+r.escalated+'</span></div>';}).join('');
+  var runs=(d.runs||[]).slice(0,6).map(function(r){return '<div style="display:flex;gap:12px;font-size:11px;color:var(--ink-2);padding:4px 0;border-bottom:1px solid var(--line)"><span style="width:48px;font-weight:700;color:var(--ink)">'+r.role+'</span><span>'+c5osT('os.ops.reviewed')+' '+r.considered+'</span><span>'+c5osT('os.ops.acted')+' '+r.acted+'</span><span>'+c5osT('os.ops.escalated')+' '+r.escalated+'</span></div>';}).join('');
   el.innerHTML='<button class="c5btn" data-c5os="runops" style="'+C5OSBTN+';margin-bottom:12px">'+c5osT('os.ops.run')+'</button>'+(runs||'<div style="color:var(--muted);font-size:12px">'+c5osT('os.ops.none')+'</div>');
 }); }
 
 function c5osFillAct(){ c5osGet('/api/actuation').then(function(d){ var el=document.getElementById('c5os-act'); if(!el)return; if(!d){el.innerHTML=c5osNo();return;}
   var acts=d.actuations||[]; if(!acts.length){el.innerHTML='<div style="color:var(--muted);font-size:12px">'+c5osT('os.act.none')+'</div>';return;}
-  el.innerHTML=acts.map(function(a){var sc=a.status==='verified'?'--good':a.status==='unverified'?'--warn':'--ink-2';var delta=a.post_residual_risk!=null?(' · '+c5usd(a.pre_residual_risk)+' → <b style="color:var(--good)">'+c5usd(a.post_residual_risk)+'</b>'):'';return '<div style="border-top:1px solid var(--line);padding:9px 0"><div style="display:flex;justify-content:space-between;gap:10px"><span style="font-size:12.5px;color:var(--ink);font-weight:600">'+c5esc(a.action)+'</span><span style="font-size:11.5px;font-weight:800;color:var('+sc+');text-transform:uppercase">'+a.status+'</span></div><div style="font-size:11px;color:var(--muted);margin-top:2px">'+a.actuator+' · '+a.external_ref+(a.simulated?' · simulated':'')+delta+'</div>'+(a.status!=='verified'?('<button class="c5btn" data-c5os="verify" data-id="'+a.id+'" style="'+C5OSBTN+';margin-top:6px">'+c5osT('os.act.verify')+'</button>'):'')+'</div>';}).join('');
+  el.innerHTML=acts.map(function(a){var sc=a.status==='verified'?'--good':a.status==='unverified'?'--warn':'--ink-2';var delta=a.post_residual_risk!=null?(' · '+c5usd(a.pre_residual_risk)+' → <b style="color:var(--good)">'+c5usd(a.post_residual_risk)+'</b>'):'';return '<div style="border-top:1px solid var(--line);padding:9px 0"><div style="display:flex;justify-content:space-between;gap:10px"><span style="font-size:12px;color:var(--ink);font-weight:600">'+c5esc(a.action)+'</span><span style="font-size:11px;font-weight:800;color:var('+sc+');text-transform:uppercase">'+a.status+'</span></div><div style="font-size:11px;color:var(--muted);margin-top:2px">'+a.actuator+' · '+a.external_ref+(a.simulated?' · simulated':'')+delta+'</div>'+(a.status!=='verified'?('<button class="c5btn" data-c5os="verify" data-id="'+a.id+'" style="'+C5OSBTN+';margin-top:6px">'+c5osT('os.act.verify')+'</button>'):'')+'</div>';}).join('');
 }); }
 
 function c5osFillPeers(){ c5osGet('/api/outcomes/insights').then(function(d){ var el=document.getElementById('c5os-peers'); if(!el)return; if(!d){el.innerHTML=c5osNo();return;}
@@ -7139,7 +7139,7 @@ function c5osAction(a,el){
   else if(a==='reconcile'){c5osPost('/api/forecast/reconcile',{}).then(c5osFillTrack);}
   else if(a==='optimize'){var v=(document.getElementById('c5os-budget')||{}).value||2000000;c5osGet('/api/allocation/optimize?budget='+encodeURIComponent(v)).then(function(d){var t=document.getElementById('c5os-alloc');if(t&&d)t.innerHTML=c5osAllocView(d);});}
   else if(a==='runops'){try{el.textContent='…';}catch(_){}c5osPost('/api/operators/tick',{}).then(c5osFillOps);}
-  else if(a==='simrun'){var ids=[].slice.call(document.querySelectorAll('#c5os-sim input:checked')).map(function(x){return x.value;});c5osPost('/api/simulate/what-if',{fix:ids}).then(function(r){var t=document.getElementById('c5os-simres');if(!t)return;if(!r){t.innerHTML=c5osNo();return;}var chains=(r.collapsedChains||[]).map(function(c){return '<div style="font-size:12px;color:var(--blue);margin-top:4px">⛓ '+c5esc(c.title)+' ('+c5usd(c.loss)+')</div>';}).join('');t.innerHTML='<div style="font-size:12.5px;color:var(--ink);line-height:1.5">'+(r.narrative||'')+'</div>'+chains;});}
+  else if(a==='simrun'){var ids=[].slice.call(document.querySelectorAll('#c5os-sim input:checked')).map(function(x){return x.value;});c5osPost('/api/simulate/what-if',{fix:ids}).then(function(r){var t=document.getElementById('c5os-simres');if(!t)return;if(!r){t.innerHTML=c5osNo();return;}var chains=(r.collapsedChains||[]).map(function(c){return '<div style="font-size:12px;color:var(--blue);margin-top:4px">⛓ '+c5esc(c.title)+' ('+c5usd(c.loss)+')</div>';}).join('');t.innerHTML='<div style="font-size:12px;color:var(--ink);line-height:1.5">'+(r.narrative||'')+'</div>'+chains;});}
   else if(a==='verify'){var id=el.getAttribute('data-id');try{el.textContent='…';}catch(_){}c5osPost('/api/actuation/'+encodeURIComponent(id)+'/verify',{}).then(c5osFillAct);}
   else if(a==='contribute'){c5osPost('/api/outcomes/contribute',{}).then(c5osFillPeers);}
 }
