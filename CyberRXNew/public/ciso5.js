@@ -5327,8 +5327,39 @@ function c5paStyle(){
    +'.c5pa-lrow .nm{font-size:14px;font-weight:600;color:var(--ink)}'
    +'.c5pa-lrow .bar{height:7px;border-radius:4px;background:var(--line);overflow:hidden}.c5pa-lrow .bar i{display:block;height:100%;border-radius:4px}'
    +'.c5pa-lrow .val{font-family:var(--mono);font-size:15px;font-weight:600;text-align:right;font-variant-numeric:tabular-nums}'
-   +'.c5pa-lrow.weak .nm{color:var(--crit)}';
+   +'.c5pa-lrow.weak .nm{color:var(--crit)}'
+   +'.c5rec{border-top:1px solid var(--line)}'
+   +'.c5rec-row{display:grid;grid-template-columns:180px 1fr 118px;align-items:center;gap:16px;padding:13px 0;border-bottom:1px solid var(--line)}'
+   +'@media(max-width:640px){.c5rec-row{grid-template-columns:116px 1fr 88px;gap:10px}}'
+   +'.c5rec-nm{font-size:13.5px;font-weight:600;color:var(--ink)}.c5rec-nm small{display:block;font-weight:400;font-size:10.5px;color:var(--muted)}'
+   +'.c5rec-track{position:relative;height:24px}'
+   +'.c5rec-base{position:absolute;left:0;right:0;top:10px;height:4px;border-radius:3px;background:var(--surface-2)}'
+   +'.c5rec-bar{position:absolute;top:8px;left:0;height:8px;border-radius:3px}'
+   +'.c5rec-over{position:absolute;top:8px;height:8px;border-radius:3px;background:var(--crit)}'
+   +'.c5rec-tol{position:absolute;top:2px;width:2px;height:20px;background:var(--ink)}'
+   +'.c5rec-tol span{position:absolute;top:-13px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:9px;color:var(--ink-2);white-space:nowrap}'
+   +'.c5rec-v{font-family:var(--mono);font-size:14px;font-weight:600;text-align:right;color:var(--ink);font-variant-numeric:tabular-nums}.c5rec-v small{color:var(--muted);font-weight:400}.c5rec-v.over{color:var(--crit)}';
   var st=document.createElement('style');st.id='c5pa-style';st.textContent=css;document.head.appendChild(st);
+}
+/* Recovery-vs-tolerance instrument (Operational impact): each service's recovery time as a
+   bar against the board's tolerance marker; any overrun past tolerance is drawn in crit. */
+function c5paRecovery(svcs,hrs){
+  var esc=(typeof c5esc==='function')?c5esc:function(x){return x;};
+  if(!svcs||!svcs.length)return '';
+  var maxH=0;svcs.forEach(function(s){maxH=Math.max(maxH,s.rto||0,s.tgt||0);});maxH=(maxH*1.12)||1;
+  var sorted=svcs.slice().sort(function(a,b){var oa=(a.rto>a.tgt)?(a.rto-a.tgt):-1,ob=(b.rto>b.tgt)?(b.rto-b.tgt):-1;return ob-oa;});
+  return '<div class="c5rec">'+sorted.map(function(s){
+    var ok=s.rto<=s.tgt;var pR=Math.min(s.rto,s.tgt)/maxH*100,pT=s.tgt/maxH*100,pO=ok?0:(s.rto-s.tgt)/maxH*100;
+    return '<div class="c5rec-row">'
+      +'<div class="c5rec-nm">'+esc(s.n)+'<small>depends on '+esc(s.dep)+'</small></div>'
+      +'<div class="c5rec-track"><div class="c5rec-base"></div>'
+        +'<div class="c5rec-bar" style="width:'+pR.toFixed(1)+'%;background:var(--'+(ok?'blue':'ink-2')+')"></div>'
+        +(ok?'':'<div class="c5rec-over" style="left:'+pT.toFixed(1)+'%;width:'+pO.toFixed(1)+'%"></div>')
+        +'<div class="c5rec-tol" style="left:'+pT.toFixed(1)+'%"><span>tol '+hrs(s.tgt)+'</span></div>'
+      +'</div>'
+      +'<div class="c5rec-v'+(ok?'':' over')+'">'+hrs(s.rto)+' <small>/ '+hrs(s.tgt)+'</small></div>'
+    +'</div>';
+  }).join('')+'</div>';
 }
 function c5paGauge(val,target){
   function pol(cx,cy,r,d){var a=(d-180)*Math.PI/180;return [cx+r*Math.cos(a),cy+r*Math.sin(a)];}
@@ -5754,9 +5785,22 @@ function c5Resilience(){
     +'</tr></thead><tbody>'+rows+'</tbody></table></div>';
   var intro='Impact here is measured in what you can verify — <b>hours of downtime and services lost</b>, not a modeled dollar. For each important business service: the <b>impact tolerance</b> the board set, how long it actually takes to recover, whether that recovery is <b>proven by a test</b> or only modeled, and whether a failover exists. A service that can’t be recovered inside tolerance — or whose recovery has never been tested — is your real exposure.';
   var foot='<div class="c5foot">Impact tolerance and recovery come from your resilience telemetry and DR-test records where connected (<b>proven</b>); the rest are modeled sample rows until per-service recovery telemetry connects — labelled <b style="color:var(--warn)">modeled</b>, never presented as tested. This is the operational-resilience read (UK Operational Resilience impact tolerances · EU DORA) — the impact currency a regulator recognizes.</div>';
+  // ── Blend presentation: editorial finding → recovery-vs-tolerance instrument → detail ──
+  if(typeof c5paStyle==='function')c5paStyle();
+  var paFinding = over>0
+    ? ('<span class="bad">'+over+' critical service'+(over>1?'s':'')+'</span> can&rsquo;t be recovered within tolerance.')
+    : (proven<svcs.length ? 'Recovery holds on paper &mdash; but <span class="bad">not all of it is proven</span>.'
+                          : 'Every critical service recovers within tolerance &mdash; and it&rsquo;s <em>proven</em>.');
+  var paHero='<div class="c5pa">'
+    +'<div class="c5pa-eyebrow">Operational impact · what breaks, for how long, is recovery proven · as of '+new Date().toLocaleDateString()+'</div>'
+    +'<h1 class="c5pa-finding">'+paFinding+'</h1>'
+    +'<div class="c5pa-dek">'+intro+'</div>'
+    +'<div class="c5pa-inst" style="grid-template-columns:1fr">'
+      +'<div class="c5pa-cell"><div class="c5pa-ct">Recovery time vs the board&rsquo;s tolerance &mdash; worst first</div>'+((typeof c5paRecovery==='function')?c5paRecovery(svcs,hrs):'')+'</div>'
+    +'</div>'
+  +'</div>';
   host.innerHTML=(typeof c5header==='function'?c5header():'')
-    +(typeof c5shell==='function'?c5shell('Operational impact · what breaks, for how long, and is recovery proven?',verdict,vcol,intro):('<div style="font-size:15px;font-weight:800">Operational impact</div><div>'+intro+'</div>'))
-    +cards+table+foot;
+    +paHero+cards+table+foot;
 }
 /* The Neuron Controls lens — capability × (adversarial + 5 non-adversarial lanes)
    × framework projection, in one view. Read-only; renders into the panel passed in. */
@@ -6910,7 +6954,10 @@ function c5OsLayer(){
   // Decision-first reading order: what to fund, what's fragile, whether actions
   // worked, whether the operators are acting, then the forecast track record and
   // peer context. Leads with the actionable panel, not the empty forecast ledger.
-  host.innerHTML = c5shell(c5osT('os.kick'), c5osT('os.verdict'), '', c5osT('os.intro'))
+  if(typeof c5paStyle==='function')c5paStyle();
+  host.innerHTML = '<div class="c5pa"><div class="c5pa-eyebrow">'+c5osT('os.kick')+'</div>'
+    +'<h1 class="c5pa-finding" style="max-width:32ch">'+c5osT('os.verdict')+'</h1>'
+    +'<div class="c5pa-dek">'+c5osT('os.intro')+'</div></div>'
   + c5osPanel('alloc','os.alloc.t','os.alloc.sub')
   + c5osPanel('sim','os.sim.t','os.sim.sub')
   + c5osPanel('act','os.act.t','os.act.sub')
