@@ -6,12 +6,13 @@
 <title>Nerion · Setup</title>
 <style>
   :root{
-    /* Instrument-of-record theme — one identity shared with the cockpit:
-       cool porcelain ground, ink authority, a single antique-brass hallmark. */
-    --plane:#EEF1F4; --surface:#FFFFFF; --surface-2:#F3F5F8; --line:#E1E5EA; --line-2:#D2D8DF;
-    --ink:#0E1826; --ink-2:#48525F; --muted:#79828F;
-    --brass:#8A6A2E; --brass-tx:#7A5D27; --brass-soft:rgba(138,106,46,.10);
-    --blue:#8A6A2E; --blue-soft:rgba(138,106,46,.10); --good:#2E7256; --good-soft:rgba(46,114,86,.11); --warn:#B4671F; --warn-soft:rgba(180,103,31,.12); --crit:#A6342E; --crit-soft:rgba(166,52,46,.10); --gold:#8A6A2E; --gold-soft:rgba(138,106,46,.13);
+    color-scheme:dark;
+    /* 'Command' theme — one identity shared with the cockpit:
+       deep-slate ground, ink authority, a single antique-brass signal. */
+    --plane:#090D14; --surface:#101827; --surface-2:#0D1420; --line:#1B2534; --line-2:#26344A;
+    --ink:#E9EEF5; --ink-2:#98A6B8; --muted:#5C6A7C;
+    --brass:#E7B24E; --brass-tx:#E7B24E; --brass-soft:rgba(231,178,78,.12);
+    --blue:#E7B24E; --blue-soft:rgba(231,178,78,.12); --good:#41C08C; --good-soft:rgba(65,192,140,.13); --warn:#E38C3E; --warn-soft:rgba(227,140,62,.14); --crit:#E85F5C; --crit-soft:rgba(232,95,92,.13); --gold:#E7B24E; --gold-soft:rgba(231,178,78,.13);
     --mono:"SFMono-Regular","SF Mono",ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace;
     --sans:'Inter',-apple-system,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     --serif:'Inter',-apple-system,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -24,7 +25,7 @@
   .wrap{max-width:900px;margin:0 auto;padding:0 24px}
   .top{border-bottom:1px solid var(--line);background:var(--surface)}
   .top-in{display:flex;align-items:center;gap:13px;height:58px}
-  .logo{width:34px;height:29px;display:flex;align-items:center;justify-content:center;color:#10406A}
+  .logo{width:34px;height:29px;display:flex;align-items:center;justify-content:center;color:var(--brass)}
   .brand{font-weight:700;font-size:16px}.brand span{color:var(--muted);font-weight:500;font-size:11px;letter-spacing:.13em;text-transform:uppercase;margin-left:9px}
   .top-r{margin-left:auto;color:var(--muted);font-size:12px}
   .head{padding:34px 0 6px}
@@ -41,7 +42,7 @@
   .obprog-lbl{font-size:11.5px;font-weight:600;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
   .obtab{font-size:12.5px;font-weight:600;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:7px 15px;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:7px}
   .obtab:hover{color:var(--ink,#fff)}
-  .obtab.on{color:#fff;border-color:var(--ink);background:var(--ink)}
+  .obtab.on{color:var(--plane);border-color:var(--ink);background:var(--ink)}
   .obtab .obn{font-size:10px;font-weight:700;opacity:.6}
   .obtab.done .obn{color:var(--good,#0ca30c);opacity:1}
   .sec{margin-top:26px;background:var(--surface);border:1px solid var(--line);border-radius:15px;padding:22px 24px}
@@ -49,7 +50,7 @@
   @keyframes obUploadFlash{0%{box-shadow:0 0 0 0 rgba(12,163,12,0)}12%{box-shadow:0 0 0 3px rgba(12,163,12,.6)}100%{box-shadow:0 0 0 3px rgba(12,163,12,0)}}
   .ob-uploadflash{animation:obUploadFlash 2.6s ease-out}
   .sh{display:flex;align-items:flex-start;gap:14px;margin-bottom:18px}
-  .sn{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--blue);background:var(--blue-soft);border:1px solid rgba(57,135,229,.35);border-radius:9px;padding:6px 10px;line-height:1}
+  .sn{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--blue);background:var(--blue-soft);border:1px solid rgba(231,178,78,.35);border-radius:9px;padding:6px 10px;line-height:1}
   .st{font-size:16px;font-weight:700}.sd{font-size:12.5px;color:var(--muted);margin-top:3px}
   .badge{margin-left:auto;font-size:11px;font-weight:700;color:var(--muted)}
   .badge.done{color:var(--good)}
@@ -62,18 +63,18 @@
   input:focus,select:focus{border-color:var(--blue)}
   input::placeholder{color:var(--muted)}
   /* dark-mode date picker: make the native calendar affordance visible + clickable */
-  input[type=date]{color-scheme:light;cursor:pointer;position:relative}
+  input[type=date]{color-scheme:dark;cursor:pointer;position:relative}
   input[type=date]::-webkit-calendar-picker-indicator{opacity:.7;cursor:pointer;font-size:16px}
   input[type=date]::-webkit-calendar-picker-indicator:hover{opacity:1}
   .chips{display:flex;flex-wrap:wrap;gap:8px}
   .chip{font-size:12.5px;font-weight:600;color:var(--ink-2);background:var(--plane);border:1px solid var(--line-2);border-radius:99px;padding:7px 13px;cursor:pointer}
-  .chip.on{color:#fff;background:var(--blue);border-color:var(--blue)}
+  .chip.on{color:var(--plane);background:var(--blue);border-color:var(--blue)}
   /* Compact upload button (matches the register cards' "Upload CSV" style) instead of a
      big dashed drop-zone — consistent document-upload UI across onboarding. Drag-and-drop
      still works (wired by wireDrop); the label carries the section-specific text. */
-  .drop{display:inline-flex;align-items:center;gap:8px;border:none;border-radius:8px;padding:10px 16px;cursor:pointer;transition:filter .12s,box-shadow .12s;background:var(--blue);color:#fff;box-shadow:0 1px 2px rgba(16,24,40,.08)}
+  .drop{display:inline-flex;align-items:center;gap:8px;border:none;border-radius:8px;padding:10px 16px;cursor:pointer;transition:filter .12s,box-shadow .12s;background:var(--blue);color:var(--plane);box-shadow:0 1px 2px rgba(16,24,40,.08)}
   .drop:hover{filter:brightness(1.06);box-shadow:0 3px 8px -3px rgba(16,24,40,.28)}
-  .drop .ic{font-size:15px;color:#fff;margin:0}.drop .t{font-weight:700;font-size:12.5px;color:#fff;margin:0}.drop .s{display:none}
+  .drop .ic{font-size:15px;color:var(--plane);margin:0}.drop .t{font-weight:700;font-size:12.5px;color:var(--plane);margin:0}.drop .s{display:none}
   .tmpl{font-family:var(--mono);font-size:11px;color:var(--muted);background:var(--plane);border:1px solid var(--line);border-radius:7px;padding:7px 10px;margin-top:10px;overflow-x:auto;white-space:nowrap}
   .tmpl b{color:var(--ink-2)}
   .result{margin-top:12px;font-size:12.5px}
@@ -94,11 +95,11 @@
   .srcopt.sel{border-color:var(--blue);background:var(--blue-soft)}
   .srcopt .so-h{font-weight:600;font-size:13px}.srcopt .so-d{font-size:11.5px;color:var(--muted);margin-top:3px}
   .conn-row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-top:10px}
-  .conn-go{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px 16px;font-weight:700;font-size:12.5px;cursor:pointer}
+  .conn-go{background:var(--blue);color:var(--plane);border:none;border-radius:8px;padding:10px 16px;font-weight:700;font-size:12.5px;cursor:pointer}
   .conn-go.done{background:var(--good)}
   .conn-msg{font-size:12px;color:var(--muted);margin-top:8px}
   .aiup{display:flex;gap:12px;align-items:flex-start;padding:14px;border:1px solid var(--line-2);border-radius:10px;background:var(--surface,#fafafa);margin-top:10px}
-  .aiup-n{flex:none;width:24px;height:24px;border-radius:50%;background:var(--blue);color:#fff;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;margin-top:1px}
+  .aiup-n{flex:none;width:24px;height:24px;border-radius:50%;background:var(--blue);color:var(--plane);font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;margin-top:1px}
   .aiup-t{font-weight:600;font-size:13px}
   .aiup-lbl{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-top:16px;font-weight:600}
   .toolgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -107,7 +108,7 @@
   .toolcard .tstat{margin-left:auto;font-size:11px;font-weight:700;color:var(--muted)}.toolcard .tstat.on{color:var(--good)}
   .toolcard .tf{display:flex;gap:8px;margin-top:9px}
   .toolcard input{font-size:12px;padding:7px 9px}
-  .toolcard .tb{background:var(--blue);color:#fff;border:none;border-radius:7px;padding:7px 12px;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap}
+  .toolcard .tb{background:var(--blue);color:var(--plane);border:none;border-radius:7px;padding:7px 12px;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap}
   .xlist{margin-top:10px;max-height:150px;overflow-y:auto;border:1px solid var(--line);border-radius:9px}
   .xrow{display:flex;gap:10px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line);font-size:12.5px}.xrow:last-child{border:none}
   .xrow .nm{font-weight:600}.xrow .mt{color:var(--muted);margin-left:auto;font-size:12px}
@@ -115,7 +116,7 @@
   .mapapp{min-width:160px;font-weight:700;font-size:13px;padding-top:3px}.mapapp .mapv{display:block;font-weight:500;color:var(--muted);font-size:11.5px;margin-top:1px}
   .mapchips{display:flex;flex-wrap:wrap;gap:6px;flex:1}
   .mchip{font-size:11.5px;font-weight:600;color:var(--muted);background:var(--plane);border:1px dashed var(--line-2);border-radius:99px;padding:5px 11px;cursor:pointer}
-  .mchip.on{color:#fff;background:var(--blue);border:1px solid var(--blue)}
+  .mchip.on{color:var(--plane);background:var(--blue);border:1px solid var(--blue)}
   .mapempty{font-size:12.5px;color:var(--muted)}
   /* crown-jewel column graph (process → application → crown jewel) */
   .cjmap{position:relative;display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;margin-bottom:8px}
@@ -141,16 +142,16 @@
   .mapedit-body{margin-top:12px;max-height:340px;overflow-y:auto;padding-right:4px}
   .maprow2{display:flex;gap:14px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line)}.maprow2:last-child{border:none}
   .maptags{display:flex;flex-wrap:wrap;gap:6px;flex:1;align-items:center}
-  .mtag{font-size:11.5px;font-weight:600;color:#fff;background:var(--blue);border:1px solid var(--blue);border-radius:99px;padding:4px 10px;cursor:pointer}
-  .mtag b{color:rgba(255,255,255,.72);font-weight:700}
+  .mtag{font-size:11.5px;font-weight:600;color:var(--plane);background:var(--blue);border:1px solid var(--blue);border-radius:99px;padding:4px 10px;cursor:pointer}
+  .mtag b{color:rgba(9,13,20,.62);font-weight:700}
   .mapadd{width:auto;font-size:11.5px;padding:5px 8px;background:var(--plane);border:1px dashed var(--line-2);border-radius:8px;color:var(--muted)}
   @media (max-width:680px){.cjmap{grid-template-columns:1fr;gap:14px}.cjsvg{display:none}}
   /* tool connectors + demo mode + credibility meter */
-  .demo-bar{display:flex;align-items:center;gap:12px;margin-bottom:14px;padding:12px 16px;background:linear-gradient(90deg,rgba(57,135,229,.10),rgba(57,135,229,.03));border:1px solid rgba(57,135,229,.28);border-radius:10px}
+  .demo-bar{display:flex;align-items:center;gap:12px;margin-bottom:14px;padding:12px 16px;background:linear-gradient(90deg,rgba(231,178,78,.10),rgba(231,178,78,.03));border:1px solid rgba(231,178,78,.28);border-radius:10px}
   .demo-bar .demo-label{flex:1;font-size:13px;color:var(--ink);font-weight:700}
   .demo-bar .demo-sub{display:block;font-size:11.5px;color:var(--muted);font-weight:400;margin-top:2px}
-  .demo-btn{font-weight:700;font-size:12.5px;color:var(--blue);background:var(--blue-soft);border:1px solid rgba(57,135,229,.35);border-radius:8px;padding:8px 16px;cursor:pointer;white-space:nowrap;width:auto}
-  .demo-btn:hover{background:var(--blue);color:#fff}
+  .demo-btn{font-weight:700;font-size:12.5px;color:var(--blue);background:var(--blue-soft);border:1px solid rgba(231,178,78,.35);border-radius:8px;padding:8px 16px;cursor:pointer;white-space:nowrap;width:auto}
+  .demo-btn:hover{background:var(--blue);color:var(--plane)}
   .demo-btn.active{background:var(--good-soft);color:var(--good);border-color:var(--good)}
   .demo-btn.loading{opacity:.6;pointer-events:none}
   .cred{background:var(--surface);border:1px solid var(--line-2);border-radius:13px;padding:15px 17px;margin-bottom:16px}
@@ -173,7 +174,7 @@
   .conn-row{display:grid;grid-template-columns:1.3fr 1fr auto;gap:10px;align-items:end}
   @media (max-width:560px){.conn-row{grid-template-columns:1fr}}
   .conn-row .field label{font-size:11px}
-  .tb{font-weight:700;font-size:13px;color:#fff;background:var(--blue);border:none;border-radius:8px;padding:9px 16px;cursor:pointer;white-space:nowrap;width:auto}
+  .tb{font-weight:700;font-size:13px;color:var(--plane);background:var(--blue);border:none;border-radius:8px;padding:9px 16px;cursor:pointer;white-space:nowrap;width:auto}
   .tb:hover{filter:brightness(1.08)}.tb.done{background:var(--good-soft);color:var(--good);cursor:default}.tb.amber{background:var(--warn-soft);color:var(--warn);cursor:default}
   .conn-info{margin-top:12px;font-size:12px;line-height:1.55;color:var(--muted)}.conn-info .pl{color:var(--ink);font-weight:700}.conn-info .an{color:var(--blue);font-weight:700}
   .livedot{width:6px;height:6px;border-radius:50%;background:var(--good);display:inline-block;margin-right:6px;vertical-align:middle}
@@ -182,7 +183,7 @@
   .foot{position:sticky;bottom:0;background:linear-gradient(180deg,transparent,var(--plane) 30%);padding:22px 0 26px;margin-top:24px}
   .foot-in{display:flex;align-items:center;gap:16px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 20px}
   .foot .sum{font-size:12.5px;color:var(--muted)}.foot .sum b{color:var(--ink)}
-  .golive{margin-left:auto;background:var(--blue);color:#fff;border:none;border-radius:10px;padding:12px 24px;font-weight:700;font-size:14px;cursor:pointer}
+  .golive{margin-left:auto;background:var(--blue);color:var(--plane);border:none;border-radius:10px;padding:12px 24px;font-weight:700;font-size:14px;cursor:pointer}
   .golive:hover{filter:brightness(1.08)}.golive:disabled{opacity:.5;cursor:not-allowed}
   .glmsg{font-size:12.5px}
 </style>
@@ -202,7 +203,7 @@
   <div id="chainSpine" style="margin:4px 0 16px"></div>
 
   <div style="border:1px solid var(--line);border-radius:12px;padding:13px 16px;margin:6px 0 18px;background:var(--surface,transparent);display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start">
-    <div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#2563eb;white-space:nowrap;padding-top:2px">Not another Vanta</div>
+    <div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--brass);white-space:nowrap;padding-top:2px">Not another Vanta</div>
     <div style="font-size:12.5px;color:var(--muted);line-height:1.6;flex:1;min-width:260px">A compliance-automation tool collects <b>point-in-time</b> evidence for one framework at one entity. Nerion is built for a <b>global enterprise</b>: multi-region scope with <b>10+ entities per region</b>, <b>control inheritance</b> (corporate common controls vs what each unit runs), <b>continuous telemetry-driven</b> scoring of all 106 NIST CSF controls, and <b>materiality-first triage</b> across 1000s of systems. You define the structure once; the rest is discovered, risk-mapped and scored continuously.</div>
   </div>
 
@@ -343,7 +344,7 @@
   <div class="sec" id="secDocReview">
     <div class="sh"><div class="sn">✦</div><div><div class="st">Policy &amp; document evidence <span style="color:var(--muted)">(framework maturity)</span></div><div class="sd">Upload your security policies (PDF · DOCX · TXT). Nerion reads each against the NIST control catalog and scores every control’s CMMI maturity from the policy language it contains — the <b>📄 document-review</b> evidence behind your framework scores, alongside live tool telemetry. Do it here so the cockpit Framework tab opens fully evidenced.</div></div><div class="badge" id="bdoc">optional</div></div>
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-      <select id="obDocType" style="min-width:230px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:#fff"></select>
+      <select id="obDocType" style="min-width:230px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface)"></select>
       <input type="file" id="obDocFile" accept=".pdf,.docx,.doc,.txt,.md,.csv">
       <button class="conn-go" id="obDocAnalyze" type="button">Analyze policy</button>
       <span id="obDocMsg" class="sd" style="margin:0"></span>
@@ -355,7 +356,7 @@
   <div class="sec">
     <div class="sh"><div class="sn">✦</div><div><div class="st">Continuous-monitoring cadence <span style="color:var(--muted)">(how often controls re-check)</span></div><div class="sd">Every one of the 106 NIST CSF controls is assessed on a <b>cadence</b> — never point-in-time. The method sets a sensible default (live telemetry re-checks continuously, attestations on their review cycle); this sets a <b>global floor</b> you can tune per function or per control later in the cockpit. It is <b>not</b> a blunt "run everything weekly" knob — a policy attestation shouldn't run more than its review cycle.</div></div><div class="badge" id="bcad">optional</div></div>
     <div class="field" style="max-width:340px;margin-top:8px"><label>Global cadence floor</label>
-      <select id="obCadence" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:#fff">
+      <select id="obCadence" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--surface)">
         <option value="">Per method (recommended default)</option>
         <option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="semiannual">Semi-annual</option><option value="annual">Annual</option>
       </select></div>
@@ -519,7 +520,7 @@
     <div class="demo-bar"><span class="demo-label">Demo mode<span class="demo-sub">Explore with simulated signals — no API keys. Clearly labeled “Demo”; never sent to the engine as real data.</span></span><button class="demo-btn" id="demoToggle" type="button">Enable demo mode</button></div>
     <div class="cred"><div class="cred-top"><span class="ct">Evidence credibility</span><span class="cv l0" id="credLabel">Not yet credible</span></div><div class="cred-bar"><i id="credBar"></i></div><div class="cred-meta"><b id="credSig">0</b> live signals · <b id="credSys">0</b> systems connected · <b id="credCov">0%</b> coverage</div></div>
     <div class="note" style="margin-top:2px;margin-bottom:8px"><b>✦ One-click setup</b> — pick a tool below and connect it in one click with read-only consent; Nerion then shows exactly which controls are ready for continuous assessment. <a id="caFullScreen" href="connector-setup.html" target="_blank" style="color:var(--blue);font-weight:600;text-decoration:none">Open full screen ↗</a></div>
-    <iframe id="caSetup" title="Control-aware connector setup" style="width:100%;height:760px;border:1px solid var(--line);border-radius:14px;background:var(--panel,#fff)"></iframe>
+    <iframe id="caSetup" title="Control-aware connector setup" style="width:100%;height:760px;border:1px solid var(--line);border-radius:14px;background:var(--panel,var(--surface))"></iframe>
     <script id="caSetupBoot">(function(){
       // Pass the resolved API base + org into the embedded setup so its catalog
       // fetch hits the real API and not the static host it is served from.
@@ -568,7 +569,7 @@
     var s=document.getElementById('aiInvSummary');if(!s)return;
     if(!AI_INV._loaded){s.innerHTML='';return;}
     var cards=[['ai_system','AI / ML systems'],['genai_app','Sanctioned GenAI apps'],['machine_identity','Machine identities'],['crypto_asset','Crypto assets (CBOM)']]
-      .map(function(p){var n=AI_INV[p[0]]||0;return '<div style="flex:1;min-width:140px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:#fff"><div style="font-size:22px;font-weight:700;color:#111">'+n.toLocaleString()+'</div><div class="sd" style="margin:2px 0 0">'+p[1]+'</div></div>';}).join('');
+      .map(function(p){var n=AI_INV[p[0]]||0;return '<div style="flex:1;min-width:140px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface)"><div style="font-size:22px;font-weight:700;color:var(--ink)">'+n.toLocaleString()+'</div><div class="sd" style="margin:2px 0 0">'+p[1]+'</div></div>';}).join('');
     s.innerHTML='<div style="display:flex;gap:10px;flex-wrap:wrap">'+cards+'</div>'+(AI_INV.sensitivity?('<div class="sd" style="margin-top:8px">Highest data sensitivity in scope: <b>'+AI_INV.sensitivity+'</b></div>'):'');
   }
   // AI risk & governance is DERIVED, never self-reported: systems/decisioning from the
@@ -613,7 +614,7 @@
       var has=(val!==''&&val!=null);
       var right=has
         ? ('<b style="color:var(--ink,#111)">'+val+'</b> · from '+src)
-        : ('<span style="color:#9a7b1f">— not yet provided</span> · '+(dashNote||('connect '+src)));
+        : ('<span style="color:var(--warn)">— not yet provided</span> · '+(dashNote||('connect '+src)));
       return '<div class="xrow"><span class="nm">'+label+'</span><span class="mt">'+right+'</span></div>';
     }
     var rows=[
@@ -858,7 +859,7 @@
       '<div class="field"><label>Type</label><select class="s-type">'+STRAT_TYPES.map(function(t){return '<option>'+t+'</option>';}).join('')+'</select></div>'+
       '<div class="field"><label>Value at stake</label><div class="moneyf"><span class="cur mcur">$</span><input type="number" step="any" class="mnum s-val" placeholder="500"><select class="munit s-valu"><option value="1000000000">B</option><option value="1000000" selected>M</option><option value="1000">K</option></select></div></div>'+
       '<div class="field"><label>Horizon</label><select class="s-horizon"><option>This quarter</option><option selected>This year</option><option>Next 12–24 months</option></select></div>'+
-      '<button class="s-del" type="button" title="Remove" style="height:38px;border:1px solid var(--line);background:#fff;border-radius:8px;cursor:pointer;color:var(--muted)">✕</button>';
+      '<button class="s-del" type="button" title="Remove" style="height:38px;border:1px solid var(--line);background:var(--surface);border-radius:8px;cursor:pointer;color:var(--muted)">✕</button>';
     wrap.appendChild(row);
     function setSel(sel,val){if(!sel||!val)return;var t=String(val).trim().toLowerCase();for(var i=0;i<sel.options.length;i++){if(sel.options[i].text.trim().toLowerCase()===t){sel.selectedIndex=i;return;}}}
     if(v.name)row.querySelector('.s-name').value=v.name;
@@ -888,7 +889,7 @@
     var row=document.createElement('div');row.className='obj-row';row.style.cssText='display:grid;grid-template-columns:2fr 1.6fr auto;gap:10px;margin-bottom:10px;align-items:end';
     row.innerHTML='<div class="field"><label>Objective</label><input class="o-name" placeholder="e.g. Grow the customer platform · Enter a new market · Launch the product line"></div>'+
       '<div class="field"><label>Cyber dependency</label><select class="o-map">'+OBJ_DEP.map(function(d){return '<option value="'+d[0]+'">'+d[1]+'</option>';}).join('')+'</select></div>'+
-      '<button class="o-del" type="button" title="Remove" style="height:38px;border:1px solid var(--line);background:#fff;border-radius:8px;cursor:pointer;color:var(--muted)">✕</button>';
+      '<button class="o-del" type="button" title="Remove" style="height:38px;border:1px solid var(--line);background:var(--surface);border-radius:8px;cursor:pointer;color:var(--muted)">✕</button>';
     wrap.appendChild(row);
     if(v.name)row.querySelector('.o-name').value=v.name;
     if(v.map)row.querySelector('.o-map').value=v.map;
@@ -911,7 +912,7 @@
     row.innerHTML='<input class="e-name" placeholder="Entity / branch — e.g. UK &amp; Ireland" style="padding:7px 9px;border:1px solid var(--line);border-radius:8px">'+
       '<label style="display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--muted);white-space:nowrap;cursor:pointer" title="On: this branch connects its OWN systems and uploads its OWN documents. Off: it inherits the region / enterprise policies and tools.">'+
         '<input type="checkbox" class="e-own"> own systems &amp; docs</label>'+
-      '<button class="e-del" type="button" title="Remove" style="border:1px solid var(--line);background:#fff;border-radius:8px;cursor:pointer;color:var(--muted);width:34px">✕</button>';
+      '<button class="e-del" type="button" title="Remove" style="border:1px solid var(--line);background:var(--surface);border-radius:8px;cursor:pointer;color:var(--muted);width:34px">✕</button>';
     entWrap.appendChild(row);
     if(v.label)row.querySelector('.e-name').value=v.label;
     if(v.own)row.querySelector('.e-own').checked=true;
@@ -953,10 +954,10 @@
     var card=document.createElement('div');card.className='reg-card';card.style.cssText='border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px';
     var regOpts='<option value="">Select region…</option>'+REGION_OPTIONS.map(function(o){return '<option>'+esc(o.label)+'</option>';}).join('');
     card.innerHTML='<div style="display:grid;grid-template-columns:1.1fr 2fr 1.2fr auto;gap:10px;align-items:start">'+
-        '<div class="field"><label>Region</label><select class="r-name" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font-size:13px;background:#fff">'+regOpts+'</select></div>'+
+        '<div class="field"><label>Region</label><select class="r-name" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font-size:13px;background:var(--surface)">'+regOpts+'</select></div>'+
         '<div class="field"><label>Countries <span style="color:var(--muted);font-weight:400">— click to toggle</span></label><div class="chips r-countries-box" style="min-height:38px;padding:4px 0"></div><input type="hidden" class="r-countries"></div>'+
         '<div class="field"><label>Primary regulator</label><input class="r-regime" placeholder="auto-filled from region" style="padding:9px 11px"></div>'+
-        '<button class="r-del" type="button" title="Remove region" style="height:38px;margin-top:22px;border:1px solid var(--line);background:#fff;border-radius:8px;cursor:pointer;color:var(--muted)">✕</button>'+
+        '<button class="r-del" type="button" title="Remove region" style="height:38px;margin-top:22px;border:1px solid var(--line);background:var(--surface);border-radius:8px;cursor:pointer;color:var(--muted)">✕</button>'+
       '</div>'+
       '<div class="ent-wrap" style="margin-top:10px"></div>'+
       '<button class="r-addent conn-go" type="button" style="margin-top:6px;font-size:12px;padding:5px 10px">+ Add entity / branch</button>';
@@ -1047,7 +1048,7 @@
     // Derive the chain Entity → Process → System from the import: distinct owning entities,
     // distinct processes, and the systems that run them.
     var ents={},procs={};IMPORTED.forEach(function(r){if(r.owner&&r.owner!=='corporate')ents[r.owner]=1;if(r.process)procs[(r.owner||'')+'|'+r.process.toLowerCase()]=1;});
-    var chainLine=IMPORTED.length?('<div style="font-size:11.5px;color:var(--ink-2);margin-top:8px;padding-top:8px;border-top:1px solid var(--line)"><span style="font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#2563eb">Chain derived</span> &nbsp;Corporate → Region → <b>'+Object.keys(ents).length+'</b> entit'+(Object.keys(ents).length===1?'y':'ies')+' → <b>'+Object.keys(procs).length+'</b> process'+(Object.keys(procs).length===1?'':'es')+' → <b>'+IMPORTED.length+'</b> system'+(IMPORTED.length===1?'':'s')+' → risks → controls</div>'):'';
+    var chainLine=IMPORTED.length?('<div style="font-size:11.5px;color:var(--ink-2);margin-top:8px;padding-top:8px;border-top:1px solid var(--line)"><span style="font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--brass)">Chain derived</span> &nbsp;Corporate → Region → <b>'+Object.keys(ents).length+'</b> entit'+(Object.keys(ents).length===1?'y':'ies')+' → <b>'+Object.keys(procs).length+'</b> process'+(Object.keys(procs).length===1?'':'es')+' → <b>'+IMPORTED.length+'</b> system'+(IMPORTED.length===1?'':'s')+' → risks → controls</div>'):'';
     var triage='<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">'
       +'<div style="flex:1;min-width:150px;border:1px solid var(--crit,#c0392b);border-radius:8px;padding:9px 12px"><div style="font-size:18px;font-weight:800;color:var(--crit,#c0392b)">'+material.toLocaleString()+'</div><div style="font-size:11px;color:var(--muted)">◆ material — triage first</div></div>'
       +'<div style="flex:1;min-width:150px;border:1px solid var(--line);border-radius:8px;padding:9px 12px"><div style="font-size:18px;font-weight:800;color:var(--ink)">'+standard.toLocaleString()+'</div><div style="font-size:11px;color:var(--muted)">auto-classified standard</div></div></div>';
@@ -1138,7 +1139,7 @@
     var rows=entities.map(function(e){
       var have=ENT_CONN[e.id]||[];
       var chips=federated.map(function(c){var on=have.indexOf(c)>=0;
-        return '<button type="button" class="entcap'+(on?' on':'')+'" data-ent="'+e.id+'" data-cap="'+c+'" style="font-size:11px;padding:3px 9px;border-radius:14px;border:1px solid '+(on?'#2563eb':'var(--line)')+';background:'+(on?'#2563eb':'transparent')+';color:'+(on?'#fff':'var(--ink-2)')+';cursor:pointer">'+esc(CAP_LABEL[c]||c)+'</button>';}).join('');
+        return '<button type="button" class="entcap'+(on?' on':'')+'" data-ent="'+e.id+'" data-cap="'+c+'" style="font-size:11px;padding:3px 9px;border-radius:14px;border:1px solid '+(on?'var(--brass)':'var(--line)')+';background:'+(on?'var(--brass)':'transparent')+';color:'+(on?'var(--plane)':'var(--ink-2)')+';cursor:pointer">'+esc(CAP_LABEL[c]||c)+'</button>';}).join('');
       return '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid var(--line)"><div style="min-width:150px;font-size:12.5px;font-weight:700;color:var(--ink)">'+esc(e.label)+'</div><div style="display:flex;gap:6px;flex-wrap:wrap">'+(federated.length?chips:'<span style="font-size:11px;color:var(--muted)">all controls are common — fully inherited</span>')+'</div></div>';
     }).join('');
     host.innerHTML=commonNote+rows;
@@ -1178,7 +1179,7 @@
         if(f.type==='select')return '<div class="field"><label>'+f.label+'</label><select class="'+f.cls+'">'+f.opts.map(function(o){return '<option>'+o+'</option>';}).join('')+'</select></div>';
         if(f.type==='money')return '<div class="field"><label>'+f.label+'</label><div class="moneyf"><span class="cur mcur">$</span><input type="number" step="any" class="mnum '+f.cls+'" placeholder="'+(f.ph||'')+'"><select class="munit '+f.cls+'u"><option value="1000000000">B</option><option value="1000000" selected>M</option><option value="1000">K</option></select></div></div>';
         return '<div class="field"><label>'+f.label+'</label><input type="'+(f.type||'text')+'"'+(f.type==='number'?' step="any"':'')+' class="'+f.cls+'" placeholder="'+(f.ph||'')+'"></div>';
-      }).join('')+'<button class="rl-del" type="button" title="Remove" style="height:38px;border:1px solid var(--line);background:#fff;border-radius:8px;cursor:pointer;color:var(--muted)">✕</button>';
+      }).join('')+'<button class="rl-del" type="button" title="Remove" style="height:38px;border:1px solid var(--line);background:var(--surface);border-radius:8px;cursor:pointer;color:var(--muted)">✕</button>';
       wrap.appendChild(row);
       // Populate from EITHER the CSV/import shape (keyed by cls) OR the snapshot /
       // backend shape (keyed by key) so uploaded rows survive save→restore — collect()
@@ -1847,7 +1848,7 @@
     var host=document.getElementById('chainSpine');if(!host)return;
     host.innerHTML='<div style="display:flex;align-items:center;gap:2px;flex-wrap:wrap;font-size:11.5px;font-weight:700">'
       +OB_SPINE.map(function(n,i){var on=n.t.indexOf(active)>=0;
-        var node='<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:20px;white-space:nowrap;border:1px solid '+(on?'#2563eb':'var(--line)')+';background:'+(on?'color-mix(in srgb,#2563eb 12%,transparent)':'transparent')+';color:'+(on?'#2563eb':'var(--muted)')+'">'+(on?'<span style="width:6px;height:6px;border-radius:50%;background:#2563eb"></span>':'')+n.k+'</span>';
+        var node='<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:20px;white-space:nowrap;border:1px solid '+(on?'var(--brass)':'var(--line)')+';background:'+(on?'color-mix(in srgb,var(--brass) 12%,transparent)':'transparent')+';color:'+(on?'var(--brass)':'var(--muted)')+'">'+(on?'<span style="width:6px;height:6px;border-radius:50%;background:var(--brass)"></span>':'')+n.k+'</span>';
         return node+(i<OB_SPINE.length-1?'<span style="color:var(--line);padding:0 1px">→</span>':'');
       }).join('')+'</div>';
   }
@@ -1891,24 +1892,24 @@
       var cur=obEntityModel(OB_ACTIVE_ENTITY);
       var chips=OB_MODES.map(function(m){return '<span class="chip'+(m[0]===cur?' on':'')+'" data-emode="'+m[0]+'" title="'+esc(m[2])+'">'+m[1]+'</span>';}).join('');
       var desc=(OB_MODES.filter(function(m){return m[0]===cur;})[0]||[])[2]||'';
-      modelRow='<div style="margin-top:11px;padding-top:11px;border-top:1px solid color-mix(in srgb,#2563eb 20%,transparent)">'
+      modelRow='<div style="margin-top:11px;padding-top:11px;border-top:1px solid color-mix(in srgb,var(--brass) 20%,transparent)">'
         +'<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span style="font-size:11.5px;font-weight:700;color:var(--ink)">Operating model for this entity</span>'
         +'<div class="chips" style="gap:6px">'+chips+'</div>'
-        +'<button type="button" id="emodeAll" style="font-size:11px;color:#2563eb;background:none;border:1px solid color-mix(in srgb,#2563eb 35%,transparent);border-radius:7px;padding:5px 9px;cursor:pointer">Apply to all '+ents.length+' entities</button></div>'
+        +'<button type="button" id="emodeAll" style="font-size:11px;color:var(--brass);background:none;border:1px solid color-mix(in srgb,var(--brass) 35%,transparent);border-radius:7px;padding:5px 9px;cursor:pointer">Apply to all '+ents.length+' entities</button></div>'
         +'<div style="font-size:11px;color:var(--muted);margin-top:6px">'+esc(desc)+'</div></div>';
     } else if(OB_ACTIVE_ENTITY==='corporate'){
       var inh=ents.filter(function(e){return obEntityModel(e.id)!=='federated';}).length;
-      modelRow='<div style="margin-top:11px;padding-top:11px;border-top:1px solid color-mix(in srgb,#2563eb 20%,transparent);font-size:11.5px;color:var(--ink-2)">'
+      modelRow='<div style="margin-top:11px;padding-top:11px;border-top:1px solid color-mix(in srgb,var(--brass) 20%,transparent);font-size:11.5px;color:var(--ink-2)">'
         +'This is the <b>Corporate baseline</b> (set the common controls under <b>Regions &amp; entities → Security operating model</b>). '
         +(ents.length?('<b>'+inh+'</b> of <b>'+ents.length+'</b> entit'+(ents.length===1?'y':'ies')+' currently inherit it; the rest are federated.'):'')+'</div>';
     }
     var hint=ents.length
       ?('You defined <b>'+ents.length+'</b> '+(ents.length===1?'entity':'entities')+'. Everything on this tab is captured for the selected one, and each entity sets <b>its own operating model</b> — centralized entities inherit the Corporate baseline, federated ones run their own.')
       :('No entities yet — add them under <b>Regions & entities</b> and each will appear here with its own operating model. Configuring at <b>Corporate</b> for now (applies to all).');
-    host.innerHTML='<div style="border:1px solid #2563eb;border-radius:12px;padding:12px 15px;margin:0 0 16px;background:color-mix(in srgb,#2563eb 6%,transparent)">'
+    host.innerHTML='<div style="border:1px solid var(--brass);border-radius:12px;padding:12px 15px;margin:0 0 16px;background:color-mix(in srgb,var(--brass) 6%,transparent)">'
       +'<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">'
-      +'<span style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#2563eb;white-space:nowrap">Configuring for</span>'
-      +'<select id="entityCtxSel" style="padding:8px 12px;border:1px solid var(--line);border-radius:8px;font-size:13px;font-weight:600;background:#fff;min-width:250px">'+opts+'</select>'
+      +'<span style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--brass);white-space:nowrap">Configuring for</span>'
+      +'<select id="entityCtxSel" style="padding:8px 12px;border:1px solid var(--line);border-radius:8px;font-size:13px;font-weight:600;background:var(--surface);min-width:250px">'+opts+'</select>'
       +'<span style="font-size:12.5px;color:var(--ink)">'+obEntityPath(OB_ACTIVE_ENTITY)+'</span></div>'
       +modelRow
       +'<div style="font-size:11.5px;color:var(--muted);margin-top:8px;line-height:1.5">'+hint+'</div></div>';
