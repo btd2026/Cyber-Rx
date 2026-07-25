@@ -4744,7 +4744,11 @@ function c5MountCrownTree(container){
   // Provenance strip (live only): states where every dollar comes from, so the tree
   // is self-evidencing instead of a black box.
   var prov=C5_CJT_INPUT?'<div class="c5cjt-prov"><b>How to read this — every figure traces to your inputs.</b> Dollars are shown at the <b>critical function</b> and at each <b>risk</b>. A function’s <b>business value</b> = the annual revenue of the processes it runs (your Business-Processes upload); it splits into <b>already mitigated</b> (behind controls at CMMI 3+) and <b>residual at risk</b> (behind controls below 3). Processes and crown jewels are the structural path (no dollars). Each risk’s figure = the slice of that value its controls leave exposed. Hover any figure for its exact math.</div>':'';
-  container.innerHTML=note+prov+'<iframe id="c5cjt-frame" class="c5cjt-frame" title="Crown-jewel value tree" scrolling="no" style="width:100%;border:0;height:640px;display:block;background:#EEF1F6" src="'+c5CjtSrc()+'"></iframe>';
+  if(typeof c5paStyle==='function')c5paStyle();
+  var cjtHdr='<div class="c5pa"><div class="c5pa-eyebrow">Program health · Nerion&rsquo;s View · crown-jewel value tree</div>'
+    +'<h1 class="c5pa-finding" style="max-width:30ch">Your business value, traced from every critical function to the risks that leave it <span class="bad">exposed</span>.</h1>'
+    +'<div class="c5pa-dek">Read it top-down: each critical function carries the annual revenue of the processes it runs, split into value already behind strong controls and the residual still at risk. Every figure traces to your inputs.</div></div>';
+  container.innerHTML=cjtHdr+note+prov+'<iframe id="c5cjt-frame" class="c5cjt-frame" title="Crown-jewel value tree" scrolling="no" style="width:100%;border:0;height:640px;display:block;background:#EEF1F6" src="'+c5CjtSrc()+'"></iframe>';
 }
 /* Bundled NIST CSF 2.0 reference metadata for the control codes the value chain
    can map a risk to (via CAP_FRAMEWORK). Framework-static — not tenant data. */
@@ -5726,10 +5730,13 @@ function c5ConfirmQueueView(host){
       +(q.coverage?('<span style="font-size:10.5px;color:var(--muted)">'+q.coverage.pct+'% cov</span>'):'')
       +'<span style="flex:1;min-width:120px">'+chips+'</span>'+act+'</div>';
   }
+  if(typeof c5paStyle==='function')c5paStyle();
+  var qFinding=pending.length?('<em>'+pending.length+'</em> hybrid control'+(pending.length>1?'s are':' is')+' waiting on your confirm.'):'The confirm queue is clear &mdash; every hybrid control is <em>decided</em>.';
   host.innerHTML='<div style="max-width:1080px">'
-    +'<div style="font-size:15px;font-weight:800;color:var(--ink)">Weekly confirm queue</div>'
-    +'<div style="font-size:12.5px;color:var(--ink-2);line-height:1.6;margin:5px 0 12px;max-width:820px">The <b>hybrid</b> controls — Nerion pulled the evidence and computed a <b>proposed verdict</b>; your job shrinks from "go find proof" to <b>approve or dispute</b>. A 10-minute pass, not a 4-hour chore. Decisions persist and feed the score.</div>'
-    +'<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">'+stat(pending.length,'awaiting a click','blue')+stat(confirmed.length,'confirmed','good')+stat(disputed.length,'disputed','crit')+'</div>'
+    +'<div class="c5pa"><div class="c5pa-eyebrow">Program health · confirm queue · as of '+new Date().toLocaleDateString()+'</div>'
+    +'<h1 class="c5pa-finding">'+qFinding+'</h1>'
+    +'<div class="c5pa-dek">The <b>hybrid</b> controls &mdash; Nerion pulled the evidence and computed a <b>proposed verdict</b>; your job shrinks from &ldquo;go find proof&rdquo; to <b>approve or dispute</b>. A 10-minute pass, not a 4-hour chore. Decisions persist and feed the score.</div></div>'
+    +'<div style="display:flex;gap:10px;flex-wrap:wrap;margin:18px 0 12px">'+stat(pending.length,'awaiting a click','blue')+stat(confirmed.length,'confirmed','good')+stat(disputed.length,'disputed','crit')+'</div>'
     +(queue.length?('<div style="border:1px solid var(--line);border-radius:12px;padding:4px 15px 12px;background:var(--surface)">'+ordered.map(row).join('')+'</div>')
       :'<div style="font-size:12px;color:var(--muted);border:1px dashed var(--line);border-radius:10px;padding:14px">No hybrid controls in the queue yet — connect telemetry so controls graduate to the machine-evidenced tier.</div>')
     +'</div>';
@@ -5944,10 +5951,13 @@ function c5NeuronControls(host){
   var provPanel=cjs.length?('<div style="margin-top:24px"><div style="font-size:12.5px;font-weight:800;color:var(--ink);margin-bottom:4px">Telemetry provenance by asset <span style="color:var(--muted);font-weight:600">— "prove it"</span></div>'
     +'<div style="font-size:11.5px;color:var(--muted);margin-bottom:10px">Each asset is only evidenced by tools that actually cover its <b>class</b>. A tool that can’t see the asset (EDR on a SaaS app, CSPM on SaaS) is shown <span style="color:var(--crit)">struck through</span> and <b>not credited</b> — this is how Nerion refuses to claim Defender covers Salesforce.</div>'
     +'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:12px;align-items:start">'+provRows+'</div></div>'):'';
+  if(typeof c5paStyle==='function')c5paStyle();
+  var ncFinding='<em>'+live+'</em> of '+nc.length+' capabilities run on live telemetry'+(off>0?(', and <span class="bad">'+off+'</span> '+(off===1?'is':'are')+' not deployed.'):' &mdash; full coverage.');
   host.innerHTML=
     '<div style="max-width:1080px">'
-    +'<div style="font-size:15px;font-weight:800;color:var(--ink)">Neuron Controls</div>'
-    +'<div style="font-size:12.5px;color:var(--ink-2);line-height:1.6;margin:5px 0 4px;max-width:760px">Your security capabilities, measured once from live telemetry and scored against <b>both</b> risk lenses — adversarial (MITRE ATT&CK: prevent / detect) and the five non-adversarial lanes — then <b>projected</b> onto every framework control they map to. <span style="color:var(--muted)">Measure once, report everywhere.</span></div>'
+    +'<div class="c5pa"><div class="c5pa-eyebrow">Program health · Neuron Controls · as of '+new Date().toLocaleDateString()+'</div>'
+    +'<h1 class="c5pa-finding">'+ncFinding+'</h1>'
+    +'<div class="c5pa-dek">Your security capabilities, measured once from live telemetry and scored against <b>both</b> risk lenses &mdash; adversarial (MITRE ATT&CK: prevent / detect) and the five non-adversarial lanes &mdash; then <b>projected</b> onto every framework control they map to. Measure once, report everywhere.</div></div>'
     +'<div style="font-size:12px;color:var(--ink-2);margin:10px 0 4px"><b style="color:var(--ink)">'+nc.length+'</b> Neuron Controls · <b style="color:var(--good)">'+live+'</b> live telemetry · <b style="color:var(--blue)">'+hyb+'</b> hybrid (a human validates) · <b style="color:var(--muted)">'+off+'</b> not deployed</div>'
     +'<div style="font-size:11px;color:var(--muted);margin-bottom:6px">Prevent reflects <b>control presence</b> (the capability is mapped &amp; deployed). Where a <b>BAS / purple-team</b> reading exists it graduates to <b style="color:var(--good)">proven</b> — the share of simulated attacks actually blocked. '+(effN>0?('<b style="color:var(--good)">'+effN+'</b> of '+nc.length+' capabilities '+(effN===1?'has':'have')+' a measured reading; the rest are presence-only.'):'No effectiveness readings yet — connect a BAS platform (AttackIQ, SafeBreach, Cymulate) or a purple-team feed to graduate presence to proven. Nothing is inferred.')+'</div>'
     +cardsHtml
