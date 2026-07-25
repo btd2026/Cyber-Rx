@@ -5298,6 +5298,65 @@ function c5AttestationInsight(){
   ids.forEach(function(id){var a=c5ControlAssessment(id);if(a.method!=='attestation')return;s.total++;s.prescreened++;
     var l=c5LlmPrescreen(id);if(l.gaps.length)s.gaps++;if(c5IndirectSignal(id))s.indirect++;});
   return s;}
+/* ===== "Blend" presentation language — editorial finding + focal instrument =====
+   Injects a scoped stylesheet once, then two SVG instruments (a maturity gauge and a
+   function radar) built as strings so they render inline with no post-paint step. Colors
+   come through the cockpit design tokens via inline `style` (CSS vars resolve there). */
+function c5paStyle(){
+  if(document.getElementById('c5pa-style'))return;
+  var css=''
+   +'.c5pa{--c5serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,"Times New Roman",serif;margin:6px 0 2px}'
+   +'.c5pa-eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);font-weight:600}'
+   +'.c5pa-finding{font-family:var(--c5serif);font-weight:600;font-size:clamp(22px,3vw,32px);line-height:1.22;letter-spacing:-.01em;color:var(--ink);margin:12px 0 0;max-width:22ch;text-wrap:balance}'
+   +'.c5pa-finding em{font-style:normal;color:var(--blue)}.c5pa-finding .bad{color:var(--crit)}'
+   +'.c5pa-dek{color:var(--ink-2);font-size:15.5px;line-height:1.55;margin-top:14px;max-width:64ch}.c5pa-dek b{color:var(--ink)}'
+   +'.c5pa-inst{display:grid;grid-template-columns:1fr 1.05fr;border:1px solid var(--line);border-radius:14px;background:var(--surface);overflow:hidden;margin-top:26px}'
+   +'@media(max-width:720px){.c5pa-inst{grid-template-columns:1fr}}'
+   +'.c5pa-cell{padding:22px 24px}.c5pa-cell + .c5pa-cell{border-left:1px solid var(--line)}'
+   +'@media(max-width:720px){.c5pa-cell + .c5pa-cell{border-left:none;border-top:1px solid var(--line)}}'
+   +'.c5pa-ct{font-family:var(--mono);font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:12px}'
+   +'.c5pa-gaugewrap{display:flex;flex-direction:column;align-items:center;gap:5px}'
+   +'.c5pa-gaugewrap .read{font-family:var(--c5serif);font-size:42px;font-weight:600;line-height:1}'
+   +'.c5pa-gaugewrap .read small{font-family:var(--sans);font-size:15px;color:var(--muted);font-weight:400}'
+   +'.c5pa-gaugewrap .sub{font-family:var(--mono);font-size:11px;color:var(--ink-2)}'
+   +'.c5pa svg{display:block;max-width:100%;height:auto;margin:0 auto}'
+   +'.c5pa-thin{margin-top:26px}'
+   +'.c5pa-ledger{border-top:1px solid var(--line)}'
+   +'.c5pa-lrow{display:grid;grid-template-columns:24px 1fr minmax(90px,1.4fr) 46px;align-items:center;gap:14px;padding:10px 0;border-bottom:1px solid var(--line)}'
+   +'.c5pa-lrow .ix{font-family:var(--mono);font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}'
+   +'.c5pa-lrow .nm{font-size:14px;font-weight:600;color:var(--ink)}'
+   +'.c5pa-lrow .bar{height:7px;border-radius:4px;background:var(--line);overflow:hidden}.c5pa-lrow .bar i{display:block;height:100%;border-radius:4px}'
+   +'.c5pa-lrow .val{font-family:var(--mono);font-size:15px;font-weight:600;text-align:right;font-variant-numeric:tabular-nums}'
+   +'.c5pa-lrow.weak .nm{color:var(--crit)}';
+  var st=document.createElement('style');st.id='c5pa-style';st.textContent=css;document.head.appendChild(st);
+}
+function c5paGauge(val,target){
+  function pol(cx,cy,r,d){var a=(d-180)*Math.PI/180;return [cx+r*Math.cos(a),cy+r*Math.sin(a)];}
+  function arc(cx,cy,r,a0,a1){var p0=pol(cx,cy,r,a0),p1=pol(cx,cy,r,a1),lg=(a1-a0)>180?1:0;return 'M '+p0[0].toFixed(2)+' '+p0[1].toFixed(2)+' A '+r+' '+r+' 0 '+lg+' 1 '+p1[0].toFixed(2)+' '+p1[1].toFixed(2);}
+  var cx=120,cy=130,r=94,frac=Math.max(0,Math.min(1,val/5)),tf=Math.max(0,Math.min(1,target/5));
+  var vc=val>=3?'--good':val>=2?'--blue':val>=1?'--warn':'--crit';var s='';
+  s+='<svg viewBox="0 0 240 148" width="240" height="148" role="img" aria-label="Maturity '+val.toFixed(1)+' of 5, target '+target+'">';
+  s+='<path d="'+arc(cx,cy,r,0,180)+'" fill="none" style="stroke:var(--line)" stroke-width="14" stroke-linecap="round"/>';
+  s+='<path d="'+arc(cx,cy,r,0,180*frac)+'" fill="none" style="stroke:var('+vc+')" stroke-width="14" stroke-linecap="round"/>';
+  var ta=180*tf,t0=pol(cx,cy,r-11,ta),t1=pol(cx,cy,r+11,ta),tl=pol(cx,cy,r+23,ta);
+  s+='<line x1="'+t0[0].toFixed(1)+'" y1="'+t0[1].toFixed(1)+'" x2="'+t1[0].toFixed(1)+'" y2="'+t1[1].toFixed(1)+'" style="stroke:var(--blue)" stroke-width="2.5"/>';
+  s+='<text x="'+tl[0].toFixed(1)+'" y="'+tl[1].toFixed(1)+'" style="fill:var(--blue);font-family:ui-monospace,monospace" font-size="10" text-anchor="middle">'+target+'</text>';
+  for(var v=0;v<=5;v++){var a=180*(v/5),q0=pol(cx,cy,r-8,a),q1=pol(cx,cy,r-2,a);s+='<line x1="'+q0[0].toFixed(1)+'" y1="'+q0[1].toFixed(1)+'" x2="'+q1[0].toFixed(1)+'" y2="'+q1[1].toFixed(1)+'" style="stroke:var(--muted)" stroke-width="1"/>';}
+  return s+'</svg>';
+}
+function c5paRadar(fns){
+  var esc=(typeof c5esc==='function')?c5esc:function(x){return x;};
+  fns=(fns||[]).filter(Boolean);var N=fns.length;if(N<3)return '';
+  var cx=150,cy=134,R=92;
+  function pt(i,rad){var a=(-90+i*360/N)*Math.PI/180;return [cx+rad*Math.cos(a),cy+rad*Math.sin(a)];}
+  var s='<svg viewBox="0 0 300 268" width="300" height="268" role="img" aria-label="Function profile radar">';
+  [0.25,0.5,0.75,1].forEach(function(g){var pts=fns.map(function(_,i){var p=pt(i,R*g);return p[0].toFixed(1)+','+p[1].toFixed(1);}).join(' ');s+='<polygon points="'+pts+'" fill="none" style="stroke:var(--line)" stroke-width="1"/>';});
+  fns.forEach(function(f,i){var p=pt(i,R),lp=pt(i,R+16);s+='<line x1="'+cx+'" y1="'+cy+'" x2="'+p[0].toFixed(1)+'" y2="'+p[1].toFixed(1)+'" style="stroke:var(--line)" stroke-width="1"/>';var an=Math.abs(lp[0]-cx)<8?'middle':(lp[0]<cx?'end':'start');s+='<text x="'+lp[0].toFixed(1)+'" y="'+(lp[1]+3).toFixed(1)+'" style="fill:var(--ink-2);font-family:ui-monospace,monospace" font-size="10" text-anchor="'+an+'">'+esc(String(f.n))+'</text>';});
+  var dp=fns.map(function(f,i){var p=pt(i,R*(Math.max(0,Math.min(5,f.s))/5));return p[0].toFixed(1)+','+p[1].toFixed(1);}).join(' ');
+  s+='<polygon points="'+dp+'" style="fill:var(--blue);stroke:var(--blue)" fill-opacity="0.15" stroke-width="2"/>';
+  fns.forEach(function(f,i){var p=pt(i,R*(Math.max(0,Math.min(5,f.s))/5));var z=(f.s<=0.05);s+='<circle cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="'+(z?3.2:2.6)+'" style="fill:var('+(z?'--crit':'--blue')+')"/>';});
+  return s+'</svg>';
+}
 /* The honest continuous-assessment view — the anti-vanity summary + every one of the 106
    controls with its method, three-axis state and freshness. Read-only. */
 function c5ContinuousAssessment(host){
@@ -5513,10 +5572,9 @@ function c5ContinuousAssessment(host){
       var scol=function(v){return v>=3.5?'good':v>=2?'blue':v>=1?'warn':'crit';};
       var fnBar=function(f){var w=Math.round(Math.max(0,Math.min(5,f.s))/5*100);return '<div style="min-width:78px"><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--ink-2);margin-bottom:3px"><span style="font-weight:700">'+esc(f.n)+'</span><span style="font-weight:700;color:var(--'+scol(f.s)+')">'+f.s.toFixed(1)+'</span></div><div style="height:5px;background:var(--surface-2);border-radius:3px;overflow:hidden"><i style="display:block;height:100%;width:'+w+'%;background:var(--'+scol(f.s)+')"></i></div></div>';};
       var isEnt=(typeof SCOPE==='undefined'||SCOPE==='enterprise');
-      var sumHtml=(sumCsf!=null)?('<div style="display:flex;gap:22px;align-items:center;flex-wrap:wrap;margin-top:12px;padding-bottom:14px;border-bottom:1px solid var(--line)">'
-        +'<div style="text-align:center;min-width:74px"><div style="font-size:27px;font-weight:800;color:var(--'+scol(sumCsf)+');line-height:1">'+sumCsf.toFixed(2)+'</div><div style="font-size:9px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);margin-top:3px">'+(isEnt?'Aggregate · all regions':(C5_ASSESS_FW==='ai'?'AI RMF':'NIST CSF'))+'</div></div>'
-        +(sumFns.length?('<div style="display:flex;gap:12px;flex-wrap:wrap;padding-left:16px;border-left:1px solid var(--line)">'+sumFns.map(fnBar).join('')+'</div>'):'')
-        +'</div>'):'';
+      // The aggregate + function bars now live in the hero instrument (gauge + radar),
+      // so the scope-nav keeps only the region navigation to avoid duplicating them.
+      var sumHtml='';
       scopeNavHtml='<div style="border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px;background:var(--surface)">'
         +'<div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--blue)">Now viewing · '+(C5_ASSESS_FW==='ai'?'AI frameworks':'continuous assessment')+'</div>'
         +'<div style="font-size:17px;font-weight:800;color:var(--ink);margin:2px 0 1px">'+esc(lbl||'Enterprise')+'</div>'
@@ -5574,8 +5632,25 @@ function c5ContinuousAssessment(host){
   var vProvenPct=s.total?Math.round(s.live/s.total*100):0;
   var vTitle=(isAiFw?'Your AI-governance program is ':'Your NIST CSF 2.0 program is ')+(vLevel?vLevel+' — ':'')+overall5.toFixed(1)+' of 5'+(vBelow?', below the 3.5 target.':' — at target.');
   var vLede=failing+' of '+s.total+' controls are failing, and only <b style="color:var(--'+(vProvenPct>=50?'good':'crit')+')">'+vProvenPct+'%</b> of your posture is proven by a live sensor today.'+(vWeakFn?(' The weakest function is <b>'+((typeof FNL!=='undefined'&&FNL[vWeakFn.k])||vWeakFn.k)+'</b> at '+vWeakFn.s.toFixed(1)+'.'):'')+' Below: what the score is built on, whether you can prove it, and the moves that raise it.';
+  // ── Blend presentation: editorial finding → focal instrument → supporting detail ──
+  c5paStyle();
+  var paFwName=isAiFw?'AI-governance':(c5AssessFwCfg().label);
+  var paReadCol=overall5>=3?'--good':overall5>=2?'--blue':overall5>=1?'--warn':'--crit';
+  var paFinding='Your '+paFwName+' program sits at <em>'+(vLevel||'&mdash;')+'</em> &mdash; '+overall5.toFixed(1)+' of 5, '+(vBelow?'<span class="bad">below the 3.5 target</span>':'at the 3.5 target')+'.';
+  var paEyebrow=(isAiFw?'Program health · AI frameworks':'Program health · '+(c5AssessFwCfg().label))+' · as of '+new Date().toLocaleDateString();
+  var paLedger=(vFns||[]).slice().sort(function(a,b){return a.s-b.s;}).map(function(f,i){var col=f.s>=3?'--good':f.s>=2?'--blue':f.s>=1?'--warn':'--crit';var w=Math.max(2,(f.s/5)*100);return '<div class="c5pa-lrow'+(i===0?' weak':'')+'"><span class="ix">'+String(i+1).padStart(2,'0')+'</span><span class="nm">'+esc(String(f.n))+'</span><span class="bar"><i style="width:'+w+'%;background:var('+col+')"></i></span><span class="val" style="color:var('+col+')">'+f.s.toFixed(1)+'</span></div>';}).join('');
+  var paHero='<div class="c5pa">'
+    +'<div class="c5pa-eyebrow">'+paEyebrow+'</div>'
+    +'<h1 class="c5pa-finding">'+paFinding+'</h1>'
+    +'<div class="c5pa-dek">'+vLede+'</div>'
+    +'<div class="c5pa-inst">'
+      +'<div class="c5pa-cell"><div class="c5pa-ct">Maturity vs 3.5 target</div><div class="c5pa-gaugewrap">'+c5paGauge(overall5,3.5)+'<div class="read" style="color:var('+paReadCol+')">'+overall5.toFixed(1)+'<small> / 5</small></div><div class="sub">'+esc(vLevel||'')+' · target 3.5 · gap '+Math.max(0,3.5-overall5).toFixed(1)+'</div></div></div>'
+      +'<div class="c5pa-cell"><div class="c5pa-ct">Function profile · '+(isAiFw?'AI RMF':'NIST CSF 2.0')+'</div>'+c5paRadar(vFns)+'</div>'
+    +'</div>'
+    +(paLedger?('<div class="c5pa-thin"><div class="c5pa-ct">Where the program is thinnest &mdash; weakest first</div><div class="c5pa-ledger">'+paLedger+'</div></div>'):'')
+  +'</div>';
   host.innerHTML=c5header()+
-    c5shell((isAiFw?'Program health · AI frameworks':'Program health · '+(c5AssessFwCfg().label))+' · as of '+new Date().toLocaleDateString(),vTitle,null,vLede)+
+    paHero+
     cards+
     scopeNavHtml+
     subBar+
