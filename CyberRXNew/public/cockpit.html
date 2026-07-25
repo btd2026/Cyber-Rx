@@ -752,7 +752,7 @@
 </div></div>
 <div id="dataModeBar"><div class="wrap" id="dataModeInner" style="padding:8px 0;font-size:12px;font-weight:600"></div></div>
 <div class="wrap" id="app"></div>
-<div class="foot"><b>Nerion</b> — every figure traces to your data or is clearly labeled modeled · build 2026-07-10a · economics · jurisdictions · resilience all compute from your data; sections labeled illustrative fill in as their intake sources connect.</div>
+<div class="foot"><b>Nerion</b> — every figure traces to its source. Continuous, evidence-based assurance across your program, operational impact and decisions.</div>
 
 <div class="ev-scrim" id="scrim"></div>
 <aside class="ev" id="ev"><div class="ev-h"><span class="eb">How this is calculated</span><button class="ev-x" id="evx">×</button></div><div class="ev-b" id="evb"></div></aside>
@@ -2875,7 +2875,7 @@ function badge(live){var demo=(typeof signalsAreDemo==='function'&&signalsAreDem
 function setBar(live){var bar=document.getElementById('dataModeBar'),inner=document.getElementById('dataModeInner');if(!bar)return;bar.style.display='block';bar.style.borderBottom='1px solid';var nm=orgName()||'your organization';
   var demo=(typeof signalsAreDemo==='function'&&signalsAreDemo())||(typeof demoActive==='function'&&demoActive());
   if(live&&demo){bar.style.background='rgba(250,178,25,.10)';bar.style.borderBottomColor='rgba(250,178,25,.35)';inner.style.color='var(--warn,#b7791f)';inner.innerHTML='● <b>Demo · sample data</b> — a fully-populated example so you can explore Nerion. Connect your tools and upload your policies, and it switches to your live data.';}
-  else if(live){bar.style.background='rgba(12,163,12,.10)';bar.style.borderBottomColor='rgba(12,163,12,.35)';inner.style.color='var(--good)';inner.innerHTML='● <b>Live · '+nm+'</b> — headline economics computed from your data. Sections labeled illustrative fill in as their intake sources connect.';}
+  else if(live){bar.style.background='rgba(12,163,12,.10)';bar.style.borderBottomColor='rgba(12,163,12,.35)';inner.style.color='var(--good)';inner.innerHTML='● <b>Live · '+nm+'</b> — computed continuously from your connected telemetry.';}
   else{bar.style.background='rgba(250,178,25,.12)';bar.style.borderBottomColor='rgba(250,178,25,.4)';inner.style.color='var(--warn,#b7791f)';inner.innerHTML='◐ <b>Illustrative</b> — sample figures. Complete onboarding (inventory + financials → Go live) to compute your live cockpit.';}}
 function renewalDays(d){if(!d)return null;var t=Date.parse(d);if(isNaN(t))return null;return Math.round((t-Date.now())/86400000);}
 function pct(n,dp){return (n*100).toFixed(dp==null?1:dp)+'%';}

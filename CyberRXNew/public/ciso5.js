@@ -898,7 +898,7 @@ function c5get(id){
         method:live2?'Your rank within the opted-in cohort of same-size peers.':'A representative sample of your position. z = (your CMMI − sample median) ÷ sample spread; the percentile is the standard-normal CDF of that z. Your live position among your actual same-size peers unlocks once the cohort reaches '+c5peerMin()+' clients.',
         inputs:pinputs,
         sources:[live2?{tool:'DTNKSHIELD peer cohort',connector:'peer',field:'overall_values',lastRefresh:c5ago()}:{tool:'Sample peer benchmark',connector:'reference',field:'csf_cmmi_distribution',lastRefresh:c5ago()}],
-        note:'Where you stand against peers your size — top-third is the target.'+(live2?'':' Sample preview — your live position unlocks at '+c5peerMin()+' clients.'),connectTool:'the live peer cohort (opt in)'});}
+        note:'Where you stand against peers your size — top-third is the target.'+(live2?'':' Preview — your live position unlocks at '+c5peerMin()+' clients.'),connectTool:'the live peer cohort (opt in)'});}
     /* ---- CFO metrics (same engine, financial lens; shared objects reused where they exist) ---- */
     case 'cf_appetite':{var ap=(typeof LIVE!=='undefined'&&LIVE&&LIVE.economics&&LIVE.economics.appetite)||{};var v=Number(ap.appetite)||0;var conn=v>0;
       var apdemo=(typeof signalsAreDemo==='function')&&signalsAreDemo();
@@ -5680,9 +5680,9 @@ function c5ContinuousAssessment(host){
     +' onmouseover="this.style.borderColor=\'var(--blue)\'" onmouseout="this.style.borderColor=\'var(--line)\'">'
     +'<div style="display:flex;align-items:center;gap:11px;min-width:0">'
     +'<span style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:9px;flex:none;background:var(--surface);color:var(--blue)">'+((typeof c5icon==='function')?c5icon('scale'):'⚖')+'</span>'
-    +'<div style="min-width:0"><div style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--blue)">Peer benchmark · '+fwShort+' · '+((typeof c5peerLive==='function'&&c5peerLive())?'view comparison':'sample preview')+'</div>'
+    +'<div style="min-width:0"><div style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--blue)">Peer benchmark · '+fwShort+' · '+((typeof c5peerLive==='function'&&c5peerLive())?'view comparison':'preview')+'</div>'
     +'<div style="font-size:12px;color:var(--ink-2);margin-top:1px">'+((typeof c5peerLive==='function'&&c5peerLive())?('See how your '+fwShort+' continuous-assessment posture compares to the DTNKShield community — anonymously.'):('Preview how your '+fwShort+' posture will compare — the live cohort unlocks at '+((typeof c5peerMin==='function')?c5peerMin():5)+' clients (anonymous, k-anonymity-gated).'))+'</div></div>'
-    +'</div><span class="peer-badge">'+((typeof c5peerLive==='function'&&c5peerLive())?'DTNKShield ›':'Sample ›')+'</span></div>';
+    +'</div><span class="peer-badge">'+((typeof c5peerLive==='function'&&c5peerLive())?'DTNKShield ›':'Preview ›')+'</span></div>';
   // ── Expandable function tree (classic .c5fw-tree); each function opens to its control table ──
   var tree='<div class="c5fw-tree">'+FN.map(function(F){
     var cids=ids.filter(function(id){return id.indexOf(F.k+'.')===0;}).sort();if(!cids.length)return '';
@@ -6242,15 +6242,15 @@ function c5FrameworksClassic(host){
   var lastAssessed='<div style="font-size:12px;color:var(--ink-2)">Last assessed <b>'+fmt(now)+'</b> · next refresh <b>'+fmt(nextD)+'</b>'+(docN?(' · <a id="c5docsLink" style="color:var(--blue);font-weight:600;cursor:pointer">'+docN+' documents reviewed</a>'):'')+'</div>';
   // Peer-benchmark box — sits inside the top card, in the empty space to the right
   // of the Reassess row. Its eyebrow names the selected framework so it reads e.g.
-  // "Peer benchmark · NIST CSF 2.0 · sample preview" and re-titles on pill switch.
+  // "Peer benchmark · NIST CSF 2.0 · preview" and re-titles on pill switch.
   var fwShort={csf:'NIST CSF 2.0',r53:'NIST 800-53',soc2:'SOC 2',hipaa:'HIPAA',cis:'CIS v8',iso:'ISO 27001'}[sel]||'framework';
   var peerBox='<div id="c5fwPeerBox" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface-2);cursor:pointer;transition:border-color .15s,background .15s"'+
     ' onmouseover="this.style.borderColor=\'var(--blue)\'" onmouseout="this.style.borderColor=\'var(--line)\'">'+
     '<div style="display:flex;align-items:center;gap:11px;min-width:0">'+
       '<span style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:9px;flex:none;background:var(--surface);color:var(--blue)">'+c5icon('scale')+'</span>'+
-      '<div style="min-width:0"><div style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--blue)">Peer benchmark · '+fwShort+' · '+(c5peerLive()?'view comparison':'sample preview')+'</div>'+
+      '<div style="min-width:0"><div style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--blue)">Peer benchmark · '+fwShort+' · '+(c5peerLive()?'view comparison':'preview')+'</div>'+
       '<div style="font-size:12px;color:var(--ink-2);margin-top:1px">'+(c5peerLive()?('See how your '+((typeof FW_NAMES!=='undefined'&&FW_NAMES[sel])||'framework')+' maturity compares to the DTNKShield community — anonymously.'):('Preview how your '+((typeof FW_NAMES!=='undefined'&&FW_NAMES[sel])||'framework')+' maturity will compare — the live cohort unlocks at '+c5peerMin()+' clients (anonymous, k-anonymity-gated).'))+'</div></div>'+
-    '</div><span class="peer-badge">'+(c5peerLive()?'DTNKShield ›':'Sample ›')+'</span></div>';
+    '</div><span class="peer-badge">'+(c5peerLive()?'DTNKShield ›':'Preview ›')+'</span></div>';
   // Top card: framework pills · (reassess + peer benchmark) · last-assessed · export buttons.
   var topCard='<div style="border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:6px">'+
     pills+
@@ -6952,7 +6952,7 @@ function c5fwPeerFetch(){
     .then(function(d){C5FW_PEER=d||{sufficient:false};C5FW_PEER_BUSY=false;c5fwPeerRender();})
     .catch(function(){C5FW_PEER={error:true};C5FW_PEER_BUSY=false;c5fwPeerRender();});
 }
-/* Illustrative cohort for the sample preview — a fixed, defensible distribution so
+/* Illustrative cohort for the preview — a fixed, defensible distribution so
    the "you vs peers" comparison can be shown BEFORE the live cohort (5+ orgs)
    exists. Deterministic; nothing here leaves the browser. */
 function c5peerSampleData(){
@@ -6971,7 +6971,7 @@ function c5fwPeerSampleHTML(fwName){
   var S=c5peerSampleData();
   var pctile=(typeof peerPercentileOf==='function')?peerPercentileOf(over,S.overall_values):null;
   var ordCol=pctile==null?'ink':(pctile>=50?'good':(pctile>=25?'warn':'crit'));
-  var banner='<div class="c5note" style="margin-top:2px;margin-bottom:10px">🔍 <b>Sample preview · '+fwName+'.</b> An illustrative cohort so you can see exactly how your comparison will present. The live '+fwName+' benchmark unlocks once <b>'+c5peerMin()+'</b> organizations have joined (anonymous, k-anonymity-gated) — nothing here has left your browser.</div>';
+  var banner='<div class="c5note" style="margin-top:2px;margin-bottom:10px">🔍 <b>Preview · '+fwName+'.</b> An illustrative cohort so you can see exactly how your comparison will present. The live '+fwName+' benchmark unlocks once <b>'+c5peerMin()+'</b> organizations have joined (anonymous, k-anonymity-gated) — nothing here has left your browser.</div>';
   var hero='<div class="peer-hero"><div><div class="peer-hero-l">My Organization · '+fwName+' vs sample cohort</div>'+
     '<div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-top:2px"><div class="peer-hero-v" style="color:var(--'+((typeof cmmiColor==='function')?cmmiColor(Math.round(over||0)):'ink')+')">'+(over!=null?Number(over).toFixed(1):'—')+'<span>/ 5</span></div>'+
     (pctile!=null?'<div class="peer-hero-d">You would rank in the <b style="color:var(--'+ordCol+')">'+((typeof peerOrdinal==='function')?peerOrdinal(pctile):pctile)+' percentile</b> — '+(pctile>=50?'ahead of':'behind')+' the sample median of '+S.overall.p50.toFixed(1)+'.</div>':'')+'</div></div>'+
