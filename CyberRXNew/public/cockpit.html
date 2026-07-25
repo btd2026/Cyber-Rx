@@ -40,6 +40,11 @@
   .scope-tier{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 3px 0 4px;white-space:nowrap}
   .seat.ent{font-size:12px;padding:5px 11px}
   .seat.ent.on{background:color-mix(in srgb,var(--blue) 12%,var(--surface-2))}
+  /* Scope selector — a secondary filter strip beneath the section tabs. Re-scopes the
+     section you're reading; the section tabs above are the primary story drivers. */
+  .c5scope{display:flex;align-items:center;gap:5px 6px;flex-wrap:wrap;margin:4px 0 22px;padding:10px 13px;border:1px solid var(--line);border-radius:11px;background:var(--surface-2)}
+  .c5scope:empty{display:none}
+  .c5scope .seatlbl{margin-right:8px}
   #dataModeBar{display:none}
   .hero{padding:30px 0 4px}
   .eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--blue);font-weight:600;margin-bottom:12px}
@@ -741,7 +746,6 @@
     <span id="orgLive"><span class="dot" style="background:var(--muted)"></span>Sample workspace</span>
   </div>
 </div></div>
-<div class="seats"><div class="wrap seats-in" id="scopeBar"><span class="seatlbl">Scope</span><button class="seat on" data-scope="enterprise">Enterprise</button></div></div>
 <div id="dataModeBar"><div class="wrap" id="dataModeInner" style="padding:8px 0;font-size:12px;font-weight:600"></div></div>
 <div class="wrap" id="app"></div>
 <div class="foot"><b>Nerion</b> — every figure traces to your data or is clearly labeled modeled · build 2026-07-10a · economics · jurisdictions · resilience all compute from your data; sections labeled illustrative fill in as their intake sources connect.</div>
@@ -801,10 +805,15 @@ function render(seat){
   // Seat header (CISO …). The "Now viewing" scope banner is removed — scope switching lives in
   // the top scope bar, and the regions/entity drill lives inside Continuous assessment.
   var h=((typeof c5seatHeader==='function')?c5seatHeader():('<div class="hero"><div class="eyebrow">'+s.eyebrow+'</div></div>'));
-  h+='<div id="secTabs" class="sectabs"></div><div id="secWrap">'+s.body()+'</div>';
+  // Section tabs drive the story (primary); the scope selector sits BELOW them as a
+  // secondary filter that re-scopes whichever section you're reading.
+  h+='<div id="secTabs" class="sectabs"></div>'
+    +'<div class="c5scope" id="scopeBar" role="navigation" aria-label="Scope: enterprise, region, entity"></div>'
+    +'<div id="secWrap">'+s.body()+'</div>';
   document.getElementById('app').innerHTML=localizeInd(h);
   try{if(typeof wireScopeBanner==='function')wireScopeBanner();}catch(_){}
   buildTabs();
+  try{if(typeof renderScopeBar==='function')renderScopeBar();}catch(_){}
   wireChoose();renderInitiatives();renderChain();renderGrowth();renderControls();renderCisoDecisions();try{if(typeof c5SeatViews==='function')c5SeatViews();}catch(_){}c5Health();c5Exposure();c5Effect();try{if(typeof c5Resilience==='function')c5Resilience();}catch(_){}c5Threats();c5Peers();c5Frameworks();c5AiSupply();try{if(typeof c5DecProj==='function')c5DecProj();}catch(_){}try{if(typeof c5OsLayer==='function')c5OsLayer();}catch(_){}renderFrameworks();renderValueChain();renderCjFlow();renderCompliance();renderPeerCompare();renderCisoVendors();renderProcBars();renderOversight();renderTrend();renderEarnings();renderRoi();renderThreatIntel();renderDrReadiness();renderPeerBench();renderOpModel(seat);renderSignals();applyLive();try{if(typeof renderDelta==='function')renderDelta();}catch(_){}window.scrollTo({top:0});
 }
 /* Turn the seat's stacked sections into tabs — one tab per section, only the

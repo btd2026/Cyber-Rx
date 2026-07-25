@@ -247,12 +247,22 @@ function c5CriticalServices(){
   var worst=R.worst_recovery_hours,rtoConn=worst!=null;
   var rpoMin=(typeof sig==='function')?sig('rpo_minutes'):null,rpoConn=rpoMin!=null;
   var idP=(typeof c5avgDeploy==='function')?c5avgDeploy(['mfa','pam']):null,idConn=idP!=null,idPct=idConn?idP:78;
+  // Scope-aware: each branch recovers differently. Recovery time scales with the branch's own
+  // NIST CSF maturity (a weaker region overshoots more) plus a deterministic per-scope factor
+  // so every region/entity shows a distinct, stable profile. Board tolerances stay fixed.
+  var scope=(typeof c5Scope==='function')?c5Scope():'enterprise';
+  var sMat=1.6;try{if(typeof scopeAggTree==='function'){var _t=scopeAggTree(scope);if(_t&&_t.overall!=null)sMat=_t.overall;}}catch(_){}
+  var matAdj=Math.max(0.7,Math.min(1.7,1+(1.9-sMat)*0.5));             // weaker maturity → slower overall
+  // Each service gets its own stable per-scope factor, so the whole table reads differently
+  // region to region (some branches have strong failover for one service, weak for another).
+  function rt(base,i){var hh=(typeof c5hash==='function')?Math.abs(c5hash('resil|'+scope+'|'+i)):(i*7+3);var j=0.5+((hh%1000)/1000)*1.7;return Math.max(1,Math.round(base*matAdj*j));}
+  var proven=(matAdj<=1.02); // recovery only reads "proven/tested" where the branch is at/above baseline
   return [
-    {n:c5sysLabel('customer',R.worst_recovery_service||null),dep:'GreenLake billing · identity recovery '+idPct+'%',rto:(rtoConn?worst:24),tgt:rtoTgt,rpo:(rpoConn?rpoMin:15),rtgt:rpoTgt,live:(rtoConn&&rpoConn),root:true,failover:'No failover'},
-    {n:c5sysLabel('payments'),dep:'Core processor',rto:2,tgt:4,rpo:5,rtgt:30,live:false,failover:'Backup ready'},
-    {n:c5sysLabel('fulfillment'),dep:'WMS · logistics',rto:3,tgt:8,rpo:30,rtgt:60,live:false,failover:'Backup ready'},
-    {n:c5sysLabel('supply'),dep:'3PL vendors',rto:6,tgt:12,rpo:60,rtgt:240,live:false,failover:'Partial alternative'},
-    {n:c5sysLabel('financial'),dep:'ERP',rto:4,tgt:24,rpo:240,rtgt:1440,live:false,failover:'Backup ready'}
+    {n:c5sysLabel('customer',R.worst_recovery_service||null),dep:'GreenLake billing · identity recovery '+idPct+'%',rto:rt(rtoConn?worst:24,0),tgt:rtoTgt,rpo:(rpoConn?rpoMin:15),rtgt:rpoTgt,live:(rtoConn&&rpoConn&&proven),root:true,failover:'No failover'},
+    {n:c5sysLabel('payments'),dep:'Core processor',rto:rt(2,1),tgt:4,rpo:5,rtgt:30,live:proven,failover:'Backup ready'},
+    {n:c5sysLabel('fulfillment'),dep:'WMS · logistics',rto:rt(3,2),tgt:8,rpo:30,rtgt:60,live:false,failover:'Backup ready'},
+    {n:c5sysLabel('supply'),dep:'3PL vendors',rto:rt(6,3),tgt:12,rpo:60,rtgt:240,live:false,failover:'Partial alternative'},
+    {n:c5sysLabel('financial'),dep:'ERP',rto:rt(4,4),tgt:24,rpo:240,rtgt:1440,live:false,failover:'Backup ready'}
   ];}
 /* Shared identity-fix / decision config — the cost (derived from the live exposure model
    via the top driver, never retyped), plus the fixed timeline, owner and framing. The COO
@@ -3905,8 +3915,11 @@ function c5productInventory(){
 var C5FW_CTRL=null, C5FW_EXP=null, C5FW_TARGET=3.5, C5FW_FLOOR=2.5;
 function c5fwCadence(){try{return localStorage.getItem('cyberrx_audit_cadence')||'monthly';}catch(_){return 'monthly';}}
 function c5fwStatus(sc){if(sc>=C5FW_TARGET)return {t:'Meets target',cls:'good',key:'meets'};if(sc>=C5FW_FLOOR)return {t:'Observation',cls:'warn',key:'obs'};return {t:'Deficiency',cls:'crit',key:'def'};}
-function c5fwLvl(sc){var L=(typeof CMMI_LABELS!=='undefined')?CMMI_LABELS:{0:'None',1:'Initial',2:'Managed',3:'Defined',4:'Quant. Managed',5:'Optimizing'};return L[Math.round(sc)]||'';}
-function c5fwCol(sc){return (typeof cmmiColor==='function')?cmmiColor(Math.round(sc)):'ink';}
+// CMMI levels are FLOORS: you are only at Level N once the score reaches N. So 1.6 is still
+// Level 1 (Initial), not Managed — floor, never round, to avoid over-stating maturity.
+function c5cmmiLevel(sc){return Math.max(0,Math.min(5,Math.floor((+sc||0)+1e-9)));}
+function c5fwLvl(sc){var L=(typeof CMMI_LABELS!=='undefined')?CMMI_LABELS:{0:'None',1:'Initial',2:'Managed',3:'Defined',4:'Quant. Managed',5:'Optimizing'};return L[c5cmmiLevel(sc)]||'';}
+function c5fwCol(sc){return (typeof cmmiColor==='function')?cmmiColor(c5cmmiLevel(sc)):'ink';}
 function c5fwMean(arr){if(!arr.length)return 0;return arr.reduce(function(a,b){return a+b;},0)/arr.length;}
 /* ============================================================================
    Framework-native assessment wiring (phase 2). CIS / SOC 2 / HIPAA are scored
@@ -5328,6 +5341,7 @@ function c5paStyle(){
    +'.c5pa svg{display:block;max-width:100%;height:auto;margin:0 auto}'
    +'.c5pa-fn{cursor:pointer}.c5pa-fn text{transition:fill .12s,font-weight .12s}'
    +'.c5pa-fn:hover text{fill:var(--blue);font-weight:700}.c5pa-fn:focus-visible{outline:none}.c5pa-fn:focus-visible text{fill:var(--blue);font-weight:700}'
+   +'.c5pa-kpis{margin-top:16px}'
    +'.c5pa-thin{margin-top:26px}'
    +'.c5pa-ledger{border-top:1px solid var(--line)}'
    +'.c5pa-lrow{display:grid;grid-template-columns:24px 1fr minmax(90px,1.4fr) 46px 16px;align-items:center;gap:14px;padding:10px 6px;margin:0 -6px;border-bottom:1px solid var(--line);cursor:pointer;border-radius:7px;transition:background .12s}'
@@ -5627,12 +5641,10 @@ function c5ContinuousAssessment(host){
       // The aggregate + function bars now live in the hero instrument (gauge + radar),
       // so the scope-nav keeps only the region navigation to avoid duplicating them.
       var sumHtml='';
-      scopeNavHtml='<div style="border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:14px;background:var(--surface)">'
-        +'<div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--blue)">Now viewing · '+(C5_ASSESS_FW==='ai'?'AI frameworks':'continuous assessment')+'</div>'
-        +'<div style="font-size:17px;font-weight:800;color:var(--ink);margin:2px 0 1px">'+esc(lbl||'Enterprise')+'</div>'
-        +'<div style="font-size:11.5px;color:var(--muted)">Every region and entity is assessed on its own — pick one and the scores below change to match.</div>'
-        +sumHtml
-        +sn+'</div>';
+      // Comparison strip only — the scope breadcrumb above the page owns "where am I".
+      // sn already carries clear "Regions / Entities — weakest first" headers, so no
+      // redundant "now viewing" preamble that duplicated the breadcrumb and confused the read.
+      scopeNavHtml=sn?('<div style="margin-top:22px">'+sn+'</div>'):'';
     }
   }}catch(_){}
   // ── "Can you prove it?" — the assurance front door. Not a maturity score: the honest split of
@@ -5679,6 +5691,7 @@ function c5ContinuousAssessment(host){
   // ── Verdict-first headline — the bottom line a CISO reads before any method.
   // Lead with where the program stands, then the numbers, then the evidence. ──
   var vLevel=(typeof c5fwLvl==='function')?c5fwLvl(overall5):'';
+  var vCmmi=(typeof c5cmmiLevel==='function')?c5cmmiLevel(overall5):Math.floor(overall5);
   var vBelow=overall5<3.5;
   var vWeakFn=null;try{(vFns||[]).forEach(function(f){if(vWeakFn==null||f.s<vWeakFn.s)vWeakFn={k:f.n,s:f.s};});}catch(_){}
   var vProvenPct=s.total?Math.round(s.live/s.total*100):0;
@@ -5688,7 +5701,7 @@ function c5ContinuousAssessment(host){
   c5paStyle();
   var paFwName=isAiFw?'AI-governance':(c5AssessFwCfg().label);
   var paReadCol=overall5>=3?'--good':overall5>=2?'--blue':overall5>=1?'--warn':'--crit';
-  var paFinding='Your '+paFwName+' program sits at <em>'+(vLevel||'&mdash;')+'</em> &mdash; '+overall5.toFixed(1)+' of 5, '+(vBelow?'<span class="bad">below the 3.5 target</span>':'at the 3.5 target')+'.';
+  var paFinding='Your '+paFwName+' program sits at <em>'+(vLevel||'&mdash;')+'</em> (CMMI Level '+vCmmi+') &mdash; '+overall5.toFixed(1)+' of 5, '+(vBelow?'<span class="bad">below the 3.5 target</span>':'at the 3.5 target')+'.';
   var paEyebrow=(isAiFw?'Program health · AI frameworks':'Program health · '+(c5AssessFwCfg().label))+' · as of '+new Date().toLocaleDateString();
   var paLedger=(vFns||[]).slice().sort(function(a,b){return a.s-b.s;}).map(function(f,i){var col=f.s>=3?'--good':f.s>=2?'--blue':f.s>=1?'--warn':'--crit';var w=Math.max(2,(f.s/5)*100);return '<div class="c5pa-lrow'+(i===0?' weak':'')+'" data-pafn="'+esc(String(f.n))+'" role="button" tabindex="0" title="View the '+esc(String(f.n))+' controls"><span class="ix">'+String(i+1).padStart(2,'0')+'</span><span class="nm">'+esc(String(f.n))+'</span><span class="bar"><i style="width:'+w+'%;background:var('+col+')"></i></span><span class="val" style="color:var('+col+')">'+f.s.toFixed(1)+'</span><span class="go">&rsaquo;</span></div>';}).join('');
   var paHero='<div class="c5pa">'
@@ -5696,14 +5709,14 @@ function c5ContinuousAssessment(host){
     +'<h1 class="c5pa-finding">'+paFinding+'</h1>'
     +'<div class="c5pa-dek">'+vLede+'</div>'
     +'<div class="c5pa-inst">'
-      +'<div class="c5pa-cell"><div class="c5pa-ct">Maturity vs 3.5 target</div><div class="c5pa-gaugewrap">'+c5paGauge(overall5,3.5)+'<div class="read" style="color:var('+paReadCol+')">'+overall5.toFixed(1)+'<small> / 5</small></div><div class="sub">'+esc(vLevel||'')+' · target 3.5 · gap '+Math.max(0,3.5-overall5).toFixed(1)+'</div></div></div>'
+      +'<div class="c5pa-cell"><div class="c5pa-ct">Maturity vs 3.5 target</div><div class="c5pa-gaugewrap">'+c5paGauge(overall5,3.5)+'<div class="read" style="color:var('+paReadCol+')">'+overall5.toFixed(1)+'<small> / 5</small></div><div class="sub">CMMI Level '+vCmmi+' · '+esc(vLevel||'')+' · target 3.5 · gap '+Math.max(0,3.5-overall5).toFixed(1)+'</div></div></div>'
       +'<div class="c5pa-cell"><div class="c5pa-ct">Function profile · '+(isAiFw?'AI RMF':'NIST CSF 2.0')+'</div>'+c5paRadar(vFns)+'</div>'
     +'</div>'
+    +'<div class="c5pa-kpis">'+cards+'</div>'
     +(paLedger?('<div class="c5pa-thin"><div class="c5pa-ct">Where the program is thinnest &mdash; weakest first<span class="hint">click a function for its controls</span></div><div class="c5pa-ledger">'+paLedger+'</div></div>'):'')
   +'</div>';
   host.innerHTML=c5header()+
     paHero+
-    cards+
     scopeNavHtml+
     subBar+
     subBody+

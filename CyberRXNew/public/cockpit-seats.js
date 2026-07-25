@@ -10,7 +10,6 @@ var SEATS = {
   body:function(){return (
    sec('01','Program health','','<div id="c5-frameworks"></div>')
    +sec('02','Operational impact','','<div id="c5-resilience"></div>')
-   +sec('03',(typeof nt==='function'?nt('os.tab'):'Operating System'),(typeof nt==='function'?nt('os.tab.desc'):'Act on the posture, and prove it worked.'),'<div id="c5-oslayer"></div>')
   );}
  }
 };
