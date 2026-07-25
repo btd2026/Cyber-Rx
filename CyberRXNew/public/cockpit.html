@@ -58,15 +58,14 @@
   /* section tabs — one per section, only the active shown */
   .sectabs{display:flex;gap:2px;overflow-x:auto;padding:0;margin-bottom:18px;border-bottom:1px solid var(--line);scrollbar-width:thin;-webkit-overflow-scrolling:touch}
   .sectabs::-webkit-scrollbar{height:5px}.sectabs::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:9px}
-  .sectab{flex:none;display:inline-flex;align-items:center;gap:6px;background:none;border:0;border-bottom:2px solid transparent;color:var(--muted);border-radius:0;padding:9px 10px;margin-bottom:-1px;font-family:inherit;font-size:12.5px;font-weight:500;cursor:pointer;white-space:nowrap;transition:color .12s,border-color .12s}
+  .sectab{flex:none;display:inline-flex;align-items:center;gap:7px;background:none;border:0;border-bottom:2.5px solid transparent;color:var(--muted);border-radius:0;padding:11px 14px;margin-bottom:-1px;font-family:inherit;font-size:16.5px;font-weight:600;letter-spacing:-.01em;cursor:pointer;white-space:nowrap;transition:color .12s,border-color .12s}
   .sectab:hover{color:var(--ink-2)}
   .sectab.on{color:var(--ink);background:none;border-bottom-color:var(--blue)}
-  .sectab .stno{font-family:inherit;font-size:12.5px;font-weight:500;opacity:.55;margin-right:1px}
+  .sectab .stno{font-family:inherit;font-size:16.5px;font-weight:600;opacity:.5;margin-right:1px}
   .sectab.on .stno{opacity:.85}
   .section{margin-top:0;padding-top:10px;border-top:none}
-  .rubric{display:flex;align-items:flex-start;gap:15px;margin-bottom:18px}
-  .rubric .no{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--blue);background:var(--blue-soft);border:1px solid rgba(57,135,229,.35);border-radius:9px;padding:6px 10px;line-height:1}
-  .rubric .rt{font-size:18px;font-weight:700;letter-spacing:-.01em}.rubric .rd{font-size:13px;color:var(--muted);margin-top:3px}
+  /* The section heading is redundant with each section's own editorial eyebrow, so hide it. */
+  .rubric{display:none}
   .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.cols{display:grid;grid-template-columns:1.25fr 1fr;gap:16px}
   .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:17px 19px}
   .card .ck{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:9px}
@@ -3280,13 +3279,15 @@ function scopeNav(){
     }
     // Label the strip with whatever framework is active, so AI scores are never mislabeled CSF.
     var fwLbl=(typeof C5_ASSESS_FW!=='undefined'&&C5_ASSESS_FW==='ai')?'AI RMF':'NIST CSF';
-    // The regions strip is ALWAYS shown so you can hop between regions from any scope.
-    var out=drillCards('Regions at a glance · '+fwLbl+', weakest first',
-      REGIONS.filter(function(r){return r.kind==='region';}),
-      function(r){return r.id;},function(r){return r.label;},function(r){return r.regime;},'region');
-    // Inside a region (or an entity within it), also show that region's entities below it.
-    if(reg&&reg.entities&&reg.entities.length){
-      out+=drillCards(reg.entities.length+' entities in '+reg.label+' · '+fwLbl+', weakest first',
+    // Logical grouping: at Enterprise you compare regions; once you're inside a region (or an
+    // entity within it) you compare that region's entities — you do not see the regions again.
+    var out='';
+    if(SCOPE==='enterprise'){
+      out=drillCards('Regions at a glance · '+fwLbl+', weakest first',
+        REGIONS.filter(function(r){return r.kind==='region';}),
+        function(r){return r.id;},function(r){return r.label;},function(r){return r.regime;},'region');
+    } else if(reg&&reg.entities&&reg.entities.length){
+      out=drillCards(reg.entities.length+' entities in '+reg.label+' · '+fwLbl+', weakest first',
         reg.entities,function(e){return e.id;},function(e){return e.label;},
         function(e){return (typeof scopeMeta==='function'&&scopeMeta(e.id)&&scopeMeta(e.id).regime)||'';},'entity');
     }
