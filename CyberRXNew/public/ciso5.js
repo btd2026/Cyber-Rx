@@ -5486,7 +5486,7 @@ function c5ContinuousAssessment(host){
   // ── Scope switcher — the same Enterprise → Region → Entity navigation as the top banner,
   // dropped in here so you can move scope without leaving Continuous assessment. Each scope
   // has its OWN continuous scores, so switching one updates every card/tree/detail below. ──
-  var scopeNavHtml='';
+  var scopeNavHtml='';var vFns=null;
   try{ if(typeof scopeNav==='function'){var sn=scopeNav();
     if(sn){var lbl=(typeof scopeLabel==='function')?scopeLabel(typeof SCOPE!=='undefined'?SCOPE:'enterprise'):'';
       // Aggregate summary for the CURRENT scope — the overall NIST CSF (Enterprise = the
@@ -5505,6 +5505,7 @@ function c5ContinuousAssessment(host){
         if(sumCsf==null){try{ if(typeof c5fwTree==='function'&&typeof fwDeployedIds==='function'){var st2=c5fwTree('csf',fwDeployedIds());sumCsf=st2.overall;
           sumFns=st2.groups.map(function(g){return {n:String(g.id||g.name).split(' ')[0],s:g.score};}); } }catch(_){}}
       }
+      vFns=sumFns; // hoist so the verdict headline cites the SAME function scores as the bars
       var scol=function(v){return v>=3.5?'good':v>=2?'blue':v>=1?'warn':'crit';};
       var fnBar=function(f){var w=Math.round(Math.max(0,Math.min(5,f.s))/5*100);return '<div style="min-width:78px"><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--ink-2);margin-bottom:3px"><span style="font-weight:700">'+esc(f.n)+'</span><span style="font-weight:700;color:var(--'+scol(f.s)+')">'+f.s.toFixed(1)+'</span></div><div style="height:5px;background:var(--surface-2);border-radius:3px;overflow:hidden"><i style="display:block;height:100%;width:'+w+'%;background:var(--'+scol(f.s)+')"></i></div></div>';};
       var isEnt=(typeof SCOPE==='undefined'||SCOPE==='enterprise');
@@ -5557,11 +5558,21 @@ function c5ContinuousAssessment(host){
     subBody=cadenceBar+'<div class="c5fw-wrap"><div class="c5fw-right">'+tree+'</div><div class="c5fw-left" id="assessDetail">'+detail+'</div></div>';
   }else if(C5_ASSESS_SUBTAB==='drift'){
     subBody=driftPanel||'<div style="border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:14px;background:var(--surface);font-size:12.5px;color:var(--muted)">✓ No control has drifted since the last assessment.</div>';
-  }else{ // summary (default) — the "can you prove it?" assurance hero, then the exec KPI cards
-    subBody=provHero+cards+peerBox+queuePanel;
+  }else{ // summary (default) — assurance hero, then peer benchmark + queue.
+    // The KPI cards move UP into the verdict band; method drops to the footnote.
+    subBody=provHero+peerBox+queuePanel;
   }
+  // ── Verdict-first headline — the bottom line a CISO reads before any method.
+  // Lead with where the program stands, then the numbers, then the evidence. ──
+  var vLevel=(typeof c5fwLvl==='function')?c5fwLvl(overall5):'';
+  var vBelow=overall5<3.5;
+  var vWeakFn=null;try{(vFns||[]).forEach(function(f){if(vWeakFn==null||f.s<vWeakFn.s)vWeakFn={k:f.n,s:f.s};});}catch(_){}
+  var vProvenPct=s.total?Math.round(s.live/s.total*100):0;
+  var vTitle=(isAiFw?'Your AI-governance program is ':'Your NIST CSF 2.0 program is ')+(vLevel?vLevel+' — ':'')+overall5.toFixed(1)+' of 5'+(vBelow?', below the 3.5 target.':' — at target.');
+  var vLede=failing+' of '+s.total+' controls are failing, and only <b style="color:var(--'+(vProvenPct>=50?'good':'crit')+')">'+vProvenPct+'%</b> of your posture is proven by a live sensor today.'+(vWeakFn?(' The weakest function is <b>'+((typeof FNL!=='undefined'&&FNL[vWeakFn.k])||vWeakFn.k)+'</b> at '+vWeakFn.s.toFixed(1)+'.'):'')+' Below: what the score is built on, whether you can prove it, and the moves that raise it.';
   host.innerHTML=c5header()+
-    c5shell('Continuous assessment · how is every control assessed?','All '+s.total+' '+c5AssessFwCfg().label+' controls, continuously assessed — never point-in-time.',null,'The <b>method differs by control</b> and Nerion is honest about which it used: live telemetry, a weekly human-confirm, or a scheduled <b>attestation</b> with freshness tracking — a governance outcome has no sensor, so it is not fake-automated. Each control carries three axes never blended into one number — <b>verdict</b>, <b>assurance</b> and <b>freshness</b> — plus <b>coverage</b> (observed vs known). Open a function to see its controls; click one for the detail.')+
+    c5shell((isAiFw?'Program health · AI frameworks':'Program health · '+(c5AssessFwCfg().label))+' · as of '+new Date().toLocaleDateString(),vTitle,null,vLede)+
+    cards+
     scopeNavHtml+
     subBar+
     subBody+
