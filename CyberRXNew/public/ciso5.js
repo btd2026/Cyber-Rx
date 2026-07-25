@@ -4724,6 +4724,8 @@ var C5_PH_DEFAULT='classic'; // flip to 'nerion' to change the default tab in on
 var C5_PH_TAB=C5_PH_DEFAULT;
 // Continuous-assessment view (Classic-view layout): expanded functions + selected control.
 var C5_ASSESS_EXP=null, C5_ASSESS_CTRL=null, C5_ASSESS_DRIFT_ALL=false;
+// The function drilled into from the blend ledger/radar — opens its controls at any scope.
+var C5_ASSESS_FN=null;
 // Continuous-assessment sub-tab: 'summary' (exec overview) · 'controls' (per-scope detail) · 'drift'.
 var C5_ASSESS_SUBTAB='summary';
 function c5CjtSrc(){try{return new URL('crownjewel-tree.html',location.href).href;}catch(_){return 'crownjewel-tree.html';}}
@@ -5326,12 +5328,16 @@ function c5paStyle(){
    +'.c5pa svg{display:block;max-width:100%;height:auto;margin:0 auto}'
    +'.c5pa-thin{margin-top:26px}'
    +'.c5pa-ledger{border-top:1px solid var(--line)}'
-   +'.c5pa-lrow{display:grid;grid-template-columns:24px 1fr minmax(90px,1.4fr) 46px;align-items:center;gap:14px;padding:10px 0;border-bottom:1px solid var(--line)}'
+   +'.c5pa-lrow{display:grid;grid-template-columns:24px 1fr minmax(90px,1.4fr) 46px 16px;align-items:center;gap:14px;padding:10px 6px;margin:0 -6px;border-bottom:1px solid var(--line);cursor:pointer;border-radius:7px;transition:background .12s}'
+   +'.c5pa-lrow:hover{background:var(--surface-2)}.c5pa-lrow:focus-visible{outline:2px solid var(--blue);outline-offset:-2px}'
    +'.c5pa-lrow .ix{font-family:var(--mono);font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}'
    +'.c5pa-lrow .nm{font-size:14px;font-weight:600;color:var(--ink)}'
    +'.c5pa-lrow .bar{height:7px;border-radius:4px;background:var(--line);overflow:hidden}.c5pa-lrow .bar i{display:block;height:100%;border-radius:4px}'
    +'.c5pa-lrow .val{font-family:var(--mono);font-size:15px;font-weight:600;text-align:right;font-variant-numeric:tabular-nums}'
+   +'.c5pa-lrow .go{font-family:var(--mono);font-size:13px;color:var(--muted);text-align:right;opacity:.5;transition:opacity .12s,transform .12s}'
+   +'.c5pa-lrow:hover .go{opacity:1;transform:translateX(2px);color:var(--blue)}'
    +'.c5pa-lrow.weak .nm{color:var(--crit)}'
+   +'.c5pa-thin .c5pa-ct .hint{font-weight:500;text-transform:none;letter-spacing:0;color:var(--muted);margin-left:8px}'
    +'.c5rec{border-top:1px solid var(--line)}'
    +'.c5rec-row{display:grid;grid-template-columns:180px 1fr 118px;align-items:center;gap:16px;padding:13px 0;border-bottom:1px solid var(--line)}'
    +'@media(max-width:640px){.c5rec-row{grid-template-columns:116px 1fr 88px;gap:10px}}'
@@ -5640,7 +5646,7 @@ function c5ContinuousAssessment(host){
   // Drift. The Controls tab appears only once you've drilled into a region/entity (or opened a
   // drifted control); Drift is its own tab, kept out of the summary. ──
   var isEntScope=(typeof SCOPE!=='undefined'&&SCOPE&&SCOPE!=='enterprise');
-  var showControls=isEntScope||!!C5_ASSESS_CTRL;
+  var showControls=isEntScope||!!C5_ASSESS_CTRL||!!C5_ASSESS_FN;
   if(C5_ASSESS_SUBTAB==='controls'&&!showControls)C5_ASSESS_SUBTAB='summary';
   if(C5_ASSESS_SUBTAB!=='controls'&&C5_ASSESS_SUBTAB!=='drift')C5_ASSESS_SUBTAB='summary';
   var driftN=drift.regressions.length;
@@ -5673,7 +5679,7 @@ function c5ContinuousAssessment(host){
   var paReadCol=overall5>=3?'--good':overall5>=2?'--blue':overall5>=1?'--warn':'--crit';
   var paFinding='Your '+paFwName+' program sits at <em>'+(vLevel||'&mdash;')+'</em> &mdash; '+overall5.toFixed(1)+' of 5, '+(vBelow?'<span class="bad">below the 3.5 target</span>':'at the 3.5 target')+'.';
   var paEyebrow=(isAiFw?'Program health · AI frameworks':'Program health · '+(c5AssessFwCfg().label))+' · as of '+new Date().toLocaleDateString();
-  var paLedger=(vFns||[]).slice().sort(function(a,b){return a.s-b.s;}).map(function(f,i){var col=f.s>=3?'--good':f.s>=2?'--blue':f.s>=1?'--warn':'--crit';var w=Math.max(2,(f.s/5)*100);return '<div class="c5pa-lrow'+(i===0?' weak':'')+'"><span class="ix">'+String(i+1).padStart(2,'0')+'</span><span class="nm">'+esc(String(f.n))+'</span><span class="bar"><i style="width:'+w+'%;background:var('+col+')"></i></span><span class="val" style="color:var('+col+')">'+f.s.toFixed(1)+'</span></div>';}).join('');
+  var paLedger=(vFns||[]).slice().sort(function(a,b){return a.s-b.s;}).map(function(f,i){var col=f.s>=3?'--good':f.s>=2?'--blue':f.s>=1?'--warn':'--crit';var w=Math.max(2,(f.s/5)*100);return '<div class="c5pa-lrow'+(i===0?' weak':'')+'" data-pafn="'+esc(String(f.n))+'" role="button" tabindex="0" title="View the '+esc(String(f.n))+' controls"><span class="ix">'+String(i+1).padStart(2,'0')+'</span><span class="nm">'+esc(String(f.n))+'</span><span class="bar"><i style="width:'+w+'%;background:var('+col+')"></i></span><span class="val" style="color:var('+col+')">'+f.s.toFixed(1)+'</span><span class="go">&rsaquo;</span></div>';}).join('');
   var paHero='<div class="c5pa">'
     +'<div class="c5pa-eyebrow">'+paEyebrow+'</div>'
     +'<h1 class="c5pa-finding">'+paFinding+'</h1>'
@@ -5682,7 +5688,7 @@ function c5ContinuousAssessment(host){
       +'<div class="c5pa-cell"><div class="c5pa-ct">Maturity vs 3.5 target</div><div class="c5pa-gaugewrap">'+c5paGauge(overall5,3.5)+'<div class="read" style="color:var('+paReadCol+')">'+overall5.toFixed(1)+'<small> / 5</small></div><div class="sub">'+esc(vLevel||'')+' · target 3.5 · gap '+Math.max(0,3.5-overall5).toFixed(1)+'</div></div></div>'
       +'<div class="c5pa-cell"><div class="c5pa-ct">Function profile · '+(isAiFw?'AI RMF':'NIST CSF 2.0')+'</div>'+c5paRadar(vFns)+'</div>'
     +'</div>'
-    +(paLedger?('<div class="c5pa-thin"><div class="c5pa-ct">Where the program is thinnest &mdash; weakest first</div><div class="c5pa-ledger">'+paLedger+'</div></div>'):'')
+    +(paLedger?('<div class="c5pa-thin"><div class="c5pa-ct">Where the program is thinnest &mdash; weakest first<span class="hint">click a function for its controls</span></div><div class="c5pa-ledger">'+paLedger+'</div></div>'):'')
   +'</div>';
   host.innerHTML=c5header()+
     paHero+
@@ -5692,8 +5698,9 @@ function c5ContinuousAssessment(host){
     subBody+
     '<div class="c5foot">Method: <b style="color:var(--good)">live</b> = a sensor observes it (re-scored on every refresh) · <b style="color:var(--blue)">hybrid</b> = telemetry pulled, a human confirms · <b style="color:var(--warn)">attestation</b> = owner-assigned, LLM pre-screened, freshness-tracked · <b>awaiting</b> = connect a source to light it up. Freshness decays past the TTL, so an old attestation reads <b style="color:var(--warn)">expiring</b>, not passing — which is what makes "continuous" true across all '+s.total+'.</div>';
   // Wiring — scope switcher, cadence overrides, confirm actions, expand/collapse, control select, detail close.
-  // Picking a region/entity here drills straight into its Controls detail — no extra tab click.
-  host.querySelectorAll('[data-scope]').forEach(function(b){b.onclick=function(){var t=b.getAttribute('data-scope');C5_ASSESS_SUBTAB=(t&&t!=='enterprise')?'controls':'summary';if(typeof selectScope==='function')selectScope(t);};});
+  // Picking a region/entity shows THAT scope's summary (the finding + instrument), so you can
+  // read Enterprise → Region → Entity the same way. Click a function to drill into its controls.
+  host.querySelectorAll('[data-scope]').forEach(function(b){b.onclick=function(){var t=b.getAttribute('data-scope');C5_ASSESS_SUBTAB='summary';C5_ASSESS_FN=null;C5_ASSESS_CTRL=null;if(typeof selectScope==='function')selectScope(t);};});
   host.querySelectorAll('[data-cadence]').forEach(function(sel){sel.addEventListener('change',function(e){e.stopPropagation();
     c5SetCadence(sel.getAttribute('data-cadence'),sel.value);c5ContinuousAssessment(host);});});
   host.querySelectorAll('[data-confirm]').forEach(function(btn){btn.addEventListener('click',function(e){e.stopPropagation();
@@ -5701,6 +5708,11 @@ function c5ContinuousAssessment(host){
   host.querySelectorAll('[data-asssub]').forEach(function(b){b.onclick=function(){C5_ASSESS_SUBTAB=b.getAttribute('data-asssub');c5ContinuousAssessment(host);};});
   host.querySelectorAll('[data-assessexp]').forEach(function(b){b.onclick=function(){var k=b.getAttribute('data-assessexp');C5_ASSESS_EXP[k]=!C5_ASSESS_EXP[k];c5ContinuousAssessment(host);};});
   host.querySelectorAll('[data-assessctl]').forEach(function(row){row.onclick=function(e){if(e.target.closest('select')||e.target.closest('[data-confirm]'))return;C5_ASSESS_CTRL=row.getAttribute('data-assessctl');C5_ASSESS_SUBTAB='controls';c5ContinuousAssessment(host);};});
+  // Clickable functions (blend ledger) — open the picked function's controls at any scope.
+  host.querySelectorAll('[data-pafn]').forEach(function(row){
+    function open(){C5_ASSESS_FN=row.getAttribute('data-pafn');C5_ASSESS_CTRL=null;C5_ASSESS_EXP={};C5_ASSESS_EXP[C5_ASSESS_FN]=true;C5_ASSESS_SUBTAB='controls';c5ContinuousAssessment(host);
+      var d=host.querySelector('#assessDetail')||host.querySelector('.c5fw-wrap');if(d&&d.scrollIntoView)try{d.scrollIntoView({behavior:'smooth',block:'center'});}catch(_){}}
+    row.onclick=open;row.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}};});
   var acl=host.querySelector('[data-assessclose]');if(acl)acl.onclick=function(){C5_ASSESS_CTRL=null;c5ContinuousAssessment(host);};
   var dm=host.querySelector('[data-driftmore]');if(dm)dm.onclick=function(){C5_ASSESS_DRIFT_ALL=!C5_ASSESS_DRIFT_ALL;c5ContinuousAssessment(host);};
   var pb=host.querySelector('#c5fwPeerBox');if(pb)pb.onclick=function(){if(typeof c5fwPeerOpen==='function')c5fwPeerOpen();};
@@ -6038,7 +6050,7 @@ function c5Frameworks(){
   host.querySelectorAll('[data-phtab]').forEach(function(b){b.onclick=function(){var nt=b.getAttribute('data-phtab');
     // Switching between the CSF and AI assessments resets the drill so a CSF control id never
     // leaks into the AI view (and vice-versa).
-    if((nt==='assess'||nt==='ai')&&nt!==C5_PH_TAB){C5_ASSESS_CTRL=null;C5_ASSESS_EXP=null;C5_ASSESS_SUBTAB='summary';}
+    if((nt==='assess'||nt==='ai')&&nt!==C5_PH_TAB){C5_ASSESS_CTRL=null;C5_ASSESS_EXP=null;C5_ASSESS_FN=null;C5_ASSESS_SUBTAB='summary';}
     C5_PH_TAB=nt;c5Frameworks();};});
   var body=document.getElementById('c5ph-body');
   if(tab==='ai'){C5_ASSESS_FW='ai';c5ContinuousAssessment(body);}
