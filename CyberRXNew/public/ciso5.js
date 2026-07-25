@@ -5364,7 +5364,22 @@ function c5paStyle(){
    +'.c5rec-over{position:absolute;top:8px;height:8px;border-radius:3px;background:var(--crit)}'
    +'.c5rec-tol{position:absolute;top:2px;width:2px;height:20px;background:var(--ink)}'
    +'.c5rec-tol span{position:absolute;top:-13px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:9px;color:var(--ink-2);white-space:nowrap}'
-   +'.c5rec-v{font-family:var(--mono);font-size:14px;font-weight:600;text-align:right;color:var(--ink);font-variant-numeric:tabular-nums}.c5rec-v small{color:var(--muted);font-weight:400}.c5rec-v.over{color:var(--crit)}';
+   +'.c5rec-v{font-family:var(--mono);font-size:14px;font-weight:600;text-align:right;color:var(--ink);font-variant-numeric:tabular-nums}.c5rec-v small{color:var(--muted);font-weight:400}.c5rec-v.over{color:var(--crit)}'
+   +'.c5path-track{position:relative;height:34px;margin:12px 0 6px}'
+   +'.c5path-base{position:absolute;left:0;right:0;top:15px;height:6px;border-radius:4px;background:var(--line)}'
+   +'.c5path-cur{position:absolute;left:0;top:15px;height:6px;border-radius:4px}'
+   +'.c5path-gain{position:absolute;top:15px;height:6px;border-radius:4px;background:repeating-linear-gradient(90deg,var(--blue),var(--blue) 5px,transparent 5px,transparent 9px)}'
+   +'.c5path-tgt{position:absolute;top:5px;width:2px;height:26px;background:var(--ink)}'
+   +'.c5path-tgt span{position:absolute;top:-13px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:9px;color:var(--ink-2);white-space:nowrap}'
+   +'.c5path-pin{position:absolute;top:9px;width:12px;height:12px;border-radius:50%;background:var(--surface);border:3px solid var(--ink-2);transform:translateX(-50%)}.c5path-pin.proj{border-color:var(--blue)}'
+   +'.c5path-legend{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--ink-2);font-family:var(--mono);flex-wrap:wrap}.c5path-legend .ar{color:var(--muted)}'
+   +'.c5dec{border-top:1px solid var(--line)}'
+   +'.c5dec-row{display:grid;grid-template-columns:98px 1fr 92px;align-items:center;gap:16px;padding:14px 0;border-bottom:1px solid var(--line)}'
+   +'@media(max-width:640px){.c5dec-row{grid-template-columns:78px 1fr;gap:11px}.c5dec-imp{display:none}}'
+   +'.c5dec-delta{font-family:var(--c5serif);font-size:23px;font-weight:600;color:var(--good);line-height:1}.c5dec-delta small{display:block;font-family:var(--mono);font-size:9px;color:var(--muted);font-weight:400;text-transform:uppercase;letter-spacing:.06em;margin-top:2px}'
+   +'.c5dec-t{font-size:15px;font-weight:600;color:var(--ink)}'
+   +'.c5dec-s{font-size:12.5px;color:var(--ink-2);margin-top:3px;font-family:var(--mono)}'
+   +'.c5dec-imp{font-family:var(--mono);font-size:18px;font-weight:600;text-align:right}.c5dec-imp small{display:block;font-size:9px;color:var(--muted);font-weight:400}';
   var st=document.createElement('style');st.id='c5pa-style';st.textContent=css;document.head.appendChild(st);
 }
 /* Recovery-vs-tolerance instrument (Operational impact): each service's recovery time as a
@@ -5386,6 +5401,62 @@ function c5paRecovery(svcs,hrs){
       +'<div class="c5rec-v'+(ok?'':' over')+'">'+hrs(s.rto)+' <small>/ '+hrs(s.tgt)+'</small></div>'
     +'</div>';
   }).join('')+'</div>';
+}
+/* Path-to-target instrument (Decisions): current maturity, the projected lift from the
+   listed moves, and the board target on one 1..5 scale. */
+function c5paPath(cur,proj,target){
+  var min=1,max=5,pct=function(v){return Math.max(0,Math.min(100,(v-min)/(max-min)*100));};
+  var cc=cur>=3?'--good':cur>=2?'--blue':cur>=1?'--warn':'--crit';
+  return '<div class="c5path"><div class="c5path-track">'
+    +'<div class="c5path-base"></div>'
+    +'<div class="c5path-cur" style="width:'+pct(cur).toFixed(1)+'%;background:var('+cc+')"></div>'
+    +'<div class="c5path-gain" style="left:'+pct(cur).toFixed(1)+'%;width:'+Math.max(0,pct(proj)-pct(cur)).toFixed(1)+'%"></div>'
+    +'<div class="c5path-tgt" style="left:'+pct(target).toFixed(1)+'%"><span>target '+target+'</span></div>'
+    +'<div class="c5path-pin" style="left:'+pct(cur).toFixed(1)+'%"></div>'
+    +'<div class="c5path-pin proj" style="left:'+pct(proj).toFixed(1)+'%"></div>'
+    +'</div><div class="c5path-legend"><span><b style="color:var('+cc+')">'+cur.toFixed(1)+'</b> now</span><span class="ar">&rarr;</span><span><b style="color:var(--blue)">'+proj.toFixed(1)+'</b> with these moves</span><span style="margin-left:auto">target '+target+'</span></div></div>';
+}
+/* Decisions — the scope-aware moves that raise the maturity number. For the current scope
+   (enterprise / region / entity) each below-target NIST function becomes a move to lift it to
+   Defined, ranked by how much it moves the overall number. Switch scope above to re-plan. */
+function c5Decisions(){
+  var host=document.getElementById('c5-decisions'); if(!host) return;
+  var esc=(typeof c5esc==='function')?c5esc:function(x){return x;};
+  if(typeof c5paStyle==='function')c5paStyle();
+  var scope=(typeof c5Scope==='function')?c5Scope():'enterprise';
+  var isEnt=(scope==='enterprise');
+  var scLbl=isEnt?'the enterprise':((typeof scopeLabel==='function')?scopeLabel(scope):scope);
+  var agg=null;try{if(typeof scopeAggTree==='function')agg=scopeAggTree(scope);}catch(_){}
+  var overall5=agg?agg.overall:0;
+  var fns=(agg&&agg.groups)?agg.groups.map(function(g){return {n:String(g.id||g.name).split(' ')[0],s:g.score};}):[];
+  var N=fns.length||6,target=3.5,near=3.0;
+  var FNL2=(typeof FNL!=='undefined')?FNL:{GV:'Govern',ID:'Identify',PR:'Protect',DE:'Detect',RS:'Respond',RC:'Recover'};
+  var MOVE={GV:'Establish security governance & risk ownership',ID:'Complete asset, risk & supply-chain identification',PR:'Close protection gaps — access, data & platform',DE:'Stand up continuous detection & monitoring',RS:'Operationalize incident response',RC:'Prove recovery & resilience',
+    GOVERN:'Establish AI governance & accountability',MAP:'Map AI systems, context & risk',MEASURE:'Measure AI performance, bias & robustness',MANAGE:'Manage & monitor AI risk in production'};
+  var moves=fns.filter(function(f){return f.s<near-0.05;}).map(function(f){
+    var to=near,gap=to-f.s,delta=gap/N,eff=gap>=2.4?'3–4 quarters':gap>=1.4?'2–3 quarters':'1–2 quarters';
+    return {k:f.n,name:FNL2[f.n]||f.n,label:MOVE[f.n]||('Strengthen '+(FNL2[f.n]||f.n)),from:f.s,to:to,delta:delta,eff:eff};
+  }).sort(function(a,b){return b.delta-a.delta;});
+  var totalDelta=moves.reduce(function(a,m){return a+m.delta;},0),projected=Math.min(5,overall5+totalDelta);
+  var lvNow=(typeof c5cmmiLevel==='function')?c5cmmiLevel(overall5):Math.floor(overall5);
+  var lvProj=(typeof c5cmmiLevel==='function')?c5cmmiLevel(projected):Math.floor(projected);
+  var finding=(!moves.length)
+    ? '<em>'+esc(scLbl)+'</em> is already at or above the near-term target on every function.'
+    : (moves.length+' move'+(moves.length>1?'s':'')+' take <em>'+esc(scLbl)+'</em> from '+overall5.toFixed(1)+' to <em>'+projected.toFixed(1)+'</em>'+(projected>=target?' &mdash; reaching the 3.5 target.':(lvProj>lvNow?' &mdash; up to <span class="bad">CMMI Level '+lvProj+'</span>.':', still short of the 3.5 target.')));
+  var dek='Each move lifts one '+(agg&&fns.length===4?'AI RMF':'NIST CSF')+' function to <b>Defined (Level 3)</b> and shows what that does to overall maturity. Ordered by how much it moves the number for <b>'+esc(scLbl)+'</b> &mdash; switch scope above to plan a region or a single entity.';
+  var list=moves.map(function(m){var ic=m.from<1?'--crit':m.from<2?'--warn':'--blue';
+    return '<div class="c5dec-row">'
+      +'<div class="c5dec-delta">+'+m.delta.toFixed(2)+'<small>maturity</small></div>'
+      +'<div><div class="c5dec-t">'+esc(m.label)+'</div><div class="c5dec-s"><b>'+esc(m.name)+'</b> '+m.from.toFixed(1)+' &rarr; '+m.to.toFixed(1)+' &middot; '+m.eff+'</div></div>'
+      +'<div class="c5dec-imp" style="color:var('+ic+')">'+m.from.toFixed(1)+'<small>/5 now</small></div>'
+    +'</div>';}).join('');
+  host.innerHTML='<div class="c5pa">'
+    +'<div class="c5pa-eyebrow">Decisions · where to move the needle · '+esc(isEnt?'Enterprise':scLbl)+' · as of '+new Date().toLocaleDateString()+'</div>'
+    +'<h1 class="c5pa-finding">'+finding+'</h1>'
+    +'<div class="c5pa-dek">'+dek+'</div>'
+    +'<div class="c5pa-inst" style="grid-template-columns:1fr"><div class="c5pa-cell"><div class="c5pa-ct">Projected maturity if you take these moves</div>'+c5paPath(overall5,projected,target)+'</div></div>'
+    +(moves.length?('<div class="c5pa-thin"><div class="c5pa-ct">Your moves &mdash; biggest needle-mover first</div><div class="c5dec">'+list+'</div></div>'):'')
+  +'</div>';
 }
 function c5paGauge(val,target){
   function pol(cx,cy,r,d){var a=(d-180)*Math.PI/180;return [cx+r*Math.cos(a),cy+r*Math.sin(a)];}
