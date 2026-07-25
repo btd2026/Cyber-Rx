@@ -3388,7 +3388,15 @@ function fetchEntityEvidence(scope){
       .catch(function(){});
   }catch(_){}
 }
-function selectScope(id){C5_PRESERVE_SCROLL=true;try{applyScope(id);}catch(_){}renderScopeBar();try{render('ciso');}catch(_){}try{fetchEntityEvidence(id);}catch(_){}}
+function selectScope(id){C5_PRESERVE_SCROLL=true;
+  // Clicking a LEAF ENTITY (id carries a region prefix, e.g. "americas_latam") opens that
+  // entity's control-by-control detail directly — the "details" the user wants, without a
+  // second click. Regions / Enterprise reset to the summary so their entity drill stays visible.
+  try{var isEnt=(id&&id!=='enterprise'&&id.indexOf('_')>0);
+    if(isEnt){C5_ASSESS_SUBTAB='controls';C5_ASSESS_FORCECTRL=true;}
+    else{C5_ASSESS_SUBTAB='summary';C5_ASSESS_FORCECTRL=false;C5_ASSESS_CTRL=null;C5_ASSESS_FN=null;}
+  }catch(_){}
+  try{applyScope(id);}catch(_){}renderScopeBar();try{render('ciso');}catch(_){}try{fetchEntityEvidence(id);}catch(_){}}
 /* Bulletproof scope navigation: ONE delegated listener on the document catches every click on
    any [data-scope] control — the top scope bar, the "Regions/Entities at a glance" drill cards,
    the region banner — no matter how many times render() rebuilds the DOM. This replaces the old
