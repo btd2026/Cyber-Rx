@@ -14,8 +14,8 @@
     '.c5id-s{font-size:12px;color:var(--ink-2)}',
     '.c5asof{font-size:12px;color:var(--muted);white-space:nowrap}',
     '.c5kick{font-size:12px;color:var(--blue);font-weight:500}',
-    '.c5verdict{font-size:22px;font-weight:500;margin-top:4px;line-height:1.3;color:var(--ink)}',
-    '.c5intro{font-size:14px;color:var(--ink-2);margin-top:6px;line-height:1.6;max-width:620px}',
+    '.c5verdict{font-family:var(--c5serif);font-size:clamp(22px,2.4vw,28px);font-weight:600;margin-top:4px;line-height:1.24;letter-spacing:-.01em;color:var(--ink)}',
+    '.c5intro{font-size:14px;color:var(--ink-2);margin-top:8px;line-height:1.6;max-width:none;text-wrap:pretty}',
     '.c5chip{font-size:9px;font-weight:500;text-transform:uppercase;letter-spacing:.04em;padding:1px 6px;border-radius:20px;border:1px solid var(--line);white-space:nowrap}',
     '.c5-live{color:var(--good);border-color:rgba(46,139,107,.35);background:rgba(46,139,107,.08)}',
     '.c5-computed{color:var(--blue);border-color:rgba(74,111,165,.35);background:rgba(74,111,165,.08)}',
@@ -884,8 +884,8 @@ function c5get(id){
     case 'peer_median':{var pd=c5peer();var opt=c5peerOptin();var live=!!(opt&&pd&&pd.sufficient&&pd.overall);var val=live?Number(pd.overall.p50):C5_REF_OVERALL;
       return c5obj({id:id,name:'Peer median',connected:true,displayValue:Number(val).toFixed(1)+(live?'':' (sample)'),label:live?'computed':'sample',color:'ink',
         formula:live?'peer median = 50th percentile of your anonymized same-size, same-industry cohort (k-anonymity gated)':'peer median = representative sample (published industry baseline); replaced by your live cohort median once the cohort reaches '+c5peerMin()+' clients',
-        inputs:live?[{name:'Cohort size',value:(pd&&pd.n)||0,source:'DTNKSHIELD cohort'},{name:'Minimum cohort',value:(pd&&pd.minCohort)||c5peerMin(),source:'k-anonymity gate'}]:[{name:'Sample median (overall CMMI)',value:C5_REF_OVERALL.toFixed(1),source:'representative sample'},{name:'Live cohort unlocks at',value:c5peerMin()+' clients',source:'k-anonymity gate'}],
-        sources:[live?{tool:'DTNKSHIELD peer cohort',connector:'peer',field:'benchmark.p50',lastRefresh:c5ago()}:{tool:'Sample peer benchmark',connector:'reference',field:'csf_cmmi_median',lastRefresh:c5ago()}],
+        inputs:live?[{name:'Cohort size',value:(pd&&pd.n)||0,source:'Nerion cohort'},{name:'Minimum cohort',value:(pd&&pd.minCohort)||c5peerMin(),source:'k-anonymity gate'}]:[{name:'Sample median (overall CMMI)',value:C5_REF_OVERALL.toFixed(1),source:'representative sample'},{name:'Live cohort unlocks at',value:c5peerMin()+' clients',source:'k-anonymity gate'}],
+        sources:[live?{tool:'Nerion peer cohort',connector:'peer',field:'benchmark.p50',lastRefresh:c5ago()}:{tool:'Sample peer benchmark',connector:'reference',field:'csf_cmmi_median',lastRefresh:c5ago()}],
         note:live?'Your live opted-in cohort — anonymized and suppressed below a minimum cohort size.':'Sample peer benchmark — a representative preview. Your live cohort median unlocks once '+c5peerMin()+' clients have joined the anonymized, k-anonymity-gated cohort.',connectTool:'the live peer cohort (opt in)'});}
     case 'peer_position':{var ov2=c5Overall();var pd2=c5peer();var opt2=c5peerOptin();var live2=!!(opt2&&pd2&&pd2.sufficient&&pd2.overall_values&&ov2!=null);
       var pctile=live2?((typeof peerPercentileOf==='function')?peerPercentileOf(ov2,pd2.overall_values):null):(ov2!=null?c5refPercentile(ov2):null);
@@ -897,7 +897,7 @@ function c5get(id){
         formula:live2?'position = your percentile rank within your live cohort by overall CMMI':'position = the standard-normal percentile of your CMMI vs the sample benchmark (μ='+C5_REF_OVERALL.toFixed(2)+', σ='+C5_REF_SD+')',
         method:live2?'Your rank within the opted-in cohort of same-size peers.':'A representative sample of your position. z = (your CMMI − sample median) ÷ sample spread; the percentile is the standard-normal CDF of that z. Your live position among your actual same-size peers unlocks once the cohort reaches '+c5peerMin()+' clients.',
         inputs:pinputs,
-        sources:[live2?{tool:'DTNKSHIELD peer cohort',connector:'peer',field:'overall_values',lastRefresh:c5ago()}:{tool:'Sample peer benchmark',connector:'reference',field:'csf_cmmi_distribution',lastRefresh:c5ago()}],
+        sources:[live2?{tool:'Nerion peer cohort',connector:'peer',field:'overall_values',lastRefresh:c5ago()}:{tool:'Sample peer benchmark',connector:'reference',field:'csf_cmmi_distribution',lastRefresh:c5ago()}],
         note:'Where you stand against peers your size — top-third is the target.'+(live2?'':' Preview — your live position unlocks at '+c5peerMin()+' clients.'),connectTool:'the live peer cohort (opt in)'});}
     /* ---- CFO metrics (same engine, financial lens; shared objects reused where they exist) ---- */
     case 'cf_appetite':{var ap=(typeof LIVE!=='undefined'&&LIVE&&LIVE.economics&&LIVE.economics.appetite)||{};var v=Number(ap.appetite)||0;var conn=v>0;
@@ -1431,7 +1431,7 @@ function c5get(id){
     case 'bd_spend_peers':{return c5obj({id:id,name:'Spend vs. peers',connected:false,displayValue:'—',label:'modeled',color:'muted',
         formula:'spend proportionality = cyber spend vs the anonymized peer benchmark for your size/sector',
         inputs:[{name:'Peer spend benchmark',value:'not connected',source:'peer cohort'}],
-        sources:[{tool:'DTNKSHIELD peer cohort',connector:'peer',field:'spend_benchmark',lastRefresh:c5ago()}],
+        sources:[{tool:'Nerion peer cohort',connector:'peer',field:'spend_benchmark',lastRefresh:c5ago()}],
         note:'Whether the enterprise is over- or under-spending on cyber vs peers — needs the peer spend benchmark.',connectTool:'the anonymous peer benchmark'});}
     case 'bd_funded':{var st=(typeof ROI_STATE!=='undefined'&&ROI_STATE)?ROI_STATE:null;var conn=!!(st&&st.n>0);var yes=!!(st&&st.invested>0);
       return c5obj({id:id,name:'Funded to sustain',connected:conn||true,displayValue:(st&&st.invested>0)?'Yes':'Management to fund',label:'computed',color:(st&&st.invested>0)?'good':'warn',
@@ -1823,8 +1823,8 @@ function c5domainMetric(k){
   return c5obj({id:'dom_'+k,name:def.label,connected:conn,displayValue:conn?(Number(mine).toFixed(1)+' / 5'):'—',label:'computed',color:conn?((delta==null||delta===0)?'ink':(delta>0?'good':'warn')):'muted',mine:mine,med:med,delta:delta,
     formula:'your domain score = mean CMMI across the controls in this domain ('+def.pre.join(', ')+'); peer median = '+(live?('your cohort p50 for '+def.fn):'published industry baseline'),
     method:live?('Peer medians are shared at the CSF-function level; '+def.label+' maps to '+def.fn+'.'):('Compared to the published industry baseline for '+def.label.toLowerCase()+'. Opt in to compare to a live cohort of your same-size peers.'),
-    inputs:[{name:'Your CMMI',value:mine!=null?Number(mine).toFixed(1):'—',source:'framework posture'},{name:'Peer median',value:med!=null?Number(med).toFixed(1):'—',source:live?('DTNKSHIELD cohort · '+def.fn):'published industry benchmark'}],
-    sources:[{tool:'Nerion engine',connector:'nerion',field:'domain_cmmi',lastRefresh:c5ago()},live?{tool:'DTNKSHIELD peer cohort',connector:'peer',field:'functions.'+def.fn,lastRefresh:c5ago()}:{tool:'Published industry benchmark',connector:'reference',field:'csf_cmmi_median',lastRefresh:c5ago()}],
+    inputs:[{name:'Your CMMI',value:mine!=null?Number(mine).toFixed(1):'—',source:'framework posture'},{name:'Peer median',value:med!=null?Number(med).toFixed(1):'—',source:live?('Nerion cohort · '+def.fn):'published industry benchmark'}],
+    sources:[{tool:'Nerion engine',connector:'nerion',field:'domain_cmmi',lastRefresh:c5ago()},live?{tool:'Nerion peer cohort',connector:'peer',field:'functions.'+def.fn,lastRefresh:c5ago()}:{tool:'Published industry benchmark',connector:'reference',field:'csf_cmmi_median',lastRefresh:c5ago()}],
     action:conn?((delta!=null&&delta<0)?('Your '+def.label.toLowerCase()+' maturity ('+Number(mine).toFixed(1)+'/5) trails the peer median ('+Number(med).toFixed(1)+'/5) by '+Math.abs(delta).toFixed(1)+' — raise the '+def.pre.join(', ')+' controls in this domain toward Defined (3.0+), starting with those below your average.'):((delta!=null&&delta>0)?('Your '+def.label.toLowerCase()+' maturity leads the peer median — hold the '+def.pre.join(', ')+' controls and reinvest effort in your lagging domains.'):((delta===0)?('Your '+def.label.toLowerCase()+' maturity is on par with the peer median ('+Number(med).toFixed(1)+'/5) — hold the '+def.pre.join(', ')+' controls and push a lagging domain to pull ahead.'):('Raise the '+def.pre.join(', ')+' controls in this domain toward Defined to strengthen '+def.label.toLowerCase()+'.')))):'Connect your control tools + policies to score '+def.label.toLowerCase()+' maturity against peers.',
     note:'How your '+def.label.toLowerCase()+' maturity compares to peers your size.',connectTool:'the live peer cohort (opt in)'});
 }
@@ -3691,13 +3691,13 @@ function c5bdFigures(){
     sources:[c5bdSelf('SEC disclosure process','materiality + 8-K process, '+(irTested?'tested':'documented')+' at onboarding')]});
   F.bd_reg_gdpr=fig({title:'GDPR / privacy',value:'72-hour breach clock',status:'Compliant',pill:'g',owner:'CLO',ownerSeat:'clo',
     detail:'A personal-data breach must be notified to the lead EU regulator <b>within 72 hours</b> of becoming aware. Our breach-notification runbook is attested and rehearsed, so the clock starts the day an incident is confirmed.',
-    sources:[c5bdDocSrc('privacy|gdpr|dpa','Privacy programme')||c5bdSelf('Privacy programme','breach-notification process attested at onboarding')]});
+    sources:[c5bdDocSrc('privacy|gdpr|dpa','Privacy program')||c5bdSelf('Privacy program','breach-notification process attested at onboarding')]});
   F.bd_reg_aiact=fig({title:'EU AI Act',value:'High-risk AI obligations',status:'In progress',pill:'a',owner:'CLO',ownerSeat:'clo',
     detail:'The EU AI Act phases in obligations for high-risk AI — risk management, logging, human oversight and serious-incident reporting. We have <b>no systems currently classified high-risk</b>, and we’re standing up the classification and evidence process so any that appear are covered.',
     sources:[c5bdSelf('AI governance','EU AI Act classification, self-reported at onboarding')]});
   F.bd_reg_dora=fig({title:'DORA',value:'ICT major-incident reporting',status:'On track',pill:'g',owner:'CLO',ownerSeat:'clo',
     detail:'DORA requires an <b>initial major-ICT-incident report within ~4 hours</b> of classification, plus operational-resilience testing of critical providers. Our reporting process is attested and mapped to the same incident workflow that drives SEC disclosure.',
-    sources:[c5bdSelf('Operational-resilience programme','DORA reporting process attested at onboarding')]});
+    sources:[c5bdSelf('Operational-resilience program','DORA reporting process attested at onboarding')]});
   // Independent validation requires a GENUINE third-party artifact — an external-audit /
   // SOC 2 / ISO certification report, a penetration-test report, or an outside-counsel opinion.
   // A self-reported upload (a risk register, a policy PDF) is NOT independent validation, so the
@@ -4358,18 +4358,18 @@ function c5fwPayload(){
   var version={csf:'2.0',r53:'Rev 5',cis:'v8.1',soc2:'2017 TSC',hipaa:'Security Rule'}[sel]||'';
   var groupNoun=(sel==='csf')?'Function':(sel==='r53')?'Family':'Domain';
   var backbone={csf:'the six Functions — Govern, Identify, Protect, Detect, Respond and Recover — and their Categories and Subcategories',r53:'the control families (AC, AU, CM, CP, IA, IR, RA, SC, SI, SR and the remaining families), assessed control by control',cis:'the 18 Controls and 153 Safeguards, mapped to Implementation Groups IG1–IG3',soc2:'the Trust Services Criteria',hipaa:'the Administrative, Physical and Technical safeguards of the Security Rule'}[sel]||'the control domains';
-  var backboneNote={csf:'Alongside the maturity scores, each Function is expressed as a Current Profile against the organisation’s Target Profile and an implementation Tier (1 Partial through 4 Adaptive).',r53:'In a formal RMF context these findings feed the System Security Plan (SSP), the Security Assessment Report (SAR), the Risk Assessment Report (RAR) and a Plan of Action & Milestones (POA&M); each control is assessed as Satisfied or Other-than-Satisfied.',cis:'Each Safeguard ID is assessed natively by a Nerion-authored evidence test against its Implementation Group (IG1, IG2, IG3) — no official CIS Safeguard text is stored or reproduced and no CSF crosswalk is used to score it; configuration-level benchmark signals are used where CIS-CAT tooling is connected.',soc2:'Each criterion is assessed natively by its identifier against a Nerion-authored evidence test — no official AICPA Trust Services Criteria text is stored or reproduced, and no CSF crosswalk is used to score it.',hipaa:'Required and Addressable implementation specifications are distinguished, and severity is escalated for Required specifications near the floor.'}[sel]||'';
+  var backboneNote={csf:'Alongside the maturity scores, each Function is expressed as a Current Profile against the organization’s Target Profile and an implementation Tier (1 Partial through 4 Adaptive).',r53:'In a formal RMF context these findings feed the System Security Plan (SSP), the Security Assessment Report (SAR), the Risk Assessment Report (RAR) and a Plan of Action & Milestones (POA&M); each control is assessed as Satisfied or Other-than-Satisfied.',cis:'Each Safeguard ID is assessed natively by a Nerion-authored evidence test against its Implementation Group (IG1, IG2, IG3) — no official CIS Safeguard text is stored or reproduced and no CSF crosswalk is used to score it; configuration-level benchmark signals are used where CIS-CAT tooling is connected.',soc2:'Each criterion is assessed natively by its identifier against a Nerion-authored evidence test — no official AICPA Trust Services Criteria text is stored or reproduced, and no CSF crosswalk is used to score it.',hipaa:'Required and Addressable implementation specifications are distinguished, and severity is escalated for Required specifications near the floor.'}[sel]||'';
   var worst=groups.slice().sort(function(a,b){return a.score-b.score;}).slice(0,2).map(function(g){return g.name;});
-  var execNarrative='As of '+((typeof orgName==='function'&&orgName())||'the organisation')+'’s assessment dated '+new Date().toISOString().slice(0,10)+', the '+nm+' programme is assessed at an overall maturity of CMMI '+ov.toFixed(1)+' of 5 against a defined target of '+tg.toFixed(1)+'. '+
-    (ov>=tg?'On balance the programme meets its target, indicating controls that are documented, operating and measured across the estate. ':'The programme currently operates below its target, indicating that while foundational controls are largely in place, they are not yet consistently standardised, measured and optimised across the estate. ')+
+  var execNarrative='As of '+((typeof orgName==='function'&&orgName())||'the organization')+'’s assessment dated '+new Date().toISOString().slice(0,10)+', the '+nm+' program is assessed at an overall maturity of CMMI '+ov.toFixed(1)+' of 5 against a defined target of '+tg.toFixed(1)+'. '+
+    (ov>=tg?'On balance the program meets its target, indicating controls that are documented, operating and measured across the estate. ':'The program currently operates below its target, indicating that while foundational controls are largely in place, they are not yet consistently standardized, measured and optimized across the estate. ')+
     'The assessment identified '+defc+' deficienc'+(defc===1?'y':'ies')+' and '+obsc+' observation'+(obsc===1?'':'s')+' requiring management attention. '+
-    'In business terms, the residual exposure concentrates in '+(worst.length?worst.join(' and '):'a small number of domains')+', where the control gaps most directly affect the organisation’s ability to prevent, detect and recover from a material cyber event. '+
-    'Accordingly, management should prioritise the deficiencies set out in the findings register and remediation roadmap, beginning with the highest-criticality items — each scoped with a target maturity uplift and a delivery timeframe. '+
+    'In business terms, the residual exposure concentrates in '+(worst.length?worst.join(' and '):'a small number of domains')+', where the control gaps most directly affect the organization’s ability to prevent, detect and recover from a material cyber event. '+
+    'Accordingly, management should prioritize the deficiencies set out in the findings register and remediation roadmap, beginning with the highest-criticality items — each scoped with a target maturity uplift and a delivery timeframe. '+
     'Delivered on the phased basis that follows, these actions are expected to move overall maturity toward the '+tg.toFixed(1)+' target within the current planning horizon.';
-  var scopeProse='This assessment evaluated the organisation’s cybersecurity control environment against '+nm+(version?(' ('+version+')'):'')+', organised by '+backbone+'. The '+T.total+' controls in scope were assessed across the connected systems, business units and security tooling in the environment. '+
+  var scopeProse='This assessment evaluated the organization’s cybersecurity control environment against '+nm+(version?(' ('+version+')'):'')+', organized by '+backbone+'. The '+T.total+' controls in scope were assessed across the connected systems, business units and security tooling in the environment. '+
     'Controls that fall outside the current evidence boundary — those without connected telemetry or a reviewed policy — are reported transparently as unevidenced rather than assumed effective, so the baseline is defensible. '+
-    'The objectives were to establish a current-state maturity baseline, to identify and rate deficiencies against the target profile, and to produce a prioritised remediation roadmap that management and the board can act on and that is re-run continuously on the '+cadence+' cadence.';
-  var methodologyProse='The assessment followed a continuous, evidence-based methodology rather than a point-in-time review. Each control was scored on a 0–5 CMMI maturity scale drawn from two independent sources of evidence: live telemetry from connected security tools — deployment and coverage percentages — and analysed policy documents mapped to the control’s expected attributes. '+
+    'The objectives were to establish a current-state maturity baseline, to identify and rate deficiencies against the target profile, and to produce a prioritized remediation roadmap that management and the board can act on and that is re-run continuously on the '+cadence+' cadence.';
+  var methodologyProse='The assessment followed a continuous, evidence-based methodology rather than a point-in-time review. Each control was scored on a 0–5 CMMI maturity scale drawn from two independent sources of evidence: live telemetry from connected security tools — deployment and coverage percentages — and analyzed policy documents mapped to the control’s expected attributes. '+
     'Where both were available the stronger evidence prevailed; where neither existed the control was scored as unevidenced rather than presumed effective. '+
     'Control scores were rolled up to category, '+groupNoun.toLowerCase()+' and overall as the evidence-weighted mean of their children. '+backboneNote+' '+
     'Because the ratings derive from the same live control-assessment source as the management dashboard, this report reconciles exactly to the platform and can be reproduced on demand.';
@@ -4382,7 +4382,7 @@ function c5fwPayload(){
     return {ref:f.ref,risk:'Insufficient control maturity — '+f.name,likelihood:likelihood,impact:impact,severity:severity,treatment:(f.recommendation||'Uplift toward target maturity.')};});
   // Phase each roadmap item on a 0–3 / 3–6 / 6–12 month plan (worst-first = soonest).
   var roadmapPhased=roadmap.map(function(r,i){return Object.assign({},r,{phase:i<4?'0–3 months':i<8?'3–6 months':'6–12 months'});});
-  var detailedIntro='The detailed findings that follow are organised by '+backbone+'. '+backboneNote+' Each deficiency is presented on the auditor’s condition–criteria–cause–effect–recommendation basis, with the evidence tested and the target maturity uplift.';
+  var detailedIntro='The detailed findings that follow are organized by '+backbone+'. '+backboneNote+' Each deficiency is presented on the auditor’s condition–criteria–cause–effect–recommendation basis, with the evidence tested and the target maturity uplift.';
   var payload={fw:sel,standard:nm,client:((typeof orgName==='function'&&orgName())||'Your organization'),period:new Date().toISOString().slice(0,10),cadence:c5fwCadence(),
     overall:T.overall,overallLevel:c5fwLvl(T.overall),overallStatus:c5fwStatus(T.overall).key,target:C5FW_TARGET,coverage:T.coverage,evidenced:T.evidenced,total:T.total,failing:T.failing,trendDelta:trendDelta,
     verdict:nm+' is assessed at CMMI '+T.overall.toFixed(1)+' of 5 against a '+C5FW_TARGET.toFixed(1)+' target, from continuous evidence. '+findings.filter(function(f){return /deficiency/i.test(f.classification);}).length+' deficiencies and '+findings.filter(function(f){return /observation/i.test(f.classification);}).length+' observations identified.',
@@ -4611,11 +4611,22 @@ function c5DecProj(){
   var _dpScope=(typeof c5Scope==='function')?c5Scope():'enterprise';
   var _dpScopeLbl=(_dpScope==='enterprise')?'Enterprise':((typeof scopeLabel==='function')?scopeLabel(_dpScope):_dpScope);
   var _dpFN={GV:'Govern',ID:'Identify',PR:'Protect',DE:'Detect',RS:'Respond',RC:'Recover'};
-  var _dpFnScore={};try{var _dpRoll=c5AssessmentRollup();Object.keys(_dpRoll.functions||{}).forEach(function(f){_dpFnScore[f]=_dpRoll.functions[f].score*5;});}catch(_){}
+  // Source the function scores from the SAME hierarchical aggregate the Program-health Function
+  // Profile shows (scopeAggTree: Enterprise = mean of regions = mean of entities). A prior version
+  // used the flat c5AssessmentRollup, which disagreed with the card above (Identify 1.0 vs 1.3) —
+  // so the Decisions finding and the maturity card now read the identical number.
+  var _dpFnScore={};
+  try{var _dpAgg=(typeof scopeAggTree==='function')?scopeAggTree(_dpScope):null;
+    if(_dpAgg&&_dpAgg.groups)_dpAgg.groups.forEach(function(g){_dpFnScore[g.id]=g.score;});   // already ×5
+  }catch(_){}
+  if(!Object.keys(_dpFnScore).length){try{var _dpRoll=c5AssessmentRollup();Object.keys(_dpRoll.functions||{}).forEach(function(f){_dpFnScore[f]=_dpRoll.functions[f].score*5;});}catch(_){}}
+  // The scope's genuinely weakest function — only THIS one may be called "weakest".
+  var _dpGlobalWeak=null;Object.keys(_dpFnScore).forEach(function(f){if(_dpGlobalWeak==null||_dpFnScore[f]<_dpFnScore[_dpGlobalWeak])_dpGlobalWeak=f;});
   // For each lever, find the weakest function its mapped controls touch AT THIS SCOPE — that is the
   // finding the decision is supported by.
   function _dpWeakFn(l){var fns={};(l.proj||[]).forEach(function(p){var f=String(p.id||'').split('.')[0];if(_dpFnScore[f]!=null)fns[f]=_dpFnScore[f];});
     var ks=Object.keys(fns);if(!ks.length)return null;ks.sort(function(a,b){return fns[a]-fns[b];});return {fn:ks[0],score:fns[ks[0]]};}
+  function _dpCap(str){str=String(str||'');return str.charAt(0).toUpperCase()+str.slice(1);}
   // Rank weakest-scope-function first (address the biggest gap here), then by control uplift.
   var _dpRanked=levers.slice().sort(function(a,b){var wa=_dpWeakFn(a),wb=_dpWeakFn(b);
     var sa=wa?wa.score:99,sb=wb?wb.score:99;return (sa-sb)||(b.gain-a.gain);});
@@ -4625,10 +4636,11 @@ function c5DecProj(){
     var n=l.proj.length;
     var moves=n?(n+' mapped control'+(n>1?'s':'')+' toward target maturity'):'your posture in this area';
     var wf=_dpWeakFn(l);
+    var isWeakest=(wf&&wf.fn===_dpGlobalWeak);   // is THIS the scope's actual lowest function?
     // The scope-anchored finding line: names the scope and the exact function score the card shows.
-    var sit=wf?('At <b>'+c5esc(_dpScopeLbl)+'</b>, '+_dpFN[wf.fn]+' sits at '+wf.score.toFixed(1)+'/5'+(wf.score<3.5?' — below the 3.5 target':'')+'. '+l.need):l.need;
+    var sit=wf?('At <b>'+c5esc(_dpScopeLbl)+'</b>, '+_dpFN[wf.fn]+' sits at '+wf.score.toFixed(1)+'/5'+(wf.score<3.5?' — below the 3.5 target':'')+(isWeakest?' — the weakest function here':'')+'. '+_dpCap(l.need)):_dpCap(l.need);
     var rec={on:'Commit & fund',osum:'Raises control coverage · improves '+moves,
-      pros:['Improves '+moves+' at '+_dpScopeLbl+'.',(wf?('Lifts '+_dpFN[wf.fn]+' — '+_dpScopeLbl+'’s weakest function here ('+wf.score.toFixed(1)+'/5).'):'Raises measured control coverage in this area.'),'Opens a tracked funding project.'],
+      pros:['Improves '+moves+' at '+_dpScopeLbl+'.',(wf?('Lifts '+_dpFN[wf.fn]+' ('+wf.score.toFixed(1)+'/5)'+(isWeakest?(' — '+_dpScopeLbl+'’s weakest function'):(wf.score<3.5?', below the 3.5 target':''))+'.'):'Raises measured control coverage in this area.'),'Opens a tracked funding project.'],
       cons:['Requires capital this cycle (scoped with your team).'],
       consequence:'Opens a tracked funding project and begins control-improvement tracking.'};
     var alt=[{on:'Defer to next cycle',osum:'Records the deferral; the gap stays open',pros:['No spend now.'],cons:['The coverage gap stays open until it is funded.'],req:true,consequence:'Records the decision as deferred; the gap remains open until the next cycle.'}];
@@ -4637,8 +4649,10 @@ function c5DecProj(){
   // Scope drill cards (Enterprise / region / entity) at the top — the scope switcher lives on
   // every section now, not in a separate top bar.
   var decScopeNav='';try{if(typeof scopeNav==='function'){var _dsn=scopeNav();if(_dsn)decScopeNav='<div class="c5pa" style="margin:0 0 4px">'+_dsn+'</div>';}}catch(_){}
+  var _dpEyebrow='<div class="c5pa-eyebrow" style="margin-top:2px">Decisions · '+c5esc(_dpScopeLbl)+' · as of '+new Date().toLocaleDateString()+'</div>';
   host.innerHTML=c5header()+
     decScopeNav+
+    _dpEyebrow+
     c5shell('Decisions · '+_dpScopeLbl+' · what needs your sign-off?',(levers.length?(levers.length+' funding decision'+(levers.length>1?'s':'')+' waiting for <b>'+c5esc(_dpScopeLbl)+'</b> — each supported by '+_dpScopeLbl+'’s own findings. Commit or defer.'):'Connect your tools and the funded decisions that move your posture appear here.'),null,'These decisions are ranked by '+_dpScopeLbl+'’s weakest function, so they align with the maturity you see for this scope above. Choosing one stamps it with your name and time, keeps it editable for 24 hours, and opens a tracked project. Switch scope in the cards above to see another region or entity’s decisions.')+
     (list.length?c5decisions(list):'<div class="c5note">◐ Connect your security tools and upload your policies, and the funded decisions that move your posture appear here — each with the exact controls it improves.</div>')+
     '<div class="c5foot">Each decision is priced from your control model.</div>';
@@ -5095,7 +5109,7 @@ var AI_CONTROLS=[
  ['MAP.5-1','doc','Potential impacts to individuals, groups and society are assessed and documented.'],
  ['MEASURE.1-1','doc','Approaches and metrics for measuring AI risks are identified and documented.'],
  ['MEASURE.2-1','hybrid','Test sets and evaluation procedures assess AI system performance.'],
- ['MEASURE.2-3','live','AI system performance and behaviour are monitored in deployment.'],
+ ['MEASURE.2-3','live','AI system performance and behavior are monitored in deployment.'],
  ['MEASURE.2-5','hybrid','AI system robustness, reliability and safety are evaluated.'],
  ['MEASURE.2-6','hybrid','AI system bias and fairness are evaluated across affected groups.'],
  ['MEASURE.2-9','doc','AI system explainability and interpretability are assessed and documented.'],
@@ -5535,9 +5549,15 @@ function c5ReviewQueue(){
   var ids=Object.keys(CSF_BASE_METHOD);var conf=c5Confirmations();  // confirm queue is CSF-only
   var proj=(typeof neuronFrameworkProjection==='function')?neuronFrameworkProjection('csf'):{controls:{}};
   var out=[];
-  ids.forEach(function(id){var a=c5ControlAssessment(id);if(a.method!=='hybrid')return;
-    var ev=((proj.controls&&proj.controls[id])||[]).filter(function(m){return m.evidence!=='none';}).map(function(m){return m.name;});
-    out.push({id:id,proposed:a.verdict,coverage:a.coverage,evidence:ev,confirmed:!!conf[id],decision:conf[id]&&conf[id].decision});});
+  // c5ControlAssessment reads the global C5_ASSESS_FW; the queue is CSF-only, so pin it to 'csf'
+  // for the duration — otherwise, after the user visits the AI/ISO/CIS tab, this recomputes against
+  // that framework and reports "queue clear / every hybrid decided" when 26 CSF hybrids are pending.
+  var _fwSave=(typeof C5_ASSESS_FW!=='undefined')?C5_ASSESS_FW:'csf';C5_ASSESS_FW='csf';
+  try{
+    ids.forEach(function(id){var a=c5ControlAssessment(id);if(a.method!=='hybrid')return;
+      var ev=((proj.controls&&proj.controls[id])||[]).filter(function(m){return m.evidence!=='none';}).map(function(m){return m.name;});
+      out.push({id:id,proposed:a.verdict,coverage:a.coverage,evidence:ev,confirmed:!!conf[id],decision:conf[id]&&conf[id].decision});});
+  }finally{C5_ASSESS_FW=_fwSave;}
   return out;
 }
 /* ===== ATTESTATION INTELLIGENCE — make a governance control more than a rubber stamp.
@@ -5608,7 +5628,7 @@ function c5paStyle(){
    +'.c5pa-lrow .go{font-family:var(--mono);font-size:13px;color:var(--muted);text-align:right;opacity:.5;transition:opacity .12s,transform .12s}'
    +'.c5pa-lrow:hover .go{opacity:1;transform:translateX(2px);color:var(--blue)}'
    +'.c5pa-bars{display:flex;flex-direction:column}'
-   +'.c5pa-brow{display:grid;grid-template-columns:58px 1fr minmax(90px,1.25fr) 42px 12px;align-items:center;gap:12px;padding:7px 6px;margin:0 -6px;border-top:1px solid var(--line)}.c5pa-brow:first-child{border-top:none}'
+   +'.c5pa-brow{display:grid;grid-template-columns:78px minmax(0,1fr) minmax(90px,1.25fr) 42px 12px;align-items:center;gap:12px;padding:7px 6px;margin:0 -6px;border-top:1px solid var(--line)}.c5pa-brow:first-child{border-top:none}'
    +'.c5pa-brow.clk{cursor:pointer;border-radius:7px;transition:background .12s}.c5pa-brow.clk:hover{background:var(--surface-2)}.c5pa-brow.clk:focus-visible{outline:2px solid var(--blue);outline-offset:-2px}'
    +'.c5pa-brow .bid{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink);white-space:nowrap}'
    +'.c5pa-brow .bnm{font-size:12.5px;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'
@@ -5970,7 +5990,12 @@ function c5ContinuousAssessment(host){
   // wobble that rounds to the same number (1.5 → 1.5) would still show an ▲ and read as an increase.
   // If the two shown values are equal it is "unchanged" (flat), no arrow claiming a rise.
   var prevShown=+prev5.toFixed(1),nowShown=+overall5.toFixed(1);
-  var tdir=nowShown>prevShown?'up':(nowShown<prevShown?'down':'flat');
+  // No control moved this cycle → no basis to claim a maturity change. Without this, the AI tab
+  // (whose prior-overall scaling can wobble a rounded 0.1) rendered "2.0 → 2.1 ▲" beside
+  // "0 improved · 0 regressed" — a rise with no drivers. Drift IS the driver set; if it's empty, flat.
+  var _driftMoves=drift.improvements.length+drift.regressions.length;
+  var tdir=(_driftMoves===0)?'flat':(nowShown>prevShown?'up':(nowShown<prevShown?'down':'flat'));
+  if(tdir==='flat')prev5=overall5;   // keep the shown "from" honest when we call it unchanged
   var tcol=tdir==='up'?'good':(tdir==='down'?'crit':'muted');var tarrow=tdir==='up'?'▲':(tdir==='down'?'▼':'—');
   // A control a sensor / attestation actively marks FAILING is a real deficiency; a control
   // simply not yet evidenced is a COVERAGE gap, not a failure — the two are kept apart so a
@@ -5990,8 +6015,8 @@ function c5ContinuousAssessment(host){
     +'<div style="display:flex;align-items:center;gap:11px;min-width:0">'
     +'<span style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:9px;flex:none;background:var(--surface);color:var(--blue)">'+((typeof c5icon==='function')?c5icon('scale'):'⚖')+'</span>'
     +'<div style="min-width:0"><div style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--blue)">Peer benchmark · '+fwShort+' · '+((typeof c5peerLive==='function'&&c5peerLive())?'view comparison':'preview')+'</div>'
-    +'<div style="font-size:12px;color:var(--ink-2);margin-top:1px">'+((typeof c5peerLive==='function'&&c5peerLive())?('See how your '+fwShort+' continuous-assessment posture compares to the DTNKShield community — anonymously.'):('Preview how your '+fwShort+' posture will compare — the live cohort unlocks at '+((typeof c5peerMin==='function')?c5peerMin():5)+' clients (anonymous, k-anonymity-gated).'))+'</div></div>'
-    +'</div><span class="peer-badge">'+((typeof c5peerLive==='function'&&c5peerLive())?'DTNKShield ›':'Preview ›')+'</span></div>';
+    +'<div style="font-size:12px;color:var(--ink-2);margin-top:1px">'+((typeof c5peerLive==='function'&&c5peerLive())?('See how your '+fwShort+' continuous-assessment posture compares to the Nerion community — anonymously.'):('Preview how your '+fwShort+' posture will compare — the live cohort unlocks at '+((typeof c5peerMin==='function')?c5peerMin():5)+' clients (anonymous, k-anonymity-gated).'))+'</div></div>'
+    +'</div><span class="peer-badge">'+((typeof c5peerLive==='function'&&c5peerLive())?'Nerion ›':'Preview ›')+'</span></div>';
   // ── Expandable function tree (classic .c5fw-tree); each function opens to its control table ──
   var tree='<div class="c5fw-tree">'+FN.map(function(F){
     var cids=ids.filter(function(id){return id.indexOf(F.k+'.')===0;}).sort();if(!cids.length)return '';
@@ -6035,17 +6060,26 @@ function c5ContinuousAssessment(host){
   // Human-confirmed (telemetry, human-verified) + Asserted (fresh attestation) + Unproven
   // (no valid proof now = awaiting a connector or an expired attestation). Asserted is derived
   // as the remainder so the four segments always total s.total exactly.
-  var pvProven=s.live,pvHuman=s.hybrid,pvUnproven=s.notAssessed;
-  var pvAsserted=Math.max(0,s.total-pvProven-pvHuman-pvUnproven);
-  var pvEvidenced=pvProven+pvHuman;                                  // observed today, not on file
-  var pvEvPct=s.total?Math.round(pvEvidenced/s.total*100):0;
-  var pvPct=s.total?Math.round(pvProven/s.total*100):0;
-  var pvSegs=[['Proven',pvProven,'good'],['Human-confirmed',pvHuman,'blue'],['Asserted',pvAsserted,'warn'],['Unproven',pvUnproven,'muted']];
-  var pvBar=pvSegs.map(function(x){var w=s.total?(x[1]/s.total*100):0;return w>0?('<div title="'+esc(x[0]+': '+x[1])+'" style="width:'+w+'%;background:var(--'+x[2]+')"></div>'):'';}).join('');
-  var pvLegend=pvSegs.map(function(x){return '<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--ink-2)"><i style="width:9px;height:9px;border-radius:2px;background:var(--'+x[2]+');display:inline-block"></i><b style="color:var(--ink)">'+x[1]+'</b> '+x[0]+'</span>';}).join('');
+  // HONESTY: a hybrid control still AWAITING its one-click confirm is NOT "human-confirmed" — it is
+  // telemetry-backed and pending. Only proven (live sensor) + genuinely-confirmed hybrids are
+  // defensible-to-a-regulator TODAY. The rest of the hybrids are shown as a distinct pending band and
+  // kept OUT of the headline "defensible" figure until they are actually confirmed.
+  var confHy=0;try{if(!isAiFw&&typeof c5ReviewQueue==='function')confHy=c5ReviewQueue().filter(function(q){return q.confirmed;}).length;}catch(_){}
+  var pvProven=s.live,pvTele=s.hybrid,pvUnproven=s.notAssessed;
+  var pvConfirmed=Math.min(confHy,pvTele),pvPending=Math.max(0,pvTele-pvConfirmed);
+  var pvAsserted=Math.max(0,s.total-pvProven-pvTele-pvUnproven);
+  var pvDefensible=pvProven+pvConfirmed;                             // proven now + human-signed-off
+  var pvDefPct=s.total?Math.round(pvDefensible/s.total*100):0;
+  var pvPendPct=s.total?Math.round(pvPending/s.total*100):0;
+  var pvSegs=[['Proven',pvProven,'good']];
+  if(pvConfirmed>0)pvSegs.push(['Human-confirmed',pvConfirmed,'blue']);
+  pvSegs.push(['Telemetry-backed · pending',pvPending,'sky'],['Asserted',pvAsserted,'warn'],['Unproven',pvUnproven,'muted']);
+  function pvClr(k){return k==='sky'?'color-mix(in srgb,var(--blue) 45%,var(--surface-2))':'var(--'+k+')';}
+  var pvBar=pvSegs.map(function(x){var w=s.total?(x[1]/s.total*100):0;return w>0?('<div title="'+esc(x[0]+': '+x[1])+'" style="width:'+w+'%;background:'+pvClr(x[2])+'"></div>'):'';}).join('');
+  var pvLegend=pvSegs.filter(function(x){return x[1]>0;}).map(function(x){return '<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--ink-2)"><i style="width:9px;height:9px;border-radius:2px;background:'+pvClr(x[2])+';display:inline-block"></i><b style="color:var(--ink)">'+x[1]+'</b> '+x[0]+'</span>';}).join('');
   var pvLine=isAiFw
-    ?('You operate <b>'+s.total+'</b> AI-governance controls; <b style="color:var(--good)">'+pvEvPct+'%</b> are <b>evidenced today</b>, not merely on file. The rest are <b>attested</b> (a policy says so) or <b>awaiting</b> an AI-monitoring connector. Governance is not assurance: this is the gap between “we have a policy” and “we can prove it.”')
-    :('<b style="color:var(--good)">'+pvEvPct+'%</b> of your '+s.total+' controls are <b>evidenced today</b> — proven by a live sensor or telemetry-backed and human-confirmed, not a document on file. The rest sit on a current attestation or await a connector to light up. This is the number you can defend to a board, an auditor or a regulator.');
+    ?('You operate <b>'+s.total+'</b> AI-governance controls. <b>None are machine-verified</b> — AI governance has no runtime security sensor wired yet — so today’s assurance is <b>human-reviewed</b> ('+pvTele+') or <b>attested</b> ('+pvAsserted+'), with <b>'+pvUnproven+'</b> awaiting an AI-monitoring connector. Governance is not assurance: this is the gap between “we have a policy” and “we can prove it.”')
+    :('<b style="color:var(--good)">'+pvDefPct+'%</b> of your '+s.total+' controls are <b>defensible today</b> — observed by a live sensor'+(pvConfirmed>0?' or human-confirmed':'')+', the number you can put in front of a board, an auditor or a regulator right now. Another <b>'+pvPendPct+'%</b> is <b>telemetry-backed and one click from confirmed</b> (see the Confirm queue); the rest sit on a current attestation or await a connector to light up.');
   var provHero='<div style="border:1px solid var(--blue);border-radius:14px;padding:15px 17px;margin-top:14px;background:color-mix(in srgb,var(--blue) 4%,var(--surface))">'
     +'<div style="font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--blue)">'+(isAiFw?'The AI proof gap':'Can you prove it?')+'</div>'
     +'<div style="font-size:12px;color:var(--ink-2);line-height:1.55;margin:4px 0 10px;max-width:880px">'+pvLine+'</div>'
@@ -6781,8 +6815,8 @@ function c5FrameworksClassic(host){
     '<div style="display:flex;align-items:center;gap:11px;min-width:0">'+
       '<span style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:9px;flex:none;background:var(--surface);color:var(--blue)">'+c5icon('scale')+'</span>'+
       '<div style="min-width:0"><div style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--blue)">Peer benchmark · '+fwShort+' · '+(c5peerLive()?'view comparison':'preview')+'</div>'+
-      '<div style="font-size:12px;color:var(--ink-2);margin-top:1px">'+(c5peerLive()?('See how your '+((typeof FW_NAMES!=='undefined'&&FW_NAMES[sel])||'framework')+' maturity compares to the DTNKShield community — anonymously.'):('Preview how your '+((typeof FW_NAMES!=='undefined'&&FW_NAMES[sel])||'framework')+' maturity will compare — the live cohort unlocks at '+c5peerMin()+' clients (anonymous, k-anonymity-gated).'))+'</div></div>'+
-    '</div><span class="peer-badge">'+(c5peerLive()?'DTNKShield ›':'Preview ›')+'</span></div>';
+      '<div style="font-size:12px;color:var(--ink-2);margin-top:1px">'+(c5peerLive()?('See how your '+((typeof FW_NAMES!=='undefined'&&FW_NAMES[sel])||'framework')+' maturity compares to the Nerion community — anonymously.'):('Preview how your '+((typeof FW_NAMES!=='undefined'&&FW_NAMES[sel])||'framework')+' maturity will compare — the live cohort unlocks at '+c5peerMin()+' clients (anonymous, k-anonymity-gated).'))+'</div></div>'+
+    '</div><span class="peer-badge">'+(c5peerLive()?'Nerion ›':'Preview ›')+'</span></div>';
   // Top card: framework pills · (reassess + peer benchmark) · last-assessed · export buttons.
   var topCard='<div style="border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:6px">'+
     pills+
@@ -7287,7 +7321,7 @@ function c5ViewDoc(fname){
       (matchedLoc.length?('<div style="font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--blue);margin:14px 0 6px">✓ Located — sentence match</div><div style="font-size:11px;color:var(--muted);margin-bottom:8px">Found in <b>this</b> document and highlighted in <b style="color:var(--blue)">blue</b> on the sentence carrying the most of the requirement’s language — click one to jump to it.</div>'+matchedLoc.map(matchLocItem).join('')):'')+
       (matchedUnloc.length?('<div style="font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--warn);margin:14px 0 6px">⚠ Scored elsewhere — not found in this document</div><div style="font-size:11px;color:var(--muted);margin-bottom:8px">The control score credited these, but Nerion could <b>not</b> locate them in this document’s text. That is expected when the file is a <b>data export</b> (e.g. a risk-register CSV) rather than a policy or procedure — a list of risks is not the same as documenting the control. They are <b>not</b> evidenced here; verify against the document that actually describes the control.</div>'+matchedUnloc.map(matchUnlocItem).join('')):'')+
       (gaps.length?('<div style="font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--warn);margin:14px 0 8px">⚠ Gaps — expected, not found</div>'+gaps.map(gapItem).join('')):'')+
-      ((!met.length&&!gaps.length&&!matched.length)?('<div style="font-size:12px;color:var(--ink-2);line-height:1.6">No attribute-level review is on file for this document, so it isn’t contributing to any control score. This happens when a policy was uploaded but not analysed. Run the review to score it against the control catalog.</div>'+((typeof window!=='undefined'&&typeof window.reanalyzeStoredDocs==='function')?('<button type="button" id="c5annReanalyze" style="margin-top:12px;border:1px solid var(--line);background:var(--surface);color:var(--blue);font-weight:600;font-size:12px;padding:8px 14px;border-radius:8px;cursor:pointer">↻ Run document review</button>'):'<div style="margin-top:10px;font-size:11px;color:var(--muted)">Re-upload and analyse this policy in onboarding to score it.</div>')):'');
+      ((!met.length&&!gaps.length&&!matched.length)?('<div style="font-size:12px;color:var(--ink-2);line-height:1.6">No attribute-level review is on file for this document, so it isn’t contributing to any control score. This happens when a policy was uploaded but not analyzed. Run the review to score it against the control catalog.</div>'+((typeof window!=='undefined'&&typeof window.reanalyzeStoredDocs==='function')?('<button type="button" id="c5annReanalyze" style="margin-top:12px;border:1px solid var(--line);background:var(--surface);color:var(--blue);font-weight:600;font-size:12px;padding:8px 14px;border-radius:8px;cursor:pointer">↻ Run document review</button>'):'<div style="margin-top:10px;font-size:11px;color:var(--muted)">Re-upload and analyse this policy in onboarding to score it.</div>')):'');
     wrap.innerHTML='<div style="width:min(1160px,96vw);max-height:92vh;display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 24px 60px rgba(20,33,72,.45);overflow:hidden">'+
       '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line);background:var(--surface-2)">'+
         '<div style="min-width:0;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><b style="font-family:var(--serif);font-size:15px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📄 '+c5esc(fname)+'</b><span style="font-size:10px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--blue);background:color-mix(in srgb,var(--blue) 12%,var(--surface));border:1px solid color-mix(in srgb,var(--blue) 30%,transparent);border-radius:20px;padding:2px 9px">✦ Nauditor-annotated</span></div>'+
@@ -7430,7 +7464,7 @@ function c5fwInspect(card,T,sel,cad){
   }
   c5InspectObj(m);
 }
-/* ===== DTNKShield community benchmark (inside the Frameworks tab) =====
+/* ===== Nerion community benchmark (inside the Frameworks tab) =====
    Anonymous, opt-in, per-framework peer comparison — the only feature that
    reaches the internet. Flow: preview exactly what would be shared → verify →
    share; the org's own row is always labeled "My Organization" and its real
@@ -7531,11 +7565,11 @@ function c5fwPeerRender(){
   var over=(window.C5FW_OVERALL!=null)?Number(window.C5FW_OVERALL):null;
   var optedIn=(typeof peerOptin==='function')&&peerOptin();
   var minC=(typeof PEER_MIN!=='undefined')?PEER_MIN:5;
-  var head='<div class="peer-head"><div class="ck">Community benchmark · how do we compare?</div><span class="peer-badge">DTNKShield portal</span></div>';
+  var head='<div class="peer-head"><div class="ck">Community benchmark · how do we compare?</div><span class="peer-badge">Nerion portal</span></div>';
   var body='';
   if(!optedIn&&!C5PEER_PREVIEW){
     body=c5fwPeerSampleHTML(fwName)+
-      '<div class="cn" style="margin-top:14px;line-height:1.55">See how your <b>'+fwName+'</b> maturity compares to the DTNKShield community — anonymously. This is the <b>only</b> feature that reaches the internet. If you share, only your <b>anonymized scores</b> and cohort tags (industry, region, revenue band) leave your browser — <b>no organization name, no inventory, no dollar figures</b>. The comparison unlocks once at least '+minC+' organizations have joined a cohort, so no single peer can be identified.</div>'+
+      '<div class="cn" style="margin-top:14px;line-height:1.55">See how your <b>'+fwName+'</b> maturity compares to the Nerion community — anonymously. This is the <b>only</b> feature that reaches the internet. If you share, only your <b>anonymized scores</b> and cohort tags (industry, region, revenue band) leave your browser — <b>no organization name, no inventory, no dollar figures</b>. The comparison unlocks once at least '+minC+' organizations have joined a cohort, so no single peer can be identified.</div>'+
       '<div style="margin-top:12px"><button class="c5btn" id="c5peerPreview">Preview what would be shared →</button></div>';
   } else if(!optedIn&&C5PEER_PREVIEW){
     var rows=c5peerShared().map(function(f){return '<tr><td style="padding:6px 10px;color:var(--ink-2);white-space:nowrap">'+f.k+'</td><td style="padding:6px 10px;font-weight:600">'+f.v+(f.note?(' <span style="font-weight:400;color:var(--muted)">— '+f.note+'</span>'):'')+'</td></tr>';}).join('');
@@ -7547,8 +7581,8 @@ function c5fwPeerRender(){
     var cats='<div class="c5fw-pills" style="margin-top:10px">'+c5peerCats().map(function(c){return '<button class="c5fw-pill'+(C5PEER_CAT===c.k?' on':'')+'" data-c5peercat="'+c.k+'">'+c.l+'</button>';}).join('')+'</div>';
     var q=c5peerCatQuery(C5PEER_CAT);
     var cmp;
-    if(C5FW_PEER_BUSY||!C5FW_PEER){cmp='<div class="cn" style="margin-top:14px;color:var(--muted)">⟳ Contacting the DTNKShield '+q.label+' cohort…</div>';if(!C5FW_PEER&&!C5FW_PEER_BUSY){c5fwPeerFetch();return;}}
-    else if(C5FW_PEER.error){cmp='<div class="cn" style="margin-top:14px;color:var(--warn)">Couldn’t reach the DTNKShield portal. Nothing beyond your anonymized scores was shared. <button class="peer-toggle" id="c5peerRetry">try again</button></div>';}
+    if(C5FW_PEER_BUSY||!C5FW_PEER){cmp='<div class="cn" style="margin-top:14px;color:var(--muted)">⟳ Contacting the Nerion '+q.label+' cohort…</div>';if(!C5FW_PEER&&!C5FW_PEER_BUSY){c5fwPeerFetch();return;}}
+    else if(C5FW_PEER.error){cmp='<div class="cn" style="margin-top:14px;color:var(--warn)">Couldn’t reach the Nerion portal. Nothing beyond your anonymized scores was shared. <button class="peer-toggle" id="c5peerRetry">try again</button></div>';}
     else if(!C5FW_PEER.sufficient){var got=C5FW_PEER.n||0,need=C5FW_PEER.minCohort||minC;
       // Opted in but the live cohort isn't at k-anonymity yet — show the SAME sample
       // preview the not-opted-in view shows, so the drawer is consistent and the user
@@ -7566,7 +7600,7 @@ function c5fwPeerRender(){
       var legend='<div class="peer-legend" style="margin-top:6px"><span><i style="background:var(--blue-soft);border:1px solid rgba(26,95,160,.35)"></i>cohort band (p25–p75)</span><span><i style="background:var(--blue);width:2px"></i>cohort median</span><span><i style="background:var(--good);border-radius:50%;border:1.5px solid var(--card,#fff);box-shadow:0 1px 2px rgba(0,0,0,.3)"></i><b style="color:var(--ink-2)">the ● dot = My Organization</b></span><span style="color:var(--muted)">its colour: green ≥ median · amber ≥ 25th · red below 25th</span></div>';
       cmp=hero+bars+legend;
     }
-    body='<div class="cn" style="margin-top:6px">Comparing <b>My Organization</b>’s '+fwName+' maturity against the DTNKShield community. Pick a cohort:</div>'+cats+
+    body='<div class="cn" style="margin-top:6px">Comparing <b>My Organization</b>’s '+fwName+' maturity against the Nerion community. Pick a cohort:</div>'+cats+
       '<div style="margin-top:6px">'+cmp+'</div>'+
       '<div style="margin-top:12px;display:flex;gap:14px;flex-wrap:wrap;align-items:center"><button class="c5btn" id="c5peerPull">↻ Pull latest comparison</button><button class="peer-toggle" id="c5peerOptout">opt out &amp; delete my shared row</button></div>';
   }

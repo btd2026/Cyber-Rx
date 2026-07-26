@@ -175,7 +175,7 @@
   .fw-cmmi-lbl{font-size:12px;color:var(--ink-2);font-weight:700}
   .fw-trend{display:flex;align-items:center;gap:9px;margin-left:auto;flex-wrap:wrap}
   .fw-trend-d{font-size:14px;font-weight:800}.fw-trend-n{font-size:10px;color:var(--muted)}
-  /* DTNKSHIELD anonymous peer benchmark */
+  /* Nerion anonymous peer benchmark */
   .peer-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px}
   .peer-badge{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;padding:2px 7px;border-radius:20px;background:var(--blue-soft);color:var(--blue);border:1px solid rgba(26,95,160,.3)}
   .peer-cloud{margin-left:auto;display:flex;align-items:center;gap:8px}
@@ -2844,9 +2844,9 @@ function renderCompliance(){
     else if(k==='avg')openDrill('Average audit readiness — the breakdown',drillFwAvg());
     else if(k==='ready')openDrill('Audit-ready — which pass, and the path to all',drillFwReady());};});
 }
-/* ---- DTNKSHIELD anonymous peer benchmark — the ONLY internet-connected feature ----
+/* ---- Nerion anonymous peer benchmark — the ONLY internet-connected feature ----
    Opt-in. Submits ONLY anonymized CMMI scores + industry / region / size band to the
-   shared DTNKSHIELD cohort table and reads back k-anonymity-gated percentiles. Nothing
+   shared Nerion cohort table and reads back k-anonymity-gated percentiles. Nothing
    identifying leaves the browser (server-side sanitize/aggregate enforce the gate). */
 var PEER_DATA=null,PEER_BUSY=false;
 function peerCid(){try{var c=localStorage.getItem('cyberrx_peer_cid');if(!c){c='pc_'+Math.random().toString(36).slice(2,10)+Date.now().toString(36);localStorage.setItem('cyberrx_peer_cid',c);}return c;}catch(_){return 'pc_anon';}}
@@ -2888,7 +2888,7 @@ function peerBar(label,you,st){
 function peerOptinCard(snap){
   var mine=snap&&snap.overall!=null?('<b>'+Number(snap.overall).toFixed(1)+' / 5</b> overall CMMI'):'your framework posture';
   return '<div class="card">'+
-    '<div class="peer-head"><div class="ck">Anonymous peer benchmark</div><span class="peer-badge">DTNKSHIELD cloud</span></div>'+
+    '<div class="peer-head"><div class="ck">Anonymous peer benchmark</div><span class="peer-badge">Nerion cloud</span></div>'+
     '<div class="cn" style="margin-top:8px;line-height:1.55">See how your framework maturity compares to '+indLabel()+' peers of your size ('+peerSizeLabel()+'). This is the <b>only</b> feature that connects to the internet. If you opt in, Nerion shares <b>only</b> your anonymized scores — '+mine+' and per-function CMMI, plus your industry, region and revenue band. <b>No organization name, no inventory, no dollar figures, no IP addresses</b> ever leave your browser, and the cohort is only shown once at least '+ (typeof PEER_MIN!=='undefined'?PEER_MIN:5) +' organizations have joined (so no single peer can be identified).</div>'+
     '<div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">'+
       '<button class="bp-btn primary" id="peerOptinBtn">Opt in &amp; compare →</button>'+
@@ -2904,13 +2904,13 @@ function renderPeerCompare(){
     var b=document.getElementById('peerOptinBtn');if(b)b.onclick=function(){peerSetOptin(true);};
     return;
   }
-  var head='<div class="peer-head"><div class="ck">Anonymous peer benchmark</div><span class="peer-badge">DTNKSHIELD cloud</span>'+
+  var head='<div class="peer-head"><div class="ck">Anonymous peer benchmark</div><span class="peer-badge">Nerion cloud</span>'+
     '<div class="peer-cloud"><button class="peer-toggle" id="peerRefreshBtn">↻ refresh</button><button class="peer-toggle" id="peerOptoutBtn">opt out</button></div></div>'+
     '<div class="cn" style="margin-top:4px">'+indLabel()+' · '+peerSizeLabel()+' cohort. Shared anonymously; refreshed on each audit cadence.</div>';
   var body;
-  if(PEER_BUSY){body='<div class="cn" style="margin-top:14px;color:var(--muted)">⟳ Contacting the DTNKSHIELD cohort…</div>';}
-  else if(!PEER_DATA){peerSubmitAndFetch();body='<div class="cn" style="margin-top:14px;color:var(--muted)">⟳ Contacting the DTNKSHIELD cohort…</div>';}
-  else if(PEER_DATA.error){body='<div class="cn" style="margin-top:14px;color:var(--warn)">Couldn’t reach the DTNKSHIELD cloud. Your data is safe and nothing was shared beyond the anonymized scores. <button class="peer-toggle" id="peerRetryBtn">try again</button></div>';}
+  if(PEER_BUSY){body='<div class="cn" style="margin-top:14px;color:var(--muted)">⟳ Contacting the Nerion cohort…</div>';}
+  else if(!PEER_DATA){peerSubmitAndFetch();body='<div class="cn" style="margin-top:14px;color:var(--muted)">⟳ Contacting the Nerion cohort…</div>';}
+  else if(PEER_DATA.error){body='<div class="cn" style="margin-top:14px;color:var(--warn)">Couldn’t reach the Nerion cloud. Your data is safe and nothing was shared beyond the anonymized scores. <button class="peer-toggle" id="peerRetryBtn">try again</button></div>';}
   else if(!PEER_DATA.sufficient){var got=PEER_DATA.n||0,need=PEER_DATA.minCohort||PEER_MIN;
     body='<div class="peer-hero"><div><div class="peer-hero-l">Building your cohort</div><div class="peer-hero-d" style="margin-top:6px">Your scores are shared. The comparison unlocks once <b>'+need+'</b> peers in this cohort have joined — so no single organization can be identified.</div></div><div class="peer-n"><b>'+got+' / '+need+'</b>peers joined</div></div>';}
   else{
@@ -3601,7 +3601,7 @@ function indKey(){var i=String(industry()||'').toLowerCase();
   if(/retail|commerce/.test(i))return 'retail';if(/gov|public/.test(i))return 'gov';if(/manufactur/.test(i))return 'mfg';if(/energy|utilit/.test(i))return 'energy';return 'tech';}
 function indProfile(){return IND_PROFILES[indKey()]||IND_PROFILES.tech;}
 function indLabel(){return {health:'healthcare',tech:'technology',fin:'financial services',retail:'retail',gov:'government',mfg:'manufacturing',energy:'energy & utilities',telecom:'telecommunications'}[indKey()]||'your sector';}
-/* Finer-grained industry for the DTNKShield peer cohort ONLY — splits banking and
+/* Finer-grained industry for the Nerion peer cohort ONLY — splits banking and
    insurance out of the general 'fin' bucket so they form distinct benchmark cohorts.
    The rest of the cockpit (profiles, threats, labels) keeps using indKey(). */
 function peerIndustry(){var i=String(industry()||'').toLowerCase();if(/bank/.test(i))return 'banking';if(/insur/.test(i))return 'insurance';return indKey();}
