@@ -5538,34 +5538,27 @@ function c5ContinuousAssessment(host){
       C5_CADENCE_KEYS.map(function(k){return '<option value="'+k+'"'+(k===curKey?' selected':'')+'>'+C5_CADENCE_LABEL[k]+'</option>';}).join('');
     return '<select data-cadence="'+scope+'" style="font-size:11px;padding:3px 6px;border:1px solid var(--'+(overridden?'blue':'line')+');border-radius:6px;background:var(--surface);color:var(--ink)'+(extra||'')+'">'+opts+'</select>';
   }
-  // One clickable control row — selecting it opens the detail panel below (like Classic view).
+  // One clickable control row — four columns only: the answer (verdict + score) and the ONE thing
+  // that makes Nerion different (Proof = how it's evidenced + how fresh). Method detail, coverage,
+  // assurance/confidence and cadence live in the click-through detail, not this executive table.
   function assessRow(id){var a=c5ControlAssessment(id);var m=ASSESS_METHOD[a.method];
-    var ind=(a.method==='attestation')?c5IndirectSignal(id):null;
-    var llm=(a.method==='attestation')?c5LlmPrescreen(id):null;
-    var cov=a.coverage?(a.coverage.pct+'% <span style="color:var(--muted)">('+(a.coverage.known-a.coverage.observed)+'% unobserved)</span>')
-      :(ind?('<span title="Indirect corroboration — not proof of the outcome" style="color:var(--blue)">'+esc(ind.source)+' · '+esc(ind.value)+'</span>'):'<span style="color:var(--muted)">n/a</span>');
-    var llmMark=llm?(' <span title="'+(llm.gaps.length?('LLM flagged: '+esc(llm.gaps[0])):('LLM pre-screen — confirm, never auto-pass'))+'" style="cursor:help">'+(llm.gaps.length?'⚠':'🔍')+'</span>'):'';
-    var frLabel=a.freshness==='none'?'—':(fmtLast(a)+' · TTL '+fmtTtl(a.ttlDays)+' · '+a.freshness);
     var selRow=(C5_ASSESS_CTRL===id);
-    // Per-control score (0–5) — the three axes multiplied, same number the detail shows.
     var sc5=(typeof c5ControlScore==='function')?c5ControlScore(a)*5:0;
     var scCol=(a.verdict==='not_assessed')?'muted':(sc5>=3.5?'good':sc5>=2.5?'warn':'crit');
+    var freshTxt=(a.freshness==='none')?'not yet evidenced':(fmtLast(a)+(a.freshness==='healthy'?'':' · '+a.freshness));
+    var proof=pill(m.label,methodColor[a.method])+' <span style="font-size:10px;color:var(--'+freshColor[a.freshness]+')">'+freshTxt+'</span>';
     return '<tr data-assessctl="'+id+'" style="border-top:1px solid var(--line);cursor:pointer;background:'+(selRow?'color-mix(in srgb,var(--blue) 8%,transparent)':'transparent')+'">'
-      +'<td style="padding:6px 12px 6px 0;font-family:ui-monospace,monospace;font-size:11px;color:var(--'+(selRow?'blue':'ink')+');white-space:nowrap">'+esc(id)+' ›</td>'
-      +'<td style="padding:6px 10px 6px 0">'+pill(m.label,methodColor[a.method])+llmMark+'</td>'
-      +'<td style="padding:6px 10px 6px 0">'+pill(verdictLabel[a.verdict],verdictColor[a.verdict])+'</td>'
-      +'<td style="padding:6px 10px 6px 0;white-space:nowrap"><b style="font-size:13px;color:var(--'+scCol+')">'+(a.verdict==='not_assessed'?'—':sc5.toFixed(1))+'</b><span style="font-size:10px;color:var(--muted)">'+(a.verdict==='not_assessed'?'':' / 5')+'</span></td>'
-      +'<td style="padding:6px 10px 6px 0;font-size:11px;color:var(--ink-2)">'+a.assurance+' · <b style="color:var(--'+(a.confidence==='high'?'good':a.confidence==='medium'?'blue':a.confidence==='stale'?'crit':'muted')+')">'+a.confidence+'</b></td>'
-      +'<td style="padding:6px 10px 6px 0;font-size:11px;color:var(--ink-2)">'+cov+'</td>'
-      +'<td style="padding:6px 10px 6px 0;font-size:11px;color:var(--'+freshColor[a.freshness]+')">'+frLabel+'</td>'
-      +'<td style="padding:6px 0">'+cadSelect('control:'+id,a.cadenceKey,a.cadenceSource==='control')+'</td></tr>';
+      +'<td style="padding:8px 12px 8px 0;font-family:ui-monospace,monospace;font-size:11px;color:var(--'+(selRow?'blue':'ink')+');white-space:nowrap">'+esc(id)+' ›</td>'
+      +'<td style="padding:8px 10px 8px 0">'+pill(verdictLabel[a.verdict],verdictColor[a.verdict])+'</td>'
+      +'<td style="padding:8px 10px 8px 0;white-space:nowrap"><b style="font-size:13px;color:var(--'+scCol+')">'+(a.verdict==='not_assessed'?'—':sc5.toFixed(1))+'</b><span style="font-size:10px;color:var(--muted)">'+(a.verdict==='not_assessed'?'':' / 5')+'</span></td>'
+      +'<td style="padding:8px 0;font-size:11px;color:var(--ink-2)">'+proof+'</td></tr>';
   }
   function assessTable(fnKey){
     var cids=ids.filter(function(id){return id.indexOf(fnKey+'.')===0;}).sort();
     if(!cids.length)return '';
     var thin='text-align:left;padding:6px 10px 6px 0;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)';
-    return '<div style="overflow-x:auto;margin-top:6px"><table style="border-collapse:collapse;width:100%;min-width:720px"><thead><tr>'
-      +['Control','Method','Verdict','Score','Assurance · confidence','Coverage','Freshness','Cadence'].map(function(h){return '<th style="'+thin+'">'+h+'</th>';}).join('')
+    return '<div style="overflow-x:auto;margin-top:6px"><table style="border-collapse:collapse;width:100%;min-width:420px"><thead><tr>'
+      +['Control','Verdict','Score','Proof · how evidenced, how fresh'].map(function(h){return '<th style="'+thin+'">'+h+'</th>';}).join('')
       +'</tr></thead><tbody>'+cids.map(assessRow).join('')+'</tbody></table></div>';
   }
   // Full auditor-style Finding & recommendation — same structure & depth as Classic view.
