@@ -5392,7 +5392,7 @@ function c5paStyle(){
   var css=''
    +'.c5pa{--c5serif:var(--serif);margin:6px 0 2px}'
    +'.c5pa-eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);font-weight:600}'
-   +'.c5pa-finding{font-family:var(--c5serif);font-weight:600;font-size:clamp(22px,2.6vw,30px);line-height:1.24;letter-spacing:-.01em;color:var(--ink);margin:12px 0 0;max-width:none;text-wrap:balance}'
+   +'.c5pa-finding{font-family:var(--c5serif);font-weight:600;font-size:clamp(22px,2.6vw,30px);line-height:1.24;letter-spacing:-.01em;color:var(--ink);margin:12px 0 0;max-width:none;text-wrap:pretty}'
    +'.c5pa-finding em{font-style:normal;color:var(--blue)}.c5pa-finding .bad{color:var(--crit)}'
    +'.c5pa-dek{color:var(--ink-2);font-size:15px;line-height:1.55;margin-top:14px;max-width:64ch}.c5pa-dek b{color:var(--ink)}'
    +'.c5pa-basis{display:flex;align-items:center;gap:9px;margin-top:12px;font-size:12px;color:var(--ink-2);line-height:1.5}.c5pa-basis b{color:var(--ink);font-weight:700}'
