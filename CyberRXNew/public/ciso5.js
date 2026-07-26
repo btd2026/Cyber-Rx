@@ -5339,7 +5339,10 @@ function c5paStyle(){
    +'@media(max-width:720px){.c5pa-inst{grid-template-columns:1fr}}'
    +'.c5pa-cell{padding:22px 24px}.c5pa-cell + .c5pa-cell{border-left:1px solid var(--line)}'
    +'@media(max-width:720px){.c5pa-cell + .c5pa-cell{border-left:none;border-top:1px solid var(--line)}}'
-   +'.c5pa-ct{font-family:var(--mono);font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:12px}'
+   +'.c5pa-ct{font-family:var(--mono);font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:8px}'
+   +'.c5pa-cellgo{font-family:var(--sans);font-size:10px;font-weight:700;letter-spacing:.02em;text-transform:none;color:var(--blue);opacity:0;transition:opacity .15s}'
+   +'.c5pa-cell-go{cursor:pointer;transition:background .15s}.c5pa-cell-go:hover,.c5pa-cell-go:focus-visible{background:color-mix(in srgb,var(--blue) 4%,transparent);outline:none}.c5pa-cell-go:hover .c5pa-cellgo,.c5pa-cell-go:focus-visible .c5pa-cellgo{opacity:1}'
+   +'.c5pa-cell:hover .c5pa-cellgo{opacity:1}'
    +'.c5pa-gaugewrap{display:flex;flex-direction:column;align-items:center;gap:5px}'
    +'.c5pa-gaugewrap .read{font-family:var(--c5serif);font-size:42px;font-weight:600;line-height:1}'
    +'.c5pa-gaugewrap .read small{font-family:var(--sans);font-size:15px;color:var(--muted);font-weight:400}'
@@ -5703,35 +5706,27 @@ function c5ContinuousAssessment(host){
   // dropped in here so you can move scope without leaving Continuous assessment. Each scope
   // has its OWN continuous scores, so switching one updates every card/tree/detail below. ──
   var scopeNavHtml='';var vFns=null;
-  try{ if(typeof scopeNav==='function'){var sn=scopeNav();
-    if(sn){var lbl=(typeof scopeLabel==='function')?scopeLabel(typeof SCOPE!=='undefined'?SCOPE:'enterprise'):'';
-      // Aggregate summary for the CURRENT scope — the overall NIST CSF (Enterprise = the
-      // aggregate of all regions) plus the 6 CSF functions only. Same basis as the region
-      // cards below, so it re-computes as you pick a region/entity.
-      var sumCsf=null,sumFns=[];
-      // The reconciling hierarchical aggregate (now framework-aware: CSF or AI RMF), so the
-      // headline equals the mean of the region/entity cards below for either framework.
-      try{ if(typeof scopeAggTree==='function'){var st=scopeAggTree(c5Scope());
-        if(st){sumCsf=st.overall;sumFns=(st.groups||[]).map(function(g){return {n:String(g.id||g.name).split(' ')[0],s:g.score};});} } }catch(_){}
-      if(sumCsf==null){
-        if(C5_ASSESS_FW==='ai'){ // fallback: derive the overall + functions straight from the AI rollup.
-          sumCsf=roll.overall*5;
-          sumFns=FN.map(function(F){var fsx=roll.functions[F.k];return {n:F.k,s:(fsx?fsx.score:0)*5};});
-        } else { try{ if(typeof c5fwTree==='function'&&typeof fwDeployedIds==='function'){var st2=c5fwTree('csf',fwDeployedIds());sumCsf=st2.overall;
-          sumFns=st2.groups.map(function(g){return {n:String(g.id||g.name).split(' ')[0],s:g.score};}); } }catch(_){}}
-      }
-      vFns=sumFns; // hoist so the verdict headline cites the SAME function scores as the bars
-      var scol=function(v){return v>=3.5?'good':v>=2?'blue':v>=1?'warn':'crit';};
-      var fnBar=function(f){var w=Math.round(Math.max(0,Math.min(5,f.s))/5*100);return '<div style="min-width:78px"><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--ink-2);margin-bottom:3px"><span style="font-weight:700">'+esc(f.n)+'</span><span style="font-weight:700;color:var(--'+scol(f.s)+')">'+f.s.toFixed(1)+'</span></div><div style="height:5px;background:var(--surface-2);border-radius:3px;overflow:hidden"><i style="display:block;height:100%;width:'+w+'%;background:var(--'+scol(f.s)+')"></i></div></div>';};
-      var isEnt=(typeof SCOPE==='undefined'||SCOPE==='enterprise');
-      // The aggregate + function bars now live in the hero instrument (gauge + radar),
-      // so the scope-nav keeps only the region navigation to avoid duplicating them.
-      var sumHtml='';
-      // Comparison strip only — the scope breadcrumb above the page owns "where am I".
-      // sn already carries clear "Regions / Entities — weakest first" headers, so no
-      // redundant "now viewing" preamble that duplicated the breadcrumb and confused the read.
-      scopeNavHtml=sn?('<div style="margin-top:22px">'+sn+'</div>'):'';
+  // Function profile for the CURRENT scope — ALWAYS computed from the reconciling hierarchical
+  // aggregate (framework-aware: CSF or AI RMF), independent of whether there is a drill to show.
+  // A prior bug tied this to scopeNav(), so a scope with no drill (or a degraded load) left the
+  // radar and the weakest-function ledger blank. It now always has its full set of spokes.
+  try{
+    var sumCsf=null,sumFns=[];
+    try{ if(typeof scopeAggTree==='function'){var st=scopeAggTree(c5Scope());
+      if(st){sumCsf=st.overall;sumFns=(st.groups||[]).map(function(g){return {n:String(g.id||g.name).split(' ')[0],s:g.score};});} } }catch(_){}
+    if(sumCsf==null){
+      if(C5_ASSESS_FW==='ai'){ sumCsf=roll.overall*5;
+        sumFns=FN.map(function(F){var fsx=roll.functions[F.k];return {n:F.k,s:(fsx?fsx.score:0)*5};}); }
+      else { try{ if(typeof c5fwTree==='function'&&typeof fwDeployedIds==='function'){var st2=c5fwTree('csf',fwDeployedIds());sumCsf=st2.overall;
+        sumFns=st2.groups.map(function(g){return {n:String(g.id||g.name).split(' ')[0],s:g.score};}); } }catch(_){}}
     }
+    // Last-resort guarantee: the framework's full function set so the radar always has its spokes.
+    if(!sumFns.length){ sumFns=FN.map(function(F){var fsx=roll.functions&&roll.functions[F.k];return {n:F.k,s:(fsx?fsx.score*5:0)};}); }
+    vFns=sumFns;
+  }catch(_){}
+  // Scope-drill (regions / entities) — independent of the profile above; may legitimately be empty.
+  try{ if(typeof scopeNav==='function'){var sn=scopeNav();
+    if(sn){ scopeNavHtml='<div style="margin-top:22px">'+sn+'</div>'; }
   }}catch(_){}
   // ── "Can you prove it?" — the assurance front door. Not a maturity score: the honest split of
   // what is PROVEN by a sensor today vs merely asserted on a policy vs unproven. This is Nerion's
@@ -5829,8 +5824,8 @@ function c5ContinuousAssessment(host){
     +paBasisHtml
     +'<div class="c5pa-dek">'+vLede+'</div>'
     +'<div class="c5pa-inst">'
-      +'<div class="c5pa-cell"><div class="c5pa-ct">Maturity vs 3.5 target</div><div class="c5pa-gaugewrap">'+c5paGauge(overall5,3.5)+'<div class="read" style="color:var('+paReadCol+')">'+overall5.toFixed(1)+'<small> / 5</small></div><div class="sub">CMMI Level '+vCmmi+' · '+esc(vLevel||'')+' · target 3.5 · gap '+Math.max(0,3.5-overall5).toFixed(1)+'</div></div></div>'
-      +'<div class="c5pa-cell"><div class="c5pa-ct">Function profile · '+(isAiFw?'AI RMF':'NIST CSF 2.0')+'</div>'+c5paRadar(vFns)+'</div>'
+      +'<div class="c5pa-cell c5pa-cell-go" data-pagauge="1" role="button" tabindex="0" title="See the controls behind this score"><div class="c5pa-ct">Maturity vs 3.5 target<span class="c5pa-cellgo">all controls &rsaquo;</span></div><div class="c5pa-gaugewrap">'+c5paGauge(overall5,3.5)+'<div class="read" style="color:var('+paReadCol+')">'+overall5.toFixed(1)+'<small> / 5</small></div><div class="sub">CMMI Level '+vCmmi+' · '+esc(vLevel||'')+' · target 3.5 · gap '+Math.max(0,3.5-overall5).toFixed(1)+'</div></div></div>'
+      +'<div class="c5pa-cell"><div class="c5pa-ct">Function profile · '+(isAiFw?'AI RMF':'NIST CSF 2.0')+'<span class="c5pa-cellgo">click a function &rsaquo;</span></div>'+c5paRadar(vFns)+'</div>'
     +'</div>'
     +'<div class="c5pa-kpis">'+cards+'</div>'
     +(paLedger?('<div class="c5pa-thin"><div class="c5pa-ct">Where the program is thinnest &mdash; weakest first<span class="hint">click a function for its controls</span></div><div class="c5pa-ledger">'+paLedger+'</div></div>'):'')
@@ -5865,6 +5860,12 @@ function c5ContinuousAssessment(host){
     function open(){C5_ASSESS_FN=row.getAttribute('data-pafn');C5_ASSESS_CTRL=null;C5_ASSESS_EXP={};C5_ASSESS_EXP[C5_ASSESS_FN]=true;C5_ASSESS_SUBTAB='controls';c5ContinuousAssessment(host);
       var d=host.querySelector('#assessDetail')||host.querySelector('.c5fw-wrap');if(d&&d.scrollIntoView)try{d.scrollIntoView({behavior:'smooth',block:'center'});}catch(_){}}
     row.onclick=open;row.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}};});
+  // Clickable maturity gauge — opens the full control breakdown (every function expanded) that
+  // the headline score is built from, so the gauge box is a door to the evidence, not just a dial.
+  host.querySelectorAll('[data-pagauge]').forEach(function(g){
+    function openAll(){C5_ASSESS_FORCECTRL=true;C5_ASSESS_FN=null;C5_ASSESS_CTRL=null;C5_ASSESS_EXP={GV:1,ID:1,PR:1,DE:1,RS:1,RC:1,GOVERN:1,MAP:1,MEASURE:1,MANAGE:1};C5_ASSESS_SUBTAB='controls';c5ContinuousAssessment(host);
+      var d=host.querySelector('#assessDetail')||host.querySelector('.c5fw-wrap')||host.querySelector('.subwrap');if(d&&d.scrollIntoView)try{d.scrollIntoView({behavior:'smooth',block:'start'});}catch(_){}}
+    g.onclick=openAll;g.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();openAll();}};});
   var acl=host.querySelector('[data-assessclose]');if(acl)acl.onclick=function(){C5_ASSESS_CTRL=null;c5ContinuousAssessment(host);};
   var dm=host.querySelector('[data-driftmore]');if(dm)dm.onclick=function(){C5_ASSESS_DRIFT_ALL=!C5_ASSESS_DRIFT_ALL;c5ContinuousAssessment(host);};
   var pb=host.querySelector('#c5fwPeerBox');if(pb)pb.onclick=function(){if(typeof c5fwPeerOpen==='function')c5fwPeerOpen();};
