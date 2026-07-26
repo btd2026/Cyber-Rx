@@ -3170,16 +3170,12 @@ function loadOrgStructure(){
   }}catch(_){}
   ensureRegionEntities();
 }
-/* Every region must have at least one entity so the Entity → Region → Enterprise rollup is
-   always well-defined and the scope drill is never empty. A region defined without sub-entities
-   gets a single synthetic entity that represents the region as a whole (it inherits the region's
-   own posture). */
+/* A region must have at least one entity — Enterprise is the mean of its regions and a region is
+   the mean of its entities, so a region with none has nothing to average and is meaningless. Such a
+   region is DROPPED entirely (not padded with a synthetic entity), so the scope drill only ever
+   shows regions that actually contain something. Onboarding states this rule up front. */
 function ensureRegionEntities(){
-  (REGIONS||[]).forEach(function(r){
-    if(r.kind==='region'&&(!r.entities||!r.entities.length)){
-      r.entities=[{id:r.id+'_all',label:'All '+r.label,synthetic:true}];
-    }
-  });
+  REGIONS=(REGIONS||[]).filter(function(r){return r.kind!=='region'||(r.entities&&r.entities.length>0);});
 }
 /* Hierarchical scope score that RECONCILES: an entity is a leaf (scored from its own telemetry),
    a region is the mean of its entities, and Enterprise is the mean of its regions — equal-weighted
