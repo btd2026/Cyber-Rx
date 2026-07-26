@@ -5600,6 +5600,7 @@ function c5paStyle(){
    +'.c5pa-inst{display:grid;grid-template-columns:1fr 1.05fr;border:1px solid var(--line);border-radius:14px;background:var(--surface);overflow:hidden;margin-top:26px}'
    +'@media(max-width:720px){.c5pa-inst{grid-template-columns:1fr}}'
    +'.c5pa-cell{padding:22px 24px}.c5pa-cell + .c5pa-cell{border-left:1px solid var(--line)}'
+   +'.c5pa-cell:first-child{display:flex;flex-direction:column;justify-content:center}'   /* center the gauge vertically when the sibling ledger (e.g. CIS 18 rows) is much taller */
    +'@media(max-width:720px){.c5pa-cell + .c5pa-cell{border-left:none;border-top:1px solid var(--line)}}'
    +'.c5pa-ct{font-family:var(--mono);font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:8px}'
    +'.c5pa-cellgo{font-family:var(--sans);font-size:10px;font-weight:700;letter-spacing:.02em;text-transform:none;color:var(--blue);opacity:0;transition:opacity .15s}'
