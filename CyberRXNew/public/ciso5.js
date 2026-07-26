@@ -6631,6 +6631,95 @@ function nerionInternal(){try{return (typeof localStorage!=='undefined'&&localSt
    it moves with your real posture. Kept honest: every control shows how it's evidenced, and the
    dek states the score is crosswalk-derived (readiness), not a certified audit opinion. */
 var C5_FWLENS_EXP={},C5_FWLENS_CTRL=null,C5_FWLENS_KPI=null;
+var C5_AIFW='rmf',C5_AIFW_CTRL=null;
+/* AI-frameworks tab — a second-level selector so a CISO can move between the five recognised AI
+   frameworks. NIST AI RMF uses the honest continuous-assessment view; ISO/IEC 42001, OWASP LLM &
+   Agentic Top 10, MITRE ATLAS and the EU AI Act are attestation-evidenced governance frameworks
+   (no runtime AI sensor is wired yet), rendered from AI_FW_CATALOG in the same c5pa chrome. */
+function c5AiFrameworkTab(host){
+  if(!host)return;var esc=(typeof c5esc==='function')?c5esc:function(x){return x;};
+  var order=(typeof AI_FW_ORDER!=='undefined')?AI_FW_ORDER:['rmf'];
+  var cat=(typeof AI_FW_CATALOG!=='undefined')?AI_FW_CATALOG:{rmf:{short:'NIST AI RMF'}};
+  if(!cat[C5_AIFW])C5_AIFW='rmf';
+  var pills='<div class="subwrap c5aifw-sel" style="margin:0 0 2px"><div class="subtabs" role="tablist" aria-label="AI framework">'
+    +order.map(function(k){return '<button class="subtab'+(C5_AIFW===k?' on':'')+'" data-aifwk="'+esc(k)+'" role="tab" aria-selected="'+(C5_AIFW===k)+'">'+esc((cat[k]&&cat[k].short)||k)+'</button>';}).join('')
+    +'</div></div>';
+  host.innerHTML=pills+'<div id="c5aifw-body"></div>';
+  host.querySelectorAll('[data-aifwk]').forEach(function(b){b.onclick=function(){C5_AIFW=b.getAttribute('data-aifwk');C5_AIFW_CTRL=null;c5AiFrameworkTab(host);};});
+  var body=host.querySelector('#c5aifw-body');
+  if(C5_AIFW==='rmf'){C5_ASSESS_FW='ai';c5ContinuousAssessment(body);}   // the honest continuous view
+  else c5AiFwView(body,C5_AIFW);
+}
+/* Render one attestation-evidenced AI framework (ISO 42001 / OWASP LLM / MITRE ATLAS / EU AI Act)
+   from AI_FW_CATALOG, honestly: every control is a governance attestation (assess() returns the
+   method / finding / recommendation), scored 0–5 CMMI; nothing claims live telemetry. Same finding
+   → gauge → weakest-first ledger → drill-down chrome as the other framework lenses. */
+function c5AiFwView(host,fwKey){
+  if(!host)return;var esc=(typeof c5esc==='function')?c5esc:function(x){return x;};
+  var cat=(typeof AI_FW_CATALOG!=='undefined')?AI_FW_CATALOG[fwKey]:null;if(!cat){host.innerHTML='';return;}
+  if(typeof c5paStyle==='function')c5paStyle();
+  var g=(typeof aiG==='function')?aiG():{};
+  var label=cat.name||cat.short||fwKey;
+  var srcLbl={system:'🔌 telemetry',governance:'🧾 attested',document:'📄 document'};
+  var groups=(cat.groups||[]).map(function(grp){
+    var ctrls=(grp.controls||[]).map(function(c){var a={};try{a=c.assess(g)||{};}catch(_){}
+      return {id:c.id,name:c.name,cmmi:(a.cmmi!=null?a.cmmi:0),src:a.src||'governance',method:a.method||'',finding:a.finding||'',rec:a.rec||''};});
+    return {name:grp.fn||'',controls:ctrls};
+  });
+  var allC=[];groups.forEach(function(gr){allC=allC.concat(gr.controls);});
+  var overall5=allC.length?allC.reduce(function(s,c){return s+c.cmmi;},0)/allC.length:0;
+  var vCmmi=(typeof c5cmmiLevel==='function')?c5cmmiLevel(overall5):Math.floor(overall5);
+  var vLevel=(typeof c5fwLvl==='function')?c5fwLvl(overall5):'';
+  var readCol=overall5>=3.5?'--good':overall5>=2?'--blue':overall5>=1?'--warn':'--crit';
+  var vBelow=overall5<3.5,belowN=allC.filter(function(c){return c.cmmi<3.5;}).length;
+  var attested=allC.filter(function(c){return c.cmmi>0;}).length;
+  var covPct=allC.length?Math.round(attested/allC.length*100):0;
+  var paFinding='Your <b>'+esc(label)+'</b> posture sits at <em>'+(vLevel||'&mdash;')+'</em> (CMMI Level '+vCmmi+') &mdash; '+overall5.toFixed(1)+' of 5, '+(vBelow?'<span class="bad">below the 3.5 target</span>':'at the 3.5 target')+'.';
+  // Weakest-first control ledger (id · name · bar · score) — clickable to open each control's detail.
+  var barItems=allC.slice().sort(function(a,b){return a.cmmi-b.cmmi;}).map(function(c){return {id:c.id,name:c.name,s:c.cmmi,key:c.id};});
+  var profileInner=(typeof c5paBars==='function')?c5paBars(barItems,{clickable:true}):'';   // rows carry data-pafn = control id
+  function card(l,v,vc,cn){return '<div class="c5card"><div class="c5card-top"><span class="c5card-l">'+l+'</span><span class="c5chip c5-computed">computed</span></div><div class="c5card-v" style="color:var(--'+vc+')">'+v+'</div><div class="cn">'+cn+'</div></div>';}
+  var cards='<div class="c5cards">'
+    +card('Controls below target',belowN+' / '+allC.length,belowN?'warn':'good','under CMMI 3.5')
+    +card('Attestation coverage',covPct+'%',covPct>=75?'good':covPct>=50?'warn':'crit',attested+' of '+allC.length+' controls attested')
+    +card('Overall maturity',overall5.toFixed(1)+' / 5',readCol.replace('--',''),(vLevel||'')+' · target 3.5')
+    +'</div>';
+  // Control rows + inline detail (method / finding / recommendation), same drill affordance as CSF/ISO.
+  function ctlDetail(c){var cc=c.cmmi>=3.5?'good':c.cmmi>=2?'blue':c.cmmi>=1?'warn':'crit';
+    return '<div style="border:1px solid var(--blue);border-radius:14px;margin:6px 0 4px;padding:16px 18px;background:color-mix(in srgb,var(--blue) 3%,var(--surface))">'
+      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px"><div><div style="font-size:9px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">'+esc(label)+' control</div><div style="font-size:15px;font-weight:600;margin-top:3px"><b>'+esc(c.id)+'</b> — '+esc(c.name||'')+'</div></div><button data-aifwclose="1" style="flex:none;font-size:12px;font-weight:600;color:var(--blue);background:none;border:1px solid var(--line);border-radius:20px;padding:3px 11px;cursor:pointer">close &times;</button></div>'
+      +'<div style="display:flex;align-items:baseline;gap:10px;margin:8px 0 12px"><div style="font-size:24px;font-weight:600;font-family:var(--serif);color:var(--'+cc+')">'+c.cmmi.toFixed(1)+'<span style="font-size:13px;color:var(--muted)"> / 5</span></div><span style="font-size:11px;color:var(--muted)">'+esc(srcLbl[c.src]||'🧾 attested')+'</span></div>'
+      +(c.method?('<div class="ev-sec">How it was assessed</div><div class="drill-p">'+c.method+'</div>'):'')
+      +(c.finding?('<div class="ev-sec">Finding</div><div class="drill-p">'+c.finding+'</div>'):'')
+      +(c.rec?('<div class="ev-sec">Recommendation</div><div class="drill-p">'+c.rec+'</div>'):'')
+      +'<div class="ev-sec">Evidence basis</div><div class="drill-p" style="font-size:11px;color:var(--muted)">Governance attestation from your onboarding AI intake. AI governance has no runtime security sensor wired, so this is a documented-posture read (self-reported), not machine-verified — connect an AI-security tool to graduate it.</div>'
+    +'</div>';}
+  var listRows=groups.map(function(gr){
+    var head=(groups.length>1)?('<div style="font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:14px 0 4px">'+esc(gr.name)+'</div>'):'';
+    var rows=gr.controls.map(function(c){var cc=c.cmmi>=3.5?'good':c.cmmi>=2?'blue':c.cmmi>=1?'warn':'crit',sel=(c.id===C5_AIFW_CTRL);
+      var row='<div data-aifwctl="'+esc(c.id)+'" role="button" tabindex="0" title="Open '+esc(c.id)+' detail" style="display:flex;align-items:center;gap:10px;padding:6px 8px;margin:0 -8px;border-top:1px solid var(--line);cursor:pointer;border-radius:6px;background:'+(sel?'color-mix(in srgb,var(--blue) 7%,transparent)':'transparent')+'"><span style="font-family:var(--mono);font-size:11px;color:var(--'+(sel?'blue':'ink')+');min-width:96px">'+esc(c.id)+' ›</span><span style="flex:1;font-size:12px;color:var(--ink-2)">'+esc(c.name||'')+'</span><span style="font-size:10px;color:var(--muted);min-width:70px">'+esc(srcLbl[c.src]||'attested')+'</span><span style="font-size:13px;font-weight:700;color:var(--'+cc+');min-width:30px;text-align:right">'+c.cmmi.toFixed(1)+'</span></div>';
+      return row+(sel?ctlDetail(c):'');});
+    return head+rows.join('');
+  }).join('');
+  var tree='<div class="c5fw-tree" style="margin-top:22px">'+listRows+'</div>';
+  host.innerHTML=(typeof c5header==='function'?c5header():'')
+    +'<div class="c5pa">'
+    +'<div class="c5pa-eyebrow">Program health · '+esc(label)+' · as of '+new Date().toLocaleDateString()+'</div>'
+    +'<h1 class="c5pa-finding">'+paFinding+'</h1>'
+    +'<div class="c5pa-dek"><b>'+esc(label)+'</b> is an <b>AI-governance</b> framework, evidenced by <b>attestation</b> from your onboarding intake — there is no runtime AI security sensor yet, so this is a documented-posture read, not machine-verified assurance. <b>Governance is not assurance</b>: the score is honest about that gap. Click any control for how it was assessed, the finding and the fix.</div>'
+    +'<div class="c5pa-inst">'
+      +'<div class="c5pa-cell"><div class="c5pa-ct">Maturity vs 3.5 target</div><div class="c5pa-gaugewrap">'+((typeof c5paGauge==='function')?c5paGauge(overall5,3.5):'')+'<div class="read" style="color:var('+readCol+')">'+overall5.toFixed(1)+'<small> / 5</small></div><div class="sub">CMMI Level '+vCmmi+' · '+esc(vLevel||'')+' · target 3.5</div></div></div>'
+      +'<div class="c5pa-cell"><div class="c5pa-ct">Control profile · '+esc(label)+' · weakest first<span class="c5pa-cellgo">click a control &rsaquo;</span></div>'+profileInner+'</div>'
+    +'</div>'
+    +'<div class="c5pa-kpis">'+cards+'</div>'
+    +'</div>'
+    +tree
+    +'<div class="c5foot">'+esc(label)+' controls are scored from your onboarding AI-governance attestation. AI governance is documented posture, not machine-verified assurance — connect an AI-security tool (AI-SPM / guardrails / gateway) to graduate these to live evidence.</div>';
+  function open(id){C5_AIFW_CTRL=(C5_AIFW_CTRL===id)?null:id;c5AiFwView(host,fwKey);}
+  host.querySelectorAll('[data-aifwctl]').forEach(function(r){var go=function(){open(r.getAttribute('data-aifwctl'));};r.onclick=go;r.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}};});
+  host.querySelectorAll('[data-pafn]').forEach(function(r){r.onclick=function(){open(r.getAttribute('data-pafn'));};});
+  var cx=host.querySelector('[data-aifwclose]');if(cx)cx.onclick=function(){C5_AIFW_CTRL=null;c5AiFwView(host,fwKey);};
+}
 function c5FwLens(host,fwKey,label){
   if(!host)return;
   try{window.C5_SCOPE_FWKEY=fwKey;}catch(_){}
@@ -6732,7 +6821,7 @@ function c5Frameworks(){
     if((nt==='assess'||nt==='ai')&&nt!==C5_PH_TAB){C5_ASSESS_CTRL=null;C5_ASSESS_EXP=null;C5_ASSESS_FN=null;C5_ASSESS_FORCECTRL=false;C5_ASSESS_SUBTAB='summary';}
     C5_PH_TAB=nt;c5Frameworks();};});
   var body=document.getElementById('c5ph-body');
-  if(tab==='ai'){C5_ASSESS_FW='ai';c5ContinuousAssessment(body);}
+  if(tab==='ai'){c5AiFrameworkTab(body);}
   else if(tab==='iso'){c5FwLens(body,'iso','ISO/IEC 27001');}
   else if(tab==='cis'){c5FwLens(body,'cis','CIS Controls v8');}
   else if(tab==='queue'){c5ConfirmQueueView(body);}
