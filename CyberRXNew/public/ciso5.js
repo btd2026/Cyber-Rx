@@ -5206,12 +5206,74 @@ function c5AssessmentSummary(){
    evidenced control can't inflate the number: verdict × assurance × freshness × coverage.
    An expired attestation (verdict not_assessed) scores 0; a met live control at 94% coverage
    scores ~0.94. Confidence rides alongside as the assurance tier. */
+/* SECURITY, NOT COMPLIANCE — the risk each control actually mitigates, in plain English. Keyed by
+   framework category (NIST CSF 2.0 category, AI RMF function) so every control states WHY it exists:
+   what an attacker or failure does if the control is weak. Shown under the control objective. */
+var C5_CTRL_RISK={
+  'GV.OC':'Cyber decisions are made without the business context, so the wrong risks get prioritized and real exposure is missed.',
+  'GV.RM':'Risk is managed ad hoc, so exposure is not consistently identified, prioritized or funded — gaps persist unseen.',
+  'GV.RR':'No one owns a given risk, so gaps fall between the cracks and go unaddressed until they are exploited.',
+  'GV.PO':'With no baseline expectation, controls are applied inconsistently and cannot be enforced — an attacker finds the weak spot.',
+  'GV.OV':'Leadership cannot tell whether the risk strategy is working, so failing controls persist unchallenged.',
+  'GV.SC':'A compromised or failing supplier becomes an attacker’s path into your estate — inherited risk you don’t directly control.',
+  'ID.AM':'Unknown assets cannot be protected or monitored — they become the unguarded way in.',
+  'ID.RA':'Threats and vulnerabilities go unidentified, so they are exploited before they are ever addressed.',
+  'ID.IM':'The same weaknesses recur because lessons from tests and incidents are never captured and fixed.',
+  'PR.AA':'Stolen, weak or over-privileged credentials let an attacker in and move laterally to crown-jewel systems.',
+  'PR.AT':'People are phished or socially engineered into handing an attacker access — the most common breach entry point.',
+  'PR.DS':'Sensitive data is stolen, leaked or tampered with in transit, at rest or in use.',
+  'PR.PS':'Unpatched or misconfigured systems and software are exploited to gain a foothold and escalate.',
+  'PR.IR':'A flat network offers no barriers, so a single intrusion reaches critical systems unchecked.',
+  'DE.CM':'Malicious activity on the network and endpoints goes unseen — dwell time grows and the breach deepens.',
+  'DE.AE':'An intrusion is detected too late — or misunderstood — so it is not contained before it does damage.',
+  'RS.MA':'An incident escalates because the response is slow, unrehearsed or disorganized.',
+  'RS.AN':'The true scope and root cause are missed, so the attacker keeps a foothold after “recovery.”',
+  'RS.CO':'Stakeholders and regulators are not informed in time, compounding legal, financial and reputational damage.',
+  'RS.MI':'An active incident spreads because it is not contained and eradicated quickly.',
+  'RC.RP':'Critical services stay down longer than the business can tolerate, turning an incident into a crisis.',
+  'RC.CO':'Confusion during recovery delays restoration and erodes customer, partner and regulator trust.',
+  // NIST AI RMF functions
+  'GOVERN':'AI is deployed without accountability or guardrails, so harmful, biased or non-compliant model behavior goes unchecked.',
+  'MAP':'AI systems and their risks are unknown, so high-risk use cases run without any controls.',
+  'MEASURE':'Model performance, bias and robustness go unmeasured, so failures surface first in production.',
+  'MANAGE':'Identified AI risks are not mitigated or monitored, so they materialize unmanaged.'
+};
+function c5ControlRisk(id){id=String(id||'');var cat=id.split('-')[0];if(C5_CTRL_RISK[cat])return C5_CTRL_RISK[cat];var fn=cat.split('.')[0];return C5_CTRL_RISK[fn]||'';}
+/* CONTROL SCORE — the real, CMMI-aligned rubric. Returns 0..1 (callers ×5 for the 0–5 score).
+   The number answers "how good is this control", NOT "how did we learn about it":
+     0–3  = how much of the control's REQUIREMENT is actually met. 100% met = 3.0 (Defined).
+            For a sensor-scored control that is (compliance on the observed population) ×
+            (fraction of the estate observed) — a 90%-compliant control seen across 80% of the
+            estate meets 72% of the requirement. For an attestation it is met / partial / weak.
+     +1 → 4 = the requirement is fully met AND the control is fully AUTOMATED — continuously
+              enforced by a sensor with no human step (method 'live').
+     +1 → 5 = fully met, automated, AND continuously verified and holding (fresh telemetry at
+              high confidence) — the quantitatively-managed → optimizing step.
+   A control that does not fully meet its requirement CANNOT exceed 3, however it is evidenced.
+   Automation and continuous verification are maturity ABOVE full compliance, never a substitute. */
 function c5ControlScore(a){
-  var vb={met:1,partial:0.5,not_met:0,not_assessed:0}[a.verdict];if(vb==null)vb=0;
-  var af=a.method==='live'?1:a.method==='hybrid'?0.9:a.method==='attestation'?0.75:0;
-  var ff={healthy:1,expiring:0.85,expired:0.5,none:0}[a.freshness];if(ff==null)ff=0;
-  var cf=a.coverage?a.coverage.pct/100:1;
-  return vb*af*ff*cf;
+  var d=c5ScoreParts(a);
+  return Math.max(0,Math.min(5,d.base+d.auto+d.opt))/5;
+}
+/* The scored parts, exposed so the control detail can SHOW exactly how the number was derived. */
+function c5ScoreParts(a){
+  if(!a||a.verdict==='not_assessed')return {met:0,base:0,auto:0,opt:0,full:false,automated:false,reason:'no valid evidence right now'};
+  var met,how;
+  if(a.method==='live'||a.method==='hybrid'){
+    var comp=(a.observedPass!=null?a.observedPass:0)/100;              // % compliant on the observed population
+    var cov=(a.coverage&&a.coverage.pct!=null?a.coverage.pct:100)/100; // % of the estate observed
+    met=comp*cov;how='sensor';
+  }else{                                                                // attestation — no sensor population
+    met=(a.verdict==='met')?1:(a.verdict==='partial')?0.6:0.3;
+    if(a.freshness==='expiring')met*=0.85;
+    how='attestation';
+  }
+  met=Math.max(0,Math.min(1,met));
+  var base=3*met, full=(met>=0.98), automated=(a.method==='live');
+  var auto=(full&&automated)?1:0;
+  var opt=(full&&automated&&a.freshness==='healthy'&&a.confidence==='high')?1:0;
+  return {met:met,base:base,auto:auto,opt:opt,full:full,automated:automated,how:how,
+    comp:(a.observedPass!=null?a.observedPass:null),cov:(a.coverage&&a.coverage.pct!=null?a.coverage.pct:null)};
 }
 /* Crown-jewel weighting — a control that protects a CONFIRMED crown jewel counts more than
    one on the HR wiki. From each crown jewel's asset class → the capabilities that validly
@@ -5566,23 +5628,27 @@ function c5ContinuousAssessment(host){
   // One clickable control row — four columns only: the answer (verdict + score) and the ONE thing
   // that makes Nerion different (Proof = how it's evidenced + how fresh). Method detail, coverage,
   // assurance/confidence and cadence live in the click-through detail, not this executive table.
+  // Fixed-width, middle-aligned cells so Control / Verdict / Score / Proof line up in a clean grid.
+  var _rtd='padding:9px 14px 9px 0;font-size:12px;vertical-align:middle;border-top:1px solid var(--line)';
   function assessRow(id){var a=c5ControlAssessment(id);var m=ASSESS_METHOD[a.method];
     var selRow=(C5_ASSESS_CTRL===id);
     var sc5=(typeof c5ControlScore==='function')?c5ControlScore(a)*5:0;
     var scCol=(a.verdict==='not_assessed')?'muted':(sc5>=3.5?'good':sc5>=2.5?'warn':'crit');
     var freshTxt=(a.freshness==='none')?'not yet evidenced':(fmtLast(a)+(a.freshness==='healthy'?'':' · '+a.freshness));
-    var proof=pill(m.label,methodColor[a.method])+' <span style="font-size:10px;color:var(--'+freshColor[a.freshness]+')">'+freshTxt+'</span>';
-    return '<tr data-assessctl="'+id+'" style="border-top:1px solid var(--line);cursor:pointer;background:'+(selRow?'color-mix(in srgb,var(--blue) 8%,transparent)':'transparent')+'">'
-      +'<td style="padding:8px 12px 8px 0;font-family:ui-monospace,monospace;font-size:11px;color:var(--'+(selRow?'blue':'ink')+');white-space:nowrap">'+esc(id)+' ›</td>'
-      +'<td style="padding:8px 10px 8px 0">'+pill(verdictLabel[a.verdict],verdictColor[a.verdict])+'</td>'
-      +'<td style="padding:8px 10px 8px 0;white-space:nowrap"><b style="font-size:13px;color:var(--'+scCol+')">'+(a.verdict==='not_assessed'?'—':sc5.toFixed(1))+'</b><span style="font-size:10px;color:var(--muted)">'+(a.verdict==='not_assessed'?'':' / 5')+'</span></td>'
-      +'<td style="padding:8px 0;font-size:11px;color:var(--ink-2)">'+proof+'</td></tr>';
+    var proof=pill(m.label,methodColor[a.method])+' <span style="font-size:10px;color:var(--'+freshColor[a.freshness]+')">'+esc(freshTxt)+'</span>';
+    return '<tr data-assessctl="'+id+'" style="cursor:pointer;background:'+(selRow?'color-mix(in srgb,var(--blue) 8%,transparent)':'transparent')+'">'
+      +'<td style="'+_rtd+';font-family:ui-monospace,monospace;font-size:11px;color:var(--'+(selRow?'blue':'ink')+');white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(id)+' ›</td>'
+      +'<td style="'+_rtd+'">'+pill(verdictLabel[a.verdict],verdictColor[a.verdict])+'</td>'
+      +'<td style="'+_rtd+';white-space:nowrap"><b style="font-size:13px;color:var(--'+scCol+')">'+(a.verdict==='not_assessed'?'—':sc5.toFixed(1))+'</b><span style="font-size:10px;color:var(--muted)">'+(a.verdict==='not_assessed'?'':' / 5')+'</span></td>'
+      +'<td style="'+_rtd+';color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+proof+'</td></tr>';
   }
   function assessTable(fnKey){
     var cids=ids.filter(function(id){return id.indexOf(fnKey+'.')===0;}).sort();
     if(!cids.length)return '';
-    var thin='text-align:left;padding:6px 10px 6px 0;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)';
-    return '<div style="overflow-x:auto;margin-top:6px"><table style="border-collapse:collapse;width:100%;min-width:420px"><thead><tr>'
+    var thin='text-align:left;padding:6px 14px 8px 0;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);border-bottom:1px solid var(--line);vertical-align:middle';
+    return '<div style="overflow-x:auto;margin-top:6px"><table style="border-collapse:collapse;width:100%;min-width:480px;table-layout:fixed">'
+      +'<colgroup><col style="width:104px"><col style="width:124px"><col style="width:78px"><col></colgroup>'
+      +'<thead><tr>'
       +['Control','Verdict','Score','Proof · how evidenced, how fresh'].map(function(h){return '<th style="'+thin+'">'+h+'</th>';}).join('')
       +'</tr></thead><tbody>'+cids.map(assessRow).join('')+'</tbody></table></div>';
   }
@@ -5638,11 +5704,25 @@ function c5ContinuousAssessment(host){
     var findingLead=hasFinding
       ? '<b style="color:var(--'+st.cls+')">Finding &mdash; '+(a.verdict==='not_assessed'?'not evidenced':(a.verdict==='not_met'?'does not meet the control':(a.verdict==='partial'?'partially meets the control':'below the CMMI 3.5 target')))+'.</b> '
       : '<b style="color:var(--good)">No finding &mdash; meets the CMMI 3.5 target.</b> ';
-    // The control objective appears ONCE, in the header. No "Criteria" restatement, no subtitle echo.
+    // Explain the number against the rubric so the score is defensible, never a black box.
+    var P=(typeof c5ScoreParts==='function')?c5ScoreParts(a):{met:0,base:0,auto:0,opt:0,full:false,automated:false};
+    var scoreWhy;
+    if(a.verdict==='not_assessed'){scoreWhy='<b>0 / 5</b> — no valid evidence right now, so the control is not scored.';}
+    else if(P.how==='sensor'){var metPct=Math.round(P.met*100);
+      scoreWhy='The control mitigates its risk on <b>'+metPct+'%</b> of the estate'+(P.comp!=null&&P.cov!=null?(' &mdash; '+P.comp+'% effective &times; '+P.cov+'% of the estate observed'):'')+' &rarr; base <b>'+P.base.toFixed(1)+'</b> of 3.'
+        +(P.full?(P.automated?(' Fully mitigated and <b>continuously enforced</b> by a sensor (no human step) &rarr; +1'+(P.opt?', continuously verified &amp; holding &rarr; +1.':'; not yet continuously verified at high confidence, so no optimization point.')):' Fully mitigated, but a <b>human validates</b> it &mdash; not continuously enforced, so it is capped at <b>3</b>.')
+                :' The risk is <b>not fully mitigated</b>, so it is capped below 3: automation cannot lift a control that still leaves the risk open.');
+    }else{scoreWhy=(a.verdict==='met')?'The risk is <b>fully mitigated</b>, evidenced by a current attestation &rarr; <b>3</b>. Manual / point-in-time evidence, so no automation point.':(a.verdict==='partial'?'The risk is <b>partially</b> mitigated &rarr; base '+P.base.toFixed(1)+' of 3.':'Weak or late evidence that the risk is mitigated &rarr; base '+P.base.toFixed(1)+' of 3.');}
+    var rubric='<div style="font-size:11px;color:var(--muted);margin-top:7px;line-height:1.55;border-top:1px dashed var(--line);padding-top:7px"><b>Rubric</b> (does it mitigate the risk, not tick a box) · <b>3</b> = fully mitigates the risk (100% of the estate) · <b>4</b> = + continuously enforced (automated) · <b>5</b> = + continuously verified &amp; improving. A control that leaves the risk partly open is capped under 3, however it is evidenced.</div>';
+    // The control objective appears ONCE, in the header, followed by the RISK it mitigates (security,
+    // not compliance): why the control exists — what an attacker or failure does if it is weak.
+    var riskTxt=(typeof c5ControlRisk==='function')?c5ControlRisk(id):'';
+    var riskHtml=riskTxt?('<div style="font-size:12px;color:var(--ink-2);margin-top:7px;line-height:1.5;display:flex;gap:8px;align-items:flex-start;max-width:640px"><span style="flex:none;font-size:9px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--crit);background:color-mix(in srgb,var(--crit) 9%,transparent);border:1px solid color-mix(in srgb,var(--crit) 30%,transparent);border-radius:20px;padding:2px 8px;margin-top:1px">Risk it mitigates</span><span>'+esc(riskTxt)+'</span></div>'):'';
     return '<div class="c5fw-detail">'
-      +'<div class="c5fw-dtop"><div><div class="c5kick">Control detail</div><div style="font-size:15px;font-weight:500;margin-top:4px"><b>'+esc(id)+'</b> — '+esc(name)+'</div></div>'
+      +'<div class="c5fw-dtop"><div><div class="c5kick">Control detail</div><div style="font-size:15px;font-weight:500;margin-top:4px"><b>'+esc(id)+'</b> — '+esc(name)+'</div>'+riskHtml+'</div>'
       +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="c5pill '+(st.cls==='good'?'g':st.cls==='warn'?'a':'r')+'">'+st.t+'</span><span data-assessclose="1" style="cursor:pointer;color:var(--muted);font-size:11px">✕ close</span></div></div>'
       +'<div style="display:flex;align-items:baseline;gap:8px;margin-top:10px"><div style="font-size:26px;font-weight:500;font-family:var(--serif);color:var(--'+col+')">'+sc5.toFixed(1)+'<span style="font-size:14px;color:var(--muted)"> / 5</span></div><div class="c5intro" style="margin:0">'+lvl+' · target 3.5</div></div>'
+      +'<div class="ev-sec">Why this score</div><div class="drill-p">'+scoreWhy+rubric+'</div>'
       +'<div class="ev-sec">How it was tested</div><div class="drill-p">'+F.condition+'</div>'
       +'<div class="ev-sec">Finding</div><div class="drill-p">'+findingLead+F.conclusion+'</div>'
       +'<div class="ev-sec">Recommendation</div><div class="drill-p">'+F.recommendation+'</div>'
