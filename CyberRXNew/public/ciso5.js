@@ -5366,6 +5366,14 @@ function c5paStyle(){
    +'.c5pa-lrow .val{font-family:var(--mono);font-size:15px;font-weight:600;text-align:right;font-variant-numeric:tabular-nums}'
    +'.c5pa-lrow .go{font-family:var(--mono);font-size:13px;color:var(--muted);text-align:right;opacity:.5;transition:opacity .12s,transform .12s}'
    +'.c5pa-lrow:hover .go{opacity:1;transform:translateX(2px);color:var(--blue)}'
+   +'.c5pa-bars{display:flex;flex-direction:column}'
+   +'.c5pa-brow{display:grid;grid-template-columns:58px 1fr minmax(90px,1.25fr) 42px 12px;align-items:center;gap:12px;padding:7px 6px;margin:0 -6px;border-top:1px solid var(--line)}.c5pa-brow:first-child{border-top:none}'
+   +'.c5pa-brow.clk{cursor:pointer;border-radius:7px;transition:background .12s}.c5pa-brow.clk:hover{background:var(--surface-2)}.c5pa-brow.clk:focus-visible{outline:2px solid var(--blue);outline-offset:-2px}'
+   +'.c5pa-brow .bid{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ink);white-space:nowrap}'
+   +'.c5pa-brow .bnm{font-size:12.5px;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'
+   +'.c5pa-brow .bbar{height:7px;border-radius:4px;background:var(--line);overflow:hidden}.c5pa-brow .bbar i{display:block;height:100%;border-radius:4px}'
+   +'.c5pa-brow .bval{font-family:var(--mono);font-size:14px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums}'
+   +'.c5pa-brow .bgo{font-family:var(--mono);font-size:12px;color:var(--muted);opacity:.5;text-align:right;transition:opacity .12s,transform .12s}.c5pa-brow.clk:hover .bgo{opacity:1;transform:translateX(2px);color:var(--blue)}'
    +'.c5pa-lrow.weak .nm{color:var(--crit)}'
    +'.c5pa-thin .c5pa-ct .hint{font-weight:500;text-transform:none;letter-spacing:0;color:var(--muted);margin-left:8px}'
    +'.c5rec{border-top:1px solid var(--line)}'
@@ -5485,6 +5493,23 @@ function c5paGauge(val,target){
   s+='<text x="'+tl[0].toFixed(1)+'" y="'+tl[1].toFixed(1)+'" style="fill:var(--blue);font-family:ui-monospace,monospace" font-size="10" text-anchor="middle">'+target+'</text>';
   for(var v=0;v<=5;v++){var a=180*(v/5),q0=pol(cx,cy,r-8,a),q1=pol(cx,cy,r-2,a);s+='<line x1="'+q0[0].toFixed(1)+'" y1="'+q0[1].toFixed(1)+'" x2="'+q1[0].toFixed(1)+'" y2="'+q1[1].toFixed(1)+'" style="stroke:var(--muted)" stroke-width="1"/>';}
   return s+'</svg>';
+}
+/* The shared maturity profile — a weakest-first bar ledger (id · name · bar · score) used by
+   every framework lens in place of a spider chart: NIST CSF by function, ISO 27001 / CIS / AI
+   by their main control domains. items:[{id,name,s,key}]. opts.clickable → rows carry data-pafn
+   so clicking opens that function's controls (CSF/AI); static elsewhere. */
+function c5paBars(items,opts){opts=opts||{};var esc=(typeof c5esc==='function')?c5esc:function(x){return x;};
+  return '<div class="c5pa-bars">'+(items||[]).slice().sort(function(a,b){return (a.s||0)-(b.s||0);}).map(function(it){
+    var s=Math.max(0,Math.min(5,it.s||0)),col=s>=3.5?'--good':s>=2?'--blue':s>=1?'--warn':'--crit',w=Math.max(2,s/5*100);
+    var clk=!!opts.clickable,da=clk?(' data-pafn="'+esc(String(it.key||it.id||''))+'" role="button" tabindex="0" title="View '+esc(String(it.name||it.id||''))+' controls"'):'';
+    return '<div class="c5pa-brow'+(clk?' clk':'')+'"'+da+'>'
+      +'<span class="bid">'+esc(String(it.id||''))+'</span>'
+      +'<span class="bnm">'+esc(String(it.name||''))+'</span>'
+      +'<span class="bbar"><i style="width:'+w+'%;background:var('+col+')"></i></span>'
+      +'<span class="bval" style="color:var('+col+')">'+s.toFixed(1)+'</span>'
+      +'<span class="bgo">'+(clk?'&rsaquo;':'')+'</span>'
+    +'</div>';
+  }).join('')+'</div>';
 }
 function c5paRadar(fns){
   var esc=(typeof c5esc==='function')?c5esc:function(x){return x;};
@@ -5814,7 +5839,10 @@ function c5ContinuousAssessment(host){
     }
   }catch(_){}
   var paBasisHtml=paBasis?('<div class="c5pa-basis"><span class="c5pa-basis-tag">Scope</span><span>'+paBasis+'</span></div>'):'';
-  var paLedger=(vFns||[]).slice().sort(function(a,b){return a.s-b.s;}).map(function(f,i){var col=f.s>=3?'--good':f.s>=2?'--blue':f.s>=1?'--warn':'--crit';var w=Math.max(2,(f.s/5)*100);return '<div class="c5pa-lrow'+(i===0?' weak':'')+'" data-pafn="'+esc(String(f.n))+'" role="button" tabindex="0" title="View the '+esc(String(f.n))+' controls"><span class="ix">'+String(i+1).padStart(2,'0')+'</span><span class="nm">'+esc(String(f.n))+'</span><span class="bar"><i style="width:'+w+'%;background:var('+col+')"></i></span><span class="val" style="color:var('+col+')">'+f.s.toFixed(1)+'</span><span class="go">&rsaquo;</span></div>';}).join('');
+  // Weakest-first bar ledger (id · name · bar · score), CSF by function / AI RMF by function —
+  // replaces the spider chart, clickable to open each function's controls.
+  var _fnLbl={};(FN||[]).forEach(function(F){_fnLbl[F.k]=F.l;});
+  var vBarItems=(vFns||[]).map(function(f){return {id:f.n,name:(_fnLbl[f.n]||f.n),s:f.s,key:f.n};});
   var paHero='<div class="c5pa">'
     +'<div class="c5pa-eyebrow">'+paEyebrow+'</div>'
     +'<h1 class="c5pa-finding">'+paFinding+'</h1>'
@@ -5822,10 +5850,9 @@ function c5ContinuousAssessment(host){
     +'<div class="c5pa-dek">'+vLede+'</div>'
     +'<div class="c5pa-inst">'
       +'<div class="c5pa-cell c5pa-cell-go" data-pagauge="1" role="button" tabindex="0" title="See the controls behind this score"><div class="c5pa-ct">Maturity vs 3.5 target<span class="c5pa-cellgo">all controls &rsaquo;</span></div><div class="c5pa-gaugewrap">'+c5paGauge(overall5,3.5)+'<div class="read" style="color:var('+paReadCol+')">'+overall5.toFixed(1)+'<small> / 5</small></div><div class="sub">CMMI Level '+vCmmi+' · '+esc(vLevel||'')+' · target 3.5 · gap '+Math.max(0,3.5-overall5).toFixed(1)+'</div></div></div>'
-      +'<div class="c5pa-cell"><div class="c5pa-ct">Function profile · '+(isAiFw?'AI RMF':'NIST CSF 2.0')+'<span class="c5pa-cellgo">click a function &rsaquo;</span></div>'+c5paRadar(vFns)+'</div>'
+      +'<div class="c5pa-cell"><div class="c5pa-ct">Function profile · '+(isAiFw?'AI RMF':'NIST CSF 2.0')+' · weakest first<span class="c5pa-cellgo">click a function &rsaquo;</span></div>'+c5paBars(vBarItems,{clickable:true})+'</div>'
     +'</div>'
     +'<div class="c5pa-kpis">'+cards+'</div>'
-    +(paLedger?('<div class="c5pa-thin"><div class="c5pa-ct">Where the program is thinnest &mdash; weakest first<span class="hint">click a function for its controls</span></div><div class="c5pa-ledger">'+paLedger+'</div></div>'):'')
   +'</div>';
   host.innerHTML=c5header()+
     paHero+
@@ -6254,14 +6281,9 @@ function c5FwLens(host,fwKey,label){
   var gname=function(g){return String(g.name||'').replace(/^[^·]*·\s*/,'')||String(g.id||'');};
   var srcLbl={system:'🔌 telemetry',document:'📄 document',mapped:'🔗 crosswalk',native:'✓ tested','native-pending':'— not tested',none:'— not evidenced'};
   var paFinding='Your <b>'+esc(label)+'</b> posture'+(scLbl?(' for <b>'+esc(scLbl)+'</b>'):'')+' sits at <em>'+(vLevel||'&mdash;')+'</em> (CMMI Level '+vCmmi+') &mdash; '+overall5.toFixed(1)+' of 5, '+(vBelow?'<span class="bad">below the 3.5 target</span>':'at the 3.5 target')+'.';
-  // Domain profile — radar when few domains (ISO), a weakest-first bar ledger when many (CIS 18).
-  var useRadar=groups.length>=3&&groups.length<=8;
-  var profileInner;
-  if(useRadar){ profileInner=c5paRadar(groups.map(function(g){return {n:String(g.id),s:g.score||0};})); }
-  else{ var gs=groups.slice().sort(function(a,b){return (a.score||0)-(b.score||0);});
-    profileInner=gs.map(function(g){var s=g.score||0,col=s>=3.5?'good':s>=2?'blue':s>=1?'warn':'crit',w=Math.max(2,s/5*100);
-      return '<div style="display:flex;align-items:center;gap:10px;padding:4px 0"><span style="font-size:11px;font-family:var(--mono);color:var(--ink);min-width:52px">'+esc(g.id)+'</span><span style="flex:1;font-size:11px;color:var(--ink-2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(gname(g))+'</span><span style="width:110px;height:6px;background:var(--surface-2);border-radius:3px;overflow:hidden;flex:none"><i style="display:block;height:100%;width:'+w+'%;background:var(--'+col+')"></i></span><span style="font-size:12px;font-weight:800;color:var(--'+col+');min-width:28px;text-align:right">'+s.toFixed(1)+'</span></div>';
-    }).join(''); }
+  // Domain profile — the same weakest-first bar ledger the CSF lens uses (id · name · bar · score),
+  // by ISO/CIS main control domain. No spider chart.
+  var profileInner=c5paBars(groups.map(function(g){return {id:String(g.id),name:gname(g),s:g.score||0};}),{});
   function card(l,v,c,sub){return '<div class="c5card"><div class="c5card-top"><span class="c5card-l">'+l+'</span><span class="c5chip c5-computed">computed</span></div><div class="c5card-v" style="color:var(--'+c+')">'+v+'</div><div class="cn">'+sub+'</div></div>';}
   var cards='<div class="c5cards">'
     +card('Domains below target',belowN+' / '+groups.length,belowN?'warn':'good','maturity under CMMI 3.5')
@@ -6282,7 +6304,7 @@ function c5FwLens(host,fwKey,label){
     +'<div class="c5pa-dek"><b>'+esc(label)+'</b> maturity is <b>crosswalk-derived</b> — each control is scored from the NIST CSF 2.0 evidence and live telemetry it maps to, so it moves with your real posture (a defensible readiness read, not a certified audit opinion — your assessor issues that). Expand a domain for its control-by-control detail.</div>'
     +'<div class="c5pa-inst">'
       +'<div class="c5pa-cell"><div class="c5pa-ct">Maturity vs 3.5 target</div><div class="c5pa-gaugewrap">'+c5paGauge(overall5,3.5)+'<div class="read" style="color:var('+readCol+')">'+overall5.toFixed(1)+'<small> / 5</small></div><div class="sub">CMMI Level '+vCmmi+' · '+esc(vLevel||'')+' · target 3.5</div></div></div>'
-      +'<div class="c5pa-cell"><div class="c5pa-ct">Domain profile · '+esc(label)+(useRadar?'':' · weakest first')+'</div>'+profileInner+'</div>'
+      +'<div class="c5pa-cell"><div class="c5pa-ct">Domain profile · '+esc(label)+' · weakest first</div>'+profileInner+'</div>'
     +'</div>'
     +'<div class="c5pa-kpis">'+cards+'</div>'
     +'</div>'
