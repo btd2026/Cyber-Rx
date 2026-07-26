@@ -5558,7 +5558,7 @@ function c5paStyle(){
    +'.c5pa-eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);font-weight:600}'
    +'.c5pa-finding{font-family:var(--c5serif);font-weight:600;font-size:clamp(22px,2.6vw,30px);line-height:1.24;letter-spacing:-.01em;color:var(--ink);margin:12px 0 0;max-width:none;text-wrap:pretty}'
    +'.c5pa-finding em{font-style:normal;color:var(--blue)}.c5pa-finding .bad{color:var(--crit)}'
-   +'.c5pa-dek{color:var(--ink-2);font-size:15px;line-height:1.55;margin-top:14px;max-width:64ch}.c5pa-dek b{color:var(--ink)}'
+   +'.c5pa-dek{color:var(--ink-2);font-size:15px;line-height:1.55;margin-top:14px;max-width:none;text-wrap:pretty}.c5pa-dek b{color:var(--ink)}'
    +'.c5pa-basis{display:flex;align-items:center;gap:9px;margin-top:12px;font-size:12px;color:var(--ink-2);line-height:1.5}.c5pa-basis b{color:var(--ink);font-weight:700}'
    +'.c5pa-basis-tag{flex:none;font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);border-radius:20px;padding:2px 9px}'
    +'.c5pa-inst{display:grid;grid-template-columns:1fr 1.05fr;border:1px solid var(--line);border-radius:14px;background:var(--surface);overflow:hidden;margin-top:26px}'
@@ -5948,8 +5948,12 @@ function c5ContinuousAssessment(host){
   // — so "from" and "to" are never two different engines (which would fake a jump).
   var prev5=overall5;try{var _cur=roll.overall,_pv=c5AssessmentPrevOverall();
     if(_cur>0&&_pv!=null)prev5=overall5*(_pv/_cur);}catch(_){}
-  var moved=overall5-prev5;var tdir=moved>0.04?'up':(moved<-0.04?'down':'flat');
-  var tcol=tdir==='up'?'good':(tdir==='down'?'crit':'muted');var tarrow=tdir==='up'?'▲':(tdir==='down'?'▼':'▬');
+  // Direction is decided by the DISPLAYED (1-decimal) figures, not the raw ones — otherwise a sub-0.05
+  // wobble that rounds to the same number (1.5 → 1.5) would still show an ▲ and read as an increase.
+  // If the two shown values are equal it is "unchanged" (flat), no arrow claiming a rise.
+  var prevShown=+prev5.toFixed(1),nowShown=+overall5.toFixed(1);
+  var tdir=nowShown>prevShown?'up':(nowShown<prevShown?'down':'flat');
+  var tcol=tdir==='up'?'good':(tdir==='down'?'crit':'muted');var tarrow=tdir==='up'?'▲':(tdir==='down'?'▼':'—');
   // A control a sensor / attestation actively marks FAILING is a real deficiency; a control
   // simply not yet evidenced is a COVERAGE gap, not a failure — the two are kept apart so a
   // healthy program isn't slandered by its own unmonitored surface (that story is the Coverage
@@ -5959,7 +5963,7 @@ function c5ContinuousAssessment(host){
   var cards='<div class="c5cards">'
     +card('Controls not met',notMet,notMet>0?'crit':'good',notMet>0?'a sensor or attestation marks these failing':'nothing a sensor or attestation marks as failing','controls')
     +card('Coverage',covPct+'%',covPct>=75?'good':covPct>=50?'warn':'crit',evidenced+' of '+s.total+' controls assessed','controls')
-    +card('Trend · vs last cycle',prev5.toFixed(1)+' <span style="color:var(--muted);font-weight:600">&rarr;</span> '+overall5.toFixed(1)+' <span style="font-size:15px">'+tarrow+'</span>',tcol,drift.improvements.length+' improved · '+drift.regressions.length+' regressed','drift')
+    +card('Trend · vs last cycle',(tdir==='flat'?(nowShown.toFixed(1)+' <span style="font-size:13px;color:var(--muted);font-weight:600">unchanged</span>'):(prev5.toFixed(1)+' <span style="color:var(--muted);font-weight:600">&rarr;</span> '+overall5.toFixed(1)+' <span style="font-size:15px">'+tarrow+'</span>')),tcol,drift.improvements.length+' improved · '+drift.regressions.length+' regressed'+(tdir==='flat'&&(drift.improvements.length||drift.regressions.length)?' <span style="color:var(--muted)">· net below 0.1</span>':''),'drift')
     +'</div>';
   // ── Peer-benchmark box (same as Classic view) ──
   var fwShort=(C5_ASSESS_FW==='ai'?'AI RMF':'NIST CSF 2.0');
