@@ -3298,17 +3298,29 @@ function scopeNav(){
     var col=function(v){return v>=3.5?'good':v>=2?'blue':v>=1?'warn':'crit';};
     var activeRegion=scopeRegion(SCOPE);
     var reg=null;REGIONS.forEach(function(r){if(r.id===activeRegion)reg=r;});
-    function drillCards(title,items,idOf,labelOf,subOf,kind){
+    function drillCards(title,items,idOf,labelOf,subOf,kind,lead){
       var isEnt=(kind==='entity');
       // scopeAggScore reconciles: a region card = mean of its entities, an entity card = its leaf.
       items=items.map(function(it){return {it:it,csf:scopeAggScore(idOf(it))};}).filter(function(x){return x.csf!=null;});
       items.sort(function(a,b){return a.csf-b.csf;});
-      if(!items.length)return '';
+      if(!items.length&&!lead)return '';
       // Type badge so a Region card can never be mistaken for an Entity card.
       var typeBadge=isEnt
         ? '<span style="font-size:8px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--blue);background:color-mix(in srgb,var(--blue) 13%,transparent);border-radius:5px;padding:1px 6px">▸ Entity</span>'
         : '<span style="font-size:8px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-2);background:var(--surface-2);border-radius:5px;padding:1px 6px">◆ Region</span>';
-      var cards=items.map(function(x,i){var c=col(x.csf),weak=(i===0),sel=(idOf(x.it)===SCOPE||idOf(x.it)===activeRegion);
+      // The PARENT/aggregate card — pinned first, visually distinct — so the consolidated scope is
+      // never confused with the weakest child. It reads "now viewing" when it IS the current scope,
+      // or an "↑ roll-up" you can click to go up a level.
+      var leadCard='';
+      if(lead&&lead.csf!=null){var lc=col(lead.csf),lsel=(lead.id===SCOPE);
+        leadCard='<button data-scope="'+lead.id+'" style="text-align:left;border:2px solid var(--blue);border-radius:10px;padding:9px 12px;background:color-mix(in srgb,var(--blue) 8%,var(--surface));cursor:pointer;min-width:172px">'
+          +'<div style="margin-bottom:5px"><span style="font-size:8px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#fff;background:var(--blue);border-radius:5px;padding:1px 6px">'+esc(lead.tier||'★ Consolidated')+'</span></div>'
+          +'<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><b style="font-size:12px;color:var(--ink)">'+esc(lead.label)+'</b><span style="font-size:17px;font-weight:800;color:var(--'+lc+')">'+lead.csf.toFixed(2)+'</span></div>'
+          +'<div style="font-size:10px;color:var(--muted);margin-top:2px">'+esc(lead.sub||'')+'</div>'
+          +'<div style="font-size:10px;font-weight:700;color:var(--blue);margin-top:4px">'+(lsel?'● now viewing':'↑ roll-up — click to view')+'</div></button>'
+          +'<div style="align-self:stretch;width:1px;background:var(--line);margin:0 2px"></div>';
+      }
+      var cards=items.map(function(x,i){var c=col(x.csf),weak=(i===0),sel=(idOf(x.it)===SCOPE);
         // Entity cards carry a faint blue tint + inset so the tier reads at a glance; regions stay plain.
         var bg=sel?'color-mix(in srgb,var(--blue) 8%,var(--surface))':(isEnt?'color-mix(in srgb,var(--blue) 4%,var(--surface))':'var(--surface)');
         return '<button data-scope="'+idOf(x.it)+'" style="text-align:left;border:1px solid '+(sel?'var(--blue)':(weak?'var(--crit)':'var(--line)'))+';'+(isEnt?'border-left:3px solid var(--blue);':'')+'border-radius:10px;padding:9px 12px;background:'+bg+';cursor:pointer;min-width:158px'+(isEnt?';margin-left:2px':'')+'">'
@@ -3317,7 +3329,7 @@ function scopeNav(){
           +'<div style="font-size:10px;color:var(--muted);margin-top:2px">'+esc(subOf(x.it)||'')+'</div>'
           +(sel?'<div style="font-size:10px;font-weight:700;color:var(--blue);margin-top:4px">● now viewing</div>':(weak?'<div style="font-size:10px;font-weight:700;color:var(--crit);margin-top:4px">◆ weakest — focus here</div>':''))+'</button>';
       }).join('');
-      return '<div style="flex-basis:100%;margin-top:14px;border-top:1px solid var(--line);padding-top:12px"><div style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">'+esc(title)+'</div><div style="display:flex;gap:10px;flex-wrap:wrap'+(isEnt?';padding-left:14px;border-left:2px solid var(--line)':'')+'">'+cards+'</div></div>';
+      return '<div style="flex-basis:100%;margin-top:14px;border-top:1px solid var(--line);padding-top:12px"><div style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">'+esc(title)+'</div><div style="display:flex;gap:10px;flex-wrap:wrap;align-items:stretch'+(isEnt?';padding-left:14px;border-left:2px solid var(--line)':'')+'">'+leadCard+cards+'</div></div>';
     }
     // Label the strip with whatever framework is active, so AI scores are never mislabeled CSF.
     var fwLbl=(typeof C5_ASSESS_FW!=='undefined'&&C5_ASSESS_FW==='ai')?'AI RMF':'NIST CSF';
@@ -3325,13 +3337,17 @@ function scopeNav(){
     // entity within it) you compare that region's entities — you do not see the regions again.
     var out='';
     if(SCOPE==='enterprise'){
-      out=drillCards('Regions at a glance · '+fwLbl+' · Enterprise is their average · weakest first',
+      var entScore=scopeAggScore('enterprise');
+      out=drillCards('Enterprise & its regions · '+fwLbl+' · Enterprise is the equal-weighted average of the regions · weakest first',
         REGIONS.filter(function(r){return r.kind==='region';}),
-        function(r){return r.id;},function(r){return r.label;},function(r){return r.regime;},'region');
+        function(r){return r.id;},function(r){return r.label;},function(r){return r.regime;},'region',
+        (entScore!=null?{id:'enterprise',label:'Enterprise',sub:'consolidated · all regions',csf:entScore,tier:'★ Enterprise'}:null));
     } else if(reg&&reg.entities&&reg.entities.length){
-      out=drillCards(reg.entities.length+' entities in '+reg.label+' · '+fwLbl+' · '+reg.label+' is their average · weakest first',
+      var regScore=scopeAggScore(reg.id);
+      out=drillCards(reg.label+' & its entities · '+fwLbl+' · '+reg.label+' is the average of its entities · weakest first',
         reg.entities,function(e){return e.id;},function(e){return e.label;},
-        function(e){return (typeof scopeMeta==='function'&&scopeMeta(e.id)&&scopeMeta(e.id).regime)||'';},'entity');
+        function(e){return (typeof scopeMeta==='function'&&scopeMeta(e.id)&&scopeMeta(e.id).regime)||'';},'entity',
+        (regScore!=null?{id:reg.id,label:'All '+reg.label,sub:'consolidated · all entities',csf:regScore,tier:'◆ Region'}:null));
     }
     return out;
   }catch(_){return '';}
