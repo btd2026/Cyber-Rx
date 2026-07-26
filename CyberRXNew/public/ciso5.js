@@ -6130,6 +6130,10 @@ function c5Resilience(){
 }
 /* The Neuron Controls lens — capability × (adversarial + 5 non-adversarial lanes)
    × framework projection, in one view. Read-only; renders into the panel passed in. */
+/* Domain icons + which domain sections / the advanced-mapping block are expanded. Neuron Controls
+   defaults to all domains collapsed so the reader scans icon-led section headers, not a long scroll. */
+var NC_ICON={'Endpoint':'💻','Identity & Access':'🔑','Network':'🌐','Data Protection':'🔒','Detection & Response':'📡','Cloud Posture':'☁️','SaaS Posture':'🧩','Attack Surface':'🎯','Human Risk':'🧑','Resilience & Recovery':'🛟'};
+var C5_NEURON_EXP={},C5_NEURON_ADV=false;
 function c5NeuronControls(host){
   if(!host)return;
   var esc=(typeof c5esc==='function')?c5esc:function(s){return s;};
@@ -6161,11 +6165,21 @@ function c5NeuronControls(host){
       +'<span style="width:34px;text-align:right;font-weight:700;color:var(--'+col+')">'+w+'%</span></div>';
   }
   function laneChip(id){return '<span style="font-size:10px;color:var(--ink-2);background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:2px 7px;white-space:nowrap">'+esc(NEURON_LANE_LABEL[id]||id)+'</span>';}
-  // ── capability cards, grouped by domain ──
+  // ── capability cards, grouped into COLLAPSIBLE, icon-led domain sections (scan, then expand) ──
   var domains={},order=[];
   nc.forEach(function(n){if(!domains[n.domain]){domains[n.domain]=[];order.push(n.domain);}domains[n.domain].push(n);});
+  // Weakest domains first so the reader's eye lands on the gaps.
+  order.sort(function(a,b){var av=domains[a].reduce(function(s,n){return s+(n.telemetry!=null?n.telemetry:0);},0)/domains[a].length;var bv=domains[b].reduce(function(s,n){return s+(n.telemetry!=null?n.telemetry:0);},0)/domains[b].length;return av-bv;});
   var cardsHtml=order.map(function(dom){
-    var cards=domains[dom].map(function(n){
+    var items=domains[dom];
+    var liveN=items.filter(function(n){return n.evidence==='live';}).length;
+    var hybN=items.filter(function(n){return n.evidence==='hybrid';}).length;
+    var deployedN=items.filter(function(n){return n.deployed;}).length;
+    var avgCov=Math.round(items.reduce(function(s,n){return s+(n.telemetry!=null?n.telemetry:0);},0)/items.length);
+    var provenN=items.filter(function(n){return n.effectiveness&&n.effectiveness.measured;}).length;
+    var dcol=avgCov>=75?'good':avgCov>=40?'blue':avgCov>0?'warn':'muted';
+    var open=!!C5_NEURON_EXP[dom];
+    var cards=items.map(function(n){
       var xw=n.crosswalk;
       var proj=FW.map(function(f){var ids=xw[f.k]||[];return ids.length?('<span title="'+esc(ids.join(', '))+'" style="font-size:10px;color:var(--ink-2)"><b style="color:var(--ink)">'+f.l+'</b> '+ids.length+'</span>'):'';}).filter(Boolean).join('<span style="color:var(--line)"> · </span>');
       // Prevent graduates to PROVEN where a BAS / purple-team reading exists; otherwise
@@ -6193,8 +6207,17 @@ function c5NeuronControls(host){
         +'<div style="border-top:1px solid var(--line);padding-top:8px;line-height:1.7">'+(proj||'<span style="font-size:10px;color:var(--muted)">no external mapping</span>')+'</div>'
         +'</div>';
     }).join('');
-    return '<div style="margin-top:16px"><div style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:9px">'+esc(dom)+'</div>'
-      +'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">'+cards+'</div></div>';
+    var body=open?('<div style="padding:2px 14px 15px;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">'+cards+'</div>'):'';
+    return '<div style="border:1px solid var(--line);border-radius:12px;margin-top:10px;overflow:hidden;background:var(--surface)">'
+      +'<div data-ncdom="'+esc(dom)+'" role="button" tabindex="0" style="display:flex;align-items:center;gap:13px;padding:13px 15px;cursor:pointer;'+(open?'background:var(--surface-2);border-bottom:1px solid var(--line)':'')+'">'
+        +'<span style="font-size:20px;flex:none;width:26px;text-align:center;line-height:1">'+(NC_ICON[dom]||'🛡')+'</span>'
+        +'<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--ink)">'+esc(dom)+'</div>'
+          +'<div style="font-size:11px;color:var(--muted)">'+items.length+' capabilit'+(items.length===1?'y':'ies')+' · <b style="color:var(--good)">'+liveN+'</b> live · <b style="color:var(--blue)">'+hybN+'</b> hybrid'+(deployedN<items.length?(' · <b style="color:var(--muted)">'+(items.length-deployedN)+'</b> not deployed'):'')+(provenN?(' · <b style="color:var(--good)">'+provenN+'</b> proven effective'):'')+'</div></div>'
+        +'<div style="width:110px;flex:none;height:7px;background:var(--surface-2);border-radius:4px;overflow:hidden" title="Average live-telemetry coverage across this domain"><i style="display:block;height:100%;width:'+avgCov+'%;background:var(--'+dcol+')"></i></div>'
+        +'<span style="width:38px;text-align:right;font-size:13px;font-weight:800;color:var(--'+dcol+')">'+avgCov+'%</span>'
+        +'<span style="flex:none;color:var(--muted);font-size:13px;width:14px;text-align:center">'+(open?'▾':'▸')+'</span>'
+      +'</div>'+body
+    +'</div>';
   }).join('');
   // ── non-adversarial lane rollup ──
   var lanes=neuronLaneRollup();
@@ -6276,14 +6299,21 @@ function c5NeuronControls(host){
     '<div style="max-width:1080px">'
     +'<div class="c5pa"><div class="c5pa-eyebrow">Program health · Neuron Controls · as of '+new Date().toLocaleDateString()+'</div>'
     +'<h1 class="c5pa-finding">'+ncFinding+'</h1>'
-    +'<div class="c5pa-dek">Your security capabilities, measured once from live telemetry and scored against <b>both</b> risk lenses &mdash; adversarial (MITRE ATT&CK: prevent / detect) and the five non-adversarial lanes &mdash; then <b>projected</b> onto every framework control they map to. Measure once, report everywhere.</div></div>'
-    +'<div style="font-size:12px;color:var(--ink-2);margin:10px 0 4px"><b style="color:var(--ink)">'+nc.length+'</b> Neuron Controls · <b style="color:var(--good)">'+live+'</b> live telemetry · <b style="color:var(--blue)">'+hyb+'</b> hybrid (a human validates) · <b style="color:var(--muted)">'+off+'</b> not deployed</div>'
-    +'<div style="font-size:11px;color:var(--muted);margin-bottom:6px">Prevent reflects <b>control presence</b> (the capability is mapped &amp; deployed). Where a <b>BAS / purple-team</b> reading exists it graduates to <b style="color:var(--good)">proven</b> — the share of simulated attacks actually blocked. '+(effN>0?('<b style="color:var(--good)">'+effN+'</b> of '+nc.length+' capabilities '+(effN===1?'has':'have')+' a measured reading; the rest are presence-only.'):'No effectiveness readings yet — connect a BAS platform (AttackIQ, SafeBreach, Cymulate) or a purple-team feed to graduate presence to proven. Nothing is inferred.')+'</div>'
+    +'<div class="c5pa-dek">A <b>Neuron Control</b> is a security capability — a tool doing a real job: EDR blocking malware, MFA gating access, backups enabling recovery. Nerion measures each one <b>once</b> from live telemetry (is it deployed, and is it <b>proven</b> to work — via BAS / purple-team), then maps it to every framework control it satisfies. This is the engine behind every score above: <b>measure the capability once, report it into NIST CSF, ISO 27001, CIS and the rest</b>.</div></div>'
+    +'<div style="display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 4px">'
+      +'<div style="border:1px solid var(--line);border-radius:11px;padding:10px 14px;background:var(--surface)"><div style="font-size:22px;font-weight:800;color:var(--ink);line-height:1">'+nc.length+'</div><div style="font-size:11px;color:var(--muted)">capabilities</div></div>'
+      +'<div style="border:1px solid var(--line);border-radius:11px;padding:10px 14px;background:var(--surface)"><div style="font-size:22px;font-weight:800;color:var(--good);line-height:1">'+live+'</div><div style="font-size:11px;color:var(--muted)">live telemetry</div></div>'
+      +'<div style="border:1px solid var(--line);border-radius:11px;padding:10px 14px;background:var(--surface)"><div style="font-size:22px;font-weight:800;color:var(--blue);line-height:1">'+hyb+'</div><div style="font-size:11px;color:var(--muted)">hybrid · human-validated</div></div>'
+      +'<div style="border:1px solid var(--line);border-radius:11px;padding:10px 14px;background:var(--surface)"><div style="font-size:22px;font-weight:800;color:var(--'+(effN?'good':'muted')+');line-height:1">'+effN+'</div><div style="font-size:11px;color:var(--muted)">proven effective</div></div>'
+      +'<div style="border:1px solid var(--line);border-radius:11px;padding:10px 14px;background:var(--surface)"><div style="font-size:22px;font-weight:800;color:var(--muted);line-height:1">'+off+'</div><div style="font-size:11px;color:var(--muted)">not deployed</div></div>'
+    +'</div>'
+    +'<div style="font-size:11px;color:var(--muted);margin:8px 0 2px">Capabilities by domain — <b>weakest first</b>. <b>Deployed</b> means the sensor is live; <b style="color:var(--good)">proven</b> means a BAS / purple-team test measured it actually blocks the attack (never inferred from deployment). Click a domain to expand its capabilities.</div>'
     +cardsHtml
-    // Lower sections tiled into two columns so the whole estate reads without a long scroll —
-    // the boxes themselves are unchanged, only their arrangement. Left: non-adversarial lanes;
-    // right: framework projection stacked over the risk-driver matrix.
-    +'<div style="display:flex;flex-wrap:wrap;gap:24px;margin-top:24px;align-items:flex-start">'
+    // The framework-mapping / risk-driver detail is collapsed by default so the page opens short —
+    // it's the "how it reports everywhere" evidence, one click away, not a wall to scroll past.
+    +'<div style="margin-top:24px;border-top:1px solid var(--line);padding-top:14px">'
+    +'<div data-ncadv="1" role="button" tabindex="0" style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;font-weight:700;color:var(--blue)"><span style="width:12px;text-align:center">'+(C5_NEURON_ADV?'▾':'▸')+'</span>Framework mapping &amp; risk-driver detail <span style="font-weight:500;color:var(--muted)">— how each capability reports into every framework, plus the non-adversarial risk lanes</span></div>'
+    +(C5_NEURON_ADV?('<div style="display:flex;flex-wrap:wrap;gap:24px;margin-top:16px;align-items:flex-start">'
     +'<div style="flex:1 1 500px;min-width:0"><div style="font-size:12px;font-weight:800;color:var(--ink);margin-bottom:4px">Non-adversarial risk lanes</div>'
     +'<div style="font-size:11px;color:var(--muted);margin-bottom:8px">The exposures that are not an intrusion — outage, corruption, insider, supply-chain, privacy — each covered by the same telemetry, so the whole estate is answered, not just crown jewels.</div>'
     +'<div style="overflow-x:auto">'+laneRows+'</div></div>'
@@ -6295,8 +6325,12 @@ function c5NeuronControls(host){
     +'<div style="font-size:11px;color:var(--muted);margin-bottom:10px">Every framework, split by <b>why</b> each control matters — the adversarial lens (ATT&amp;CK) and the five non-adversarial lanes. Cells show controls <b>evidenced by deployed telemetry</b> / controls mapped. The dual-lens view: compliance is not only about stopping attackers — it is also uptime, integrity, insider, supply-chain and privacy.</div>'
     +driverMatrix+'</div></div>'
     +'</div>'
-    +provPanel
+    +provPanel):'')
+    +'</div>'
     +'</div>';
+  // Collapsible domain sections + the advanced mapping block.
+  host.querySelectorAll('[data-ncdom]').forEach(function(b){var go=function(){var d=b.getAttribute('data-ncdom');C5_NEURON_EXP[d]=!C5_NEURON_EXP[d];c5NeuronControls(host);};b.onclick=go;b.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}};});
+  var _nadv=host.querySelector('[data-ncadv]');if(_nadv)_nadv.onclick=function(){C5_NEURON_ADV=!C5_NEURON_ADV;c5NeuronControls(host);};
 }
 /* Program Health dispatcher — renders the tab strip, then the active panel.
    Lazy-mounts: the island is only built while "Nerion's View" is active. */
