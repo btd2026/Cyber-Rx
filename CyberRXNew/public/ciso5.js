@@ -4601,6 +4601,7 @@ var C5_DP_OPENASK={};    // which awaiting-leader rows are expanded (ask id → 
 var C5_DP_PLANNER_OPEN=false; // control-improvement planner drill-down open?
 function c5DecProj(){
   var host=document.getElementById('c5-decproj');if(!host)return;
+  try{window.C5_SCOPE_FWKEY='csf';}catch(_){}
   if(window.__c5Return||document.getElementById('c5retbar')){window.__c5Return=null;c5HideReturnBar();}
   var levers=c5Levers();
   // Scope alignment — a decision shown for Enterprise must be SUPPORTED BY Enterprise's findings,
@@ -5802,6 +5803,7 @@ function c5paRadar(fns){
    controls with its method, three-axis state and freshness. Read-only. */
 function c5ContinuousAssessment(host){
   if(!host)return;
+  try{window.C5_SCOPE_FWKEY=(typeof C5_ASSESS_FW!=='undefined'?C5_ASSESS_FW:'csf');}catch(_){}
   var esc=(typeof c5esc==='function')?c5esc:function(s){return s;};
   var s=c5AssessmentSummary();var ai=c5AttestationInsight();
   var ids=Object.keys(c5AssessMethods());
@@ -6253,6 +6255,7 @@ function c5ConfirmQueueView(host){
 var C5_RESIL_FILTER=null,C5_RESIL_SVC=null;
 function c5Resilience(){
   var host=document.getElementById('c5-resilience');if(!host)return;
+  try{window.C5_SCOPE_FWKEY='csf';}catch(_){}
   var esc=(typeof c5esc==='function')?c5esc:function(s){return s;};
   var svcs=(typeof c5CriticalServices==='function')?c5CriticalServices():[];
   var rScope=(typeof c5Scope==='function')?c5Scope():'enterprise';
@@ -6370,6 +6373,7 @@ var NC_ICON={'Endpoint':'💻','Identity & Access':'🔑','Network':'🌐','Data
 var C5_NEURON_EXP={},C5_NEURON_ADV=false;
 function c5NeuronControls(host){
   if(!host)return;
+  try{window.C5_SCOPE_FWKEY='csf';}catch(_){}
   var esc=(typeof c5esc==='function')?c5esc:function(s){return s;};
   var nc=neuronControls();
   var live=nc.filter(function(n){return n.evidence==='live';}).length;
@@ -6628,6 +6632,7 @@ function nerionInternal(){try{return (typeof localStorage!=='undefined'&&localSt
 var C5_FWLENS_EXP={},C5_FWLENS_CTRL=null,C5_FWLENS_KPI=null;
 function c5FwLens(host,fwKey,label){
   if(!host)return;
+  try{window.C5_SCOPE_FWKEY=fwKey;}catch(_){}
   var esc=(typeof c5esc==='function')?c5esc:function(x){return x;};
   if(typeof caFetch==='function'){try{caFetch();}catch(_){}}
   if(typeof c5paStyle==='function')c5paStyle();
