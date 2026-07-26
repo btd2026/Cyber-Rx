@@ -6232,14 +6232,74 @@ function c5NeuronMap(host){
    the data — NEURON_XWALK still ships inside ciso5.js and is readable in devtools. True
    protection requires moving the crosswalk server-side behind auth (backend parity). */
 function nerionInternal(){try{return (typeof localStorage!=='undefined'&&localStorage.getItem('cyberrx_internal')==='1')||(typeof location!=='undefined'&&/[?&#]internal=1\b/.test(location.href));}catch(_){return false;}}
+/* ISO 27001 / CIS Controls lens — the same blend read as CSF (finding, gauge, domain profile,
+   drill-down controls), scored by crosswalk from the live NIST CSF 2.0 evidence via c5fwTree, so
+   it moves with your real posture. Kept honest: every control shows how it's evidenced, and the
+   dek states the score is crosswalk-derived (readiness), not a certified audit opinion. */
+var C5_FWLENS_EXP={};
+function c5FwLens(host,fwKey,label){
+  if(!host)return;
+  var esc=(typeof c5esc==='function')?c5esc:function(x){return x;};
+  if(typeof caFetch==='function'){try{caFetch();}catch(_){}}
+  if(typeof c5paStyle==='function')c5paStyle();
+  var cov=(typeof fwDeployedIds==='function')?fwDeployedIds():{};
+  var T=(typeof c5fwTree==='function')?c5fwTree(fwKey,cov):{overall:0,groups:[],coverage:0};
+  var overall5=T.overall||0,groups=(T.groups||[]);
+  var scope=(typeof c5Scope==='function')?c5Scope():'enterprise';
+  var scLbl=(scope==='enterprise')?'':((typeof scopeLabel==='function')?scopeLabel(scope):scope);
+  var vLevel=(typeof c5fwLvl==='function')?c5fwLvl(overall5):'';
+  var vCmmi=(typeof c5cmmiLevel==='function')?c5cmmiLevel(overall5):Math.floor(overall5);
+  var vBelow=overall5<3.5,belowN=groups.filter(function(g){return (g.score||0)<3.5;}).length;
+  var readCol=overall5>=3?'--good':overall5>=2?'--blue':overall5>=1?'--warn':'--crit';
+  var gname=function(g){return String(g.name||'').replace(/^[^·]*·\s*/,'')||String(g.id||'');};
+  var srcLbl={system:'🔌 telemetry',document:'📄 document',mapped:'🔗 crosswalk',native:'✓ tested','native-pending':'— not tested',none:'— not evidenced'};
+  var paFinding='Your <b>'+esc(label)+'</b> posture'+(scLbl?(' for <b>'+esc(scLbl)+'</b>'):'')+' sits at <em>'+(vLevel||'&mdash;')+'</em> (CMMI Level '+vCmmi+') &mdash; '+overall5.toFixed(1)+' of 5, '+(vBelow?'<span class="bad">below the 3.5 target</span>':'at the 3.5 target')+'.';
+  // Domain profile — radar when few domains (ISO), a weakest-first bar ledger when many (CIS 18).
+  var useRadar=groups.length>=3&&groups.length<=8;
+  var profileInner;
+  if(useRadar){ profileInner=c5paRadar(groups.map(function(g){return {n:String(g.id),s:g.score||0};})); }
+  else{ var gs=groups.slice().sort(function(a,b){return (a.score||0)-(b.score||0);});
+    profileInner=gs.map(function(g){var s=g.score||0,col=s>=3.5?'good':s>=2?'blue':s>=1?'warn':'crit',w=Math.max(2,s/5*100);
+      return '<div style="display:flex;align-items:center;gap:10px;padding:4px 0"><span style="font-size:11px;font-family:var(--mono);color:var(--ink);min-width:52px">'+esc(g.id)+'</span><span style="flex:1;font-size:11px;color:var(--ink-2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(gname(g))+'</span><span style="width:110px;height:6px;background:var(--surface-2);border-radius:3px;overflow:hidden;flex:none"><i style="display:block;height:100%;width:'+w+'%;background:var(--'+col+')"></i></span><span style="font-size:12px;font-weight:800;color:var(--'+col+');min-width:28px;text-align:right">'+s.toFixed(1)+'</span></div>';
+    }).join(''); }
+  function card(l,v,c,sub){return '<div class="c5card"><div class="c5card-top"><span class="c5card-l">'+l+'</span><span class="c5chip c5-computed">computed</span></div><div class="c5card-v" style="color:var(--'+c+')">'+v+'</div><div class="cn">'+sub+'</div></div>';}
+  var cards='<div class="c5cards">'
+    +card('Domains below target',belowN+' / '+groups.length,belowN?'warn':'good','maturity under CMMI 3.5')
+    +card('Coverage',(T.coverage||0)+'%','ink','domains evidenced by your telemetry & policies')
+    +card('Overall maturity',overall5.toFixed(1)+' / 5',readCol.replace('--',''),(vLevel||'')+' · target 3.5')
+    +'</div>';
+  var tree='<div class="c5fw-tree" style="margin-top:22px">'+groups.map(function(g){
+    var open=!!C5_FWLENS_EXP[fwKey+'|'+g.id],s=g.score||0,gc=s>=3.5?'good':s>=2?'blue':s>=1?'warn':'crit';
+    var inner=open?('<div style="padding:2px 14px 12px 30px">'+(g.children||[]).map(function(c){var cs=c.score||0,cc=cs>=3.5?'good':cs>=2?'blue':cs>=1?'warn':'crit',untested=(c.tested===false||c.src==='none'||c.src==='native-pending');
+      return '<div style="display:flex;align-items:center;gap:10px;padding:5px 0;border-top:1px solid var(--line)"><span style="font-family:var(--mono);font-size:11px;color:var(--ink);min-width:78px">'+esc(c.id)+'</span><span style="flex:1;font-size:11px;color:var(--ink-2)">'+esc(c.name||'')+'</span><span style="font-size:10px;color:var(--muted);min-width:96px">'+esc(srcLbl[c.src]||c.src||'')+'</span><span style="font-size:12px;font-weight:700;color:var(--'+(untested?'muted':cc)+');min-width:32px;text-align:right">'+(untested?'—':cs.toFixed(1))+'</span></div>';
+    }).join('')+'</div>'):'';
+    return '<div class="c5fw-g"><div class="c5fw-grow" data-fwlensexp="'+esc(g.id)+'" role="button" tabindex="0"><span class="c5fw-tw">'+(open?'▾':'▸')+'</span><span class="c5fw-dot" style="background:var(--'+gc+')"></span><span class="c5fw-id">'+esc(g.id)+'</span><span class="c5fw-nm">'+esc(gname(g))+'</span><span class="c5fw-lvl">'+(g.children||[]).length+' controls</span><span class="c5fw-sc" style="color:var(--'+gc+')">'+s.toFixed(1)+'</span></div>'+inner+'</div>';
+  }).join('')+'</div>';
+  host.innerHTML=(typeof c5header==='function'?c5header():'')
+    +'<div class="c5pa">'
+    +'<div class="c5pa-eyebrow">Program health · '+esc(label)+(scLbl?(' · '+esc(scLbl)):'')+' · as of '+new Date().toLocaleDateString()+'</div>'
+    +'<h1 class="c5pa-finding">'+paFinding+'</h1>'
+    +'<div class="c5pa-dek"><b>'+esc(label)+'</b> maturity is <b>crosswalk-derived</b> — each control is scored from the NIST CSF 2.0 evidence and live telemetry it maps to, so it moves with your real posture (a defensible readiness read, not a certified audit opinion — your assessor issues that). Expand a domain for its control-by-control detail.</div>'
+    +'<div class="c5pa-inst">'
+      +'<div class="c5pa-cell"><div class="c5pa-ct">Maturity vs 3.5 target</div><div class="c5pa-gaugewrap">'+c5paGauge(overall5,3.5)+'<div class="read" style="color:var('+readCol+')">'+overall5.toFixed(1)+'<small> / 5</small></div><div class="sub">CMMI Level '+vCmmi+' · '+esc(vLevel||'')+' · target 3.5</div></div></div>'
+      +'<div class="c5pa-cell"><div class="c5pa-ct">Domain profile · '+esc(label)+(useRadar?'':' · weakest first')+'</div>'+profileInner+'</div>'
+    +'</div>'
+    +'<div class="c5pa-kpis">'+cards+'</div>'
+    +'</div>'
+    +tree
+    +'<div class="c5foot">Crosswalk mapping: '+esc(label)+' controls inherit the maturity of the NIST CSF 2.0 controls they map to (public crosswalk). Where a tool evidences a control directly, that telemetry is used instead. This is a readiness indicator — your certification body issues the audit opinion.</div>';
+  host.querySelectorAll('[data-fwlensexp]').forEach(function(b){var go=function(){var k=fwKey+'|'+b.getAttribute('data-fwlensexp');C5_FWLENS_EXP[k]=!C5_FWLENS_EXP[k];c5FwLens(host,fwKey,label);};b.onclick=go;b.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}};});
+}
 function c5Frameworks(){
   var host=document.getElementById('c5-frameworks');if(!host)return;
   var internal=nerionInternal();
-  var tab=(C5_PH_TAB==='ai')?'ai':(C5_PH_TAB==='queue')?'queue':(C5_PH_TAB==='neuron')?'neuron':(C5_PH_TAB==='nmap'&&internal)?'nmap':'assess';
+  var tab=(C5_PH_TAB==='ai')?'ai':(C5_PH_TAB==='iso')?'iso':(C5_PH_TAB==='cis')?'cis':(C5_PH_TAB==='queue')?'queue':(C5_PH_TAB==='neuron')?'neuron':(C5_PH_TAB==='nmap'&&internal)?'nmap':'assess';
   var qN=(typeof c5ReviewQueue==='function')?c5ReviewQueue().filter(function(q){return !q.confirmed;}).length:0;
   host.innerHTML=c5header()+
     '<div class="subwrap c5phwrap"><div class="subtabs">'+
-      '<button class="subtab'+(tab==='assess'?' on':'')+'" data-phtab="assess">Continuous assessment</button>'+
+      '<button class="subtab'+(tab==='assess'?' on':'')+'" data-phtab="assess">NIST CSF 2.0</button>'+
+      '<button class="subtab'+(tab==='iso'?' on':'')+'" data-phtab="iso">ISO 27001</button>'+
+      '<button class="subtab'+(tab==='cis'?' on':'')+'" data-phtab="cis">CIS Controls</button>'+
       '<button class="subtab'+(tab==='ai'?' on':'')+'" data-phtab="ai">AI frameworks</button>'+
       '<button class="subtab'+(tab==='queue'?' on':'')+'" data-phtab="queue">Confirm queue'+(qN?(' <span style="font-size:10px;font-weight:800;color:#fff;background:var(--blue);border-radius:20px;padding:1px 6px">'+qN+'</span>'):'')+'</button>'+
       '<button class="subtab'+(tab==='neuron'?' on':'')+'" data-phtab="neuron">Neuron Controls</button>'+
@@ -6252,6 +6312,8 @@ function c5Frameworks(){
     C5_PH_TAB=nt;c5Frameworks();};});
   var body=document.getElementById('c5ph-body');
   if(tab==='ai'){C5_ASSESS_FW='ai';c5ContinuousAssessment(body);}
+  else if(tab==='iso'){c5FwLens(body,'iso','ISO/IEC 27001');}
+  else if(tab==='cis'){c5FwLens(body,'cis','CIS Controls v8');}
   else if(tab==='queue'){c5ConfirmQueueView(body);}
   else if(tab==='neuron'){c5NeuronControls(body);}
   else if(tab==='nmap'&&internal){c5NeuronMap(body);}
