@@ -6689,27 +6689,52 @@ function c5AiFrameworkTab(host){
    from AI_FW_CATALOG, honestly: every control is a governance attestation (assess() returns the
    method / finding / recommendation), scored 0–5 CMMI; nothing claims live telemetry. Same finding
    → gauge → weakest-first ledger → drill-down chrome as the other framework lenses. */
+/* Scope factor for an AI-governance framework: in production each entity files its own AI intake;
+   in the demo we vary the org-level attestation by the SAME scope-maturity signal every other
+   framework uses, so Enterprise → Region → Entity is consistent across the whole platform. Enterprise
+   sits at ~0.82, so the factor is ~1 there and rises/falls with a scope's maturity. */
+function c5AiScopeFactor(){try{return Math.max(0.5,Math.min(1.25,(c5ScopeMaturity()||0.82)/0.82));}catch(_){return 1;}}
+/* One AI-catalog framework scored at the CURRENT scope (SCOPE is set by the caller / scopeAggTree
+   leaf). Returns the reconciling {overall, groups:[{id,score}]} shape scopeAggTree expects. */
+function c5AiCatalogLeaf(fwKey){
+  var cat=(typeof AI_FW_CATALOG!=='undefined')?AI_FW_CATALOG[fwKey]:null;if(!cat)return {overall:0,groups:[]};
+  var g=(typeof aiG==='function')?aiG():{};var f=c5AiScopeFactor();
+  var groups=(cat.groups||[]).map(function(grp,i){
+    var cs=(grp.controls||[]).map(function(c){var a={};try{a=c.assess(g)||{};}catch(_){}return Math.max(0,Math.min(5,(a.cmmi!=null?a.cmmi:0)*f));});
+    var sc=cs.length?cs.reduce(function(s,x){return s+x;},0)/cs.length:0;
+    return {id:'G'+(i+1),score:sc};});
+  var all=[];groups.forEach(function(gr,i){(cat.groups[i].controls||[]).forEach(function(c){var a={};try{a=c.assess(g)||{};}catch(_){}all.push(Math.max(0,Math.min(5,(a.cmmi!=null?a.cmmi:0)*f)));});});
+  var overall=all.length?all.reduce(function(s,x){return s+x;},0)/all.length:0;
+  return {overall:overall,groups:groups};
+}
 function c5AiFwView(host,fwKey){
   if(!host)return;var esc=(typeof c5esc==='function')?c5esc:function(x){return x;};
   var cat=(typeof AI_FW_CATALOG!=='undefined')?AI_FW_CATALOG[fwKey]:null;if(!cat){host.innerHTML='';return;}
   if(typeof c5paStyle==='function')c5paStyle();
+  try{window.C5_SCOPE_FWKEY='ai:'+fwKey;}catch(_){}   // publish the lens so the scope cards score on it
   var g=(typeof aiG==='function')?aiG():{};
+  var _aiF=c5AiScopeFactor();   // scope-maturity scaling, consistent with every other framework
+  var _aiScope=(typeof c5Scope==='function')?c5Scope():'enterprise';
+  var _aiScLbl=(_aiScope==='enterprise')?'':((typeof scopeLabel==='function')?scopeLabel(_aiScope):_aiScope);
   var label=cat.name||cat.short||fwKey;
   var srcLbl={system:'🔌 telemetry',governance:'🧾 attested',document:'📄 document'};
   var groups=(cat.groups||[]).map(function(grp){
     var ctrls=(grp.controls||[]).map(function(c){var a={};try{a=c.assess(g)||{};}catch(_){}
-      return {id:c.id,name:c.name,cmmi:(a.cmmi!=null?a.cmmi:0),src:a.src||'governance',method:a.method||'',finding:a.finding||'',rec:a.rec||''};});
+      return {id:c.id,name:c.name,cmmi:Math.max(0,Math.min(5,(a.cmmi!=null?a.cmmi:0)*_aiF)),src:a.src||'governance',method:a.method||'',finding:a.finding||'',rec:a.rec||''};});
     return {name:grp.fn||'',controls:ctrls};
   });
   var allC=[];groups.forEach(function(gr){allC=allC.concat(gr.controls);});
+  // Headline overall comes from the reconciling scope aggregate (Enterprise = mean of regions), the
+  // same source the scope cards use, so the gauge and the cards always agree; fall back to the mean.
   var overall5=allC.length?allC.reduce(function(s,c){return s+c.cmmi;},0)/allC.length:0;
+  try{if(typeof scopeAggTree==='function'&&typeof c5Scope==='function'){var _aggAi=scopeAggTree(c5Scope());if(_aggAi&&_aggAi.overall!=null)overall5=_aggAi.overall;}}catch(_){}
   var vCmmi=(typeof c5cmmiLevel==='function')?c5cmmiLevel(overall5):Math.floor(overall5);
   var vLevel=(typeof c5fwLvl==='function')?c5fwLvl(overall5):'';
   var readCol=overall5>=3.5?'--good':overall5>=2?'--blue':overall5>=1?'--warn':'--crit';
   var vBelow=overall5<3.5,belowN=allC.filter(function(c){return c.cmmi<3.5;}).length;
   var attested=allC.filter(function(c){return c.cmmi>0;}).length;
   var covPct=allC.length?Math.round(attested/allC.length*100):0;
-  var paFinding='Your <b>'+esc(label)+'</b> posture sits at <em>'+(vLevel||'&mdash;')+'</em> (CMMI Level '+vCmmi+') &mdash; '+overall5.toFixed(1)+' of 5, '+(vBelow?'<span class="bad">below the 3.5 target</span>':'at the 3.5 target')+'.';
+  var paFinding='Your <b>'+esc(label)+'</b> posture'+(_aiScLbl?(' for <b>'+esc(_aiScLbl)+'</b>'):'')+' sits at <em>'+(vLevel||'&mdash;')+'</em> (CMMI Level '+vCmmi+') &mdash; '+overall5.toFixed(1)+' of 5, '+(vBelow?'<span class="bad">below the 3.5 target</span>':'at the 3.5 target')+'.';
   // Weakest-first control ledger (id · name · bar · score) — clickable to open each control's detail.
   var barItems=allC.slice().sort(function(a,b){return a.cmmi-b.cmmi;}).map(function(c){return {id:c.id,name:c.name,s:c.cmmi,key:c.id};});
   var profileInner=(typeof c5paBars==='function')?c5paBars(barItems,{clickable:true}):'';   // rows carry data-pafn = control id
@@ -6744,9 +6769,12 @@ function c5AiFwView(host,fwKey){
   var filterHead=C5_AIFW_FILTER?('<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:6px"><div style="font-size:12px;font-weight:700;color:var(--ink)">'+(C5_AIFW_FILTER==='below'?'Controls below the 3.5 target':'Controls not yet attested (the coverage gap)')+' <span style="color:var(--muted);font-weight:600">· '+_fmatched+'</span></div><span data-aifwall="1" role="button" tabindex="0" style="font-size:11px;font-weight:600;color:var(--blue);cursor:pointer">show all controls &rsaquo;</span></div>'):'';
   var emptyMsg=(C5_AIFW_FILTER&&_fmatched===0)?'<div style="border:1px solid var(--line);border-radius:12px;padding:16px 18px;background:var(--surface);font-size:12.5px;color:var(--good)"><b>None.</b> Every '+esc(label)+' control '+(C5_AIFW_FILTER==='below'?'meets the 3.5 target.':'is attested.')+'</div>':'';
   var tree='<div class="c5fw-tree" style="margin-top:22px">'+filterHead+(emptyMsg||listRows)+'</div>';
+  // Scope switcher — the SAME Enterprise → Region → Entity drill cards as every other framework tab.
+  var aiScopeNav='';try{if(typeof scopeNav==='function'){var _asn=scopeNav();if(_asn)aiScopeNav='<div style="margin-bottom:6px">'+_asn+'</div>';}}catch(_){}
   host.innerHTML=(typeof c5header==='function'?c5header():'')
     +'<div class="c5pa">'
-    +'<div class="c5pa-eyebrow">Program health · '+esc(label)+' · as of '+new Date().toLocaleDateString()+'</div>'
+    +'<div class="c5pa-eyebrow">Program health · '+esc(label)+(_aiScLbl?(' · '+esc(_aiScLbl)):'')+' · as of '+new Date().toLocaleDateString()+'</div>'
+    +aiScopeNav
     +'<h1 class="c5pa-finding">'+paFinding+'</h1>'
     +'<div class="c5pa-dek"><b>'+esc(label)+'</b> is an <b>AI-governance</b> framework, evidenced by <b>attestation</b> from your onboarding intake — there is no runtime AI security sensor yet, so this is a documented-posture read, not machine-verified assurance. <b>Governance is not assurance</b>: the score is honest about that gap. Click any control for how it was assessed, the finding and the fix.</div>'
     +'<div class="c5pa-inst">'

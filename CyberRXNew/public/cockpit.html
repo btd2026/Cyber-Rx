@@ -3239,6 +3239,10 @@ function scopeAggTree(id){
     var _sfw=(typeof window!=='undefined'&&window.C5_SCOPE_FWKEY)||null;
     if((_sfw==='iso'||_sfw==='cis')&&typeof c5fwTree==='function'){var tt=c5fwTree(_sfw,fwDeployedIds());
       return {overall:tt.overall,groups:(tt.groups||[]).map(function(g){return {id:(g.id||g.name),score:g.score};})};}
+    // AI-governance catalog frameworks (ISO 42001 / OWASP LLM / MITRE ATLAS / EU AI Act): scored per
+    // scope by c5AiCatalogLeaf (org-level attestation × this scope's maturity), so their region/entity
+    // cards vary and reconcile exactly like every other framework.
+    if(_sfw&&_sfw.indexOf('ai:')===0&&typeof c5AiCatalogLeaf==='function'){return c5AiCatalogLeaf(_sfw.slice(3));}
     if(typeof c5AssessmentRollup==='function'){var r=c5AssessmentRollup();
       return {overall:(r.overall||0)*5,groups:Object.keys(r.functions||{}).map(function(fn){return {id:fn,score:(r.functions[fn].score||0)*5};})};}
     var t=c5fwTree('csf',fwDeployedIds());return {overall:t.overall,groups:(t.groups||[]).map(function(g){return {id:(g.id||g.name),score:g.score};})};
@@ -3389,7 +3393,9 @@ function scopeNav(){
     // CSF. The renderer publishes the active lens in window.C5_SCOPE_FWKEY; the cards are now scored
     // on that framework (see scopeAggTree leaf), so label and number agree.
     var _sfw=(typeof window!=='undefined'&&window.C5_SCOPE_FWKEY)||((typeof C5_ASSESS_FW!=='undefined'&&C5_ASSESS_FW==='ai')?'ai':'csf');
-    var fwLbl={csf:'NIST CSF',ai:'AI RMF',iso:'ISO 27001',cis:'CIS Controls'}[_sfw]||'NIST CSF';
+    var fwLbl;
+    if(_sfw&&_sfw.indexOf('ai:')===0){var _ak=_sfw.slice(3);fwLbl=(typeof AI_FW_CATALOG!=='undefined'&&AI_FW_CATALOG[_ak]&&AI_FW_CATALOG[_ak].short)||'AI';}
+    else fwLbl={csf:'NIST CSF',ai:'AI RMF',iso:'ISO 27001',cis:'CIS Controls'}[_sfw]||'NIST CSF';
     // Logical grouping: at Enterprise you compare regions; once you're inside a region (or an
     // entity within it) you compare that region's entities — you do not see the regions again.
     var out='';
