@@ -3188,14 +3188,14 @@ function ensureRegionEntities(){
 function scopeAggTree(id){
   function leaf(sid){var savedS=SIGNALS,savedSC=SCOPE;try{
     SCOPE=sid;
-    // Framework-aware: on the AI frameworks tab, score each scope with the AI RMF
-    // rollup (scope-sensitive via c5Scope) so region cards show AI posture, not CSF.
-    if(typeof C5_ASSESS_FW!=='undefined'&&C5_ASSESS_FW==='ai'&&typeof c5AssessmentRollup==='function'){
-      var r=c5AssessmentRollup();
-      return {overall:(r.overall||0)*5,groups:Object.keys(r.functions||{}).map(function(fn){return {id:fn,score:(r.functions[fn].score||0)*5};})};
-    }
+    // Score EVERY scope with the SAME real, security rubric the control table uses
+    // (c5AssessmentRollup → c5ControlScore): does each control actually mitigate its risk. So the
+    // gauge, the bars, the region cards and each control all agree, on CSF and AI alike. Apply the
+    // scope's own telemetry first so the projection reflects that branch's tools.
     var vals=(typeof scopeSignalValues==='function')?scopeSignalValues(sid):{};
     var s=JSON.parse(JSON.stringify(SIGNALS_BASE||SIGNALS||{}));Object.keys(vals).forEach(function(k){s[k]={key:k,value:vals[k]};});SIGNALS=s;
+    if(typeof c5AssessmentRollup==='function'){var r=c5AssessmentRollup();
+      return {overall:(r.overall||0)*5,groups:Object.keys(r.functions||{}).map(function(fn){return {id:fn,score:(r.functions[fn].score||0)*5};})};}
     var t=c5fwTree('csf',fwDeployedIds());return {overall:t.overall,groups:(t.groups||[]).map(function(g){return {id:(g.id||g.name),score:g.score};})};
   }catch(_){return null;}finally{SIGNALS=savedS;SCOPE=savedSC;}}
   function meanTrees(ts){ts=(ts||[]).filter(Boolean);if(!ts.length)return null;
