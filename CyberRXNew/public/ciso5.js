@@ -5392,7 +5392,7 @@ function c5paStyle(){
   var css=''
    +'.c5pa{--c5serif:var(--serif);margin:6px 0 2px}'
    +'.c5pa-eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);font-weight:600}'
-   +'.c5pa-finding{font-family:var(--c5serif);font-weight:600;font-size:clamp(22px,3vw,32px);line-height:1.22;letter-spacing:-.01em;color:var(--ink);margin:12px 0 0;max-width:22ch;text-wrap:balance}'
+   +'.c5pa-finding{font-family:var(--c5serif);font-weight:600;font-size:clamp(22px,2.6vw,30px);line-height:1.24;letter-spacing:-.01em;color:var(--ink);margin:12px 0 0;max-width:none;text-wrap:balance}'
    +'.c5pa-finding em{font-style:normal;color:var(--blue)}.c5pa-finding .bad{color:var(--crit)}'
    +'.c5pa-dek{color:var(--ink-2);font-size:15px;line-height:1.55;margin-top:14px;max-width:64ch}.c5pa-dek b{color:var(--ink)}'
    +'.c5pa-basis{display:flex;align-items:center;gap:9px;margin-top:12px;font-size:12px;color:var(--ink-2);line-height:1.5}.c5pa-basis b{color:var(--ink);font-weight:700}'
@@ -5863,12 +5863,14 @@ function c5ContinuousAssessment(host){
   if(C5_ASSESS_SUBTAB==='controls'&&!showControls)C5_ASSESS_SUBTAB='summary';
   if(C5_ASSESS_SUBTAB!=='controls'&&C5_ASSESS_SUBTAB!=='drift')C5_ASSESS_SUBTAB='summary';
   var driftN=drift.regressions.length;
-  function assSubBtn(k,label,badge){return '<button class="subtab'+(C5_ASSESS_SUBTAB===k?' on':'')+'" data-asssub="'+k+'">'+label+(badge?(' <span style="font-size:10px;font-weight:800;color:#fff;background:var(--warn);border-radius:20px;padding:1px 6px">'+badge+'</span>'):'')+'</button>';}
-  var subBar='<div class="subwrap c5phwrap" style="margin-top:14px"><div class="subtabs">'
-    +assSubBtn('summary','Summary')
-    +(showControls?assSubBtn('controls','Controls · '+esc((typeof scopeLabel==='function')?scopeLabel(SCOPE):'scope')):'')
-    +assSubBtn('drift','Drift',driftN||'')
-    +'</div></div>';
+  // The Summary / Controls / Drift tab bar was duplicative — the gauge, the function bars and the
+  // KPI cards already open the controls view, and the Trend card opens drift. Replaced with a single
+  // "back to summary" link shown ONLY while you're in a drilled view.
+  var subBar=(C5_ASSESS_SUBTAB!=='summary')
+    ? ('<div style="margin-top:16px;font-size:12px"><span data-asssub="summary" role="button" tabindex="0" style="font-weight:600;color:var(--blue);cursor:pointer">&lsaquo; Back to summary</span>'
+        +(C5_ASSESS_SUBTAB==='controls'?(' <span style="color:var(--muted)">· Controls · '+esc((typeof scopeLabel==='function')?scopeLabel(SCOPE):'scope')+'</span>'):'')
+        +(C5_ASSESS_SUBTAB==='drift'?' <span style="color:var(--muted)">· Drift</span>':'')+'</div>')
+    : '';
   var subBody;
   if(C5_ASSESS_SUBTAB==='controls'){
     subBody=cadenceBar+'<div class="c5fw-wrap"><div class="c5fw-right">'+tree+'</div><div class="c5fw-left" id="assessDetail">'+detail+'</div></div>';
@@ -5925,6 +5927,7 @@ function c5ContinuousAssessment(host){
   var vBarItems=(vFns||[]).map(function(f){return {id:f.n,name:(_fnLbl[f.n]||f.n),s:f.s,key:f.n};});
   var paHero='<div class="c5pa">'
     +'<div class="c5pa-eyebrow">'+paEyebrow+'</div>'
+    +scopeNavHtml   // "Regions / entities at a glance" sits ABOVE the finding — pick a scope, then read it
     +'<h1 class="c5pa-finding">'+paFinding+'</h1>'
     +paBasisHtml
     +'<div class="c5pa-dek">'+vLede+'</div>'
@@ -5936,7 +5939,6 @@ function c5ContinuousAssessment(host){
   +'</div>';
   host.innerHTML=c5header()+
     paHero+
-    scopeNavHtml+
     subBar+
     subBody+
     '<div class="c5foot">Method: <b style="color:var(--good)">live</b> = a sensor observes it (re-scored on every refresh) · <b style="color:var(--blue)">hybrid</b> = telemetry pulled, a human confirms · <b style="color:var(--warn)">attestation</b> = owner-assigned, LLM pre-screened, freshness-tracked · <b>awaiting</b> = connect a source to light it up. Freshness decays past the TTL, so an old attestation reads <b style="color:var(--warn)">expiring</b>, not passing — which is what makes "continuous" true across all '+s.total+'.</div>';
@@ -6343,7 +6345,7 @@ function nerionInternal(){try{return (typeof localStorage!=='undefined'&&localSt
    drill-down controls), scored by crosswalk from the live NIST CSF 2.0 evidence via c5fwTree, so
    it moves with your real posture. Kept honest: every control shows how it's evidenced, and the
    dek states the score is crosswalk-derived (readiness), not a certified audit opinion. */
-var C5_FWLENS_EXP={};
+var C5_FWLENS_EXP={},C5_FWLENS_CTRL=null,C5_FWLENS_KPI=null;
 function c5FwLens(host,fwKey,label){
   if(!host)return;
   var esc=(typeof c5esc==='function')?c5esc:function(x){return x;};
@@ -6364,16 +6366,35 @@ function c5FwLens(host,fwKey,label){
   // Domain profile — the same weakest-first bar ledger the CSF lens uses (id · name · bar · score),
   // by ISO/CIS main control domain. No spider chart.
   var profileInner=c5paBars(groups.map(function(g){return {id:String(g.id),name:gname(g),s:g.score||0};}),{});
-  function card(l,v,c,sub){return '<div class="c5card"><div class="c5card-top"><span class="c5card-l">'+l+'</span><span class="c5chip c5-computed">computed</span></div><div class="c5card-v" style="color:var(--'+c+')">'+v+'</div><div class="cn">'+sub+'</div></div>';}
+  // KPI cards are clickable to EXPLAIN their number (same affordance as CSF), toggling a panel.
+  function card(l,v,c,sub,kpi){var on=(C5_FWLENS_KPI===kpi);return '<div class="c5card c5card-go'+(on?' on':'')+'" data-fwkpi="'+kpi+'" role="button" tabindex="0" title="Explain '+esc(l)+'"><div class="c5card-top"><span class="c5card-l">'+l+'</span><span class="c5card-go-lbl">'+(on?'hide ›':'explain ›')+'</span></div><div class="c5card-v" style="color:var(--'+c+')">'+v+'</div><div class="cn">'+sub+'</div></div>';}
   var cards='<div class="c5cards">'
-    +card('Domains below target',belowN+' / '+groups.length,belowN?'warn':'good','maturity under CMMI 3.5')
-    +card('Coverage',(T.coverage||0)+'%','ink','domains evidenced by your telemetry & policies')
-    +card('Overall maturity',overall5.toFixed(1)+' / 5',readCol.replace('--',''),(vLevel||'')+' · target 3.5')
+    +card('Domains below target',belowN+' / '+groups.length,belowN?'warn':'good','maturity under CMMI 3.5','below')
+    +card('Coverage',(T.coverage||0)+'%','ink','domains evidenced by your telemetry & policies','coverage')
+    +card('Overall maturity',overall5.toFixed(1)+' / 5',readCol.replace('--',''),(vLevel||'')+' · target 3.5','overall')
     +'</div>';
+  var kpiExplain={
+    below:'<b>'+belowN+' of '+groups.length+'</b> '+esc(label)+' domains score under CMMI 3.5 — their controls do not yet fully mitigate their risks across the estate. These are where to focus.',
+    coverage:'<b>'+(T.coverage||0)+'%</b> of '+esc(label)+' domains have at least one control evidenced by connected telemetry or a reviewed policy; the rest are not yet evidenced. Coverage is the breadth of evidence — separate from how well the evidenced controls actually score.',
+    overall:'<b>'+overall5.toFixed(1)+' / 5</b> is the average of every '+esc(label)+' control score. Same rubric across frameworks: <b>3</b> = fully mitigates the risk · <b>4</b> = + continuously enforced (automated) · <b>5</b> = + continuously verified. Crosswalk-derived from the NIST CSF 2.0 evidence each control maps to.'
+  }[C5_FWLENS_KPI];
+  var kpiPanel=(C5_FWLENS_KPI&&kpiExplain)?('<div style="border:1px solid var(--blue);border-radius:12px;padding:12px 15px;margin-top:12px;background:color-mix(in srgb,var(--blue) 4%,var(--surface));font-size:12.5px;color:var(--ink-2);line-height:1.55">'+kpiExplain+'</div>'):'';
+  // Each sub-control (safeguard / Annex control) is clickable and opens a detail panel, like CSF.
+  function fwCtlDetail(c){var cs=c.score||0,cc=cs>=3.5?'good':cs>=2?'blue':cs>=1?'warn':'crit',untested=(c.tested===false||c.src==='none'||c.src==='native-pending');
+    var mapped=(c.mapped||c.related||[]);
+    var srcExplain={system:'scored directly from connected telemetry evidencing this control',document:'scored from a reviewed policy / document',mapped:'a readiness score crosswalked from the NIST CSF 2.0 controls it maps to',native:'natively tested by the assessment engine','native-pending':'mapped, but not yet tested',none:'not yet evidenced — connect a source or map a policy'}[c.src]||'evidenced from your posture';
+    return '<div style="border:1px solid var(--blue);border-radius:14px;margin-top:14px;padding:16px 18px;background:color-mix(in srgb,var(--blue) 3%,var(--surface))">'
+      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px"><div><div style="font-size:9px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">'+esc(label)+' control</div><div style="font-size:15px;font-weight:600;margin-top:3px"><b>'+esc(c.id)+'</b> — '+esc(c.name||'')+'</div></div><button data-fwctlclose="1" style="flex:none;font-size:12px;font-weight:600;color:var(--blue);background:none;border:1px solid var(--line);border-radius:20px;padding:3px 11px;cursor:pointer">close &times;</button></div>'
+      +'<div style="display:flex;align-items:baseline;gap:10px;margin:8px 0 12px"><div style="font-size:24px;font-weight:600;font-family:var(--serif);color:var(--'+(untested?'muted':cc)+')">'+(untested?'—':cs.toFixed(1))+'<span style="font-size:13px;color:var(--muted)"> / 5</span></div><span style="font-size:11px;color:var(--muted)">'+esc(srcLbl[c.src]||'')+'</span></div>'
+      +'<div class="ev-sec">Why this score</div><div class="drill-p">This '+esc(label)+' control is '+srcExplain+'.'+(mapped.length?(' It maps to NIST CSF 2.0 <b>'+mapped.slice(0,6).map(esc).join(', ')+'</b> and inherits their maturity.'):'')+'</div>'
+      +'<div class="ev-sec">Scoring</div><div class="drill-p" style="font-size:11px;color:var(--muted)">Same rubric across every framework: <b>3</b> = fully mitigates the risk · <b>4</b> = + continuously enforced (automated) · <b>5</b> = + continuously verified &amp; improving. Below 100% is capped under 3.</div>'
+    +'</div>';}
+  var selCtl=null;if(C5_FWLENS_CTRL){groups.forEach(function(g){(g.children||[]).forEach(function(c){if((fwKey+'|'+c.id)===C5_FWLENS_CTRL)selCtl=c;});});}
+  var ctlDetail=selCtl?fwCtlDetail(selCtl):'';
   var tree='<div class="c5fw-tree" style="margin-top:22px">'+groups.map(function(g){
     var open=!!C5_FWLENS_EXP[fwKey+'|'+g.id],s=g.score||0,gc=s>=3.5?'good':s>=2?'blue':s>=1?'warn':'crit';
-    var inner=open?('<div style="padding:2px 14px 12px 30px">'+(g.children||[]).map(function(c){var cs=c.score||0,cc=cs>=3.5?'good':cs>=2?'blue':cs>=1?'warn':'crit',untested=(c.tested===false||c.src==='none'||c.src==='native-pending');
-      return '<div style="display:flex;align-items:center;gap:10px;padding:5px 0;border-top:1px solid var(--line)"><span style="font-family:var(--mono);font-size:11px;color:var(--ink);min-width:78px">'+esc(c.id)+'</span><span style="flex:1;font-size:11px;color:var(--ink-2)">'+esc(c.name||'')+'</span><span style="font-size:10px;color:var(--muted);min-width:96px">'+esc(srcLbl[c.src]||c.src||'')+'</span><span style="font-size:12px;font-weight:700;color:var(--'+(untested?'muted':cc)+');min-width:32px;text-align:right">'+(untested?'—':cs.toFixed(1))+'</span></div>';
+    var inner=open?('<div style="padding:2px 8px 12px 30px">'+(g.children||[]).map(function(c){var cs=c.score||0,cc=cs>=3.5?'good':cs>=2?'blue':cs>=1?'warn':'crit',untested=(c.tested===false||c.src==='none'||c.src==='native-pending'),selRow=((fwKey+'|'+c.id)===C5_FWLENS_CTRL);
+      return '<div data-fwctl="'+esc(fwKey+'|'+c.id)+'" role="button" tabindex="0" title="Open '+esc(c.id)+' detail" style="display:flex;align-items:center;gap:10px;padding:5px 8px;margin:0 -8px;border-top:1px solid var(--line);cursor:pointer;border-radius:6px;background:'+(selRow?'color-mix(in srgb,var(--blue) 7%,transparent)':'transparent')+'"><span style="font-family:var(--mono);font-size:11px;color:var(--'+(selRow?'blue':'ink')+');min-width:78px">'+esc(c.id)+' ›</span><span style="flex:1;font-size:11px;color:var(--ink-2)">'+esc(c.name||'')+'</span><span style="font-size:10px;color:var(--muted);min-width:96px">'+esc(srcLbl[c.src]||c.src||'')+'</span><span style="font-size:12px;font-weight:700;color:var(--'+(untested?'muted':cc)+');min-width:32px;text-align:right">'+(untested?'—':cs.toFixed(1))+'</span></div>';
     }).join('')+'</div>'):'';
     return '<div class="c5fw-g"><div class="c5fw-grow" data-fwlensexp="'+esc(g.id)+'" role="button" tabindex="0"><span class="c5fw-tw">'+(open?'▾':'▸')+'</span><span class="c5fw-dot" style="background:var(--'+gc+')"></span><span class="c5fw-id">'+esc(g.id)+'</span><span class="c5fw-nm">'+esc(gname(g))+'</span><span class="c5fw-lvl">'+(g.children||[]).length+' controls</span><span class="c5fw-sc" style="color:var(--'+gc+')">'+s.toFixed(1)+'</span></div>'+inner+'</div>';
   }).join('')+'</div>';
@@ -6387,10 +6408,17 @@ function c5FwLens(host,fwKey,label){
       +'<div class="c5pa-cell"><div class="c5pa-ct">Domain profile · '+esc(label)+' · weakest first</div>'+profileInner+'</div>'
     +'</div>'
     +'<div class="c5pa-kpis">'+cards+'</div>'
+    +kpiPanel
     +'</div>'
     +tree
+    +ctlDetail
     +'<div class="c5foot">Crosswalk mapping: '+esc(label)+' controls inherit the maturity of the NIST CSF 2.0 controls they map to (public crosswalk). Where a tool evidences a control directly, that telemetry is used instead. This is a readiness indicator — your certification body issues the audit opinion.</div>';
   host.querySelectorAll('[data-fwlensexp]').forEach(function(b){var go=function(){var k=fwKey+'|'+b.getAttribute('data-fwlensexp');C5_FWLENS_EXP[k]=!C5_FWLENS_EXP[k];c5FwLens(host,fwKey,label);};b.onclick=go;b.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}};});
+  // Sub-control rows → open (toggle) that control's detail, like CSF.
+  host.querySelectorAll('[data-fwctl]').forEach(function(row){var go=function(){var k=row.getAttribute('data-fwctl');C5_FWLENS_CTRL=(C5_FWLENS_CTRL===k)?null:k;c5FwLens(host,fwKey,label);};row.onclick=go;row.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}};});
+  var _fcx=host.querySelector('[data-fwctlclose]');if(_fcx)_fcx.onclick=function(){C5_FWLENS_CTRL=null;c5FwLens(host,fwKey,label);};
+  // KPI cards → toggle their explanation.
+  host.querySelectorAll('[data-fwkpi]').forEach(function(cd){var go=function(){var k=cd.getAttribute('data-fwkpi');C5_FWLENS_KPI=(C5_FWLENS_KPI===k)?null:k;c5FwLens(host,fwKey,label);};cd.onclick=go;cd.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}};});
 }
 function c5Frameworks(){
   var host=document.getElementById('c5-frameworks');if(!host)return;
