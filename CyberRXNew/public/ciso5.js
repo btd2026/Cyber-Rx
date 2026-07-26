@@ -6184,7 +6184,7 @@ function c5ContinuousAssessment(host){
   var paFwName=isAiFw?'AI-governance':(c5AssessFwCfg().label);
   var paReadCol=overall5>=3.5?'--good':overall5>=2?'--blue':overall5>=1?'--warn':'--crit';
   var paFinding='Your '+paFwName+' program'+(paScopeLbl?(' for <b>'+esc(paScopeLbl)+'</b>'):'')+' sits at <em>'+(vLevel||'&mdash;')+'</em> (CMMI Level '+vCmmi+') &mdash; '+overall5.toFixed(1)+' of 5, '+(vBelow?'<span class="bad">below the 3.5 target</span>':'at the 3.5 target')+'.';
-  var paEyebrow=(isAiFw?'Program health · AI frameworks':'Program health · '+(c5AssessFwCfg().label))+(paScopeLbl?(' · '+esc(paScopeLbl)):'')+' · as of '+new Date().toLocaleDateString();
+  var paEyebrow=(isAiFw?'Program health · NIST AI RMF':'Program health · '+(c5AssessFwCfg().label))+(paScopeLbl?(' · '+esc(paScopeLbl)):'')+' · as of '+new Date().toLocaleDateString();
   // Scope basis — state the hierarchy explicitly so Enterprise is never read as a place:
   // Enterprise = equal-weighted mean of regions; a region = mean of its entities; an entity
   // = a leaf scored from its own telemetry. Keeps the roll-up honest in the UI, not just the code.
