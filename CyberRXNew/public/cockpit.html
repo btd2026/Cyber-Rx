@@ -1441,8 +1441,12 @@ function quarterlyTrend(t){
 }
 function trajInfo(){
   var t=quarterlyTrend((LIVE&&LIVE.trend)||[]),vals=t.map(function(p){return p.ale;}),ale=(LIVE&&LIVE.economics&&Number(LIVE.economics.ale))||0;
-  if(vals.length>=2){var down=vals[vals.length-1]<=vals[0],delta=vals[vals.length-1]-vals[0],pc=vals[0]?Math.round(delta/vals[0]*100):0;
-    return {two:true,down:down,val:(down?'▼ ':'▲ ')+usd(Math.abs(delta))+' ('+(pc<=0?'':'+')+pc+'%)',cls:down?'good':'crit',sub:'expected loss across '+vals.length+' quarters',vals:vals,t:t};}
+  if(vals.length>=2){var delta=vals[vals.length-1]-vals[0],pc=vals[0]?Math.round(delta/vals[0]*100):0;
+    // Three-state: falling loss = good (▼), rising = bad (▲), unchanged = neutral (▬). A prior "<="
+    // folded "unchanged" into "improving", so a flat quarter read "▼ $0 (0%)" green — corrected.
+    var dir=delta<0?'down':(delta>0?'up':'flat');
+    var val=(dir==='flat')?'▬ no change':((dir==='down'?'▼ ':'▲ ')+usd(Math.abs(delta))+' ('+(pc<=0?'':'+')+pc+'%)');
+    return {two:true,down:dir==='down',flat:dir==='flat',val:val,cls:dir==='down'?'good':(dir==='up'?'crit':'muted'),sub:'expected loss across '+vals.length+' quarters',vals:vals,t:t};}
   return {two:false,val:ale>0?usd(ale):'—',cls:'',sub:(t.length===1?('this quarter ('+t[0].label+') — the trajectory builds quarter over quarter from here'):'baseline — the trajectory builds quarter over quarter from here, no history invented'),ale:ale,t:t};
 }
 function iamGovRow(label,val,ok,sub){return '<div class="drow"><div class="drow-h"><span class="cap-dot" style="background:var(--'+(ok===true?'good':ok===false?'crit':'muted')+')"></span><b>'+label+'</b><span class="drow-tool" style="color:var(--'+(ok===true?'good':ok===false?'crit':'ink-2')+')">'+val+'</span></div>'+(sub?'<div class="drow-need">'+sub+'</div>':'')+'</div>';}
@@ -1661,9 +1665,9 @@ function drillEffectiveness(){var eff=controlsEffUsd();
     '<div class="ev-sec">How to make it real</div><div class="drill-p">Connect your control catalog / GRC so each control’s inherent-vs-residual delta is measured from evidence rather than modeled. The figure then updates per control and becomes audit-defensible — the honest upgrade path for this number.</div>';}
 function drillTrajectory(){var tr=trajInfo();
   var howNote='<div class="ev-sec">How this is measured</div><div class="drill-p" style="color:var(--muted)">Nerion records your expected loss on every analysis and rolls the points up by calendar quarter — a quarter’s value is the latest analysis recorded in it. Two or more quarters produce the trend line and the up/down delta. Real history, nothing back-filled or invented.</div>';
-  if(tr.two){var down=tr.down;
-    return '<div class="drill-hero'+(down?' good':'')+'" style="color:var(--'+(down?'good':'crit')+')">'+tr.val+'</div>'+sparkSvg(tr.vals,down)+
-      '<div class="drill-p">Your expected loss <b>quarter over quarter</b>. '+(down?'<b style="color:var(--good)">Down</b>':'<b style="color:var(--crit)">Up</b>')+' across '+tr.vals.length+' quarters — a falling line means your controls are removing more risk than the business is adding.</div>'+
+  if(tr.two){var down=tr.down,flat=tr.flat;
+    return '<div class="drill-hero'+(down?' good':'')+'" style="color:var(--'+(flat?'muted':down?'good':'crit')+')">'+tr.val+'</div>'+sparkSvg(tr.vals,down)+
+      '<div class="drill-p">Your expected loss <b>quarter over quarter</b>. '+(flat?'<b>Unchanged</b>':down?'<b style="color:var(--good)">Down</b>':'<b style="color:var(--crit)">Up</b>')+' across '+tr.vals.length+' quarters — a falling line means your controls are removing more risk than the business is adding.</div>'+
       '<div class="ev-sec">Recorded quarters</div>'+tr.t.map(function(p){return gRow(p.label,usd(p.ale));}).join('')+howNote;}
   var single=!!(tr.t&&tr.t.length===1),label=single?tr.t[0].label:null;
   return '<div class="drill-hero">'+(tr.ale>0?usd(tr.ale):'—')+'</div>'+
@@ -2475,8 +2479,13 @@ function renderFrameworks(){
   var docN=docList().length;
   // Record a cadence snapshot and build the trend graph from refresh to refresh.
   var hist=fwRecord(overall),trend;
-  if(hist.length>=2){var v0=hist[0].v,vN=hist[hist.length-1].v,delta=vN-v0,up=delta>=0;
-    trend='<div class="fw-trend">'+sparkSvg(hist.map(function(x){return x.v;}),up)+'<span class="fw-trend-d" style="color:var(--'+(up?'good':'crit')+')">'+(up?'▲':'▼')+' '+(delta>=0?'+':'')+delta.toFixed(1)+' CMMI</span><span class="fw-trend-n">across '+hist.length+' '+auditCadence()+' refreshes</span></div>';}
+  if(hist.length>=2){var v0=hist[0].v,vN=hist[hist.length-1].v;
+    // Direction from the DISPLAYED 1-decimal endpoints, so a sub-0.05 wobble that rounds equal
+    // (or a -0.04 that would print "-0.0") reads as "no change", never a false ▲/▼ or a "-0.0".
+    var d0=+v0.toFixed(1),dN=+vN.toFixed(1),rdelta=dN-d0,tdir=rdelta>0?'up':(rdelta<0?'down':'flat');
+    var tcol=tdir==='up'?'good':tdir==='down'?'crit':'muted',tgl=tdir==='up'?'▲ +':tdir==='down'?'▼ ':'▬ ';
+    var tval=tdir==='flat'?'no change':(tgl+Math.abs(rdelta).toFixed(1)+' CMMI');
+    trend='<div class="fw-trend">'+sparkSvg(hist.map(function(x){return x.v;}),tdir!=='down')+'<span class="fw-trend-d" style="color:var(--'+tcol+')">'+tval+'</span><span class="fw-trend-n">across '+hist.length+' '+auditCadence()+' refreshes</span></div>';}
   else trend='<div class="fw-trend"><span class="fw-trend-n">Baseline recorded — the trend builds from here on each '+auditCadence()+' refresh.</span></div>';
   var cmmiHero='<div class="fw-cmmi"><div><div class="fw-cmmi-l">Framework posture — overall CMMI</div><div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><div class="fw-cmmi-v" style="color:var(--'+cmmiColor(Math.round(overall))+')">'+overall.toFixed(1)+'<span>/ 5</span></div><div class="fw-cmmi-lbl">'+(CMMI_LABELS[Math.round(overall)]||'')+' '+liveTag()+'</div></div></div>'+trend+'</div>';
   host.innerHTML=

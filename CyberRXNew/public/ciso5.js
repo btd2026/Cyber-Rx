@@ -1817,13 +1817,15 @@ function c5domainMetric(k){
   var def=C5_DOM[k]||{label:k,pre:[],fn:''};var mine=c5DomainScore(def.pre);var pd=c5peer();var opt=c5peerOptin();
   var liveMed=(opt&&pd&&pd.sufficient&&pd.functions&&pd.functions[def.fn])?pd.functions[def.fn].p50:null;
   var med=(liveMed!=null)?liveMed:(C5_REF_MED[k]!=null?C5_REF_MED[k]:null);var live=(liveMed!=null);
-  var conn=mine!=null;var delta=(mine!=null&&med!=null)?(mine-med):null;
-  return c5obj({id:'dom_'+k,name:def.label,connected:conn,displayValue:conn?(Number(mine).toFixed(1)+' / 5'):'—',label:'computed',color:conn?((delta==null)?'ink':(delta>=0?'good':'warn')):'muted',mine:mine,med:med,delta:delta,
+  // Delta from the DISPLAYED 1-decimal figures, so mine 3.44 vs med 3.41 (both show 3.4) reads
+  // "on par", not a green "+0.0 · leads". Equal shown numbers must never carry a directional verdict.
+  var conn=mine!=null;var delta=(mine!=null&&med!=null)?(+Number(mine).toFixed(1)-+Number(med).toFixed(1)):null;
+  return c5obj({id:'dom_'+k,name:def.label,connected:conn,displayValue:conn?(Number(mine).toFixed(1)+' / 5'):'—',label:'computed',color:conn?((delta==null||delta===0)?'ink':(delta>0?'good':'warn')):'muted',mine:mine,med:med,delta:delta,
     formula:'your domain score = mean CMMI across the controls in this domain ('+def.pre.join(', ')+'); peer median = '+(live?('your cohort p50 for '+def.fn):'published industry baseline'),
     method:live?('Peer medians are shared at the CSF-function level; '+def.label+' maps to '+def.fn+'.'):('Compared to the published industry baseline for '+def.label.toLowerCase()+'. Opt in to compare to a live cohort of your same-size peers.'),
     inputs:[{name:'Your CMMI',value:mine!=null?Number(mine).toFixed(1):'—',source:'framework posture'},{name:'Peer median',value:med!=null?Number(med).toFixed(1):'—',source:live?('DTNKSHIELD cohort · '+def.fn):'published industry benchmark'}],
     sources:[{tool:'Nerion engine',connector:'nerion',field:'domain_cmmi',lastRefresh:c5ago()},live?{tool:'DTNKSHIELD peer cohort',connector:'peer',field:'functions.'+def.fn,lastRefresh:c5ago()}:{tool:'Published industry benchmark',connector:'reference',field:'csf_cmmi_median',lastRefresh:c5ago()}],
-    action:conn?((delta!=null&&delta<0)?('Your '+def.label.toLowerCase()+' maturity ('+Number(mine).toFixed(1)+'/5) trails the peer median ('+Number(med).toFixed(1)+'/5) by '+Math.abs(delta).toFixed(1)+' — raise the '+def.pre.join(', ')+' controls in this domain toward Defined (3.0+), starting with those below your average.'):((delta!=null&&delta>=0)?('Your '+def.label.toLowerCase()+' maturity leads the peer median — hold the '+def.pre.join(', ')+' controls and reinvest effort in your lagging domains.'):('Raise the '+def.pre.join(', ')+' controls in this domain toward Defined to strengthen '+def.label.toLowerCase()+'.'))):'Connect your control tools + policies to score '+def.label.toLowerCase()+' maturity against peers.',
+    action:conn?((delta!=null&&delta<0)?('Your '+def.label.toLowerCase()+' maturity ('+Number(mine).toFixed(1)+'/5) trails the peer median ('+Number(med).toFixed(1)+'/5) by '+Math.abs(delta).toFixed(1)+' — raise the '+def.pre.join(', ')+' controls in this domain toward Defined (3.0+), starting with those below your average.'):((delta!=null&&delta>0)?('Your '+def.label.toLowerCase()+' maturity leads the peer median — hold the '+def.pre.join(', ')+' controls and reinvest effort in your lagging domains.'):((delta===0)?('Your '+def.label.toLowerCase()+' maturity is on par with the peer median ('+Number(med).toFixed(1)+'/5) — hold the '+def.pre.join(', ')+' controls and push a lagging domain to pull ahead.'):('Raise the '+def.pre.join(', ')+' controls in this domain toward Defined to strengthen '+def.label.toLowerCase()+'.')))):'Connect your control tools + policies to score '+def.label.toLowerCase()+' maturity against peers.',
     note:'How your '+def.label.toLowerCase()+' maturity compares to peers your size.',connectTool:'the live peer cohort (opt in)'});
 }
 
@@ -3341,8 +3343,8 @@ function c5Peers(){
   var rows=doms.map(function(k){var m=c5domainMetric(k);
     var yp=m.mine!=null?Math.max(2,Math.min(98,m.mine/5*100)):0;
     var mp=m.med!=null?Math.max(2,Math.min(98,m.med/5*100)):null;
-    var yc=m.delta==null?'muted':(m.delta>=0?'good':'warn');
-    var dtxt=m.delta==null?'—':((m.delta>=0?'+':'−')+Math.abs(m.delta).toFixed(1));
+    var yc=(m.delta==null||m.delta===0)?'muted':(m.delta>0?'good':'warn');
+    var dtxt=m.delta==null?'—':(m.delta===0?'on par':((m.delta>0?'+':'−')+Math.abs(m.delta).toFixed(1)));
     var trk='<div class="c5trk">'+(mp!=null?('<div style="position:absolute;left:'+mp+'%;top:-3px;width:2px;height:14px;background:var(--muted)"></div>'):'')+(m.mine!=null?('<div style="position:absolute;left:calc('+yp+'% - 6px);top:-2px;width:12px;height:12px;border-radius:50%;background:var(--'+yc+');border:2px solid var(--surface)"></div>'):'')+'</div>';
     return '<div class="c5drow" data-c5m="dom_'+k+'"><div style="flex:1;min-width:0"><div class="c5dn">'+m.name+'</div></div>'+trk+'<div style="font-size:14px;font-weight:500;width:28px;text-align:right;color:var(--ink)">'+(m.mine!=null?Number(m.mine).toFixed(1):'—')+'</div><div class="c5delta" style="color:var(--'+yc+')">'+dtxt+'</div></div>';
   }).join('');
@@ -3659,8 +3661,18 @@ function c5bdFigures(){
   F.bd_oversight=fig({title:'Oversight',value:'Committee + ERM',status:((gov.committee&&/yes|integrated/i.test(gov.ermIntegrated||''))?'Active':(gov.committee?'Active':'Partial')),pill:(gov.committee?'g':'a'),owner:'Board / CISO',ownerSeat:'ciso',
     detail:'Management’s cyber oversight is <b>'+((gov.committee)?'active':'still being formalized')+'</b>: '+(gov.committee?('the '+gov.committee+' owns it'+(gov.cadence?(', reviewing '+String(gov.cadence).toLowerCase()):'')):'a board committee should own it')+(gov.ermIntegrated&&/yes|integrated/i.test(gov.ermIntegrated)?', and cyber is integrated into enterprise risk management.':'.')+' Every above-appetite risk has a named owner.',
     sources:[c5bdSelf('Governance intake',(gov.committee?('Board committee = '+gov.committee):'Board committee')+(gov.cadence?(' · '+gov.cadence):'')+(gov.ermIntegrated?(' · ERM integrated = '+gov.ermIntegrated):'')+' — set by admin at onboarding')]});
-  F.bd_q1=fig({title:'Q1 · Are we getting better, or worse?',q:'Are we getting better, or worse?',a:'Improving, one gap caps it',metric:(mat!=null?('NIST CSF '+mat.toFixed(1)+'/5 ↑'):'NIST CSF ↑'),value:(mat!=null?('CSF '+mat.toFixed(1)+'/5 ↑'):'Improving'),status:'Watch',pill:'a',owner:'CISO',ownerSeat:'ciso',
-    detail:'Our security-program maturity is <b>'+(mat!=null?('NIST CSF '+mat.toFixed(1)+' of 5'):'improving')+'</b> and rising. It’s scored from live control telemetry and your analyzed policies — not self-attestation. The one gap that caps it is identity and access, and its fix is funded ('+fixC+').',
+  // "Are we getting better?" MUST be answered from the maturity history, not asserted — a board
+  // question about direction that always says "improving" is the worst place to hardcode an ↑.
+  var _q1h=(typeof fwHistory==='function')?fwHistory():[];
+  var _q1delta=(_q1h.length>=2)?(+(_q1h[_q1h.length-1].v).toFixed(1)-+(_q1h[0].v).toFixed(1)):null;
+  var _q1dir=(_q1delta==null)?'base':(_q1delta>0?'up':(_q1delta<0?'down':'flat'));
+  var _q1arrow=_q1dir==='up'?' ↑':(_q1dir==='down'?' ↓':'');
+  var _q1a=_q1dir==='up'?'Improving, one gap caps it':_q1dir==='down'?'Slipping — needs attention':_q1dir==='flat'?'Holding steady':'Baseline — first cycle';
+  var _q1status=_q1dir==='down'?'Slipping':(_q1dir==='up'?'Watch':(_q1dir==='flat'?'Steady':'Baseline'));
+  var _q1pill=_q1dir==='down'?'r':(_q1dir==='up'?'a':'g');
+  var _q1move=_q1dir==='up'?' and rising':_q1dir==='down'?' and slipping':_q1dir==='flat'?', holding steady':' — this is the baseline cycle, the trend builds from here';
+  F.bd_q1=fig({title:'Q1 · Are we getting better, or worse?',q:'Are we getting better, or worse?',a:_q1a,metric:(mat!=null?('NIST CSF '+mat.toFixed(1)+'/5'+_q1arrow):'NIST CSF'+_q1arrow),value:(mat!=null?('CSF '+mat.toFixed(1)+'/5'+_q1arrow):_q1a),status:_q1status,pill:_q1pill,owner:'CISO',ownerSeat:'ciso',
+    detail:'Our security-program maturity is <b>'+(mat!=null?('NIST CSF '+mat.toFixed(1)+' of 5'):'measured')+'</b>'+_q1move+'. It’s scored from live control telemetry and your analyzed policies — not self-attestation. The one gap that caps it is identity and access, and its fix is funded ('+fixC+').',
     sources:[ctrlTelem,policyDoc,c5bdMod('maturity = evidenced control CMMI across the framework; inputs: control telemetry (measured) + analyzed policy documents (self-reported)')]});
   F.bd_q2=fig({title:'Q2 · What is our risk in dollars, vs appetite?',q:'What is our risk in dollars, vs appetite?',a:((resUsd>0?(usd(resUsd)+' residual, '):'residual ')+(over?'above appetite':'within appetite')),metric:(resUsd>0?usd(resUsd):'—')+' vs appetite',value:(resUsd>0?(usd(resUsd)+' residual'):'—'),status:(over?'Over':'Within'),pill:(over?'r':'g'),owner:'CFO / CRO',ownerSeat:'cro',
     detail:(resUsd>0?('Modeled residual loss is <b>'+usd(resUsd)+'</b>, '+(over?'<b>above</b>':'<b>within</b>')+' the board’s appetite'+(apUsd>0?(' of '+usd(apUsd)):'')+'. '+(over?('The funded identity fix ('+fixC+') closes the gap.'):'We hold it by keeping the top controls funded.')):'Connect financials and this shows in dollars against appetite.'),
@@ -4336,7 +4348,7 @@ function c5fwPayload(){
   var roadmap=findings.filter(function(f){return /deficiency/i.test(f.classification);}).slice(0,12).map(function(f){return {action:'Remediate '+f.ref+' — '+f.name,owner:'Control owner',effort:'1 cycle',uplift:f.targetUplift,timeframe:'This '+c5fwCadence()+' cycle'};});
   var mapping=mapped?controls.map(function(c){return {ref:c.id,name:c.name,sources:c.mapped||[]};}):[];
   var evidence=[['Tool telemetry','Live coverage % from connected control tools (EDR · identity · SIEM · CNAPP)'],['Document review','Analyzed policies mapped to expected control attributes'],['Crosswalk','Public CSF ↔ framework mapping for derived scores']].map(function(e){return {area:e[0],evidence:e[1]};});
-  var trendDelta=(function(){var h=(typeof fwHistory==='function')?fwHistory():[];if(h.length>=2){var d=h[h.length-1].v-h[0].v;return (d>=0?'+':'')+d.toFixed(1)+' CMMI';}return 'Baseline';})();
+  var trendDelta=(function(){var h=(typeof fwHistory==='function')?fwHistory():[];if(h.length>=2){var d=+(h[h.length-1].v).toFixed(1)-+(h[0].v).toFixed(1);if(d===0)return 'No change';return (d>0?'+':'−')+Math.abs(d).toFixed(1)+' CMMI';}return 'Baseline';})();
   var licensing=[(typeof FW_XNOTE!=='undefined'&&FW_XNOTE[sel])?FW_XNOTE[sel].replace(/<[^>]+>/g,''):null].filter(Boolean);
   // ---- EY-style narrative + framework-specific backbone (real numbers only) ----
   var cadence=(typeof c5fwCadence==='function')?c5fwCadence():'monthly';
@@ -4361,7 +4373,10 @@ function c5fwPayload(){
     'Where both were available the stronger evidence prevailed; where neither existed the control was scored as unevidenced rather than presumed effective. '+
     'Control scores were rolled up to category, '+groupNoun.toLowerCase()+' and overall as the evidence-weighted mean of their children. '+backboneNote+' '+
     'Because the ratings derive from the same live control-assessment source as the management dashboard, this report reconciles exactly to the platform and can be reproduced on demand.';
-  var gap=groups.map(function(g){var sc=Number(g.score)||0;return {domain:g.id+' · '+g.name,current:sc.toFixed(1),target:tg.toFixed(1),gap:(sc>=tg?'0.0':'−'+(tg-sc).toFixed(1)),priority:(sc<2.5?'High':sc<tg?'Medium':'On target')};});
+  // Gap & priority from the DISPLAYED 1-decimal current vs target, so a 3.47 (shows 3.5) against a
+  // 3.5 target reads gap 0.0 / On target — never a "−0.0 · Medium" for a row whose numbers match.
+  var gap=groups.map(function(g){var sc=Number(g.score)||0;var scS=+sc.toFixed(1),tgS=+tg.toFixed(1);var gp=tgS-scS;
+    return {domain:g.id+' · '+g.name,current:sc.toFixed(1),target:tg.toFixed(1),gap:(gp<=0?'0.0':'−'+gp.toFixed(1)),priority:(scS<2.5?'High':scS<tgS?'Medium':'On target')};});
   var riskRegister=findings.slice(0,18).map(function(f){var isDef=/deficiency/i.test(f.classification);var sc=Number(f.score)||0;
     var likelihood=sc<1?'High':sc<2.5?'Medium':'Low';var impact=isDef?'High':'Medium';var severity=isDef?'High':(/observation/i.test(f.classification)?'Medium':'Low');
     return {ref:f.ref,risk:'Insufficient control maturity — '+f.name,likelihood:likelihood,impact:impact,severity:severity,treatment:(f.recommendation||'Uplift toward target maturity.')};});
@@ -5710,7 +5725,11 @@ function c5paGauge(val,target){
   function pol(cx,cy,r,d){var a=(d-180)*Math.PI/180;return [cx+r*Math.cos(a),cy+r*Math.sin(a)];}
   function arc(cx,cy,r,a0,a1){var p0=pol(cx,cy,r,a0),p1=pol(cx,cy,r,a1),lg=(a1-a0)>180?1:0;return 'M '+p0[0].toFixed(2)+' '+p0[1].toFixed(2)+' A '+r+' '+r+' 0 '+lg+' 1 '+p1[0].toFixed(2)+' '+p1[1].toFixed(2);}
   var cx=120,cy=130,r=94,frac=Math.max(0,Math.min(1,val/5)),tf=Math.max(0,Math.min(1,target/5));
-  var vc=val>=3?'--good':val>=2?'--blue':val>=1?'--warn':'--crit';var s='';
+  // Green means AT/ABOVE the target, not a fixed 3.0 — otherwise a 3.2 gauge turns green right next
+  // to the words "below the 3.5 target" and blue (>=3.5) function bars. Colour polarity tracks the
+  // target so the whole page agrees.
+  var _tg=(target>0?target:3.5);
+  var vc=val>=_tg?'--good':val>=Math.max(2,_tg-1.5)?'--blue':val>=1?'--warn':'--crit';var s='';
   s+='<svg viewBox="0 0 240 148" width="240" height="148" role="img" aria-label="Maturity '+val.toFixed(1)+' of 5, target '+target+'">';
   s+='<path d="'+arc(cx,cy,r,0,180)+'" fill="none" style="stroke:var(--line)" stroke-width="14" stroke-linecap="round"/>';
   s+='<path d="'+arc(cx,cy,r,0,180*frac)+'" fill="none" style="stroke:var('+vc+')" stroke-width="14" stroke-linecap="round"/>';
@@ -5772,7 +5791,6 @@ function c5ContinuousAssessment(host){
   var methodColor={live:'good',hybrid:'blue',attestation:'warn',awaiting:'muted'};
   var verdictLabel={met:'met',partial:'partially met',not_met:'not met',not_assessed:'not assessed'};
   var verdictColor={met:'good',partial:'warn',not_met:'crit',not_assessed:'muted'};
-  var prior=s.met-3;var trend=s.met>=prior?('▲ up from '+prior+' last week'):('▼ down from '+prior+' last week');
   function stat(n,l,c,sub){return '<div style="min-width:120px;border:1px solid var(--line);border-radius:11px;padding:11px 13px;background:var(--surface)"><div style="font-size:24px;font-weight:800;color:var(--'+c+');line-height:1">'+n+'</div><div style="font-size:11px;font-weight:600;color:var(--ink-2);margin-top:2px">'+l+'</div>'+(sub?('<div style="font-size:10px;color:var(--muted);margin-top:1px">'+sub+'</div>'):'')+'</div>';}
   var summary='<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:6px">'
     +stat(s.continuouslyVerified,'continuously verified','good','live telemetry')
@@ -6077,7 +6095,7 @@ function c5ContinuousAssessment(host){
   // ── Blend presentation: editorial finding → focal instrument → supporting detail ──
   c5paStyle();
   var paFwName=isAiFw?'AI-governance':(c5AssessFwCfg().label);
-  var paReadCol=overall5>=3?'--good':overall5>=2?'--blue':overall5>=1?'--warn':'--crit';
+  var paReadCol=overall5>=3.5?'--good':overall5>=2?'--blue':overall5>=1?'--warn':'--crit';
   var paFinding='Your '+paFwName+' program'+(paScopeLbl?(' for <b>'+esc(paScopeLbl)+'</b>'):'')+' sits at <em>'+(vLevel||'&mdash;')+'</em> (CMMI Level '+vCmmi+') &mdash; '+overall5.toFixed(1)+' of 5, '+(vBelow?'<span class="bad">below the 3.5 target</span>':'at the 3.5 target')+'.';
   var paEyebrow=(isAiFw?'Program health · AI frameworks':'Program health · '+(c5AssessFwCfg().label))+' · as of '+new Date().toLocaleDateString();
   // Scope basis — state the hierarchy explicitly so Enterprise is never read as a place:
@@ -6587,7 +6605,7 @@ function c5FwLens(host,fwKey,label){
   var vLevel=(typeof c5fwLvl==='function')?c5fwLvl(overall5):'';
   var vCmmi=(typeof c5cmmiLevel==='function')?c5cmmiLevel(overall5):Math.floor(overall5);
   var vBelow=overall5<3.5,belowN=groups.filter(function(g){return (g.score||0)<3.5;}).length;
-  var readCol=overall5>=3?'--good':overall5>=2?'--blue':overall5>=1?'--warn':'--crit';
+  var readCol=overall5>=3.5?'--good':overall5>=2?'--blue':overall5>=1?'--warn':'--crit';
   var gname=function(g){return String(g.name||'').replace(/^[^·]*·\s*/,'')||String(g.id||'');};
   var srcLbl={system:'🔌 telemetry',document:'📄 document',mapped:'🔗 crosswalk',native:'✓ tested','native-pending':'— not tested',none:'— not evidenced'};
   var paFinding='Your <b>'+esc(label)+'</b> posture'+(scLbl?(' for <b>'+esc(scLbl)+'</b>'):'')+' sits at <em>'+(vLevel||'&mdash;')+'</em> (CMMI Level '+vCmmi+') &mdash; '+overall5.toFixed(1)+' of 5, '+(vBelow?'<span class="bad">below the 3.5 target</span>':'at the 3.5 target')+'.';
@@ -6718,9 +6736,12 @@ function c5FrameworksClassic(host){
     var prev=cur;
     if(h.length>=1){prev=Number(h[h.length-1].v);if(h.length>=2&&Math.abs(prev-cur)<0.05)prev=Number(h[h.length-2].v);}
     if(!(prev>=0))prev=cur;
-    var delta=cur-prev,dir=delta>0.049?'up':(delta<-0.049?'down':'flat');
+    // Direction from the DISPLAYED 1-decimal endpoints — never the raw delta — so two values that
+    // round to the same number (2.46 → 2.52 both show 2.5) read "no change", not a false ▲.
+    var pShown=+prev.toFixed(1),cShown=+cur.toFixed(1),delta=cShown-pShown;
+    var dir=delta>0?'up':(delta<0?'down':'flat');
     var col=dir==='up'?'good':(dir==='down'?'crit':'muted');
-    var arrow=dir==='up'?'▲':(dir==='down'?'▼':'▬');
+    var arrow=dir==='up'?'▲':(dir==='down'?'▼':'—');
     var deltaStr=dir==='flat'?'no change':(dir==='up'?'+':'')+delta.toFixed(1);
     var mx=5,b1=Math.max(4,Math.round(prev/mx*26)),b2=Math.max(4,Math.round(cur/mx*26));
     var chart='<span style="display:inline-flex;align-items:flex-end;gap:4px;height:26px" title="last refresh '+prev.toFixed(1)+' → current '+cur.toFixed(1)+'">'
@@ -7341,7 +7362,7 @@ function c5trendBars(hist,cad,fwName){
 function c5fwInspect(card,T,sel,cad){
   var fwName=(typeof FW_NAMES!=='undefined'&&FW_NAMES[sel])||'the framework';
   var trendH=(typeof fwHistory==='function')?fwHistory():[];
-  var trendDelta=(trendH.length>=2)?(trendH[trendH.length-1].v-trendH[0].v):null;
+  var trendDelta=(trendH.length>=2)?(+(trendH[trendH.length-1].v).toFixed(1)-+(trendH[0].v).toFixed(1)):null;
   var m;
   if(card==='overall'){
     m=c5obj({name:'Overall maturity · '+fwName,displayValue:T.overall.toFixed(1)+' / 5',label:'computed',color:c5fwCol(T.overall),
@@ -7375,7 +7396,7 @@ function c5fwInspect(card,T,sel,cad){
       note:'How much of '+fwName+' you can actually evidence today. Connect more tools or upload more policies to raise it.'
         +(unMore>0?(' '+unMore+' more unevidenced control'+(unMore>1?'s are':' is')+' not shown in the table above.'):'')});
   } else if(card==='trend'){
-    m=c5obj({name:'Trend vs last refresh',displayValue:(trendDelta!=null?((trendDelta>=0?'+':'')+trendDelta.toFixed(1)):'Baseline'),label:'computed',color:(trendDelta==null?'ink':trendDelta>=0?'good':'crit'),
+    m=c5obj({name:'Trend vs last refresh',displayValue:(trendDelta==null?'Baseline':(trendDelta===0?'No change':(trendDelta>0?'+':'−')+Math.abs(trendDelta).toFixed(1))),label:'computed',color:(trendDelta==null||trendDelta===0?'ink':trendDelta>0?'good':'crit'),
       formula:'trend = overall CMMI this refresh − overall CMMI at the last recorded '+cad+' refresh',
       method:trendDelta==null?('This is your first recorded refresh — the baseline. The bars grow (green) when overall maturity rises, shrink (red) when it falls, and hold level (grey) when it is flat, from your next '+cad+' reassessment on.'):('Each bar is the overall '+fwName+' maturity at one '+cad+' refresh; direction compares the latest to the one before it.'),
       visual:c5trendBars(trendH,cad,fwName),
