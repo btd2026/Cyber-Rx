@@ -3230,8 +3230,16 @@ function fetchOrgStructure(){
       .catch(function(){});
   }catch(_){}
 }
-function scopeParent(id){return (id&&id.indexOf('_')>0)?id.split('_')[0]:null;}
+// Region vs entity is decided by the ACTUAL org structure, never by string-splitting on "_".
+// (A region id can itself contain an underscore, e.g. "north_america" — the old id.split('_')
+// wrongly treated it as an entity of a non-existent "north" region, so its drill vanished.)
+function scopeParent(id){ // the region id an ENTITY belongs to; null for a region / enterprise / unknown
+  if(!id||id==='enterprise')return null;
+  try{for(var i=0;i<REGIONS.length;i++){var r=REGIONS[i];if(r&&r.entities){for(var j=0;j<r.entities.length;j++){if(r.entities[j].id===id)return r.id;}}}}catch(_){}
+  return null;
+}
 function scopeRegion(id){return id==='enterprise'?null:(scopeParent(id)||id);}
+function isEntityScope(id){return !!scopeParent(id);}  // id belongs to a region ⇒ it's a leaf entity
 function scopeMeta(id){var reg=scopeRegion(id);for(var i=0;i<REGIONS.length;i++){if(REGIONS[i].id===reg)return REGIONS[i];}return REGIONS[0];}
 function scopeLabel(id){if(id==='enterprise')return 'Enterprise';var reg=scopeMeta(id);if(reg&&reg.entities){for(var i=0;i<reg.entities.length;i++){if(reg.entities[i].id===id)return reg.label+' · '+reg.entities[i].label;}}return (reg&&reg.label)||id;}
 function scopeCapture(){try{if(!SIGNALS_BASE&&SIGNALS)SIGNALS_BASE=JSON.parse(JSON.stringify(SIGNALS));if(!LIVE_MASTER&&LIVE)LIVE_MASTER=JSON.parse(JSON.stringify(LIVE));}catch(_){}}
@@ -3421,10 +3429,10 @@ function fetchEntityEvidence(scope){
   }catch(_){}
 }
 function selectScope(id){C5_PRESERVE_SCROLL=true;
-  // Clicking a LEAF ENTITY (id carries a region prefix, e.g. "americas_latam") opens that
-  // entity's control-by-control detail directly — the "details" the user wants, without a
-  // second click. Regions / Enterprise reset to the summary so their entity drill stays visible.
-  try{var isEnt=(id&&id!=='enterprise'&&id.indexOf('_')>0);
+  // Clicking a LEAF ENTITY opens that entity's control detail directly (the "details" the user
+  // wants, no second click). Regions / Enterprise reset to the summary so their drill cards stay
+  // visible. Entity vs region is read from the org structure, not the id string.
+  try{var isEnt=(typeof isEntityScope==='function')?isEntityScope(id):(id&&id!=='enterprise'&&id.indexOf('_')>0);
     if(isEnt){C5_ASSESS_SUBTAB='controls';C5_ASSESS_FORCECTRL=true;}
     else{C5_ASSESS_SUBTAB='summary';C5_ASSESS_FORCECTRL=false;C5_ASSESS_CTRL=null;C5_ASSESS_FN=null;}
   }catch(_){}
