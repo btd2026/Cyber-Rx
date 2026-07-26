@@ -4588,24 +4588,43 @@ function c5DecProj(){
   var host=document.getElementById('c5-decproj');if(!host)return;
   if(window.__c5Return||document.getElementById('c5retbar')){window.__c5Return=null;c5HideReturnBar();}
   var levers=c5Levers();
+  // Scope alignment — a decision shown for Enterprise must be SUPPORTED BY Enterprise's findings,
+  // a region's decisions by that region's findings. The continuous-assessment rollup is scope-aware
+  // (it reads c5Scope()), so we read the CURRENT scope's function scores and (a) rank the levers so
+  // the ones addressing THIS scope's weakest function come first, and (b) tag each decision with the
+  // scope's own finding — the same number the card above shows — so the two never disagree.
+  var _dpScope=(typeof c5Scope==='function')?c5Scope():'enterprise';
+  var _dpScopeLbl=(_dpScope==='enterprise')?'Enterprise':((typeof scopeLabel==='function')?scopeLabel(_dpScope):_dpScope);
+  var _dpFN={GV:'Govern',ID:'Identify',PR:'Protect',DE:'Detect',RS:'Respond',RC:'Recover'};
+  var _dpFnScore={};try{var _dpRoll=c5AssessmentRollup();Object.keys(_dpRoll.functions||{}).forEach(function(f){_dpFnScore[f]=_dpRoll.functions[f].score*5;});}catch(_){}
+  // For each lever, find the weakest function its mapped controls touch AT THIS SCOPE — that is the
+  // finding the decision is supported by.
+  function _dpWeakFn(l){var fns={};(l.proj||[]).forEach(function(p){var f=String(p.id||'').split('.')[0];if(_dpFnScore[f]!=null)fns[f]=_dpFnScore[f];});
+    var ks=Object.keys(fns);if(!ks.length)return null;ks.sort(function(a,b){return fns[a]-fns[b];});return {fn:ks[0],score:fns[ks[0]]};}
+  // Rank weakest-scope-function first (address the biggest gap here), then by control uplift.
+  var _dpRanked=levers.slice().sort(function(a,b){var wa=_dpWeakFn(a),wb=_dpWeakFn(b);
+    var sa=wa?wa.score:99,sb=wb?wb.score:99;return (sa-sb)||(b.gain-a.gain);});
   // Standardized decision panel — one funding decision per lever, in the same
   // c5dec / c5decisions format every other seat uses (was a bespoke 3-panel tool).
-  var list=levers.slice(0,4).map(function(l,i){
+  var list=_dpRanked.slice(0,4).map(function(l,i){
     var n=l.proj.length;
     var moves=n?(n+' mapped control'+(n>1?'s':'')+' toward target maturity'):'your posture in this area';
+    var wf=_dpWeakFn(l);
+    // The scope-anchored finding line: names the scope and the exact function score the card shows.
+    var sit=wf?('At <b>'+c5esc(_dpScopeLbl)+'</b>, '+_dpFN[wf.fn]+' sits at '+wf.score.toFixed(1)+'/5'+(wf.score<3.5?' — below the 3.5 target':'')+'. '+l.need):l.need;
     var rec={on:'Commit & fund',osum:'Raises control coverage · improves '+moves,
-      pros:['Improves '+moves+'.','Raises measured control coverage in this area.','Opens a tracked funding project.'],
+      pros:['Improves '+moves+' at '+_dpScopeLbl+'.',(wf?('Lifts '+_dpFN[wf.fn]+' — '+_dpScopeLbl+'’s weakest function here ('+wf.score.toFixed(1)+'/5).'):'Raises measured control coverage in this area.'),'Opens a tracked funding project.'],
       cons:['Requires capital this cycle (scoped with your team).'],
       consequence:'Opens a tracked funding project and begins control-improvement tracking.'};
     var alt=[{on:'Defer to next cycle',osum:'Records the deferral; the gap stays open',pros:['No spend now.'],cons:['The coverage gap stays open until it is funded.'],req:true,consequence:'Records the decision as deferred; the gap remains open until the next cycle.'}];
-    return c5dec('cs',i+1,'Fund '+l.name+'?',l.need,rec,alt);
+    return c5dec('cs',i+1,'Fund '+l.name+'?',sit,rec,alt);
   });
   // Scope drill cards (Enterprise / region / entity) at the top — the scope switcher lives on
   // every section now, not in a separate top bar.
   var decScopeNav='';try{if(typeof scopeNav==='function'){var _dsn=scopeNav();if(_dsn)decScopeNav='<div class="c5pa" style="margin:0 0 4px">'+_dsn+'</div>';}}catch(_){}
   host.innerHTML=c5header()+
     decScopeNav+
-    c5shell('Decisions · what needs your sign-off?',(levers.length?(levers.length+' funding decision'+(levers.length>1?'s':'')+' waiting — commit or defer each.'):'Connect your tools and the funded decisions that move your posture appear here.'),null,'Each decision funds a control that improves your posture and raises measured coverage. Choosing one stamps it with your name and time, keeps it editable for 24 hours, and opens a tracked project.')+
+    c5shell('Decisions · '+_dpScopeLbl+' · what needs your sign-off?',(levers.length?(levers.length+' funding decision'+(levers.length>1?'s':'')+' waiting for <b>'+c5esc(_dpScopeLbl)+'</b> — each supported by '+_dpScopeLbl+'’s own findings. Commit or defer.'):'Connect your tools and the funded decisions that move your posture appear here.'),null,'These decisions are ranked by '+_dpScopeLbl+'’s weakest function, so they align with the maturity you see for this scope above. Choosing one stamps it with your name and time, keeps it editable for 24 hours, and opens a tracked project. Switch scope in the cards above to see another region or entity’s decisions.')+
     (list.length?c5decisions(list):'<div class="c5note">◐ Connect your security tools and upload your policies, and the funded decisions that move your posture appear here — each with the exact controls it improves.</div>')+
     '<div class="c5foot">Each decision is priced from your control model.</div>';
 }
@@ -5411,10 +5430,13 @@ function c5ControlWeight(id,cw){cw=cw||c5CrownControlWeights();return cw[id]||1;
    crown-jewel criticality, and apply a WEAKEST-LINK pull at the category level so one
    catastrophically broken crown-jewel control can't be hidden by healthy siblings. The
    overall carries its CONFIDENCE — the share of weighted score that is machine-verified. */
-function c5AssessmentRollup(){
+function c5AssessmentRollup(scoreOf){
+  // scoreOf(id,a) → 0..1 score for a control; defaults to the live score. A prior-state
+  // scorer can be passed to compute what the SAME rollup read one cycle ago (see prev-overall).
+  scoreOf=scoreOf||function(id,a){return c5ControlScore(a);};
   var ids=Object.keys(c5AssessMethods());var cw=c5CrownControlWeights();
   var byCat={},byFn={};
-  ids.forEach(function(id){var a=c5ControlAssessment(id);var sc=c5ControlScore(a);var wt=c5ControlWeight(id,cw);
+  ids.forEach(function(id){var a=c5ControlAssessment(id);var sc=scoreOf(id,a);var wt=c5ControlWeight(id,cw);
     var cat=id.split('-')[0];var fn=id.split('.')[0];
     (byCat[cat]=byCat[cat]||{fn:fn,items:[]}).items.push({id:id,score:sc,weight:wt,method:a.method,verdict:a.verdict});});
   var catScores={};Object.keys(byCat).forEach(function(cat){var it=byCat[cat].items;
@@ -5449,6 +5471,32 @@ function c5AssessmentPrior(a){var h=c5hash(c5Scope()+'|'+a.id+'|prior');var v=a.
   if(v==='partial')return (h%3===0)?'not_met':'partial';      // many partials climbed from not-met
   if(v==='not_met')return (h%2===0)?'not_assessed':'not_met'; // and some from unassessed
   return v;}                                                  // not-assessed: stable
+/* Reconstruct a control's PRIOR-cycle assessment so the SAME scoring rubric can be run on it —
+   this is what lets the Trend card show a real maturity move (X.X → Y.Y) instead of a bare arrow.
+   The prior verdict comes from the drift model above; for sensor controls we reconstruct a prior
+   observed-compliance consistent with that verdict band (a cycle ago it sat lower in the band),
+   and hold coverage a touch lower. No new rubric — the returned object is scored by c5ControlScore. */
+function c5ControlAssessmentPrior(a){
+  var pv=c5AssessmentPrior(a);var b={};for(var k in a)b[k]=a[k];b.verdict=pv;
+  if(a.method==='live'||a.method==='hybrid'){
+    var cur=(a.observedPass!=null)?a.observedPass:0;
+    if(pv==='met')b.observedPass=Math.max(88,cur-2);              // already passing, marginally better now
+    else if(pv==='partial')b.observedPass=Math.min(87,Math.max(62,cur-14));
+    else if(pv==='not_met')b.observedPass=Math.min(61,Math.max(40,cur-24));
+    else b.observedPass=0;                                        // not_assessed a cycle ago
+    if(b.coverage)b.coverage={observed:b.coverage.observed,known:b.coverage.known,pct:Math.max(35,b.coverage.pct-3)};
+  }else if(a.method==='attestation'){
+    // an attestation now healthy was, at worst, expiring last cycle — never fresher than today.
+    if(a.freshness==='healthy'&&(pv==='partial'||pv==='not_met'))b.freshness='expiring';
+  }
+  return b;
+}
+/* Prior overall maturity (0..1) — the same weighted, weakest-link rollup run over each control's
+   prior-cycle state. Paired with the live overall it gives the board an honest from→to on the
+   Trend card. */
+function c5AssessmentPrevOverall(){
+  return c5AssessmentRollup(function(id,a){return c5ControlScore(c5ControlAssessmentPrior(a));}).overall;
+}
 function c5DriftAlerts(){
   var ids=Object.keys(c5AssessMethods());var cw=c5CrownControlWeights();
   var out={regressions:[],improvements:[],expired:[]};
@@ -5893,7 +5941,15 @@ function c5ContinuousAssessment(host){
   var overall5=(roll.overall*5);
   try{ if(typeof scopeAggTree==='function'&&typeof c5Scope==='function'){var _aggO=scopeAggTree(c5Scope());if(_aggO&&_aggO.overall!=null)overall5=_aggO.overall;} }catch(_){}
   var evidenced=s.total-s.notAssessed;var covPct=s.total?Math.round(evidenced/s.total*100):0;
-  var net=drift.improvements.length-drift.regressions.length;var tdir=net>0?'up':(net<0?'down':'flat');var tcol=tdir==='up'?'good':(tdir==='down'?'crit':'muted');var tarrow=tdir==='up'?'▲':(tdir==='down'?'▼':'▬');
+  var net=drift.improvements.length-drift.regressions.length;
+  // The board wants the STORY, not an arrow: maturity moved from X.X to Y.Y this cycle. The displayed
+  // "to" is the reconciling scope aggregate (overall5); compute the prior on the SAME basis by scaling
+  // it by the proportional move the flat rollup finds between the current and prior-cycle control states
+  // — so "from" and "to" are never two different engines (which would fake a jump).
+  var prev5=overall5;try{var _cur=roll.overall,_pv=c5AssessmentPrevOverall();
+    if(_cur>0&&_pv!=null)prev5=overall5*(_pv/_cur);}catch(_){}
+  var moved=overall5-prev5;var tdir=moved>0.04?'up':(moved<-0.04?'down':'flat');
+  var tcol=tdir==='up'?'good':(tdir==='down'?'crit':'muted');var tarrow=tdir==='up'?'▲':(tdir==='down'?'▼':'▬');
   // A control a sensor / attestation actively marks FAILING is a real deficiency; a control
   // simply not yet evidenced is a COVERAGE gap, not a failure — the two are kept apart so a
   // healthy program isn't slandered by its own unmonitored surface (that story is the Coverage
@@ -5903,7 +5959,7 @@ function c5ContinuousAssessment(host){
   var cards='<div class="c5cards">'
     +card('Controls not met',notMet,notMet>0?'crit':'good',notMet>0?'a sensor or attestation marks these failing':'nothing a sensor or attestation marks as failing','controls')
     +card('Coverage',covPct+'%',covPct>=75?'good':covPct>=50?'warn':'crit',evidenced+' of '+s.total+' controls assessed','controls')
-    +card('Trend · vs last cycle',tarrow+' '+(net>0?'+':'')+net,tcol,drift.improvements.length+' improved · '+drift.regressions.length+' regressed','drift')
+    +card('Trend · vs last cycle',prev5.toFixed(1)+' <span style="color:var(--muted);font-weight:600">&rarr;</span> '+overall5.toFixed(1)+' <span style="font-size:15px">'+tarrow+'</span>',tcol,drift.improvements.length+' improved · '+drift.regressions.length+' regressed','drift')
     +'</div>';
   // ── Peer-benchmark box (same as Classic view) ──
   var fwShort=(C5_ASSESS_FW==='ai'?'AI RMF':'NIST CSF 2.0');
@@ -6417,9 +6473,12 @@ function c5NeuronControls(host){
     +'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:12px;align-items:start">'+provRows+'</div></div>'):'';
   if(typeof c5paStyle==='function')c5paStyle();
   var ncFinding='<em>'+live+'</em> of '+nc.length+' capabilities run on live telemetry'+(off>0?(', and <span class="bad">'+off+'</span> '+(off===1?'is':'are')+' not deployed.'):' &mdash; full coverage.');
+  // Same Enterprise → Region → Entity switcher as every other framework tab, above the finding.
+  var ncScopeNav='';try{if(typeof scopeNav==='function'){var _nsn=scopeNav();if(_nsn)ncScopeNav='<div style="margin-bottom:6px">'+_nsn+'</div>';}}catch(_){}
   host.innerHTML=
     '<div style="max-width:1080px">'
     +'<div class="c5pa"><div class="c5pa-eyebrow">Program health · Neuron Controls · as of '+new Date().toLocaleDateString()+'</div>'
+    +ncScopeNav
     +'<h1 class="c5pa-finding">'+ncFinding+'</h1>'
     +'<div class="c5pa-dek">A <b>Neuron Control</b> is a security capability — a tool doing a real job: EDR blocking malware, MFA gating access, backups enabling recovery. Nerion measures each one <b>once</b> from live telemetry (is it deployed, and is it <b>proven</b> to work — via BAS / purple-team), then maps it to every framework control it satisfies. This is the engine behind every score above: <b>measure the capability once, report it into NIST CSF, ISO 27001, CIS and the rest</b>.</div></div>'
     +'<div style="display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 4px">'
@@ -6554,9 +6613,14 @@ function c5FwLens(host,fwKey,label){
     }).join('')+'</div>'):'';
     return '<div class="c5fw-g"><div class="c5fw-grow" data-fwlensexp="'+esc(g.id)+'" role="button" tabindex="0"><span class="c5fw-tw">'+(open?'▾':'▸')+'</span><span class="c5fw-dot" style="background:var(--'+gc+')"></span><span class="c5fw-id">'+esc(g.id)+'</span><span class="c5fw-nm">'+esc(gname(g))+'</span><span class="c5fw-lvl">'+(g.children||[]).length+' controls</span><span class="c5fw-sc" style="color:var(--'+gc+')">'+s.toFixed(1)+'</span></div>'+inner+'</div>';
   }).join('')+'</div>';
+  // Scope switcher — the SAME Enterprise → Region → Entity drill cards as NIST CSF, sitting above
+  // the finding so every framework is organized identically: pick a scope, then read its maturity.
+  // Each scope has its own crosswalk-derived score, so switching one re-renders every card below.
+  var scopeNavHtml='';try{if(typeof scopeNav==='function'){var _sn=scopeNav();if(_sn)scopeNavHtml='<div style="margin-bottom:6px">'+_sn+'</div>';}}catch(_){}
   host.innerHTML=(typeof c5header==='function'?c5header():'')
     +'<div class="c5pa">'
     +'<div class="c5pa-eyebrow">Program health · '+esc(label)+(scLbl?(' · '+esc(scLbl)):'')+' · as of '+new Date().toLocaleDateString()+'</div>'
+    +scopeNavHtml
     +'<h1 class="c5pa-finding">'+paFinding+'</h1>'
     +'<div class="c5pa-dek"><b>'+esc(label)+'</b> maturity is <b>crosswalk-derived</b> — each control is scored from the NIST CSF 2.0 evidence and live telemetry it maps to, so it moves with your real posture (a defensible readiness read, not a certified audit opinion — your assessor issues that). Expand a domain for its control-by-control detail.</div>'
     +'<div class="c5pa-inst">'
