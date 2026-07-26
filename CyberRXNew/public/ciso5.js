@@ -6809,7 +6809,14 @@ function c5AiFwView(host,fwKey){
     +'<div class="c5pa-kpis">'+cards+'</div>'
     +'</div>'
     +tree
-    +'<div class="c5foot">'+esc(label)+' controls are scored from your onboarding AI-governance attestation. AI governance is documented posture, not machine-verified assurance — connect an AI-security tool (AI-SPM / guardrails / gateway) to graduate these to live evidence.</div>';
+    +'<div class="c5foot">'+esc(label)+' controls are scored from your onboarding AI-governance attestation. AI governance is documented posture, not machine-verified assurance — connect an AI-security tool (AI-SPM / guardrails / gateway) to graduate these to live evidence.'
+      +'<div style="margin-top:6px;font-size:10px;color:var(--muted)">'+({
+        owasp:'Category names from the OWASP Top 10 for LLM &amp; Agentic Applications (© OWASP Foundation, CC BY-SA 4.0), referenced for interoperability. Nerion is independent and not affiliated with or endorsed by OWASP.',
+        atlas:'Tactic / technique identifiers from MITRE ATLAS™ (© The MITRE Corporation), used with attribution. ATLAS and ATT&amp;CK are trademarks of The MITRE Corporation; Nerion is independent and not endorsed by MITRE.',
+        iso:'ISO/IEC 42001 clauses referenced by number with Nerion-authored labels; the licensed ISO text is not reproduced. ISO is a trademark of the International Organization for Standardization.',
+        eu:'References the EU AI Act (Regulation (EU) 2024/1689); article numbers are cited for mapping. Not legal advice.',
+        rmf:'Based on the NIST AI Risk Management Framework (NIST AI 100-1, U.S. Government, public domain).'
+      }[fwKey]||'Framework names are the property of their respective owners; controls are referenced by identifier with Nerion-authored labels.')+'</div></div>';
   function open(id){C5_AIFW_CTRL=(C5_AIFW_CTRL===id)?null:id;c5AiFwView(host,fwKey);}
   host.querySelectorAll('[data-aifwctl]').forEach(function(r){var go=function(){open(r.getAttribute('data-aifwctl'));};r.onclick=go;r.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}};});
   host.querySelectorAll('[data-pafn]').forEach(function(r){r.onclick=function(){open(r.getAttribute('data-pafn'));};});
@@ -6895,7 +6902,8 @@ function c5FwLens(host,fwKey,label){
     +'</div>'
     +tree
     +ctlDetail
-    +'<div class="c5foot">Crosswalk mapping: '+esc(label)+' controls inherit the maturity of the NIST CSF 2.0 controls they map to (public crosswalk). Where a tool evidences a control directly, that telemetry is used instead. This is a readiness indicator — your certification body issues the audit opinion.</div>';
+    +'<div class="c5foot">Crosswalk mapping: '+esc(label)+' controls inherit the maturity of the NIST CSF 2.0 controls they map to (public crosswalk). Where a tool evidences a control directly, that telemetry is used instead. This is a readiness indicator — your certification body issues the audit opinion.'
+      +'<div style="margin-top:6px;font-size:10px;color:var(--muted)">'+esc(label)+' controls are referenced by identifier only, with Nerion-authored plain-English labels; the licensed standard text is not reproduced. ISO and CIS are trademarks of their respective owners (ISO; the Center for Internet Security). Nerion is independent and not affiliated with or endorsed by them.</div></div>';
   host.querySelectorAll('[data-fwlensexp]').forEach(function(b){var go=function(){var k=fwKey+'|'+b.getAttribute('data-fwlensexp');C5_FWLENS_EXP[k]=!C5_FWLENS_EXP[k];c5FwLens(host,fwKey,label);};b.onclick=go;b.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}};});
   // Sub-control rows → open (toggle) that control's detail, like CSF.
   host.querySelectorAll('[data-fwctl]').forEach(function(row){var go=function(){var k=row.getAttribute('data-fwctl');C5_FWLENS_CTRL=(C5_FWLENS_CTRL===k)?null:k;c5FwLens(host,fwKey,label);};row.onclick=go;row.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}};});
