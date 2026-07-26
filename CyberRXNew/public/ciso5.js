@@ -4794,6 +4794,8 @@ var C5_ASSESS_EXP=null, C5_ASSESS_CTRL=null, C5_ASSESS_DRIFT_ALL=false;
 var C5_ASSESS_FN=null;
 // Set when a KPI card (coverage / controls-failing) opens the controls list at any scope.
 var C5_ASSESS_FORCECTRL=false;
+// When a KPI card opens the controls view filtered to a subset: null | 'notmet' | 'unassessed'.
+var C5_ASSESS_FILTER=null;
 // Continuous-assessment sub-tab: 'summary' (exec overview) · 'controls' (per-scope detail) · 'drift'.
 var C5_ASSESS_SUBTAB='summary';
 function c5CjtSrc(){try{return new URL('crownjewel-tree.html',location.href).href;}catch(_){return 'crownjewel-tree.html';}}
@@ -6007,8 +6009,8 @@ function c5ContinuousAssessment(host){
   var notMet=s.notMet;
   // Overall maturity is the gauge above, so it's not repeated here. The rest drill to detail.
   var cards='<div class="c5cards">'
-    +card('Controls not met',notMet,notMet>0?'crit':'good',notMet>0?'a sensor or attestation marks these failing':'nothing a sensor or attestation marks as failing','controls')
-    +card('Coverage',covPct+'%',covPct>=75?'good':covPct>=50?'warn':'crit',evidenced+' of '+s.total+' controls assessed','controls')
+    +card('Controls not met',notMet,notMet>0?'crit':'good',notMet>0?'a sensor or attestation marks these failing':'nothing a sensor or attestation marks as failing','notmet')
+    +card('Coverage',covPct+'%',covPct>=75?'good':covPct>=50?'warn':'crit',evidenced+' of '+s.total+' controls assessed','coverage')
     +card('Trend · vs last cycle',(tdir==='flat'?(nowShown.toFixed(1)+' <span style="font-size:13px;color:var(--muted);font-weight:600">unchanged</span>'):(prev5.toFixed(1)+' <span style="color:var(--muted);font-weight:600">&rarr;</span> '+overall5.toFixed(1)+' <span style="font-size:15px">'+tarrow+'</span>')),tcol,drift.improvements.length+' improved · '+drift.regressions.length+' regressed'+(tdir==='flat'&&(drift.improvements.length||drift.regressions.length)?' <span style="color:var(--muted)">· net below 0.1</span>':''),'drift')
     +'</div>';
   // ── Peer-benchmark box (same as Classic view) ──
@@ -6027,6 +6029,33 @@ function c5ContinuousAssessment(host){
     var inner=open?('<div style="padding:4px 14px 12px 30px">'+assessTable(F.k)+'</div>'):'';
     return '<div class="c5fw-g"><div class="c5fw-grow" data-assessexp="'+F.k+'"><span class="c5fw-tw">'+(open?'▾':'▸')+'</span><span class="c5fw-dot" style="background:var(--'+gc+')"></span><span class="c5fw-id">'+F.k+'</span><span class="c5fw-nm">'+F.l+'</span><span class="c5fw-lvl">'+cids.length+' controls</span><span class="c5fw-sc" style="color:var(--'+gc+')">'+(v*5).toFixed(1)+'</span></div>'+inner+'</div>';
   }).join('')+'</div>';
+  // A FILTERED control list — what the KPI cards open, so "Controls not met" shows only the failing
+  // controls and "Coverage" shows only the ones still awaiting evidence, instead of dumping all 106.
+  function assessFilterList(kind){
+    var cfg={
+      notmet:{pred:function(a){return a.verdict==='not_met';},
+        title:'Controls a sensor or attestation marks NOT MET',
+        empty:'<b style="color:var(--good)">Nothing is failing.</b> No control is currently marked not-met by a sensor or a fresh attestation. Coverage gaps (controls not yet evidenced) are a separate story — see the Coverage card.',
+        lead:'These are real deficiencies — a connected sensor or a current attestation actively reports the control as failing. Click any control for the finding and the fix.'},
+      unassessed:{pred:function(a){return a.verdict==='not_assessed';},
+        title:'Controls still AWAITING evidence (the coverage gap)',
+        empty:'<b style="color:var(--good)">Full coverage.</b> Every control is currently evidenced by a sensor or a fresh attestation.',
+        lead:'These are not failures — they are the coverage gap: controls with no live sensor wired or whose attestation has lapsed, so Nerion cannot yet prove them either way. Connect the source or refresh the attestation to light each one up.'}
+    }[kind];
+    if(!cfg)return tree;
+    var matched=ids.filter(function(id){return cfg.pred(c5ControlAssessment(id));}).sort();
+    var head='<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:2px">'
+      +'<div style="font-size:13px;font-weight:700;color:var(--ink)">'+cfg.title+' <span style="color:var(--muted);font-weight:600">· '+matched.length+'</span></div>'
+      +'<span data-assessall="1" role="button" tabindex="0" style="font-size:11px;font-weight:600;color:var(--blue);cursor:pointer">show all controls &rsaquo;</span></div>'
+      +'<div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:8px">'+cfg.lead+'</div>';
+    if(!matched.length)return '<div class="c5fw-tree" style="padding:2px">'+head+'<div style="border:1px solid var(--line);border-radius:12px;padding:16px 18px;background:var(--surface);font-size:12.5px;color:var(--ink-2);line-height:1.55">'+cfg.empty+'</div></div>';
+    var thin='text-align:left;padding:6px 14px 8px 0;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);border-bottom:1px solid var(--line);vertical-align:middle';
+    var tbl='<div style="overflow-x:auto;margin-top:2px"><table style="border-collapse:collapse;width:100%;min-width:480px;table-layout:fixed">'
+      +'<colgroup><col style="width:104px"><col style="width:124px"><col style="width:78px"><col></colgroup>'
+      +'<thead><tr>'+['Control','Verdict','Score','Proof · how evidenced, how fresh'].map(function(h){return '<th style="'+thin+'">'+h+'</th>';}).join('')+'</tr></thead>'
+      +'<tbody>'+matched.map(assessRow).join('')+'</tbody></table></div>';
+    return '<div class="c5fw-tree" style="padding:2px">'+head+tbl+'</div>';
+  }
   var detail=C5_ASSESS_CTRL?c5AssessDetail(C5_ASSESS_CTRL):'<div class="c5fw-detail"><div style="font-size:12px;color:var(--muted)">Open a function and click a control to see its method, the three axes, freshness, cadence and evidence.</div></div>';
   // ── Scope switcher — the same Enterprise → Region → Entity navigation as the top banner,
   // dropped in here so you can move scope without leaving Continuous assessment. Each scope
@@ -6106,7 +6135,8 @@ function c5ContinuousAssessment(host){
     : '';
   var subBody;
   if(C5_ASSESS_SUBTAB==='controls'){
-    subBody=cadenceBar+'<div class="c5fw-wrap"><div class="c5fw-right">'+tree+'</div><div class="c5fw-left" id="assessDetail">'+detail+'</div></div>';
+    var rightPane=C5_ASSESS_FILTER?assessFilterList(C5_ASSESS_FILTER):tree;
+    subBody=cadenceBar+'<div class="c5fw-wrap"><div class="c5fw-right">'+rightPane+'</div><div class="c5fw-left" id="assessDetail">'+detail+'</div></div>';
   }else if(C5_ASSESS_SUBTAB==='drift'){
     subBody=driftPanel||'<div style="border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:14px;background:var(--surface);font-size:12px;color:var(--muted)">✓ No control has drifted since the last assessment.</div>';
   }else{ // summary (default) — assurance hero, then peer benchmark + queue.
@@ -6178,31 +6208,36 @@ function c5ContinuousAssessment(host){
   // Wiring — scope switcher, cadence overrides, confirm actions, expand/collapse, control select, detail close.
   // Picking a region/entity shows THAT scope's summary (the finding + instrument), so you can
   // read Enterprise → Region → Entity the same way. Click a function to drill into its controls.
-  host.querySelectorAll('[data-scope]').forEach(function(b){b.onclick=function(){var t=b.getAttribute('data-scope');C5_ASSESS_SUBTAB='summary';C5_ASSESS_FN=null;C5_ASSESS_CTRL=null;C5_ASSESS_FORCECTRL=false;if(typeof selectScope==='function')selectScope(t);};});
+  host.querySelectorAll('[data-scope]').forEach(function(b){b.onclick=function(){var t=b.getAttribute('data-scope');C5_ASSESS_SUBTAB='summary';C5_ASSESS_FN=null;C5_ASSESS_CTRL=null;C5_ASSESS_FORCECTRL=false;C5_ASSESS_FILTER=null;if(typeof selectScope==='function')selectScope(t);};});
   host.querySelectorAll('[data-cadence]').forEach(function(sel){sel.addEventListener('change',function(e){e.stopPropagation();
     c5SetCadence(sel.getAttribute('data-cadence'),sel.value);c5ContinuousAssessment(host);});});
   host.querySelectorAll('[data-confirm]').forEach(function(btn){btn.addEventListener('click',function(e){e.stopPropagation();
     var v=btn.getAttribute('data-confirm').split(':');c5ConfirmControl(v[1],(v[0]==='clear')?null:v[0]);c5ContinuousAssessment(host);});});
-  host.querySelectorAll('[data-asssub]').forEach(function(b){b.onclick=function(){C5_ASSESS_SUBTAB=b.getAttribute('data-asssub');c5ContinuousAssessment(host);};});
+  host.querySelectorAll('[data-asssub]').forEach(function(b){b.onclick=function(){C5_ASSESS_SUBTAB=b.getAttribute('data-asssub');if(C5_ASSESS_SUBTAB==='summary')C5_ASSESS_FILTER=null;c5ContinuousAssessment(host);};});
+  // "show all controls" inside a filtered list → clear the filter, expand every function.
+  var _saAll=host.querySelector('[data-assessall]');if(_saAll)_saAll.onclick=function(){C5_ASSESS_FILTER=null;C5_ASSESS_FORCECTRL=true;C5_ASSESS_FN=null;C5_ASSESS_CTRL=null;C5_ASSESS_EXP={GV:1,ID:1,PR:1,DE:1,RS:1,RC:1,GOVERN:1,MAP:1,MEASURE:1,MANAGE:1};C5_ASSESS_SUBTAB='controls';c5ContinuousAssessment(host);};
   host.querySelectorAll('[data-assessexp]').forEach(function(b){b.onclick=function(){var k=b.getAttribute('data-assessexp');C5_ASSESS_EXP[k]=!C5_ASSESS_EXP[k];c5ContinuousAssessment(host);};});
   host.querySelectorAll('[data-assessctl]').forEach(function(row){row.onclick=function(e){if(e.target.closest('select')||e.target.closest('[data-confirm]'))return;C5_ASSESS_CTRL=row.getAttribute('data-assessctl');C5_ASSESS_SUBTAB='controls';c5ContinuousAssessment(host);};});
   // Clickable KPI cards — drill straight to the detail behind the number, at any scope.
   host.querySelectorAll('[data-kpi]').forEach(function(c){
     function go(){var t=c.getAttribute('data-kpi');
-      if(t==='drift'){C5_ASSESS_SUBTAB='drift';C5_ASSESS_FORCECTRL=false;}
-      else{C5_ASSESS_FORCECTRL=true;C5_ASSESS_FN=null;C5_ASSESS_CTRL=null;C5_ASSESS_EXP={GV:1,ID:1,PR:1,DE:1,RS:1,RC:1,GOVERN:1,MAP:1,MEASURE:1,MANAGE:1};C5_ASSESS_SUBTAB='controls';}
+      // Each card opens exactly its own subset, not the full list: Trend → drift; Controls-not-met →
+      // the failing controls only; Coverage → the controls still awaiting evidence only.
+      if(t==='drift'){C5_ASSESS_SUBTAB='drift';C5_ASSESS_FORCECTRL=false;C5_ASSESS_FILTER=null;}
+      else if(t==='notmet'||t==='coverage'){C5_ASSESS_FILTER=(t==='coverage')?'unassessed':'notmet';C5_ASSESS_FORCECTRL=true;C5_ASSESS_FN=null;C5_ASSESS_CTRL=null;C5_ASSESS_SUBTAB='controls';}
+      else{C5_ASSESS_FILTER=null;C5_ASSESS_FORCECTRL=true;C5_ASSESS_FN=null;C5_ASSESS_CTRL=null;C5_ASSESS_EXP={GV:1,ID:1,PR:1,DE:1,RS:1,RC:1,GOVERN:1,MAP:1,MEASURE:1,MANAGE:1};C5_ASSESS_SUBTAB='controls';}
       c5ContinuousAssessment(host);
       var d=host.querySelector('#assessDetail')||host.querySelector('.c5fw-wrap')||host.querySelector('.subwrap');if(d&&d.scrollIntoView)try{d.scrollIntoView({behavior:'smooth',block:'start'});}catch(_){}}
     c.onclick=go;c.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}};});
   // Clickable functions (blend ledger) — open the picked function's controls at any scope.
   host.querySelectorAll('[data-pafn]').forEach(function(row){
-    function open(){C5_ASSESS_FN=row.getAttribute('data-pafn');C5_ASSESS_CTRL=null;C5_ASSESS_EXP={};C5_ASSESS_EXP[C5_ASSESS_FN]=true;C5_ASSESS_SUBTAB='controls';c5ContinuousAssessment(host);
+    function open(){C5_ASSESS_FN=row.getAttribute('data-pafn');C5_ASSESS_CTRL=null;C5_ASSESS_FILTER=null;C5_ASSESS_EXP={};C5_ASSESS_EXP[C5_ASSESS_FN]=true;C5_ASSESS_SUBTAB='controls';c5ContinuousAssessment(host);
       var d=host.querySelector('#assessDetail')||host.querySelector('.c5fw-wrap');if(d&&d.scrollIntoView)try{d.scrollIntoView({behavior:'smooth',block:'center'});}catch(_){}}
     row.onclick=open;row.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}};});
   // Clickable maturity gauge — opens the full control breakdown (every function expanded) that
   // the headline score is built from, so the gauge box is a door to the evidence, not just a dial.
   host.querySelectorAll('[data-pagauge]').forEach(function(g){
-    function openAll(){C5_ASSESS_FORCECTRL=true;C5_ASSESS_FN=null;C5_ASSESS_CTRL=null;C5_ASSESS_EXP={GV:1,ID:1,PR:1,DE:1,RS:1,RC:1,GOVERN:1,MAP:1,MEASURE:1,MANAGE:1};C5_ASSESS_SUBTAB='controls';c5ContinuousAssessment(host);
+    function openAll(){C5_ASSESS_FORCECTRL=true;C5_ASSESS_FN=null;C5_ASSESS_CTRL=null;C5_ASSESS_FILTER=null;C5_ASSESS_EXP={GV:1,ID:1,PR:1,DE:1,RS:1,RC:1,GOVERN:1,MAP:1,MEASURE:1,MANAGE:1};C5_ASSESS_SUBTAB='controls';c5ContinuousAssessment(host);
       var d=host.querySelector('#assessDetail')||host.querySelector('.c5fw-wrap')||host.querySelector('.subwrap');if(d&&d.scrollIntoView)try{d.scrollIntoView({behavior:'smooth',block:'start'});}catch(_){}}
     g.onclick=openAll;g.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();openAll();}};});
   var acl=host.querySelector('[data-assessclose]');if(acl)acl.onclick=function(){C5_ASSESS_CTRL=null;c5ContinuousAssessment(host);};
@@ -6631,7 +6666,7 @@ function nerionInternal(){try{return (typeof localStorage!=='undefined'&&localSt
    it moves with your real posture. Kept honest: every control shows how it's evidenced, and the
    dek states the score is crosswalk-derived (readiness), not a certified audit opinion. */
 var C5_FWLENS_EXP={},C5_FWLENS_CTRL=null,C5_FWLENS_KPI=null;
-var C5_AIFW='rmf',C5_AIFW_CTRL=null;
+var C5_AIFW='rmf',C5_AIFW_CTRL=null,C5_AIFW_FILTER=null;
 /* AI-frameworks tab — a second-level selector so a CISO can move between the five recognised AI
    frameworks. NIST AI RMF uses the honest continuous-assessment view; ISO/IEC 42001, OWASP LLM &
    Agentic Top 10, MITRE ATLAS and the EU AI Act are attestation-evidenced governance frameworks
@@ -6645,7 +6680,7 @@ function c5AiFrameworkTab(host){
     +order.map(function(k){return '<button class="subtab'+(C5_AIFW===k?' on':'')+'" data-aifwk="'+esc(k)+'" role="tab" aria-selected="'+(C5_AIFW===k)+'">'+esc((cat[k]&&cat[k].short)||k)+'</button>';}).join('')
     +'</div></div>';
   host.innerHTML=pills+'<div id="c5aifw-body"></div>';
-  host.querySelectorAll('[data-aifwk]').forEach(function(b){b.onclick=function(){C5_AIFW=b.getAttribute('data-aifwk');C5_AIFW_CTRL=null;c5AiFrameworkTab(host);};});
+  host.querySelectorAll('[data-aifwk]').forEach(function(b){b.onclick=function(){C5_AIFW=b.getAttribute('data-aifwk');C5_AIFW_CTRL=null;C5_AIFW_FILTER=null;c5AiFrameworkTab(host);};});
   var body=host.querySelector('#c5aifw-body');
   if(C5_AIFW==='rmf'){C5_ASSESS_FW='ai';c5ContinuousAssessment(body);}   // the honest continuous view
   else c5AiFwView(body,C5_AIFW);
@@ -6678,10 +6713,10 @@ function c5AiFwView(host,fwKey){
   // Weakest-first control ledger (id · name · bar · score) — clickable to open each control's detail.
   var barItems=allC.slice().sort(function(a,b){return a.cmmi-b.cmmi;}).map(function(c){return {id:c.id,name:c.name,s:c.cmmi,key:c.id};});
   var profileInner=(typeof c5paBars==='function')?c5paBars(barItems,{clickable:true}):'';   // rows carry data-pafn = control id
-  function card(l,v,vc,cn){return '<div class="c5card"><div class="c5card-top"><span class="c5card-l">'+l+'</span><span class="c5chip c5-computed">computed</span></div><div class="c5card-v" style="color:var(--'+vc+')">'+v+'</div><div class="cn">'+cn+'</div></div>';}
+  function card(l,v,vc,cn,kpi){var go=kpi?'<span class="c5card-go-lbl">view &rsaquo;</span>':'<span class="c5chip c5-computed">computed</span>';return '<div class="c5card'+(kpi?' c5card-go':'')+'"'+(kpi?(' data-aifwkpi="'+kpi+'" role="button" tabindex="0" title="View '+esc(l)+'"'):'')+'><div class="c5card-top"><span class="c5card-l">'+l+'</span>'+go+'</div><div class="c5card-v" style="color:var(--'+vc+')">'+v+'</div><div class="cn">'+cn+'</div></div>';}
   var cards='<div class="c5cards">'
-    +card('Controls below target',belowN+' / '+allC.length,belowN?'warn':'good','under CMMI 3.5')
-    +card('Attestation coverage',covPct+'%',covPct>=75?'good':covPct>=50?'warn':'crit',attested+' of '+allC.length+' controls attested')
+    +card('Controls below target',belowN+' / '+allC.length,belowN?'warn':'good','under CMMI 3.5','below')
+    +card('Attestation coverage',covPct+'%',covPct>=75?'good':covPct>=50?'warn':'crit',attested+' of '+allC.length+' controls attested','coverage')
     +card('Overall maturity',overall5.toFixed(1)+' / 5',readCol.replace('--',''),(vLevel||'')+' · target 3.5')
     +'</div>';
   // Control rows + inline detail (method / finding / recommendation), same drill affordance as CSF/ISO.
@@ -6694,14 +6729,21 @@ function c5AiFwView(host,fwKey){
       +(c.rec?('<div class="ev-sec">Recommendation</div><div class="drill-p">'+c.rec+'</div>'):'')
       +'<div class="ev-sec">Evidence basis</div><div class="drill-p" style="font-size:11px;color:var(--muted)">Governance attestation from your onboarding AI intake. AI governance has no runtime security sensor wired, so this is a documented-posture read (self-reported), not machine-verified — connect an AI-security tool to graduate it.</div>'
     +'</div>';}
+  // The KPI cards filter this list to exactly their subset (below-target / un-attested), not a dump.
+  var _fpred=C5_AIFW_FILTER==='below'?function(c){return c.cmmi<3.5;}:C5_AIFW_FILTER==='coverage'?function(c){return c.cmmi<=0;}:null;
+  var _fmatched=0;
   var listRows=groups.map(function(gr){
+    var ctrls=_fpred?gr.controls.filter(_fpred):gr.controls;_fmatched+=ctrls.length;
+    if(!ctrls.length)return '';
     var head=(groups.length>1)?('<div style="font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:14px 0 4px">'+esc(gr.name)+'</div>'):'';
-    var rows=gr.controls.map(function(c){var cc=c.cmmi>=3.5?'good':c.cmmi>=2?'blue':c.cmmi>=1?'warn':'crit',sel=(c.id===C5_AIFW_CTRL);
+    var rows=ctrls.map(function(c){var cc=c.cmmi>=3.5?'good':c.cmmi>=2?'blue':c.cmmi>=1?'warn':'crit',sel=(c.id===C5_AIFW_CTRL);
       var row='<div data-aifwctl="'+esc(c.id)+'" role="button" tabindex="0" title="Open '+esc(c.id)+' detail" style="display:flex;align-items:center;gap:10px;padding:6px 8px;margin:0 -8px;border-top:1px solid var(--line);cursor:pointer;border-radius:6px;background:'+(sel?'color-mix(in srgb,var(--blue) 7%,transparent)':'transparent')+'"><span style="font-family:var(--mono);font-size:11px;color:var(--'+(sel?'blue':'ink')+');min-width:96px">'+esc(c.id)+' ›</span><span style="flex:1;font-size:12px;color:var(--ink-2)">'+esc(c.name||'')+'</span><span style="font-size:10px;color:var(--muted);min-width:70px">'+esc(srcLbl[c.src]||'attested')+'</span><span style="font-size:13px;font-weight:700;color:var(--'+cc+');min-width:30px;text-align:right">'+c.cmmi.toFixed(1)+'</span></div>';
       return row+(sel?ctlDetail(c):'');});
     return head+rows.join('');
   }).join('');
-  var tree='<div class="c5fw-tree" style="margin-top:22px">'+listRows+'</div>';
+  var filterHead=C5_AIFW_FILTER?('<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:6px"><div style="font-size:12px;font-weight:700;color:var(--ink)">'+(C5_AIFW_FILTER==='below'?'Controls below the 3.5 target':'Controls not yet attested (the coverage gap)')+' <span style="color:var(--muted);font-weight:600">· '+_fmatched+'</span></div><span data-aifwall="1" role="button" tabindex="0" style="font-size:11px;font-weight:600;color:var(--blue);cursor:pointer">show all controls &rsaquo;</span></div>'):'';
+  var emptyMsg=(C5_AIFW_FILTER&&_fmatched===0)?'<div style="border:1px solid var(--line);border-radius:12px;padding:16px 18px;background:var(--surface);font-size:12.5px;color:var(--good)"><b>None.</b> Every '+esc(label)+' control '+(C5_AIFW_FILTER==='below'?'meets the 3.5 target.':'is attested.')+'</div>':'';
+  var tree='<div class="c5fw-tree" style="margin-top:22px">'+filterHead+(emptyMsg||listRows)+'</div>';
   host.innerHTML=(typeof c5header==='function'?c5header():'')
     +'<div class="c5pa">'
     +'<div class="c5pa-eyebrow">Program health · '+esc(label)+' · as of '+new Date().toLocaleDateString()+'</div>'
@@ -6719,6 +6761,9 @@ function c5AiFwView(host,fwKey){
   host.querySelectorAll('[data-aifwctl]').forEach(function(r){var go=function(){open(r.getAttribute('data-aifwctl'));};r.onclick=go;r.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}};});
   host.querySelectorAll('[data-pafn]').forEach(function(r){r.onclick=function(){open(r.getAttribute('data-pafn'));};});
   var cx=host.querySelector('[data-aifwclose]');if(cx)cx.onclick=function(){C5_AIFW_CTRL=null;c5AiFwView(host,fwKey);};
+  // KPI cards → filter the control list to their subset (below-target / un-attested), not a dump.
+  host.querySelectorAll('[data-aifwkpi]').forEach(function(cd){var go=function(){var k=cd.getAttribute('data-aifwkpi');C5_AIFW_FILTER=(C5_AIFW_FILTER===k)?null:k;C5_AIFW_CTRL=null;c5AiFwView(host,fwKey);var t=host.querySelector('.c5fw-tree');if(t&&t.scrollIntoView)try{t.scrollIntoView({behavior:'smooth',block:'start'});}catch(_){}};cd.onclick=go;cd.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}};});
+  var _aall=host.querySelector('[data-aifwall]');if(_aall)_aall.onclick=function(){C5_AIFW_FILTER=null;c5AiFwView(host,fwKey);};
 }
 function c5FwLens(host,fwKey,label){
   if(!host)return;
