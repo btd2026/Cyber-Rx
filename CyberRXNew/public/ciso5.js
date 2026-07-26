@@ -4600,7 +4600,11 @@ function c5DecProj(){
     var alt=[{on:'Defer to next cycle',osum:'Records the deferral; the gap stays open',pros:['No spend now.'],cons:['The coverage gap stays open until it is funded.'],req:true,consequence:'Records the decision as deferred; the gap remains open until the next cycle.'}];
     return c5dec('cs',i+1,'Fund '+l.name+'?',l.need,rec,alt);
   });
+  // Scope drill cards (Enterprise / region / entity) at the top — the scope switcher lives on
+  // every section now, not in a separate top bar.
+  var decScopeNav='';try{if(typeof scopeNav==='function'){var _dsn=scopeNav();if(_dsn)decScopeNav='<div class="c5pa" style="margin:0 0 4px">'+_dsn+'</div>';}}catch(_){}
   host.innerHTML=c5header()+
+    decScopeNav+
     c5shell('Decisions · what needs your sign-off?',(levers.length?(levers.length+' funding decision'+(levers.length>1?'s':'')+' waiting — commit or defer each.'):'Connect your tools and the funded decisions that move your posture appear here.'),null,'Each decision funds a control that improves your posture and raises measured coverage. Choosing one stamps it with your name and time, keeps it editable for 24 hours, and opens a tracked project.')+
     (list.length?c5decisions(list):'<div class="c5note">◐ Connect your security tools and upload your policies, and the funded decisions that move your posture appear here — each with the exact controls it improves.</div>')+
     '<div class="c5foot">Each decision is priced from your control model.</div>';
@@ -6106,8 +6110,12 @@ function c5Resilience(){
         : ('<span class="bad">'+over+' critical service'+(over>1?'s':'')+'</span> can&rsquo;t be recovered within tolerance'+rScopeAt+'.'))
     : (proven<svcs.length ? ('Every critical service'+rScopeAt+' recovers within tolerance &mdash; but <span class="bad">not all of it is proven</span>.')
                           : ('Every critical service'+rScopeAt+' recovers within tolerance &mdash; and it&rsquo;s <em>proven</em>.'));
+  // Scope drill cards (Enterprise / region / entity) above the finding — the scope switcher now
+  // lives here on every section, not in a separate top bar.
+  var opScopeNav='';try{if(typeof scopeNav==='function'){var _osn=scopeNav();if(_osn)opScopeNav='<div style="margin-top:22px">'+_osn+'</div>';}}catch(_){}
   var paHero='<div class="c5pa">'
     +'<div class="c5pa-eyebrow">Operational impact'+(rScopeLbl?(' · '+esc(rScopeLbl)):'')+' · what breaks, for how long, is recovery proven · as of '+new Date().toLocaleDateString()+'</div>'
+    +opScopeNav
     +'<h1 class="c5pa-finding">'+paFinding+'</h1>'
     +'<div class="c5pa-dek">'+intro+'</div>'
     +'<div class="c5pa-inst" style="grid-template-columns:1fr">'

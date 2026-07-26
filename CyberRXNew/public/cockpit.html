@@ -821,9 +821,11 @@ function render(seat){
   var h=((typeof c5seatHeader==='function')?c5seatHeader():('<div class="hero"><div class="eyebrow">'+s.eyebrow+'</div></div>'));
   // Section tabs drive the story (primary); the scope selector sits BELOW them as a
   // secondary filter that re-scopes whichever section you're reading.
+  // The section tabs stay frozen at top. The separate scope bar is retired — scope navigation now
+  // lives in the Enterprise/region/entity drill cards inside EVERY section (Program health,
+  // Operational impact, Decisions), so there's one scope switcher, not two.
   h+='<div class="c5navsticky" id="navSticky">'
     +'<div id="secTabs" class="sectabs"></div>'
-    +'<div class="c5scope" id="scopeBar" role="navigation" aria-label="Scope: enterprise, region, entity"></div>'
     +'</div>'
     +'<div id="secWrap">'+s.body()+'</div>';
   document.getElementById('app').innerHTML=localizeInd(h);
@@ -3349,7 +3351,19 @@ function scopeNav(){
         function(e){return (typeof scopeMeta==='function'&&scopeMeta(e.id)&&scopeMeta(e.id).regime)||'';},'entity',
         (regScore!=null?{id:reg.id,label:'All '+reg.label,sub:'consolidated · all entities',csf:regScore,tier:'◆ Region'}:null));
     }
-    return out;
+    // Clickable breadcrumb (Enterprise › Region › Entity) — the up-navigation the retired scope bar
+    // used to provide, so you can always jump back up a level, not only drill down.
+    var crumb='';
+    try{
+      var cp=[{id:'enterprise',label:'Enterprise'}];
+      if(activeRegion&&activeRegion!=='enterprise'){var rr=null;REGIONS.forEach(function(r){if(r.id===activeRegion)rr=r;});if(rr)cp.push({id:rr.id,label:rr.label});}
+      if(SCOPE&&SCOPE!=='enterprise'&&SCOPE!==activeRegion){var el=SCOPE;if(reg&&reg.entities)reg.entities.forEach(function(e){if(e.id===SCOPE)el=e.label;});cp.push({id:SCOPE,label:el});}
+      if(cp.length>1){crumb='<div style="font-size:11px;color:var(--muted);margin-top:16px;display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span style="font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)">Scope</span>'
+        +cp.map(function(pt,i){var last=(i===cp.length-1);
+          return (last?('<b style="color:var(--ink)">'+esc(pt.label)+'</b>'):('<button data-scope="'+pt.id+'" style="background:none;border:none;padding:0;font:inherit;color:var(--blue);cursor:pointer;font-weight:600">'+esc(pt.label)+'</button>'))+(last?'':'<span style="color:var(--line)">›</span>');
+        }).join('')+'</div>';}
+    }catch(_){}
+    return crumb+out;
   }catch(_){return '';}
 }
 /* Wire any [data-scope] control inside a container to re-scope the whole cockpit. */
