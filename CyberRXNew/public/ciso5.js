@@ -6369,21 +6369,30 @@ function c5NeuronControls(host){
       // shown alongside (muted) so the difference between "deployed" and "works" is visible.
       var eff=n.effectiveness||{measured:false};
       var effPill=(eff.measured&&eff.blocked!=null)?('<span title="'+esc((eff.source||'')+(eff.last?(' · '+eff.last):'')+(eff.scenarios?(' · '+eff.scenarios+' scenarios'):''))+'" style="font-size:10px;font-weight:700;color:var(--good);background:color-mix(in srgb,var(--good) 14%,transparent);border:1px solid color-mix(in srgb,var(--good) 32%,transparent);border-radius:20px;padding:2px 8px;white-space:nowrap">✓ proven '+Math.round(eff.blocked*100)+'%</span>'):'';
-      var preventBlock=(eff.measured&&eff.blocked!=null)
+      // A capability's ATT&CK role decides which axes are even MEANINGFUL: a prevention control
+      // (EDR, MFA, patching) does no detection, so a "Detect · 0%" bar on it is not a gap — it is
+      // a category error that makes an 88%-deployed control look 0%-broken. Show only the axis or
+      // axes the capability's role actually covers (prevent / detect / both).
+      var doesPrevent=(n.role==='prevent'||n.role==='both');
+      var doesDetect=(n.role==='detect'||n.role==='both');
+      var preventBlock=!doesPrevent?'':((eff.measured&&eff.blocked!=null)
         ? (axisBar('Prevent · proven',eff.blocked,'good')
            +'<div style="font-size:10px;color:var(--muted);margin:2px 0 0 125px">'+esc(eff.source||'BAS / purple-team')+(eff.last?(' · '+esc(eff.last)):'')+'</div>'
            +'<div style="height:5px"></div>'+axisBar('Prevent · presence',n.attack.prevent,'muted'))
-        : axisBar('Prevent · presence',n.attack.prevent,'blue');
-      var detectBlock=(eff.measured&&eff.detected!=null)
+        : axisBar('Prevent · presence',n.attack.prevent,'blue'));
+      var detectBlock=!doesDetect?'':((eff.measured&&eff.detected!=null)
         ? (axisBar('Detect · proven',eff.detected,'good')+'<div style="height:5px"></div>'+axisBar('Detect · coverage',n.attack.detect,'muted'))
-        : axisBar('Detect · coverage',n.attack.detect,'good');
+        : axisBar('Detect · coverage',n.attack.detect,'good'));
+      // A short "role" line so it's explicit WHY only one axis shows (prevention vs detection control).
+      var roleLbl=n.role==='both'?'Prevention &amp; detection control':n.role==='detect'?'Detection control':'Prevention control';
+      var axisGap=(preventBlock&&detectBlock)?'<div style="height:5px"></div>':'';
       return '<div style="border:1px solid var(--line);border-radius:12px;padding:14px 15px;background:var(--surface)">'
         +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:3px"><b style="font-size:13px;color:var(--ink)">'+esc(n.name)+'</b><div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end">'+evPill(n.evidence)+effPill+'</div></div>'
-        +'<div style="font-size:11px;color:var(--muted);margin-bottom:8px">'+esc(n.tool||'')+'</div>'
+        +'<div style="font-size:11px;color:var(--muted);margin-bottom:8px">'+esc(n.tool||'')+' · '+roleLbl+'</div>'
         +'<div style="margin-bottom:10px">'+provBadge(n.provider)+'</div>'
         +(typeof capBar==='function'?('<div style="margin-bottom:10px">'+capBar(n.telemetry)+'</div>'):'')
         +preventBlock
-        +'<div style="height:5px"></div>'
+        +axisGap
         +detectBlock
         +'<div style="display:flex;flex-wrap:wrap;gap:5px;margin:11px 0 9px">'+n.lanes.map(laneChip).join('')+'</div>'
         +'<div style="border-top:1px solid var(--line);padding-top:8px;line-height:1.7">'+(proj||'<span style="font-size:10px;color:var(--muted)">no external mapping</span>')+'</div>'
