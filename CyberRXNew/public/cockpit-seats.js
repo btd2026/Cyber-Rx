@@ -10,7 +10,7 @@ var SEATS = {
   body:function(){return (
    sec('01','Program health','','<div id="c5-frameworks"></div>')
    +sec('02','Operational impact','','<div id="c5-resilience"></div>')
-   +sec('03','Decisions','Where to move the needle — by entity, region, or enterprise','<div id="c5-decisions"></div>')
+   +sec('03','Decisions','What needs your sign-off — fund or defer, each priced from your control model','<div id="c5-decproj"></div>')
   );}
  }
 };

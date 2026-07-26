@@ -5608,14 +5608,18 @@ function c5ContinuousAssessment(host){
       confRow=conf?('<div style="font-size:11px;color:var(--'+(conf.decision==='dispute'?'crit':'good')+');margin-top:8px">'+(conf.decision==='dispute'?'✗ disputed':'✓ confirmed')+' · <span data-confirm="clear:'+id+'" style="color:var(--muted);cursor:pointer">undo</span></div>')
         :('<div style="margin-top:8px;display:flex;gap:8px"><button data-confirm="approve:'+id+'" style="font-size:11px;font-weight:700;color:#fff;background:var(--good);border:none;border-radius:6px;padding:4px 12px;cursor:pointer">Approve</button><button data-confirm="dispute:'+id+'" style="font-size:11px;font-weight:700;color:var(--crit);background:none;border:1px solid var(--crit);border-radius:6px;padding:4px 12px;cursor:pointer">Dispute</button></div>');
     }
-    var descHtml='<div style="font-size:12px;color:var(--ink-2);margin-top:3px;line-height:1.4">'+esc(name)+'</div>';
+    // Is there actually a finding? A control at/above the 3.5 target with a clean verdict has none.
+    var hasFinding=(sc5<3.5)||a.verdict==='not_met'||a.verdict==='not_assessed'||a.verdict==='partial';
+    var findingLead=hasFinding
+      ? '<b style="color:var(--'+st.cls+')">Finding &mdash; '+(a.verdict==='not_assessed'?'not evidenced':(a.verdict==='not_met'?'does not meet the control':(a.verdict==='partial'?'partially meets the control':'below the CMMI 3.5 target')))+'.</b> '
+      : '<b style="color:var(--good)">No finding &mdash; meets the CMMI 3.5 target.</b> ';
+    // The control objective appears ONCE, in the header. No "Criteria" restatement, no subtitle echo.
     return '<div class="c5fw-detail">'
-      +'<div class="c5fw-dtop"><div><div class="c5kick">Finding &amp; recommendation</div><div style="font-size:15px;font-weight:500;margin-top:4px"><b>'+esc(id)+'</b> — '+esc(name)+'</div>'+descHtml+'</div>'
+      +'<div class="c5fw-dtop"><div><div class="c5kick">Control detail</div><div style="font-size:15px;font-weight:500;margin-top:4px"><b>'+esc(id)+'</b> — '+esc(name)+'</div></div>'
       +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="c5pill '+(st.cls==='good'?'g':st.cls==='warn'?'a':'r')+'">'+st.t+'</span><span data-assessclose="1" style="cursor:pointer;color:var(--muted);font-size:11px">✕ close</span></div></div>'
       +'<div style="display:flex;align-items:baseline;gap:8px;margin-top:10px"><div style="font-size:26px;font-weight:500;font-family:var(--serif);color:var(--'+col+')">'+sc5.toFixed(1)+'<span style="font-size:14px;color:var(--muted)"> / 5</span></div><div class="c5intro" style="margin:0">'+lvl+' · target 3.5</div></div>'
-      +'<div class="ev-sec">Condition (what was tested)</div><div class="drill-p">'+F.condition+'</div>'
-      +'<div class="ev-sec">Criteria</div><div class="drill-p">'+F.criteria+'</div>'
-      +'<div class="ev-sec">Conclusion</div><div class="drill-p">'+F.conclusion+'</div>'
+      +'<div class="ev-sec">How it was tested</div><div class="drill-p">'+F.condition+'</div>'
+      +'<div class="ev-sec">Finding</div><div class="drill-p">'+findingLead+F.conclusion+'</div>'
       +'<div class="ev-sec">Recommendation</div><div class="drill-p">'+F.recommendation+'</div>'
       +'<div class="ev-sec">Evidence source</div>'+F.evidence
       +'<div class="ev-sec">Continuous assessment</div>'
