@@ -3918,7 +3918,7 @@ function c5fwStatus(sc){if(sc>=C5FW_TARGET)return {t:'Meets target',cls:'good',k
 // CMMI levels are FLOORS: you are only at Level N once the score reaches N. So 1.6 is still
 // Level 1 (Initial), not Managed — floor, never round, to avoid over-stating maturity.
 function c5cmmiLevel(sc){return Math.max(0,Math.min(5,Math.floor((+sc||0)+1e-9)));}
-function c5fwLvl(sc){var L=(typeof CMMI_LABELS!=='undefined')?CMMI_LABELS:{0:'None',1:'Initial',2:'Managed',3:'Defined',4:'Quant. Managed',5:'Optimizing'};return L[c5cmmiLevel(sc)]||'';}
+function c5fwLvl(sc){var L=(typeof CMMI_LABELS!=='undefined')?CMMI_LABELS:{0:'Non-existent',1:'Initial',2:'Repeatable',3:'Defined',4:'Managed',5:'Optimizing'};return L[c5cmmiLevel(sc)]||'';}
 function c5fwCol(sc){return (typeof cmmiColor==='function')?cmmiColor(c5cmmiLevel(sc)):'ink';}
 function c5fwMean(arr){if(!arr.length)return 0;return arr.reduce(function(a,b){return a+b;},0)/arr.length;}
 /* ============================================================================
@@ -5242,7 +5242,119 @@ var C5_CTRL_RISK={
   'MEASURE':'Model performance, bias and robustness go unmeasured, so failures surface first in production.',
   'MANAGE':'Identified AI risks are not mitigated or monitored, so they materialize unmanaged.'
 };
-function c5ControlRisk(id){id=String(id||'');var cat=id.split('-')[0];if(C5_CTRL_RISK[cat])return C5_CTRL_RISK[cat];var fn=cat.split('.')[0];return C5_CTRL_RISK[fn]||'';}
+/* PER-CONTROL risk — each of the 106 NIST CSF 2.0 controls mitigates a DISTINCT risk, even within a
+   category (PR.AA-01 credential management ≠ PR.AA-02 identity proofing ≠ PR.AA-03 authentication).
+   Validated against each control's own objective. Falls back to the category map only for controls
+   not individually mapped (e.g. AI RMF). */
+var C5_CTRL_RISK_ID={
+  'GV.OC-01':'Without tying cyber to the business mission, security spends on the wrong things while the assets that actually matter go under-protected.',
+  'GV.OC-02':'Missing key stakeholders — customers, regulators, partners — means their security expectations and obligations go unmet, surfacing as breached trust or contract.',
+  'GV.OC-03':'Unmapped legal, regulatory and contractual duties are missed — exposing the org to fines, lawsuits and disclosure failures after an incident.',
+  'GV.OC-04':'If critical objectives and services aren’t identified, the controls protecting them aren’t prioritized — the crown jewels are defended like everything else.',
+  'GV.OC-05':'Undocumented external dependencies (a SaaS, a utility, a supplier) fail without warning and take critical services down with them.',
+  'GV.RM-01':'With no agreed risk objectives, teams pull in different directions and real exposure is neither owned nor closed.',
+  'GV.RM-02':'With no stated risk appetite, every call is ad hoc — the org over-spends on trivia or unknowingly accepts catastrophic risk.',
+  'GV.RM-03':'Cyber risk kept out of enterprise risk is invisible to the board, so it’s under-funded until it materializes as a crisis.',
+  'GV.RM-04':'No agreed direction for responding to risk means each threat is handled improvised and inconsistently, leaving gaps.',
+  'GV.RM-05':'Without clear escalation channels, a serious cyber risk sits with an analyst who can’t act while leadership stays unaware.',
+  'GV.RM-06':'With no consistent way to score risk, priorities go to whoever shouts loudest and the biggest exposures aren’t addressed first.',
+  'GV.RM-07':'Ignoring positive risk (secure-by-design opportunities) means the org misses cheaper, stronger ways to cut exposure.',
+  'GV.RR-01':'If leadership isn’t accountable for cyber, it’s treated as IT’s problem — starved of authority and budget until a breach forces attention.',
+  'GV.RR-02':'Undefined roles let security tasks fall between the cracks — nobody patches, nobody reviews access — and attackers exploit the gap.',
+  'GV.RR-03':'Under-resourced security can’t run its controls, so coverage decays and known gaps stay open for lack of people or tools.',
+  'GV.RR-04':'Skipping cyber in hiring and offboarding leaves departed staff with live access and unvetted insiders in sensitive roles.',
+  'GV.PO-01':'With no security policy there’s no baseline anyone can be held to — controls become optional and unenforceable.',
+  'GV.PO-02':'A policy never reviewed or enforced drifts out of date and is ignored, so it protects nothing in practice.',
+  'GV.OV-01':'Without reviewing whether the risk strategy is working, failing controls persist and the same exposures recur unchallenged.',
+  'GV.OV-02':'If the strategy isn’t checked against current requirements and threats, it defends yesterday’s risks while today’s go uncovered.',
+  'GV.OV-03':'Unmeasured risk-management performance means leadership can’t tell effective controls from theater, and money flows to the wrong places.',
+  'GV.SC-01':'With no supply-chain risk program, third-party risk is unmanaged — a supplier breach becomes your breach with no plan.',
+  'GV.SC-02':'Undefined supplier security roles mean nobody owns third-party risk, so due diligence and monitoring simply don’t happen.',
+  'GV.SC-03':'Supply-chain risk kept separate from enterprise risk is invisible to leadership until a vendor compromise cascades in.',
+  'GV.SC-04':'Not knowing which suppliers are critical means the riskiest ones get the same scant scrutiny as the trivial ones.',
+  'GV.SC-05':'Without security requirements in contracts, you have no right to audit, be notified, or hold a breached supplier accountable.',
+  'GV.SC-06':'Skipping due diligence lets you onboard a supplier already compromised or with weak controls — inheriting their risk blind.',
+  'GV.SC-07':'Unmonitored supplier risk means a vendor’s posture degrades silently until their breach reaches your data.',
+  'GV.SC-08':'Suppliers left out of incident plans can’t be coordinated during a crisis, extending outages and confusing response.',
+  'GV.SC-09':'Security not built into the supplier lifecycle leaves gaps at every stage — selection, integration, operation, exit.',
+  'GV.SC-10':'No plan for ending a supplier relationship leaves your data in their hands and their access to your systems live after termination.',
+  'ID.AM-01':'Unknown hardware can’t be patched or monitored — an unmanaged laptop or server becomes the unguarded way in.',
+  'ID.AM-02':'Untracked software (shadow IT, unpatched apps) carries vulnerabilities nobody is watching or fixing.',
+  'ID.AM-03':'Without a map of network flows, malicious or unexpected connections blend in and go unnoticed.',
+  'ID.AM-04':'Untracked supplier-provided services run inside your estate with no owner watching their risk.',
+  'ID.AM-05':'If assets aren’t ranked by criticality, the crown jewels get the same protection as a cafeteria-menu server.',
+  'ID.AM-07':'Unknown data stores can’t be protected — sensitive records leak from a database nobody knew held them.',
+  'ID.AM-08':'Assets not managed through their lifecycle linger past end-of-life — unpatched, unsupported and easy targets.',
+  'ID.RA-01':'Unidentified vulnerabilities stay open — an attacker finds the unpatched flaw before you do.',
+  'ID.RA-02':'Without threat intelligence you’re blind to the actors and campaigns targeting your sector until they hit.',
+  'ID.RA-03':'Unidentified threats can’t be defended against — you prepare for the wrong attacks.',
+  'ID.RA-04':'Without assessing impact and likelihood you can’t tell a nuisance from a catastrophe, and mis-prioritize defenses.',
+  'ID.RA-05':'If threats, vulnerabilities and impacts don’t drive risk decisions, remediation is guesswork and the real exposures persist.',
+  'ID.RA-06':'Risk responses not chosen and tracked means identified risks are noted, then forgotten — never actually closed.',
+  'ID.RA-07':'Unmanaged changes and exceptions quietly reopen closed gaps and accumulate as unreviewed risk.',
+  'ID.RA-08':'Without a vulnerability-disclosure process, researchers who find flaws have nowhere to report them — so attackers find them first.',
+  'ID.RA-09':'Unverified authenticity/integrity of hardware and software lets tampered or counterfeit components in — a supply-chain implant.',
+  'ID.RA-10':'Not assessing critical suppliers before acquisition means you buy in their vulnerabilities along with their product.',
+  'ID.IM-01':'If improvements from assessments aren’t captured, the same weaknesses found in every audit are never actually fixed.',
+  'ID.IM-02':'Lessons from tests and exercises left unimplemented mean the gaps a drill exposed are still there when the real incident comes.',
+  'ID.IM-03':'Improvements not drawn from daily operations mean recurring operational failures never get engineered out.',
+  'ID.IM-04':'Response and recovery plans not maintained go stale — during a crisis they name people who’ve left and systems that changed.',
+  'PR.AA-01':'Poorly managed credentials — shared, stale or unrotated — are stolen or guessed, handing an attacker a valid login.',
+  'PR.AA-02':'Weak identity proofing lets an attacker enroll or bind to an identity that isn’t theirs, walking in as a “legitimate” user.',
+  'PR.AA-03':'Without strong authentication (MFA), a stolen password alone is enough for an attacker to log in as the user.',
+  'PR.AA-04':'Unprotected identity assertions (tokens, SAML/OAuth) can be forged or replayed, letting an attacker impersonate a trusted session.',
+  'PR.AA-05':'Without least privilege and separation of duties, one compromised account reaches everything and moves laterally to crown jewels.',
+  'PR.AA-06':'Unmanaged physical access lets someone reach a server, workstation or network port and bypass every digital control.',
+  'PR.AT-01':'Untrained staff are phished and socially engineered into handing an attacker the initial foothold.',
+  'PR.AT-02':'Privileged roles (admins, developers) without role-specific training make high-impact mistakes attackers exploit.',
+  'PR.DS-01':'Unprotected data-at-rest is read straight off a stolen disk, backup or database dump.',
+  'PR.DS-02':'Unencrypted data-in-transit is intercepted on the wire (man-in-the-middle) and read or altered.',
+  'PR.DS-10':'Unprotected data-in-use — in memory, mid-processing — is scraped by malware or a malicious process.',
+  'PR.DS-11':'Missing or untested backups mean that when ransomware or failure hits, there’s nothing clean to restore from.',
+  'PR.PS-01':'Unmanaged configurations drift into insecure states — an exposed default or open setting becomes the way in.',
+  'PR.PS-02':'Unmaintained software runs past end-of-life with known, unpatched vulnerabilities attackers scan for.',
+  'PR.PS-03':'Unmaintained hardware runs unsupported firmware with flaws that can’t be patched — a permanent open door.',
+  'PR.PS-04':'Without generating logs there’s no record of what happened — an intrusion is invisible and un-investigable.',
+  'PR.PS-05':'If unauthorized software can execute, malware and living-off-the-land tools run freely on your endpoints.',
+  'PR.PS-06':'Insecure software development ships exploitable flaws — injection, secrets in code — straight into production.',
+  'PR.IR-01':'Networks open to unauthorized access let an attacker who’s inside reach any system with no internal barrier.',
+  'PR.IR-02':'Assets unprotected from environmental threats (power, heat, flood) fail and take services down with no attacker at all.',
+  'PR.IR-03':'Without resilience mechanisms, a single failure or attack cascades because there’s no redundancy or failover.',
+  'PR.IR-04':'Inadequate resource capacity means a traffic spike or a DoS exhausts the system and critical services fall over.',
+  'DE.CM-01':'Unmonitored networks and services let malicious traffic and intrusions move unseen — dwell time grows.',
+  'DE.CM-02':'An unmonitored physical environment lets tampering, theft or unauthorized entry go undetected.',
+  'DE.CM-03':'Unmonitored personnel and technology usage means insider misuse and risky behavior pass unnoticed.',
+  'DE.CM-06':'Unmonitored external-provider activity means a compromised or misbehaving supplier operating in your estate goes unseen.',
+  'DE.CM-09':'Unmonitored endpoints, software and data mean malware and unauthorized changes run without detection.',
+  'DE.AE-02':'Adverse events not analyzed means a real intrusion is dismissed as noise and never investigated.',
+  'DE.AE-03':'Without correlating signals from multiple sources, a multi-stage attack looks like unrelated alerts and is missed.',
+  'DE.AE-04':'If an event’s impact and scope aren’t understood, response is mis-sized — overreacting, or missing the real breach.',
+  'DE.AE-06':'Event information not reaching the right staff means the people who could respond never learn of the threat in time.',
+  'DE.AE-07':'Without folding threat intel into analysis, known attacker techniques aren’t recognized when they appear in your logs.',
+  'DE.AE-08':'Without clear incident-declaration criteria, a real breach is debated instead of actioned, and response starts too late.',
+  'RS.MA-01':'An incident-response plan that isn’t executed means the org improvises during a breach, losing critical time.',
+  'RS.MA-02':'Un-triaged incident reports mean the real threat sits in a queue while the team chases false alarms.',
+  'RS.MA-03':'Without categorizing and prioritizing incidents, the most damaging one waits behind trivial tickets.',
+  'RS.MA-04':'Incidents not escalated when needed stall at the wrong level while the attacker keeps operating.',
+  'RS.MA-05':'Without criteria to start recovery, the org restores too early (reinfecting) or too late (extending downtime).',
+  'RS.AN-03':'If root cause isn’t established, the vulnerability that let the attacker in stays open and they simply return.',
+  'RS.AN-06':'Investigation actions not recorded with integrity make evidence unreliable — you can’t prove what happened or prosecute.',
+  'RS.AN-07':'Incident data not preserved means forensic evidence is lost — you can’t determine scope or meet legal hold.',
+  'RS.AN-08':'Without estimating incident magnitude, disclosure and response are mis-scaled — under-reporting a material breach.',
+  'RS.CO-02':'Stakeholders not notified in time means regulators, customers and partners learn of the breach elsewhere, compounding damage.',
+  'RS.CO-03':'Information not shared with the right parties during response leaves defenders and partners uncoordinated.',
+  'RS.MI-01':'Incidents not contained spread — from one host to the whole estate — before anyone stops them.',
+  'RS.MI-02':'Incidents not eradicated leave the attacker’s foothold in place, so they regain access after “recovery.”',
+  'RC.RP-01':'A recovery plan not executed means restoration is chaotic and critical services stay down past tolerance.',
+  'RC.RP-02':'Recovery actions not properly scoped mean you restore the wrong systems first or miss dependencies, extending the outage.',
+  'RC.RP-03':'Restoring from backups without verifying their integrity can reintroduce the ransomware or corruption you’re recovering from.',
+  'RC.RP-04':'Without establishing post-incident norms, the org limps in a degraded state, unsure what’s safe to trust.',
+  'RC.RP-05':'Not verifying the integrity of restored assets brings compromised systems back online, reopening the breach.',
+  'RC.RP-06':'No clear end-of-recovery declaration leaves the org in limbo — neither in incident mode nor confidently operational.',
+  'RC.CO-03':'Recovery progress not communicated leaves leadership, staff and customers in the dark, eroding trust during the crisis.',
+  'RC.CO-04':'Public updates not shared through approved channels let rumor and misinformation fill the void, worsening reputational damage.'
+};
+function c5ControlRisk(id){id=String(id||'');if(C5_CTRL_RISK_ID[id])return C5_CTRL_RISK_ID[id];var cat=id.split('-')[0];if(C5_CTRL_RISK[cat])return C5_CTRL_RISK[cat];var fn=cat.split('.')[0];return C5_CTRL_RISK[fn]||'';}
 /* CONTROL SCORE — the real, CMMI-aligned rubric. Returns 0..1 (callers ×5 for the 0–5 score).
    The number answers "how good is this control", NOT "how did we learn about it":
      0–3  = how much of the control's REQUIREMENT is actually met. 100% met = 3.0 (Defined).
@@ -5717,7 +5829,9 @@ function c5ContinuousAssessment(host){
         +(P.full?(P.automated?(' Fully mitigated and <b>continuously enforced</b> by a sensor (no human step) &rarr; +1'+(P.opt?', continuously verified &amp; holding &rarr; +1.':'; not yet continuously verified at high confidence, so no optimization point.')):' Fully mitigated, but a <b>human validates</b> it &mdash; not continuously enforced, so it is capped at <b>3</b>.')
                 :' The risk is <b>not fully mitigated</b>, so it is capped below 3: automation cannot lift a control that still leaves the risk open.');
     }else{scoreWhy=(a.verdict==='met')?'The risk is <b>fully mitigated</b>, evidenced by a current attestation &rarr; <b>3</b>. Manual / point-in-time evidence, so no automation point.':(a.verdict==='partial'?'The risk is <b>partially</b> mitigated &rarr; base '+P.base.toFixed(1)+' of 3.':'Weak or late evidence that the risk is mitigated &rarr; base '+P.base.toFixed(1)+' of 3.');}
-    var rubric='<div style="font-size:11px;color:var(--muted);margin-top:7px;line-height:1.55;border-top:1px dashed var(--line);padding-top:7px"><b>Rubric</b> (does it mitigate the risk, not tick a box) · <b>3</b> = fully mitigates the risk (100% of the estate) · <b>4</b> = + continuously enforced (automated) · <b>5</b> = + continuously verified &amp; improving. A control that leaves the risk partly open is capped under 3, however it is evidenced.</div>';
+    var rubric='<div style="font-size:11px;color:var(--muted);margin-top:7px;line-height:1.6;border-top:1px dashed var(--line);padding-top:7px">'
+      +'<b>Rubric</b> (does it mitigate the risk, not tick a box): <b>3&nbsp;Defined</b> = fully mitigates the risk (100% of the estate) · <b>4&nbsp;Managed</b> = + continuously enforced (automated) · <b>5&nbsp;Optimizing</b> = + continuously verified &amp; improving. A control that leaves the risk partly open is capped under 3, however it is evidenced.'
+      +'<div style="margin-top:6px"><b>CMMI scale:</b> 0 Non-existent · 1 Initial · 2 Repeatable · 3 Defined · 4 Managed · 5 Optimizing</div></div>';
     // The control objective appears ONCE, in the header, followed by the RISK it mitigates (security,
     // not compliance): why the control exists — what an attacker or failure does if it is weak.
     var riskTxt=(typeof c5ControlRisk==='function')?c5ControlRisk(id):'';
@@ -6628,7 +6742,7 @@ function c5FrameworksClassic(host){
     evBox+
     xnote+
     '<div class="c5fw-wrap"><div class="c5fw-right">'+tree+'</div><div class="c5fw-left" id="c5fw-detail">'+c5fwFinding(sel,selNode)+'</div></div>'+
-    '<div class="c5foot">CMMI 0 None · 1 Initial · 2 Managed · 3 Defined · 4 Quant. Managed · 5 Optimizing. Meets target ≥ '+C5FW_TARGET.toFixed(1)+' (green) · Observation ≥ '+C5FW_FLOOR+' (amber) · Deficiency &lt; '+C5FW_FLOOR+' (red).'+((sel==='cis'||sel==='soc2'||sel==='hipaa'||sel==='iso')?' '+((typeof FW_NAMES!=='undefined'&&FW_NAMES[sel])||'This framework')+' is scored by <b>crosswalk readiness</b> from the evidence you provided at onboarding: each control is mapped to the NIST CSF 2.0 subcategories it shares an objective with, and inherits their maturity — and those subcategories are themselves evidenced from your <b>connected tools + reviewed documents</b>. We reference the framework by ID and use our own plain-English labels, so no licensed control text is reproduced. This is a readiness estimate, <b>not</b> a certified assessment (your assessor issues that); a control whose mapped CSF evidence is missing shows “Not tested” until you connect the tool or upload the document it awaits.':'')+(sel==='r53'?' NIST SP 800-53 Rev 5 is assessed by crosswalk from your CSF 2.0 assessment (a readiness indicator, per-family): the ~20 controls Nerion scores directly show 📄/🔌; the rest inherit their family’s governing-policy maturity.':'')+'</div>';
+    '<div class="c5foot">CMMI 0 Non-existent · 1 Initial · 2 Repeatable · 3 Defined · 4 Managed · 5 Optimizing. Meets target ≥ '+C5FW_TARGET.toFixed(1)+' (green) · Observation ≥ '+C5FW_FLOOR+' (amber) · Deficiency &lt; '+C5FW_FLOOR+' (red).'+((sel==='cis'||sel==='soc2'||sel==='hipaa'||sel==='iso')?' '+((typeof FW_NAMES!=='undefined'&&FW_NAMES[sel])||'This framework')+' is scored by <b>crosswalk readiness</b> from the evidence you provided at onboarding: each control is mapped to the NIST CSF 2.0 subcategories it shares an objective with, and inherits their maturity — and those subcategories are themselves evidenced from your <b>connected tools + reviewed documents</b>. We reference the framework by ID and use our own plain-English labels, so no licensed control text is reproduced. This is a readiness estimate, <b>not</b> a certified assessment (your assessor issues that); a control whose mapped CSF evidence is missing shows “Not tested” until you connect the tool or upload the document it awaits.':'')+(sel==='r53'?' NIST SP 800-53 Rev 5 is assessed by crosswalk from your CSF 2.0 assessment (a readiness indicator, per-family): the ~20 controls Nerion scores directly show 📄/🔌; the rest inherit their family’s governing-policy maturity.':'')+'</div>';
   // record cadence snapshot
   if(typeof fwRecord==='function'){try{fwRecord(T.overall);}catch(_){}}
   var _pb=document.getElementById('c5fwPeerBox');if(_pb)_pb.onclick=function(){c5fwPeerOpen();};
@@ -6784,7 +6898,7 @@ function c5DocChips(x){
 /* Build the full HTML for the Documents-reviewed panel. */
 function c5DocsReviewHtml(){
   var docs=c5DocListSafe(),scores=c5DocScoresSafe();
-  var CMMI_LBL=(typeof CMMI_LABELS!=='undefined')?CMMI_LABELS:{0:'None',1:'Initial',2:'Managed',3:'Defined',4:'Quant. Managed',5:'Optimizing'};
+  var CMMI_LBL=(typeof CMMI_LABELS!=='undefined')?CMMI_LABELS:{0:'Non-existent',1:'Initial',2:'Repeatable',3:'Defined',4:'Managed',5:'Optimizing'};
   if(!docs.length&&!Object.keys(scores).length){
     return '<div style="padding:8px 2px"><div style="font-size:15px;font-weight:600;color:var(--ink)">No policies analyzed yet</div>'+
       '<p style="color:var(--ink-2);font-size:13px;line-height:1.55;max-width:640px">Upload your security policies during onboarding and Nerion reads each one control-by-control against NIST CSF 2.0 and NIST SP 800-53, then carries every finding across CIS, SOC 2 and HIPAA. The full review appears here, mapped to the controls in this tab.</p>'+

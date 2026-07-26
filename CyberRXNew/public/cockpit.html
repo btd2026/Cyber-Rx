@@ -1872,7 +1872,10 @@ function fwControlTool(id){
    the higher of its live tool coverage and its document-review score, so the
    framework rolls up a real CMMI per subcategory → category → function, and every
    score shows its source (🔌 system telemetry vs 📄 document review). ---- */
-var CMMI_LABELS={0:'Non-existent',1:'Initial',2:'Managed',3:'Defined',4:'Quantitatively Managed',5:'Optimizing'};
+// CMMI maturity scale (ISACA/COBIT-style, unambiguous): "Managed" is L4, not L2, so a 2.x never
+// reads "Managed". Aligns with the scoring rubric — L3 Defined = fully mitigates the risk,
+// L4 Managed = + continuously enforced (automated), L5 Optimizing = + continuously verified.
+var CMMI_LABELS={0:'Non-existent',1:'Initial',2:'Repeatable',3:'Defined',4:'Managed',5:'Optimizing'};
 var DOC_TYPES=[
   {k:'d1',l:'Information Security Policy'},{k:'d2',l:'Risk Assessment / Register'},
   {k:'d3',l:'Third-Party / Supply-Chain Policy'},{k:'d4',l:'Access Control Policy'},
