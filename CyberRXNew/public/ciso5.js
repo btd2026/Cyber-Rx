@@ -3929,7 +3929,10 @@ function c5fwCadence(){try{return localStorage.getItem('cyberrx_audit_cadence')|
 function c5fwStatus(sc){if(sc>=C5FW_TARGET)return {t:'Meets target',cls:'good',key:'meets'};if(sc>=C5FW_FLOOR)return {t:'Observation',cls:'warn',key:'obs'};return {t:'Deficiency',cls:'crit',key:'def'};}
 // CMMI levels are FLOORS: you are only at Level N once the score reaches N. So 1.6 is still
 // Level 1 (Initial), not Managed — floor, never round, to avoid over-stating maturity.
-function c5cmmiLevel(sc){return Math.max(0,Math.min(5,Math.floor((+sc||0)+1e-9)));}
+// Level from the DISPLAYED 1-decimal score, not the raw value — otherwise a raw 0.986 shown as
+// "1.0 of 5" gets labelled "CMMI Level 0 · Non-existent" while a raw 1.013 (also shown "1.0") reads
+// "Level 1 · Initial". Round to the shown precision first so the number and its level always agree.
+function c5cmmiLevel(sc){return Math.max(0,Math.min(5,Math.floor(Math.round((+sc||0)*10)/10+1e-9)));}
 function c5fwLvl(sc){var L=(typeof CMMI_LABELS!=='undefined')?CMMI_LABELS:{0:'Non-existent',1:'Initial',2:'Repeatable',3:'Defined',4:'Managed',5:'Optimizing'};return L[c5cmmiLevel(sc)]||'';}
 function c5fwCol(sc){return (typeof cmmiColor==='function')?cmmiColor(c5cmmiLevel(sc)):'ink';}
 function c5fwMean(arr){if(!arr.length)return 0;return arr.reduce(function(a,b){return a+b;},0)/arr.length;}
@@ -4601,7 +4604,7 @@ var C5_DP_OPENASK={};    // which awaiting-leader rows are expanded (ask id → 
 var C5_DP_PLANNER_OPEN=false; // control-improvement planner drill-down open?
 function c5DecProj(){
   var host=document.getElementById('c5-decproj');if(!host)return;
-  try{window.C5_SCOPE_FWKEY='csf';}catch(_){}
+  try{window.C5_SCOPE_FWKEY='csf';C5_ASSESS_FW='csf';}catch(_){}   // pin the scope engine to CSF: these surfaces must not inherit a leaked AI-RMF config from the AI tab
   if(window.__c5Return||document.getElementById('c5retbar')){window.__c5Return=null;c5HideReturnBar();}
   var levers=c5Levers();
   // Scope alignment — a decision shown for Enterprise must be SUPPORTED BY Enterprise's findings,
@@ -5945,6 +5948,22 @@ function c5ContinuousAssessment(host){
   // met → not-met flip auto-raises a ticket on the connected ITSM.
   var drift=c5DriftAlerts();var verdLbl={met:'met',partial:'partially met',not_met:'not met',not_assessed:'not assessed'};
   var driftPanel='';
+  // Improvements block — the Trend card counts "N improved", so the drift view must LIST them, not
+  // claim "nothing drifted". Shown after any regressions; clicking a row opens that control's finding.
+  var impPanel='';
+  if(drift.improvements.length){
+    var impShown=drift.improvements.slice(0,12);
+    var iRows=impShown.map(function(d){
+      return '<div data-assessctl="'+esc(d.id)+'" style="display:flex;gap:9px;align-items:center;flex-wrap:wrap;padding:7px 4px;border-top:1px solid var(--line);cursor:pointer">'
+        +'<span style="font-size:9px;font-weight:800;letter-spacing:.04em;color:var(--good);text-transform:uppercase;width:52px;flex:none">▲ up</span>'
+        +'<span style="font-family:ui-monospace,monospace;font-size:11px;color:var(--ink);width:70px;flex:none">'+esc(d.id)+'</span>'
+        +'<span style="font-size:11px;color:var(--ink-2);flex:1;min-width:130px">'+verdLbl[d.from]+' <span style="color:var(--muted)">→</span> <b style="color:var(--good)">'+verdLbl[d.to]+'</b></span></div>';}).join('');
+    var iMore=(drift.improvements.length>12)?('<div style="border-top:1px solid var(--line);padding-top:8px;margin-top:2px;font-size:11px;color:var(--muted)">+ '+(drift.improvements.length-12)+' more improved</div>'):'';
+    impPanel='<div style="border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:14px;background:var(--surface)">'
+      +'<div style="font-weight:600;font-size:13px;color:var(--ink)"><span style="color:var(--good)">▲</span> '+drift.improvements.length+' control'+(drift.improvements.length>1?'s':'')+' improved since last assessment</div>'
+      +'<div style="font-size:11px;color:var(--muted);margin:5px 0 8px;line-height:1.5">These climbed a verdict band since the prior cycle — evidence connected, an attestation refreshed, or coverage widened. Click any row for the control.</div>'
+      +iRows+iMore+'</div>';
+  }
   if(drift.regressions.length){
     // Clean, neutral card (matches the rest of the page). Click a row to open its finding;
     // "show all / fewer" expands the full list.
@@ -5963,6 +5982,7 @@ function c5ContinuousAssessment(host){
       +'<div style="font-size:11px;color:var(--muted);margin:5px 0 8px;line-height:1.5">The score is the lagging summary; this is what to act on now. A <b>met → not-met</b> flip raises a finding and an automatic ticket on your connected ITSM (Jira / ServiceNow). Click any row to open its finding.</div>'
       +dRows+more+'</div>';
   }
+  driftPanel+=impPanel;   // improvements always listed (even when there are no regressions)
   // Compact link to the confirm-queue tab (the queue itself lives in c5ConfirmQueueView).
   var pendingN=c5ReviewQueue().filter(function(q){return !q.confirmed;}).length;
   var queuePanel=(C5_ASSESS_FW==='csf'&&pendingN)?('<div style="border:1px solid var(--blue);border-radius:10px;padding:9px 14px;margin:12px 0;background:color-mix(in srgb,var(--blue) 5%,transparent);font-size:12px;color:var(--ink-2)">✔ <b style="color:var(--blue)">'+pendingN+'</b> hybrid control'+(pendingN>1?'s':'')+' awaiting a one-click confirm — see the <b>Confirm queue</b> tab.</div>'):'';
@@ -6164,7 +6184,7 @@ function c5ContinuousAssessment(host){
   var paFwName=isAiFw?'AI-governance':(c5AssessFwCfg().label);
   var paReadCol=overall5>=3.5?'--good':overall5>=2?'--blue':overall5>=1?'--warn':'--crit';
   var paFinding='Your '+paFwName+' program'+(paScopeLbl?(' for <b>'+esc(paScopeLbl)+'</b>'):'')+' sits at <em>'+(vLevel||'&mdash;')+'</em> (CMMI Level '+vCmmi+') &mdash; '+overall5.toFixed(1)+' of 5, '+(vBelow?'<span class="bad">below the 3.5 target</span>':'at the 3.5 target')+'.';
-  var paEyebrow=(isAiFw?'Program health · AI frameworks':'Program health · '+(c5AssessFwCfg().label))+' · as of '+new Date().toLocaleDateString();
+  var paEyebrow=(isAiFw?'Program health · AI frameworks':'Program health · '+(c5AssessFwCfg().label))+(paScopeLbl?(' · '+esc(paScopeLbl)):'')+' · as of '+new Date().toLocaleDateString();
   // Scope basis — state the hierarchy explicitly so Enterprise is never read as a place:
   // Enterprise = equal-weighted mean of regions; a region = mean of its entities; an entity
   // = a leaf scored from its own telemetry. Keeps the roll-up honest in the UI, not just the code.
@@ -6280,7 +6300,10 @@ function c5ConfirmQueueView(host){
       :'<div style="font-size:12px;color:var(--muted);border:1px dashed var(--line);border-radius:10px;padding:14px">No hybrid controls in the queue yet — connect telemetry so controls graduate to the machine-evidenced tier.</div>')
     +'</div>';
   host.querySelectorAll('[data-confirm]').forEach(function(btn){btn.addEventListener('click',function(){
-    var v=btn.getAttribute('data-confirm').split(':');c5ConfirmControl(v[1],(v[0]==='clear')?null:v[0]);c5ConfirmQueueView(host);});});
+    var v=btn.getAttribute('data-confirm').split(':');c5ConfirmControl(v[1],(v[0]==='clear')?null:v[0]);
+    // Re-render the whole Frameworks panel, not just the queue body, so the subtab BADGE and the CSF
+    // "prove it" split (both painted in the outer panel) refresh too — otherwise they read stale.
+    if(typeof c5Frameworks==='function')c5Frameworks();else c5ConfirmQueueView(host);});});
 }
 /* ===== OPERATIONAL IMPACT — the honest alternative to a modeled dollar figure. Impact is
    expressed in what a board and a regulator can actually verify: which important business
@@ -6291,7 +6314,7 @@ function c5ConfirmQueueView(host){
 var C5_RESIL_FILTER=null,C5_RESIL_SVC=null;
 function c5Resilience(){
   var host=document.getElementById('c5-resilience');if(!host)return;
-  try{window.C5_SCOPE_FWKEY='csf';}catch(_){}
+  try{window.C5_SCOPE_FWKEY='csf';C5_ASSESS_FW='csf';}catch(_){}   // pin the scope engine to CSF: these surfaces must not inherit a leaked AI-RMF config from the AI tab
   var esc=(typeof c5esc==='function')?c5esc:function(s){return s;};
   var svcs=(typeof c5CriticalServices==='function')?c5CriticalServices():[];
   var rScope=(typeof c5Scope==='function')?c5Scope():'enterprise';
@@ -6409,7 +6432,7 @@ var NC_ICON={'Endpoint':'💻','Identity & Access':'🔑','Network':'🌐','Data
 var C5_NEURON_EXP={},C5_NEURON_ADV=false;
 function c5NeuronControls(host){
   if(!host)return;
-  try{window.C5_SCOPE_FWKEY='csf';}catch(_){}
+  try{window.C5_SCOPE_FWKEY='csf';C5_ASSESS_FW='csf';}catch(_){}   // pin the scope engine to CSF: these surfaces must not inherit a leaked AI-RMF config from the AI tab
   var esc=(typeof c5esc==='function')?c5esc:function(s){return s;};
   var nc=neuronControls();
   var live=nc.filter(function(n){return n.evidence==='live';}).length;
@@ -6580,9 +6603,11 @@ function c5NeuronControls(host){
   var ncFinding='<em>'+live+'</em> of '+nc.length+' capabilities run on live telemetry'+(off>0?(', and <span class="bad">'+off+'</span> '+(off===1?'is':'are')+' not deployed.'):' &mdash; full coverage.');
   // Same Enterprise → Region → Entity switcher as every other framework tab, above the finding.
   var ncScopeNav='';try{if(typeof scopeNav==='function'){var _nsn=scopeNav();if(_nsn)ncScopeNav='<div style="margin-bottom:6px">'+_nsn+'</div>';}}catch(_){}
+  var _ncScope=(typeof c5Scope==='function')?c5Scope():'enterprise';
+  var _ncScLbl=(_ncScope==='enterprise')?'':((typeof scopeLabel==='function')?scopeLabel(_ncScope):_ncScope);
   host.innerHTML=
     '<div style="max-width:1080px">'
-    +'<div class="c5pa"><div class="c5pa-eyebrow">Program health · Neuron Controls · as of '+new Date().toLocaleDateString()+'</div>'
+    +'<div class="c5pa"><div class="c5pa-eyebrow">Program health · Neuron Controls'+(_ncScLbl?(' · '+esc(_ncScLbl)):'')+' · as of '+new Date().toLocaleDateString()+'</div>'
     +ncScopeNav
     +'<h1 class="c5pa-finding">'+ncFinding+'</h1>'
     +'<div class="c5pa-dek">A <b>Neuron Control</b> is a security capability — a tool doing a real job: EDR blocking malware, MFA gating access, backups enabling recovery. Nerion measures each one <b>once</b> from live telemetry (is it deployed, and is it <b>proven</b> to work — via BAS / purple-team), then maps it to every framework control it satisfies. This is the engine behind every score above: <b>measure the capability once, report it into NIST CSF, ISO 27001, CIS and the rest</b>.</div></div>'
@@ -6803,6 +6828,11 @@ function c5FwLens(host,fwKey,label){
   var T=(typeof c5fwTree==='function')?c5fwTree(fwKey,cov):{overall:0,groups:[],coverage:0};
   var overall5=T.overall||0,groups=(T.groups||[]);
   var scope=(typeof c5Scope==='function')?c5Scope():'enterprise';
+  // Headline maturity from the reconciling scope aggregate (Enterprise = mean of regions = mean of
+  // entities), the SAME source the region cards use — so the gauge/finding/KPI match the cards below
+  // and actually move when you change scope (the flat c5fwTree overall barely varies across aggregate
+  // scopes because it is dominated by inherited common controls). CSF and AI already do this.
+  try{if(typeof scopeAggTree==='function'){var _aggFw=scopeAggTree(scope);if(_aggFw&&_aggFw.overall!=null)overall5=_aggFw.overall;}}catch(_){}
   var scLbl=(scope==='enterprise')?'':((typeof scopeLabel==='function')?scopeLabel(scope):scope);
   var vLevel=(typeof c5fwLvl==='function')?c5fwLvl(overall5):'';
   var vCmmi=(typeof c5cmmiLevel==='function')?c5cmmiLevel(overall5):Math.floor(overall5);
@@ -6891,7 +6921,10 @@ function c5Frameworks(){
   host.querySelectorAll('[data-phtab]').forEach(function(b){b.onclick=function(){var nt=b.getAttribute('data-phtab');
     // Switching between the CSF and AI assessments resets the drill so a CSF control id never
     // leaks into the AI view (and vice-versa).
-    if((nt==='assess'||nt==='ai')&&nt!==C5_PH_TAB){C5_ASSESS_CTRL=null;C5_ASSESS_EXP=null;C5_ASSESS_FN=null;C5_ASSESS_FORCECTRL=false;C5_ASSESS_SUBTAB='summary';}
+    if((nt==='assess'||nt==='ai')&&nt!==C5_PH_TAB){C5_ASSESS_CTRL=null;C5_ASSESS_EXP=null;C5_ASSESS_FN=null;C5_ASSESS_FORCECTRL=false;C5_ASSESS_SUBTAB='summary';C5_ASSESS_FILTER=null;}
+    // Reset the ISO/CIS lens drill/KPI state on any tab change so an open KPI panel or control detail
+    // from ISO doesn't render pre-opened when you land on CIS (they share these globals).
+    if(nt!==C5_PH_TAB){C5_FWLENS_KPI=null;C5_FWLENS_CTRL=null;C5_FWLENS_EXP={};}
     C5_PH_TAB=nt;c5Frameworks();};});
   var body=document.getElementById('c5ph-body');
   if(tab==='ai'){c5AiFrameworkTab(body);}
@@ -6967,7 +7000,7 @@ function c5FrameworksClassic(host){
   var reassessRow='<div class="c5fw-cad"><span style="font-size:11px;color:var(--muted);margin-right:2px">Reassess:</span>'+[['weekly','Weekly'],['monthly','Monthly'],['quarterly','Quarterly']].map(function(o){return '<button class="c5fw-cadb'+(cad===o[0]?' on':'')+'" data-c5fwcad="'+o[0]+'">'+o[1]+'</button>';}).join('')+'</div>';
   // Export buttons — draft (watermarked) pack, upload-the-reviewed-final, and the XLSX
   // scorecard. "Upload Final" lets the user put back the human-reviewed deck (PPTX/PDF).
-  var exportBtns='<button class="c5btn" onclick="c5fwExport(false)" title="Draft — DRAFT watermark on every slide">Nauditor pack (PPTX)</button>'+
+  var exportBtns='<button class="c5btn" onclick="c5fwExport(false)" title="Draft — DRAFT watermark on every slide">Auditor pack (PPTX)</button>'+
     '<button class="c5btn" id="c5fwUploadFinalBtn" title="Upload the final deck after human review (PPTX / PDF)" style="background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line)">↥ Upload Final</button>'+
     '<button class="c5btn" onclick="c5fwExportXlsx()" style="background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line)">Scorecard + POA&amp;M</button>'+
     '<input type="file" id="c5fwFinalFile" accept=".pptx,.ppt,.pdf,.key" style="display:none">';
@@ -7492,7 +7525,7 @@ function c5ViewDoc(fname){
       ((!met.length&&!gaps.length&&!matched.length)?('<div style="font-size:12px;color:var(--ink-2);line-height:1.6">No attribute-level review is on file for this document, so it isn’t contributing to any control score. This happens when a policy was uploaded but not analyzed. Run the review to score it against the control catalog.</div>'+((typeof window!=='undefined'&&typeof window.reanalyzeStoredDocs==='function')?('<button type="button" id="c5annReanalyze" style="margin-top:12px;border:1px solid var(--line);background:var(--surface);color:var(--blue);font-weight:600;font-size:12px;padding:8px 14px;border-radius:8px;cursor:pointer">↻ Run document review</button>'):'<div style="margin-top:10px;font-size:11px;color:var(--muted)">Re-upload and analyse this policy in onboarding to score it.</div>')):'');
     wrap.innerHTML='<div style="width:min(1160px,96vw);max-height:92vh;display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 24px 60px rgba(20,33,72,.45);overflow:hidden">'+
       '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line);background:var(--surface-2)">'+
-        '<div style="min-width:0;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><b style="font-family:var(--serif);font-size:15px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📄 '+c5esc(fname)+'</b><span style="font-size:10px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--blue);background:color-mix(in srgb,var(--blue) 12%,var(--surface));border:1px solid color-mix(in srgb,var(--blue) 30%,transparent);border-radius:20px;padding:2px 9px">✦ Nauditor-annotated</span></div>'+
+        '<div style="min-width:0;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><b style="font-family:var(--serif);font-size:15px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📄 '+c5esc(fname)+'</b><span style="font-size:10px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--blue);background:color-mix(in srgb,var(--blue) 12%,var(--surface));border:1px solid color-mix(in srgb,var(--blue) 30%,transparent);border-radius:20px;padding:2px 9px">✦ Nerion-annotated</span></div>'+
         '<button type="button" id="c5docViewerClose" style="flex:none;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 13px;font-weight:600;font-size:12px;cursor:pointer">Close</button>'+
       '</div>'+
       '<div style="display:flex;flex:1 1 auto;min-height:0">'+
