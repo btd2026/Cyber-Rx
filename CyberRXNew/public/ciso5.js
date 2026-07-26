@@ -5914,11 +5914,14 @@ function c5ConfirmQueueView(host){
    modeled, and whether that beats the impact tolerance the board set. This is the operational-
    resilience currency (UK Op-Res impact tolerances / DORA), not a Monte-Carlo ALE nobody
    trusts. Built on the shared c5CriticalServices() recovery records. */
-var C5_RESIL_FILTER=null;
+var C5_RESIL_FILTER=null,C5_RESIL_SVC=null;
 function c5Resilience(){
   var host=document.getElementById('c5-resilience');if(!host)return;
   var esc=(typeof c5esc==='function')?c5esc:function(s){return s;};
   var svcs=(typeof c5CriticalServices==='function')?c5CriticalServices():[];
+  var rScope=(typeof c5Scope==='function')?c5Scope():'enterprise';
+  var rScopeLbl=(rScope==='enterprise')?'':((typeof scopeLabel==='function')?scopeLabel(rScope):rScope);
+  var rScopeAt=rScopeLbl?(' in <b>'+esc(rScopeLbl)+'</b>'):' enterprise-wide';
   function hrs(h){if(h==null)return '—';return h>=48?(Math.round(h/24)+'d'):(h+'h');}
   if(!svcs.length){host.innerHTML=(typeof c5header==='function'?c5header():'')+'<div style="font-size:12px;color:var(--muted);border:1px dashed var(--line);border-radius:12px;padding:16px">No critical business services mapped yet — add them at onboarding so their impact tolerance and proven recovery surface here.</div>';return;}
   var within=svcs.filter(function(s){return s.rto<=s.tgt;}).length;
@@ -5950,9 +5953,10 @@ function c5Resilience(){
       ?'<span style="font-size:10px;font-weight:700;color:var(--good)">✓ proven — recovery tested</span>'
       :'<span style="font-size:10px;font-weight:700;color:var(--warn)">modeled — recovery not tested</span>';
     var nf=/no failover/i.test(s.failover);
+    var selRow=(C5_RESIL_SVC===s.n);
     var td='padding:9px 12px 9px 0;border-top:1px solid var(--line);font-size:12px;vertical-align:top';
-    return '<tr>'
-      +'<td style="'+td+'"><b style="color:var(--ink)">'+esc(s.n)+'</b><div style="font-size:10px;color:var(--muted)">depends on '+esc(s.dep)+'</div></td>'
+    return '<tr data-ressvc="'+esc(s.n)+'" role="button" tabindex="0" title="Open '+esc(s.n)+' detail" style="cursor:pointer;background:'+(selRow?'color-mix(in srgb,var(--blue) 7%,transparent)':'transparent')+'">'
+      +'<td style="'+td+'"><b style="color:var(--'+(selRow?'blue':'ink')+')">'+esc(s.n)+' &rsaquo;</b><div style="font-size:10px;color:var(--muted)">depends on '+esc(s.dep)+'</div></td>'
       +'<td style="'+td+';white-space:nowrap">'+hrs(s.tgt)+'</td>'
       +'<td style="'+td+';white-space:nowrap;color:var(--'+(ok?'ink':'crit')+');font-weight:700">'+hrs(s.rto)+'</td>'
       +'<td style="'+td+'">'+statusPill+'</td>'
@@ -5964,29 +5968,59 @@ function c5Resilience(){
   var table='<div style="overflow-x:auto;margin-top:'+(C5_RESIL_FILTER?'8':'14')+'px"><table style="border-collapse:collapse;width:100%;min-width:720px"><thead><tr>'
     +['Important business service','Impact tolerance','Recovers in','Status','Recovery proof','Failover'].map(function(h){return '<th style="'+th+'">'+h+'</th>';}).join('')
     +'</tr></thead><tbody>'+(rows||('<tr><td colspan="6" style="padding:14px 0;font-size:12px;color:var(--muted)">No services in this slice.</td></tr>'))+'</tbody></table></div>';
+  // Per-service detail — opens below the table when a row is clicked. Plain-English "what breaks,
+  // for how long, is it proven" for the one service, scope-aware (names the region/entity).
+  function mins(m){if(m==null)return '—';return m>=60?((m/60)%1===0?(m/60)+'h':(Math.round(m/6)/10)+'h'):(m+' min');}
+  function resSvcDetail(s){
+    var ok=s.rto<=s.tgt,overBy=ok?0:(s.rto-s.tgt),nf=/no failover/i.test(s.failover);
+    var kv=function(k,v){return '<div style="min-width:150px"><div style="font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)">'+k+'</div><div style="font-size:13px;color:var(--ink);margin-top:2px">'+v+'</div></div>';};
+    var narrative='If <b>'+esc(s.n)+'</b> goes down'+rScopeAt+', <b>'+esc(s.dep)+'</b> is the recovery path. The board set a <b>'+hrs(s.tgt)+'</b> impact tolerance; today it recovers in <b>'+hrs(s.rto)+'</b>'+(ok?' &mdash; inside the limit.':' &mdash; <span class="bad">over by '+hrs(overBy)+'</span>, the real exposure.')+' Recovery is '+(s.live?'<b style="color:var(--good)">proven by test</b>':'<b style="color:var(--warn)">modeled, not yet tested</b>')+'.'+(nf?' There is <span class="bad">no failover</span> &mdash; a single point of failure.':' Failover: '+esc(s.failover)+'.');
+    return '<div style="border:1px solid var(--blue);border-radius:14px;margin-top:14px;padding:16px 18px;background:color-mix(in srgb,var(--blue) 3%,var(--surface))">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px"><div style="font-size:15px;font-weight:800;color:var(--ink)">'+esc(s.n)+(rScopeLbl?(' <span style="font-size:12px;font-weight:600;color:var(--muted)">· '+esc(rScopeLbl)+'</span>'):'')+'</div><button data-ressvcclose="1" style="font-size:12px;font-weight:600;color:var(--blue);background:none;border:1px solid var(--line);border-radius:20px;padding:3px 11px;cursor:pointer">close &times;</button></div>'
+      +'<div style="display:flex;gap:22px;flex-wrap:wrap;margin-bottom:12px">'
+        +kv('Impact tolerance',hrs(s.tgt)+' downtime')
+        +kv('Recovers in','<b style="color:var(--'+(ok?'good':'crit')+')">'+hrs(s.rto)+'</b>'+(ok?'':' · over by '+hrs(overBy)))
+        +kv('Data-loss (RPO)',mins(s.rtgt)+' target · '+mins(s.rpo)+' actual')
+        +kv('Recovery evidence',s.live?'<span style="color:var(--good)">✓ tested</span>':'<span style="color:var(--warn)">modeled</span>')
+        +kv('Failover',(nf?'<span class="bad">⚠ '+esc(s.failover)+'</span>':esc(s.failover)))
+      +'</div>'
+      +'<div style="font-size:13px;color:var(--ink-2);line-height:1.6">'+narrative+'</div>'
+    +'</div>';
+  }
+  var selSvc=C5_RESIL_SVC?(svcs.filter(function(s){return s.n===C5_RESIL_SVC;})[0]||null):null;
+  var detailPanel=selSvc?resSvcDetail(selSvc):'';
   var intro='Impact here is measured in what you can verify — <b>hours of downtime and services lost</b>, not a modeled dollar. For each important business service: the <b>impact tolerance</b> the board set, how long it actually takes to recover, whether that recovery is <b>proven by a test</b> or only modeled, and whether a failover exists. A service that can’t be recovered inside tolerance — or whose recovery has never been tested — is your real exposure.';
   var foot='<div class="c5foot">Impact tolerance and recovery come from your resilience telemetry and DR-test records where connected (<b>proven</b>); the rest are modeled sample rows until per-service recovery telemetry connects — labelled <b style="color:var(--warn)">modeled</b>, never presented as tested. This is the operational-resilience read (UK Operational Resilience impact tolerances · EU DORA) — the impact currency a regulator recognizes.</div>';
   // ── Blend presentation: editorial finding → recovery-vs-tolerance instrument → detail ──
   if(typeof c5paStyle==='function')c5paStyle();
+  var worstSvc=svcs.filter(function(s){return s.rto>s.tgt;}).sort(function(a,b){return (b.rto-b.tgt)-(a.rto-a.tgt);})[0];
   var paFinding = over>0
-    ? ('<span class="bad">'+over+' critical service'+(over>1?'s':'')+'</span> can&rsquo;t be recovered within tolerance.')
-    : (proven<svcs.length ? 'Recovery holds on paper &mdash; but <span class="bad">not all of it is proven</span>.'
-                          : 'Every critical service recovers within tolerance &mdash; and it&rsquo;s <em>proven</em>.');
+    ? (worstSvc
+        ? ('<b>'+esc(worstSvc.n)+'</b>'+rScopeAt+' can&rsquo;t be recovered within tolerance &mdash; <span class="bad">'+hrs(worstSvc.rto)+' against a '+hrs(worstSvc.tgt)+' limit</span>'+(over>1?(', and '+(over-1)+' other critical service'+(over>2?'s':'')):'')+'.')
+        : ('<span class="bad">'+over+' critical service'+(over>1?'s':'')+'</span> can&rsquo;t be recovered within tolerance'+rScopeAt+'.'))
+    : (proven<svcs.length ? ('Every critical service'+rScopeAt+' recovers within tolerance &mdash; but <span class="bad">not all of it is proven</span>.')
+                          : ('Every critical service'+rScopeAt+' recovers within tolerance &mdash; and it&rsquo;s <em>proven</em>.'));
   var paHero='<div class="c5pa">'
-    +'<div class="c5pa-eyebrow">Operational impact · what breaks, for how long, is recovery proven · as of '+new Date().toLocaleDateString()+'</div>'
+    +'<div class="c5pa-eyebrow">Operational impact'+(rScopeLbl?(' · '+esc(rScopeLbl)):'')+' · what breaks, for how long, is recovery proven · as of '+new Date().toLocaleDateString()+'</div>'
     +'<h1 class="c5pa-finding">'+paFinding+'</h1>'
     +'<div class="c5pa-dek">'+intro+'</div>'
     +'<div class="c5pa-inst" style="grid-template-columns:1fr">'
-      +'<div class="c5pa-cell"><div class="c5pa-ct">Recovery time vs the board&rsquo;s tolerance &mdash; worst first</div>'+((typeof c5paRecovery==='function')?c5paRecovery(svcs,hrs):'')+'</div>'
+      +'<div class="c5pa-cell"><div class="c5pa-ct">Recovery time vs the board&rsquo;s tolerance &mdash; worst first<span style="float:right;text-transform:none;letter-spacing:0;color:var(--blue);font-weight:700">click a service row for detail</span></div>'+((typeof c5paRecovery==='function')?c5paRecovery(svcs,hrs):'')+'</div>'
     +'</div>'
   +'</div>';
   host.innerHTML=(typeof c5header==='function'?c5header():'')
-    +paHero+cards+filterBar+table+foot;
+    +paHero+cards+filterBar+table+detailPanel+foot;
   // Wire the KPI cards → filter the service table to the clicked subset (toggle + clear).
   host.querySelectorAll('[data-resfilter]').forEach(function(cd){
     var go=function(){var k=cd.getAttribute('data-resfilter');C5_RESIL_FILTER=(C5_RESIL_FILTER===k)?null:k;c5Resilience();};
     cd.onclick=go;cd.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}};});
   var _rc=host.querySelector('[data-resclear]');if(_rc)_rc.onclick=function(){C5_RESIL_FILTER=null;c5Resilience();};
+  // Wire the service rows → open (toggle) that service's detail panel below the table.
+  host.querySelectorAll('[data-ressvc]').forEach(function(row){
+    var go=function(){var n=row.getAttribute('data-ressvc');C5_RESIL_SVC=(C5_RESIL_SVC===n)?null:n;c5Resilience();
+      if(C5_RESIL_SVC){var d=host.querySelector('[data-ressvcclose]');if(d&&d.scrollIntoView)try{d.closest('div').scrollIntoView({behavior:'smooth',block:'nearest'});}catch(_){}}};
+    row.onclick=go;row.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go();}};});
+  var _sc=host.querySelector('[data-ressvcclose]');if(_sc)_sc.onclick=function(){C5_RESIL_SVC=null;c5Resilience();};
 }
 /* The Neuron Controls lens — capability × (adversarial + 5 non-adversarial lanes)
    × framework projection, in one view. Read-only; renders into the panel passed in. */
