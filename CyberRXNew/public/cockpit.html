@@ -2589,7 +2589,7 @@ var AI_RMF=[
      return {cmmi:c,src:'governance',method:'<b>Governance attestation review.</b> The adopted AI governance framework(s) recorded at onboarding were assessed against the RMF GOVERN outcome for a recognized, operating AI risk-management process.',
        finding:g.framework?('Framework attested as “<b>'+g.framework+'</b>”. '+((aiLookup('framework',g.framework)||{}).n||'')):'No AI governance framework was attested.',
        rec:c>=5?'Maintain both the RMF risk process and the ISO/IEC 42001 management system; keep profiles current per AI system.':'Adopt NIST AI RMF for the risk process and pursue ISO/IEC 42001 for external certifiability.'};}},
-   {id:'GV.IM-01',name:'AI inventory (AI-BOM) maintained with owners',assess:function(g){var c=aiGovCmmi('inventory',g.inventory),dep=sig('ai_deployments'),rep=Number(g.systems)||null,src='governance',method='<b>Governance attestation review.</b> The AI-inventory (AI-BOM) status recorded at onboarding was assessed against the RMF outcome for a complete, owned inventory of AI systems.',finding=g.inventory?('Inventory attested as “<b>'+g.inventory+'</b>”'+(rep!=null?(' ('+rep+' self-reported system'+(rep===1?'':'s')+')'):'')+'. '+((aiLookup('inventory',g.inventory)||{}).n||'')):'No AI inventory status was attested.';
+   {id:'GV.IM-01',name:'AI inventory (AI-BOM) maintained with owners',assess:function(g){var c=aiGovCmmi('inventory',g.inventory),dep=aiConn()?sig('ai_deployments'):null,rep=Number(g.systems)||null,src='governance',method='<b>Governance attestation review.</b> The AI-inventory (AI-BOM) status recorded at onboarding was assessed against the RMF outcome for a complete, owned inventory of AI systems.',finding=g.inventory?('Inventory attested as “<b>'+g.inventory+'</b>”'+(rep!=null?(' ('+rep+' self-reported system'+(rep===1?'':'s')+')'):'')+'. '+((aiLookup('inventory',g.inventory)||{}).n||'')):'No AI inventory status was attested.';
      if(dep!=null){src='system';method='<b>Automated corroboration.</b> A connected AI gateway/registry was queried for live AI deployments and cross-checked against the self-reported inventory; a discrepancy indicates shadow AI outside governance.';
        var disc=(rep!=null&&dep>rep);finding='A connected AI source reports <b>'+dep+'</b> live AI deployment'+(dep===1?'':'s')+(rep!=null?(' vs '+rep+' self-reported'):'')+(disc?(' — <b>'+(dep-rep)+' more than reported</b>, i.e. likely shadow AI to bring under governance.'):' — consistent with the reported inventory.');if(disc)c=Math.min(c,2);}
      return {cmmi:c,src:src,method:method,finding:finding,rec:c>=4?'Maintain the AI-BOM with a named owner per system; reconcile against the AI gateway each cycle.':'Complete the AI bill-of-materials — every agent, GenAI app and coding assistant with a named owner — and reconcile it against live AI telemetry to eliminate shadow AI.'};}},
@@ -2609,15 +2609,15 @@ var AI_RMF=[
        rec:c>=4?'Maintain the mapping as systems change.':'Map every AI system to a named owner, the data it can access, and its business purpose.'};}}
  ]},
  {fn:'MEASURE',controls:[
-   {id:'MS.TE-01',name:'AI evaluation & testing (OWASP LLM/Agentic Top 10)',assess:function(g){var has=/owasp/i.test((g.framework||'')+' '+(g.policy||'')),c=has?4:1;
-     return {cmmi:c,src:'governance',method:'<b>Governance attestation review.</b> Evidence of pre-deployment AI evaluation against the OWASP LLM & Agentic Top 10 (prompt injection, tool misuse, data leakage, memory poisoning) was assessed.',
-       finding:has?'OWASP LLM/Agentic testing is referenced in the AI programme.':'No OWASP LLM/Agentic Top 10 testing is evidenced — AI apps may reach production without adversarial evaluation.',
-       rec:has?'Automate OWASP LLM/Agentic tests in the AI CI/CD pipeline and retain results as evidence.':'Test every AI application against the OWASP LLM & Agentic Top 10 before release and on change.'};}},
-   {id:'MS.RT-01',name:'Adversarial testing / red-team (MITRE ATLAS)',assess:function(g){var has=/atlas|red.?team/i.test((g.framework||'')+' '+(g.inventory||'')),c=has?4:1;
-     return {cmmi:c,src:'governance',method:'<b>Governance attestation review.</b> Evidence of adversarial red-teaming of AI systems against MITRE ATLAS techniques was assessed.',
-       finding:has?'AI red-teaming against MITRE ATLAS is part of the programme.':'No adversarial AI testing (MITRE ATLAS) is evidenced.',
-       rec:has?'Schedule recurring ATLAS red-team exercises and track remediation.':'Red-team your AI systems against MITRE ATLAS techniques and remediate findings.'};}},
-   {id:'MS.MO-01',name:'Runtime AI monitoring (AI-SPM / guardrails)',assess:function(g){var mon=sig('ai_monitored'),c=mon===1?4:1;
+   {id:'MS.TE-01',name:'AI evaluation & testing (OWASP LLM/Agentic Top 10)',assess:function(g){var has=/owasp/i.test((g.framework||'')+' '+(g.policy||'')),c=has?3:1;
+     return {cmmi:c,src:'governance',method:'<b>Governance attestation review.</b> This is a MEASURE outcome — its real evidence is an <b>evaluation report</b> (OWASP LLM & Agentic Top 10: prompt injection, tool misuse, data leakage, memory poisoning). A policy that references OWASP shows documented intent, not that the tests were run, so a reference alone is capped at Defined (3) pending the eval artifact.',
+       finding:has?'OWASP LLM/Agentic testing is <b>referenced</b> in the AI programme — documented intent. Attach the actual evaluation report to evidence that the tests were run (and raise this above Defined).':'No OWASP LLM/Agentic Top 10 testing is evidenced — AI apps may reach production without adversarial evaluation.',
+       rec:has?'Run the OWASP LLM/Agentic tests, automate them in the AI CI/CD pipeline, and attach the results — the report, not the policy reference, is the evidence.':'Test every AI application against the OWASP LLM & Agentic Top 10 before release and on change.'};}},
+   {id:'MS.RT-01',name:'Adversarial testing / red-team (MITRE ATLAS)',assess:function(g){var has=/atlas|red.?team/i.test((g.framework||'')+' '+(g.inventory||'')),c=has?3:1;
+     return {cmmi:c,src:'governance',method:'<b>Governance attestation review.</b> A MEASURE outcome whose real evidence is a <b>red-team report</b> against MITRE ATLAS techniques. A programme mention shows intent, not a completed exercise, so a reference alone is capped at Defined (3) pending the report.',
+       finding:has?'AI red-teaming against MITRE ATLAS is <b>referenced</b> in the programme — documented intent. Attach the red-team report to evidence it was performed.':'No adversarial AI testing (MITRE ATLAS) is evidenced.',
+       rec:has?'Run the ATLAS red-team exercise, track remediation, and attach the report as evidence — the exercise, not the reference, is what raises this above Defined.':'Red-team your AI systems against MITRE ATLAS techniques and remediate findings.'};}},
+   {id:'MS.MO-01',name:'Runtime AI monitoring (AI-SPM / guardrails)',assess:function(g){var mon=aiConn()?sig('ai_monitored'):null,c=mon===1?4:1;
      return {cmmi:c,src:mon!=null?'system':'governance',method:'<b>'+(mon!=null?'Automated evidence.':'Evidence sufficiency check.')+'</b> Whether AI runtime is monitored by an AI-security tool (guardrails / AI-SPM watching prompt injection, data leakage and shadow AI) was assessed'+(mon!=null?' from the connected AI source.':'.'),
        finding:mon===1?'A connected AI source confirms AI runtime is monitored/traced.':'No runtime AI-security monitoring is connected — prompt injection, data leakage and shadow AI are not watched at machine speed.',
        rec:c>=4?'Maintain guardrail/AI-SPM coverage across all AI apps; alert into the SIEM.':'Connect an AI-security tool (Lakera · Protect AI · Prompt Security · CrowdStrike AI Detection) to monitor AI at runtime — human review does not scale to agent speed.'};}}
@@ -2639,7 +2639,12 @@ var AI_RMF=[
 ];
 function aiProvIcon(src){return src==='system'?'<span class="fwprov" title="from connected AI signal">🔌 system</span>':src==='document'?'<span class="fwprov" title="from document review">📄 doc</span>':'<span class="fwprov" title="governance attestation (onboarding)">🧾 attested</span>';}
 /* Shared scorers/builders for the AI frameworks (attestation-first, telemetry when connected). */
-function aiMon(){return sig('ai_monitored')===1;}
+/* AI runtime telemetry is only real when an AI-security connector is actually wired. Nerion ships
+   no such connector yet, so this is false today — which keeps every AI control HONEST attestation
+   instead of flipping to a "🔌 live AI signal" off a signal key nothing populates. The moment a
+   genuine AI-SPM / gateway connector lands, this lights up the telemetry path legitimately. */
+function aiConn(){try{var t=(typeof connectedTools==='function')?connectedTools():{};return !!(t&&(t.lakera||t.protectai||t.promptsecurity||t.ai_security||t.ai_gateway));}catch(_){return false;}}
+function aiMon(){return aiConn()&&sig('ai_monitored')===1;}
 function aiHasOwasp(g){return /owasp/i.test((g.framework||'')+' '+(g.policy||''));}
 function aiHasAtlas(g){return /atlas|red.?team/i.test((g.framework||'')+' '+(g.inventory||''));}
 function aiAttestMethod(what){return '<b>Governance attestation review.</b> '+what+', recorded in the onboarding AI-governance intake, was assessed against this control\'s expected outcome. Self-reported until an AI GRC / model-registry platform is connected.';}
