@@ -61,6 +61,43 @@
     };
   }
 
+  // Group the systems under the BUSINESS PROCESSES they support, from the same
+  // value-chain tree (Entity → Process → System). A system supporting two processes
+  // shows under both — that is correct. `sysByName` maps a system name to its scored
+  // system object from the biz spine. Returns ordered process groups (critical first,
+  // worst residual first), plus an "other systems" group for anything unmapped.
+  function businessGroups(systems, sysByName) {
+    var vc = (typeof LIVE !== 'undefined' && LIVE && LIVE.value_chain) || null;
+    var fns = (vc && vc.functions) || [];
+    if (!fns.length) return { grouped: false, groups: [] };
+    var groups = [], seen = {};
+    fns.forEach(function (f) {
+      (f.processes || []).forEach(function (p) {
+        var names = {};
+        (p.assets || []).forEach(function (a) { if (a && a.crown_jewel && sysByName[a.name]) names[a.name] = 1; });
+        var sys = Object.keys(names).map(function (n) { return sysByName[n]; });
+        if (!sys.length) return;
+        sys.forEach(function (s) { seen[s.name] = 1; });
+        sys.sort(function (a, b) { return a.score - b.score; });
+        var worst = sys.reduce(function (m, s) { return (m == null || s.score < m) ? s.score : m; }, null);
+        groups.push({ name: p.name, fn: f.name || '', crit: /crit/i.test(String(p.criticality || p.tier || f.criticality || '')), systems: sys, worst: worst, other: false });
+      });
+    });
+    var left = systems.filter(function (s) { return !seen[s.name]; });
+    if (left.length) {
+      left.sort(function (a, b) { return a.score - b.score; });
+      var lw = left.reduce(function (m, s) { return (m == null || s.score < m) ? s.score : m; }, null);
+      groups.push({ name: null, fn: '', crit: false, systems: left, worst: lw, other: true });
+    }
+    // Critical processes first, then worst residual first; the "other" bucket last.
+    groups.sort(function (a, b) {
+      if (a.other !== b.other) return a.other ? 1 : -1;
+      if (a.crit !== b.crit) return a.crit ? -1 : 1;
+      return (a.worst == null ? 999 : a.worst) - (b.worst == null ? 999 : b.worst);
+    });
+    return { grouped: true, groups: groups };
+  }
+
   function bandOfScore(sc) { return sc == null ? 'high' : (sc >= 75 ? 'low' : (sc >= 50 ? 'elevated' : 'high')); }
   function scoreCol(sc) {
     if (typeof capColor === 'function') return capColor(sc);
@@ -121,8 +158,13 @@
     // Sort worst-first so the reader lands on the exposure, then works down.
     systems.sort(function (a, b) { return (a.score - b.score) || (b.weight - a.weight); });
 
+    // Group them under the business processes they support (the primary layout).
+    var sysByName = {}; systems.forEach(function (s) { sysByName[s.name] = s; });
+    var bg = businessGroups(systems, sysByName);
+
     return {
       scope: scope, systems: systems, basis: basis,
+      grouped: bg.grouped, groups: bg.groups,
       totalCrit: ps.totalCrit, procTree: ps.on,
       verdict: {
         score: entityScore, band: entityBand, of5: (entityScore / 20).toFixed(1),
@@ -212,16 +254,18 @@
     return '<div style="border-bottom:1px solid var(--line)">' + head + (open ? ('<div style="padding:0 12px 12px">' + ctrlTable(risk) + '</div>') : '') + '</div>';
   }
 
-  function sysCard(s, model) {
+  function sysCard(s, model, grouped) {
     var open = (C5_ER_SYS === s.i);
     var expo = s.internet ? T('er.exposure.internet') : T('er.exposure.internal');
-    var supp = (model.procTree && s.support != null)
-      ? T('er.sys.supports', { n: s.support })
-      : (s.isCrit ? T('er.sys.critical') : T('er.sys.standard'));
-    var head = '<div class="er-sys" data-sys="' + s.i + '" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:14px 16px;cursor:pointer">'
-      + '<span style="flex:1;min-width:220px"><span style="font-size:15px;font-weight:750;color:var(--ink)">' + esc(s.name) + '</span>'
+    // When grouped under a process, the process context is already shown, so the
+    // system subline is just class · exposure; ungrouped, we name its process support.
+    var sub = grouped
+      ? esc(expo)
+      : ((model.procTree && s.support != null ? T('er.sys.supports', { n: s.support }) : (s.isCrit ? T('er.sys.critical') : T('er.sys.standard'))) + ' · ' + expo);
+    var head = '<div class="er-sys" data-sys="' + s.i + '" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:13px 16px;cursor:pointer">'
+      + '<span style="flex:1;min-width:220px"><span style="font-size:14px;font-weight:700;color:var(--ink)">🖥 ' + esc(s.name) + '</span>'
       + (s.cls ? ' <span style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">· ' + esc(s.cls) + '</span>' : '')
-      + '<span style="display:block;font-size:11px;color:var(--ink-2);margin-top:3px">' + supp + ' · ' + expo + '</span></span>'
+      + '<span style="display:block;font-size:11px;color:var(--ink-2);margin-top:3px">' + sub + '</span></span>'
       + bandChip(s.band)
       + '<span style="width:132px;flex:none">' + matBar(s.weakMit, false) + '</span>'
       + '<span style="font-size:11px;color:var(--blue);font-weight:700;flex:none">' + T('er.sys.open') + '</span>'
@@ -229,7 +273,26 @@
     var body = open ? ('<div style="border-top:1px solid var(--line)">'
       + '<div style="padding:10px 16px 4px;font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)">' + T('er.sys.risks') + '</div>'
       + s.risks.map(function (r) { return riskRow(r, s.i); }).join('') + '</div>') : '';
-    return '<div style="border:1px solid var(--line);border-radius:13px;overflow:hidden;margin-bottom:10px;background:var(--surface)' + (open ? ';box-shadow:0 1px 0 color-mix(in srgb,var(--blue) 30%,transparent)' : '') + '">' + head + body + '</div>';
+    return '<div style="border:1px solid var(--line);border-radius:11px;overflow:hidden;margin-bottom:9px;background:var(--surface)' + (open ? ';box-shadow:0 1px 0 color-mix(in srgb,var(--blue) 30%,transparent)' : '') + '">' + head + body + '</div>';
+  }
+
+  // A business-process group: the process header (name · criticality · residual =
+  // its worst system), then the systems that support it, each drilling to its
+  // risks and the controls that mitigate them.
+  function procGroup(g, model) {
+    var band = bandOfScore(g.worst);
+    var title = g.other ? T('er.proc.other') : esc(g.name);
+    var tag = g.other ? '' : (g.crit
+      ? ' <span style="font-size:9.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--crit)">· ' + T('er.proc.crit') + '</span>'
+      : ' <span style="font-size:9.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)">· ' + T('er.proc.std') + '</span>');
+    var head = '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 10px">'
+      + '<span style="font-size:15px">🏦</span>'
+      + '<span style="flex:1;min-width:200px;font-size:15.5px;font-weight:750;color:var(--ink)">' + title + tag
+      + '<span style="display:block;font-size:11px;color:var(--ink-2);margin-top:2px;font-weight:500">' + T('er.proc.systems', { n: g.systems.length }) + (g.other ? '' : ('' + (g.fn ? ' · ' + esc(g.fn) : ''))) + '</span></span>'
+      + (g.other ? '' : bandChip(band))
+      + '</div>';
+    var cards = g.systems.map(function (s) { return sysCard(s, model, true); }).join('');
+    return '<div class="c5pa" style="padding:14px 16px;margin:0 0 14px;border-left:3px solid var(--' + (g.other ? 'line' : bandCol(band)) + ')">' + head + cards + '</div>';
   }
 
   function verdictHero(model, scB) {
@@ -273,12 +336,17 @@
 
     var eyebrow = '<div class="c5pa-eyebrow" style="margin:2px 0 12px">' + T('er.eyebrow', { scope: scB }) + deckBtn + '</div>';
 
-    var systemsTitle = '<div style="display:flex;align-items:baseline;gap:10px;margin:2px 0 10px">'
-      + '<span style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">' + T('er.systems') + '</span>'
-      + '<span style="font-size:11.5px;color:var(--ink-2)">' + T(model.basis === 'process' ? 'er.systems.basis.proc' : 'er.systems.basis.crit') + '</span></div>';
-    var cards = model.systems.map(function (s) { return sysCard(s, model); }).join('');
+    // Primary layout: business process → the systems that support it → each system's
+    // risks → the controls that mitigate them. Falls back to a flat system list when
+    // the value chain (Entity → Process → System) has not been captured.
+    var chainTitle = '<div style="display:flex;align-items:baseline;gap:10px;margin:2px 0 12px">'
+      + '<span style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">' + T(model.grouped ? 'er.chain' : 'er.systems') + '</span>'
+      + '<span style="font-size:11.5px;color:var(--ink-2)">' + T(model.grouped ? 'er.chain.dek' : 'er.systems.basis.crit') + '</span></div>';
+    var body = model.grouped
+      ? model.groups.map(function (g) { return procGroup(g, model); }).join('')
+      : model.systems.map(function (s) { return sysCard(s, model, false); }).join('');
 
-    host.innerHTML = header + scopeNavHtml + eyebrow + verdictHero(model, scB) + systemsTitle + cards
+    host.innerHTML = header + scopeNavHtml + eyebrow + verdictHero(model, scB) + chainTitle + body
       + '<div class="c5foot">' + T('er.foot') + '</div>';
     wire(host);
   }
