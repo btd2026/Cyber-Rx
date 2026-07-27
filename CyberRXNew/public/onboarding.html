@@ -317,7 +317,7 @@
 
   <!-- 1e · Policy & document evidence -->
   <div class="sec" id="secDocReview">
-    <div class="sh"><div class="sn">✦</div><div><div class="st">Policy &amp; document evidence <span style="color:var(--muted)">(framework maturity)</span></div><div class="sd">Upload your security policies (PDF · DOCX · TXT). Nerion reads each against the NIST control catalog and scores every control’s CMMI maturity from the policy language it contains — the <b>📄 document-review</b> evidence behind your framework scores, alongside live tool telemetry. Do it here so the cockpit Framework tab opens fully evidenced.</div></div><div class="badge" id="bdoc">optional</div></div>
+    <div class="sh"><div class="sn">✦</div><div><div class="st">Policy &amp; document evidence <span style="color:var(--muted)">(framework maturity)</span></div><div class="sd">Upload the security policies for the <b>scope selected above</b>. Corporate uploads the enterprise policies (inherited by every centralized / hybrid entity); a <b>federated</b> entity uploads its own. Nerion reads each against the NIST control catalog and scores every control’s CMMI maturity from the policy language — the <b>📄 document-review</b> evidence behind that scope’s framework scores. Switch scope above to attach another entity’s evidence.</div></div><div class="badge" id="bdoc">optional</div></div>
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
       <select id="obDocType" style="min-width:230px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:#fff"></select>
       <input type="file" id="obDocFile" accept=".pdf,.docx,.doc,.txt,.md,.csv">
@@ -415,7 +415,28 @@
 <script>
   function apiBase(){try{return (window.CYBERRX_API||localStorage.getItem('cyberrx_api_base')||'https://cyber-rx.onrender.com').replace(/\/+$/,'');}catch(_){return 'https://cyber-rx.onrender.com';}}
   function slug(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,32)||'org';}
-  var PROC=[],APP=[],RISK=[];
+  var PROC=[],APP=[],RISK=[],IMPORTED=[];
+  // ===== Per-scope inventory. Every SCOPE — Corporate (the shared estate, inherited by all) and
+  // each entity — owns its OWN processes, systems, crown jewels and risks. PROC / APP / IMPORTED are
+  // always the ACTIVE scope's arrays (the scope picked in the entity-context bar); the full estate
+  // lives in the *_BY maps and is flattened only at go-live. Switching scope in the selector swaps
+  // the working set, so the tab always shows — and captures into — exactly the selected Corporate
+  // or entity. This is what keeps Enterprise and every entity genuinely separated. =====
+  var PROC_BY={corporate:PROC}, APP_BY={corporate:APP}, IMP_BY={corporate:IMPORTED};
+  function obUseScope(s){s=s||obScope();PROC=PROC_BY[s]||(PROC_BY[s]=[]);APP=APP_BY[s]||(APP_BY[s]=[]);IMPORTED=IMP_BY[s]||(IMP_BY[s]=[]);}
+  function scopeSetProc(a){PROC=PROC_BY[obScope()]=(a||[]);}
+  function scopeSetApp(a){APP=APP_BY[obScope()]=(a||[]);}
+  function scopeSetImp(a){IMPORTED=IMP_BY[obScope()]=(a||[]);}
+  // Flatten every scope's rows for the ingest payload / save, stamping each with its owning scope.
+  function allByScope(map){var o=[];Object.keys(map).forEach(function(s){(map[s]||[]).forEach(function(x){var it=Object.assign({},x);it.owner=s;o.push(it);});});return o;}
+  function scopeTotals(){var np=0,na=0;Object.keys(PROC_BY).forEach(function(s){np+=(PROC_BY[s]||[]).length;});Object.keys(APP_BY).forEach(function(s){na+=(APP_BY[s]||[]).length;});return {proc:np,app:na};}
+  // Re-render the Processes & systems tab for the ACTIVE scope (called on scope switch / tab open).
+  function obRenderScopeSections(){obUseScope();
+    try{showRows(document.getElementById('resProc'),PROC,(typeof procRowHtml==='function'?procRowHtml:function(x){return '<div class="xrow"><span class="nm">'+x.name+'</span></div>';}));}catch(_){}
+    var b4=document.getElementById('b4');if(b4){b4.dataset.n=PROC.length;if(PROC.length)badgeDone('b4');else{b4.textContent='recommended';b4.classList.remove('done');}}
+    var res=document.getElementById('resApp');if(res)res.innerHTML=APP.length?('<div class="ok">✓ '+APP.length+' system'+(APP.length===1?'':'s')+' for '+esc(obScopeLabel())+'</div>'):'';
+    try{renderDiscResult();}catch(_){}try{renderMap();}catch(_){}try{renderRevConfirm();}catch(_){}
+  }
   var CUR_SYM='$',CUR_CODE='USD';
 
   // ---- money fields: number + unit → value, with a formatted equivalent ----
@@ -653,21 +674,22 @@
   function obScope(){return (typeof OB_ACTIVE_ENTITY!=='undefined'&&OB_ACTIVE_ENTITY)?OB_ACTIVE_ENTITY:'corporate';}
   function obScopeLabel(id){id=id||obScope();if(id==='corporate')return 'Corporate';try{var e=obEntityList().filter(function(x){return x.id===id;})[0];return e?(e.region+' › '+e.label):id;}catch(_){return id;}}
   function obOwnerTag(owner){owner=owner||'corporate';return '<span style="font-size:10px;font-weight:700;color:'+(owner==='corporate'?'#1A5FA0':'var(--ink-2)')+';white-space:nowrap">'+(owner==='corporate'?'◆ ':'▸ ')+esc(obScopeLabel(owner))+'</span>';}
-  // Replace just the ACTIVE scope's items in a per-scope array, preserving every other scope's.
-  function obMergeByScope(arr,rows,scope){return (arr||[]).filter(function(x){return (x.owner||'corporate')!==scope;}).concat(rows);}
   function procRowHtml(x){return '<div class="xrow"><span class="nm">'+esc(x.name)+' '+obOwnerTag(x.owner)+'</span><span class="mt">'+(x.data||'')+(x.revenue?(' · '+x.revenue):'')+(x.rto?(' · RTO '+x.rto+'h'):'')+'</span></div>';}
+  // Distribute captured rows to their owning scope (explicit owner column, else the selected scope),
+  // replacing each touched scope's set; then refresh the active scope's view.
+  function obDistributeProc(rows){var groups={};rows.forEach(function(r){(groups[r.owner]=groups[r.owner]||[]).push(r);});Object.keys(groups).forEach(function(own){PROC_BY[own]=groups[own];});obUseScope();}
   wireDrop('dropProc','fileProc',function(file){readFile(file,function(p){var h=p.headers;
     var nc=findCol(h,['process_name','name','title','process']),rvc=findCol(h,['revenue','rev','value']),rtc=findCol(h,['rto','recovery']),dc=findCol(h,['data','domain','sensitivity','category']),cc=findCol(h,['criticality','crit','tier','priority']),txc=findCol(h,['transactions_per_day','transactions','tx_per_day','daily_transactions','volume','throughput']),tlc=findCol(h,['downtime_tolerance','tolerance','board_tolerance','loss_tolerance']),fnc=findCol(h,['function','business_function','biz_function','capability','area']),oc=findCol(h,['owner','entity','scope','business_unit']);
     var _own=obScope();
     var rows=p.rows.map(function(c){return {name:get(c,nc)||c[0],revenue:get(c,rvc)||get(c,2),rto:get(c,rtc),data:get(c,dc)||get(c,1)||'Process',criticality:get(c,cc),tx:get(c,txc),tolerance:get(c,tlc),func:get(c,fnc),owner:(get(c,oc)||_own)};}).filter(function(x){return x.name;});
-    PROC=obMergeByScope(PROC,rows,_own);
+    obDistributeProc(rows);
     showRows(document.getElementById('resProc'),PROC,procRowHtml);
-    var b=document.getElementById('b4');b.dataset.n=PROC.length;badgeDone('b4');updateSummary();renderMap();try{renderRevConfirm();}catch(_){}});});
+    var b=document.getElementById('b4');if(b){b.dataset.n=scopeTotals().proc;badgeDone('b4');}updateSummary();renderMap();try{renderRevConfirm();}catch(_){}});});
   wireDrop('dropApp','fileApp',function(file){readFile(file,function(p){var h=p.headers;
     var nc=findCol(h,['application_name','app_name','name','title','application']),hc=findCol(h,['ci_class','hosting','host','class','type']),dc=findCol(h,['data','sensitivity','classification']),vc=findCol(h,['vendor','provider','supplier','cloud']),ec=findCol(h,['eol','end_of_life','supported','lifecycle']),rc=findCol(h,['recovery','recovery_hours','restore','rto']),txc=findCol(h,['transactions_per_day','transactions','tx_per_day','daily_transactions','volume']),vlc=findCol(h,['value_per_day','daily_value','value_processed','daily_revenue']),vyc=findCol(h,['value_per_year','annual_value','annual_volume','yearly_value','value_per_annum']);
-    APP=p.rows.map(function(c){return {name:get(c,nc)||c[0],host:get(c,hc)||get(c,1)||'—',data:get(c,dc)||get(c,2)||'—',vendor:get(c,vc),eol:get(c,ec),recovery:get(c,rc),tx:get(c,txc),value:get(c,vlc),valueYear:get(c,vyc)};}).filter(function(x){return x.name;});
+    var _ao=obScope();scopeSetApp(p.rows.map(function(c){return {name:get(c,nc)||c[0],host:get(c,hc)||get(c,1)||'—',data:get(c,dc)||get(c,2)||'—',vendor:get(c,vc),eol:get(c,ec),recovery:get(c,rc),tx:get(c,txc),value:get(c,vlc),valueYear:get(c,vyc),owner:_ao};}).filter(function(x){return x.name;}));
     showRows(document.getElementById('resApp'),APP,function(x){return '<div class="xrow"><span class="nm">'+x.name+'</span><span class="mt">'+(x.host||'')+(x.vendor?(' · '+x.vendor):'')+'</span></div>';});
-    var b=document.getElementById('b5');b.dataset.n=APP.length;badgeDone('b5');updateSummary();renderMap();try{renderRevConfirm();}catch(_){}});});
+    var b=document.getElementById('b5');b.dataset.n=scopeTotals().app;badgeDone('b5');updateSummary();renderMap();try{renderRevConfirm();}catch(_){}});});
   // ---- shared collapse header for the hand-built repeatable-row lists ----
   // Mirrors makeRowList's rl-collapse so the bespoke registers (strategic
   // initiatives, objectives, capability map) fold exactly like the policy
@@ -806,9 +828,10 @@
 
   // ---- System discovery & bulk import (enterprise scale). Connect a source → Nerion
   // discovers the inventory (demo counts); or paste a list. Persisted to cyberrx_systems.
-  var DISCOVERED={};      // source -> count (from connected discovery sources)
-  var IMPORTED=[];        // bulk-imported system rows
-  function discTotal(){var s=0;Object.keys(DISCOVERED).forEach(function(k){s+=DISCOVERED[k];});return s+IMPORTED.length;}
+  var DISCOVERED={};      // source -> count (estate-wide, from connected discovery sources)
+  // IMPORTED (the ACTIVE scope's imported systems) + its per-scope store IMP_BY are declared above.
+  function impTotal(){var n=0;Object.keys(IMP_BY).forEach(function(s){n+=(IMP_BY[s]||[]).length;});return n;}
+  function discTotal(){var s=0;Object.keys(DISCOVERED).forEach(function(k){s+=DISCOVERED[k];});return s+impTotal();}
   function renderDiscResult(){
     var host=document.getElementById('discResult');if(!host)return;
     var srcLines=Object.keys(DISCOVERED).map(function(k){return '<div style="font-size:12px;color:var(--ink-2)">✓ <b>'+DISCOVERED[k].toLocaleString()+'</b> from '+esc(k)+'</div>';}).join('');
@@ -820,7 +843,7 @@
     // Critical/High are MATERIAL (crown-jewel candidates, assessed first); the rest are
     // auto-classified standard. Discovered-only systems await a criticality signal.
     var material=IMPORTED.filter(function(r){return /^(critical|high)$/i.test(r.criticality||'');}).length;
-    var standard=Math.max(0,t-material);
+    var standard=Math.max(0,IMPORTED.length-material);
     // Ownership split — each system belongs to an ENTITY (its own), or is a CORPORATE-shared
     // (GSS) system inherited by every entity. This is the Entity→Systems edge + inheritance.
     var shared=IMPORTED.filter(function(r){return r.owner==='corporate';}).length;
@@ -835,10 +858,14 @@
     var triage='<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">'
       +'<div style="flex:1;min-width:150px;border:1px solid var(--crit,#c0392b);border-radius:8px;padding:9px 12px"><div style="font-size:18px;font-weight:800;color:var(--crit,#c0392b)">'+material.toLocaleString()+'</div><div style="font-size:11px;color:var(--muted)">◆ material — triage first</div></div>'
       +'<div style="flex:1;min-width:150px;border:1px solid var(--line);border-radius:8px;padding:9px 12px"><div style="font-size:18px;font-weight:800;color:var(--ink)">'+standard.toLocaleString()+'</div><div style="font-size:11px;color:var(--muted)">auto-classified standard</div></div></div>';
-    host.innerHTML=t?('<div style="border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--surface,transparent)"><div style="font-size:20px;font-weight:800;color:var(--ink)">'+t.toLocaleString()+' <span style="font-size:12px;font-weight:600;color:var(--muted)">systems in scope</span></div>'+srcLines+imp+ownLine+chainLine+triage+'<div style="font-size:11px;color:var(--muted);margin-top:8px">Each system is owned by an <b>entity</b> (or Corporate, shared and inherited by all) and supports a <b>process</b> — so the whole chain traces Entity → Process → System → Risk → Control. You assess the <b>material</b> ones first; the long tail is auto-classified and monitored by inherited common controls.</div></div>'):'';
+    // Per-scope framing: the big number is THIS scope's systems; the estate total is shown beside it.
+    var estate=impTotal(),scopesN=Object.keys(IMP_BY).filter(function(s){return (IMP_BY[s]||[]).length;}).length;
+    var scopeHdr='<div style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#1A5FA0;margin-bottom:4px">Systems for '+esc(obScopeLabel())+'</div>';
+    var estLine=(estate>IMPORTED.length)?('<div style="font-size:11px;color:var(--muted);margin-top:6px">Across all scopes: <b>'+estate.toLocaleString()+'</b> systems in <b>'+scopesN+'</b> scope'+(scopesN===1?'':'s')+' — switch scope above to import another entity’s.</div>'):'';
+    host.innerHTML=(IMPORTED.length||t)?('<div style="border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--surface,transparent)">'+scopeHdr+'<div style="font-size:20px;font-weight:800;color:var(--ink)">'+IMPORTED.length.toLocaleString()+' <span style="font-size:12px;font-weight:600;color:var(--muted)">systems for this scope</span></div>'+srcLines+imp+ownLine+chainLine+triage+estLine+'<div style="font-size:11px;color:var(--muted);margin-top:8px">Each system is owned by <b>this scope</b> and supports a <b>process</b> — the chain traces Entity → Process → System → Risk → Control. You assess the <b>material</b> ones first; the long tail is auto-classified and monitored by inherited common controls.</div></div>'):'';
   }
   function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
-  function saveSystems(){try{localStorage.setItem('cyberrx_systems',JSON.stringify({discovered:DISCOVERED,imported:IMPORTED,total:discTotal()}));}catch(_){}var b=document.getElementById('bdisc');if(b){var t=discTotal();if(t){b.textContent='✓ '+t.toLocaleString()+' systems';b.classList.add('done');}}try{if(typeof obSaveState==='function')obSaveState();}catch(_){}}
+  function saveSystems(){try{localStorage.setItem('cyberrx_systems',JSON.stringify({discovered:DISCOVERED,importedByScope:IMP_BY,total:discTotal()}));}catch(_){}var b=document.getElementById('bdisc');if(b){var t=discTotal();if(t){b.textContent='✓ '+t.toLocaleString()+' systems';b.classList.add('done');}}try{if(typeof obSaveState==='function')obSaveState();}catch(_){}}
   // The actual connection mechanics per discovery source — the instance URL / API token a
   // real integration needs. Credentials are NEVER persisted from onboarding; the secure
   // connector flow at go-live re-collects them. Here they make the "how do I connect" concrete.
@@ -883,25 +910,37 @@
   // class; each system's declared process is its direct mapping (better than auto-mapping).
   function classHost(c){return {saas:'SaaS / cloud',iaas:'Cloud (IaaS)',server:'Server · on-prem',endpoint:'Endpoint',identity:'Identity platform',data:'Data store',network:'Network'}[c]||'Server · on-prem';}
   function classData(c){return {saas:'Application data',iaas:'Cloud workloads',server:'Application / DB',endpoint:'Endpoint data',identity:'Credentials',data:'Sensitive data',network:'Network traffic'}[c]||'Application / DB';}
+  // Rebuild EVERY scope's systems (APP_BY) from that scope's imported inventory (IMP_BY), so the
+  // crown-jewel map for each scope derives from its own systems. Then point APP at the active scope.
   function bridgeAppFromDiscovery(){
-    APP=(IMPORTED||[]).map(function(r){return {name:r.name,host:classHost(r.class),data:classData(r.class),vendor:'',processes:r.process?[r.process]:[],owner:r.owner||'',criticality:r.criticality||''};});
+    Object.keys(IMP_BY).forEach(function(s){APP_BY[s]=(IMP_BY[s]||[]).map(function(r){return {name:r.name,host:classHost(r.class),data:classData(r.class),vendor:'',processes:r.process?[r.process]:[],owner:s,criticality:r.criticality||''};});});
+    obUseScope();
     var res=document.getElementById('resApp');
-    if(res)res.innerHTML=APP.length?('<div class="ok">✓ '+APP.length+' system'+(APP.length===1?'':'s')+' from your discovery import</div>'):'';
-    var b5=document.getElementById('b5');if(b5&&APP.length){b5.dataset.n=APP.length;badgeDone('b5');}
+    if(res)res.innerHTML=APP.length?('<div class="ok">✓ '+APP.length+' system'+(APP.length===1?'':'s')+' for '+esc(obScopeLabel())+'</div>'):'';
+    var b5=document.getElementById('b5');if(b5&&scopeTotals().app){b5.dataset.n=scopeTotals().app;badgeDone('b5');}
     try{renderMap();}catch(_){}try{renderRevConfirm();}catch(_){}
   }
+  // Import systems, distributing each row to its owning scope (explicit owner column, else the
+  // scope selected in the entity-context bar), replacing each touched scope's inventory.
+  function obImportSystems(text){var rows=parseSystems(text),s=obScope();var groups={};
+    rows.forEach(function(r){var own=r.owner||s;r.owner=own;(groups[own]=groups[own]||[]).push(r);});
+    Object.keys(groups).forEach(function(own){IMP_BY[own]=groups[own];});
+    obUseScope();renderDiscResult();bridgeAppFromDiscovery();saveSystems();}
   (function(){
     // Selecting a source opens its connection card; it isn't counted until you Connect & pull.
     document.querySelectorAll('#discSources .chip').forEach(function(c){c.addEventListener('click',function(){
       if(!c.classList.toggle('on'))delete DISCOVERED[c.getAttribute('data-l')];
       renderDiscConn();renderDiscResult();saveSystems();});});
     var imp=document.getElementById('sysImport');if(imp)imp.addEventListener('click',function(){
-      IMPORTED=parseSystems(document.getElementById('sysBulk').value||'');renderDiscResult();bridgeAppFromDiscovery();saveSystems();});
+      obImportSystems(document.getElementById('sysBulk').value||'');});
     // Upload path for orgs without a CMDB — read the CSV and parse it exactly like the paste box.
     var sf=document.getElementById('sysFile');if(sf)sf.addEventListener('change',function(){var f=sf.files&&sf.files[0];if(!f)return;
-      var r=new FileReader();r.onload=function(){IMPORTED=parseSystems(String(r.result||''));renderDiscResult();bridgeAppFromDiscovery();saveSystems();};r.readAsText(f);});
-    // restore
-    try{var s=JSON.parse(localStorage.getItem('cyberrx_systems')||'null');if(s){DISCOVERED=s.discovered||{};IMPORTED=s.imported||[];
+      var r=new FileReader();r.onload=function(){obImportSystems(String(r.result||''));};r.readAsText(f);});
+    // restore (per-scope; back-compat with the old single-list shape)
+    try{var s=JSON.parse(localStorage.getItem('cyberrx_systems')||'null');if(s){DISCOVERED=s.discovered||{};
+      if(s.importedByScope&&typeof s.importedByScope==='object')IMP_BY=s.importedByScope;
+      else if(Array.isArray(s.imported)){IMP_BY={};s.imported.forEach(function(r){var own=r.owner||'corporate';(IMP_BY[own]=IMP_BY[own]||[]).push(r);});}
+      obUseScope();
       Object.keys(DISCOVERED).forEach(function(k){document.querySelectorAll('#discSources .chip').forEach(function(c){if(c.getAttribute('data-l')===k)c.classList.add('on');});});renderDiscConn();renderDiscResult();bridgeAppFromDiscovery();}}catch(_){}
   })();
 
@@ -1051,8 +1090,13 @@
   function obDocDocs(){try{return JSON.parse(localStorage.getItem('cyberrx_docs')||'[]')||[];}catch(_){return [];}}
   function obSaveDocs(a){try{localStorage.setItem('cyberrx_docs',JSON.stringify(a.slice(0,20)));}catch(_){}}
   function updateDocBadge(){var n=obDocDocs().length,b=document.getElementById('bdoc');if(b){if(n){b.textContent='✓ '+n+' analyzed';b.classList.add('done');}else{b.textContent='optional';b.classList.remove('done');}}}
-  function obRenderDocList(){var docs=obDocDocs(),host=document.getElementById('obDocList');if(!host)return;
-    if(!docs.length){host.innerHTML='<div class="sd">No documents uploaded yet — upload one above to evidence controls by document review.</div>';return;}
+  function obRenderDocList(){var allDocs=obDocDocs(),host=document.getElementById('obDocList');if(!host)return;
+    // Evidence is per SCOPE: Corporate uploads the enterprise policies (inherited by centralized /
+    // hybrid entities); a federated entity uploads its own. Show only the selected scope's documents.
+    var scope=obScope(),docs=allDocs.filter(function(d){return (d.owner||'corporate')===scope;});
+    var otherN=allDocs.length-docs.length;
+    var scopeHdr='<div style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#1A5FA0;margin-bottom:6px">Evidence for '+esc(obScopeLabel(scope))+(otherN?(' <span style="color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0">· '+otherN+' in other scopes</span>'):'')+'</div>';
+    if(!docs.length){host.innerHTML=scopeHdr+'<div class="sd">No documents for '+esc(obScopeLabel(scope))+' yet — upload one above to evidence this scope’s controls by document review.'+(scope!=='corporate'?' Or leave it to inherit Corporate’s policies.':'')+'</div>';return;}
     // The uploaded-document list is collapsible so a long list (many policies) can be
     // hidden to simplify the page — auto-collapsed once it grows past a few.
     if(typeof window.__obDocCollapsed==='undefined')window.__obDocCollapsed=docs.length>3;
@@ -1060,9 +1104,9 @@
     // Show the document, its type, and how many control attributes Nerion tests
     // for it — no scores/results at this level (those live in the cockpit).
     var rows=docs.map(function(d){return '<div class="xrow"><span class="nm">'+d.name+'</span><span class="mt">'+d.type+' · '+(d.total||0)+' attributes tested</span></div>';}).join('');
-    host.innerHTML=
+    host.innerHTML=scopeHdr+
       '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px">'+
-        '<button type="button" id="obDocToggle" title="Show / hide the uploaded documents" style="background:none;border:none;cursor:pointer;font-weight:700;font-size:13px;color:var(--ink);display:inline-flex;align-items:center;gap:7px;padding:0"><span style="font-size:11px">'+(collapsed?'▸':'▾')+'</span>'+docs.length+' document'+(docs.length>1?'s':'')+' uploaded</button>'+
+        '<button type="button" id="obDocToggle" title="Show / hide the uploaded documents" style="background:none;border:none;cursor:pointer;font-weight:700;font-size:13px;color:var(--ink);display:inline-flex;align-items:center;gap:7px;padding:0"><span style="font-size:11px">'+(collapsed?'▸':'▾')+'</span>'+docs.length+' document'+(docs.length>1?'s':'')+' for this scope</button>'+
         '<button class="conn-go" id="obDocClear" type="button" style="padding:6px 12px;font-size:11px">Clear all</button>'+
       '</div>'+
       '<div id="obDocRows" style="margin-top:8px;display:'+(collapsed?'none':'block')+'">'+rows+'</div>';
@@ -1106,7 +1150,7 @@
         // against a future (expanded) control map without asking for a re-upload.
         try{if(res.text){var tx=JSON.parse(localStorage.getItem('cyberrx_doc_text')||'{}')||{};tx[dt]={text:res.text,filename:file.name};localStorage.setItem('cyberrx_doc_text',JSON.stringify(tx));}}catch(_){}
         var docs=obDocDocs(),lbl=(OB_DOC_TYPES.filter(function(d){return d.k===dt;})[0]||{}).l||dt;
-        docs.unshift({name:file.name,type:lbl,cmmi:res.cmmi,matched:res.matched||0,total:res.total||0,engine:res.engine||'keyword'});obSaveDocs(docs);
+        docs.unshift({name:file.name,type:lbl,cmmi:res.cmmi,matched:res.matched||0,total:res.total||0,engine:res.engine||'keyword',owner:obScope()});obSaveDocs(docs);
         // Onboarding uploaders just confirm the file is in — no CMMI/score at this
         // level (results live in the cockpit). AI-gov: plain "uploaded"; the policy
         // uploader adds how many control attributes are tested for that document.
@@ -1116,7 +1160,7 @@
   function obSeedSampleDocScores(){if(Object.keys(obDocScores()).length)return;
     var sample={'GV.OC-01':4,'GV.OC-03':3,'GV.RM-01':3,'GV.PO-01':4,'GV.PO-02':3,'PR.AA-01':4,'PR.AA-05':3,'PR.AT-01':3,'ID.RA-01':3,'ID.RA-05':2,'DE.CM-01':2,'RS.MA-01':3};
     Object.keys(sample).forEach(function(id){obSaveDocScore(id,{cmmi:sample[id],doc:'Information Security Policy (sample).pdf',matched:Math.min(6,sample[id]+2),total:6,attrs:[{label:'Policy purpose statement',found:true},{label:'Scope definition',found:true},{label:'Roles & responsibilities',found:sample[id]>=3},{label:'Enforcement provisions',found:sample[id]>=3},{label:'Review cadence',found:sample[id]>=4},{label:'Exception process',found:sample[id]>=4}]});});
-    var docs=obDocDocs();docs.unshift({name:'Information Security Policy (sample).pdf',type:'Information Security Policy',cmmi:4,matched:5,total:6});obSaveDocs(docs);updateDocBadge();obRenderDocList();}
+    var docs=obDocDocs();docs.unshift({name:'Information Security Policy (sample).pdf',type:'Information Security Policy',cmmi:4,matched:5,total:6,owner:'corporate'});obSaveDocs(docs);updateDocBadge();obRenderDocList();}
   (function(){var sel=document.getElementById('obDocType');if(sel)sel.innerHTML=OB_DOC_TYPES.map(function(d){return '<option value="'+d.k+'">'+d.l+'</option>';}).join('');
     var a=document.getElementById('obDocAnalyze');if(a)a.addEventListener('click',obAnalyzeDoc);obRenderDocList();renderAiGovDocList();updateDocBadge();
     if(typeof computeAiGov==='function')computeAiGov();
@@ -1332,12 +1376,12 @@
     if(!cred){msg.textContent='Enter the instance URL / token.';msg.style.color='var(--warn)';return;}
     CMDB[k]={system:sys,cred:cred};b.textContent='⟳ Pulling…';
     var inv=IND_INV[invKey()]||IND_INV.tech;
-    if(k==='app'){APP=inv.sys.map(function(r){var c=r.split('|');return {name:c[0],host:c[1],data:c[2],vendor:c[3],eol:c[4],recovery:c[5]};});
+    if(k==='app'){var _ao=obScope();scopeSetApp(inv.sys.map(function(r){var c=r.split('|');return {name:c[0],host:c[1],data:c[2],vendor:c[3],eol:c[4],recovery:c[5],owner:_ao};}));
       showRows(document.getElementById('resApp'),APP,function(x){return '<div class="xrow"><span class="nm">'+x.name+'</span><span class="mt">'+(x.host||'')+(x.vendor?(' · '+x.vendor):'')+'</span></div>';});
-      var b5=document.getElementById('b5');b5.dataset.n=APP.length;badgeDone('b5');updateSummary();renderMap();try{renderRevConfirm();}catch(_){}
-    } else if(k==='proc'){var _po=obScope();PROC=obMergeByScope(PROC,inv.proc.map(function(r){var c=r.split('|');return {name:c[0],revenue:c[1],rto:c[2],data:c[3],criticality:c[4],owner:_po};}),_po);
+      var b5=document.getElementById('b5');b5.dataset.n=scopeTotals().app;badgeDone('b5');updateSummary();renderMap();try{renderRevConfirm();}catch(_){}
+    } else if(k==='proc'){var _po=obScope();scopeSetProc(inv.proc.map(function(r){var c=r.split('|');return {name:c[0],revenue:c[1],rto:c[2],data:c[3],criticality:c[4],owner:_po};}));
       showRows(document.getElementById('resProc'),PROC,procRowHtml);
-      var b4=document.getElementById('b4');b4.dataset.n=PROC.length;badgeDone('b4');updateSummary();renderMap();try{renderRevConfirm();}catch(_){}}
+      var b4=document.getElementById('b4');b4.dataset.n=scopeTotals().proc;badgeDone('b4');updateSummary();renderMap();try{renderRevConfirm();}catch(_){}}
     b.textContent='✓ Pulled';b.classList.add('done');
     msg.innerHTML='✓ Pulled <b>'+(k==='app'?APP.length:PROC.length)+'</b> '+(k==='app'?'systems':'business services')+' from <b>'+sys+'</b> <span style="color:var(--muted)">(representative — the live '+sys+' Table API syncs your real inventory on go-live)</span>. Edit any in the list, or switch to Upload for a full export.';msg.style.color='var(--good)';
   });});
@@ -1441,16 +1485,16 @@
     var btn=this,msg=document.getElementById('glmsg');
     var org=v('orgName');
     if(!org){msg.textContent='Enter an organization name.';msg.style.color='var(--warn)';try{obShow('corp');}catch(_){}return;}
-    if(!PROC.length&&!APP.length){msg.textContent='Upload your processes or systems first.';msg.style.color='var(--warn)';try{obShow('sys');}catch(_){}return;}
+    if(!scopeTotals().proc&&!scopeTotals().app){msg.textContent='Upload your processes or systems first.';msg.style.color='var(--warn)';try{obShow('sys');}catch(_){}return;}
     var orgId='org_'+slug(org);
     var frameworksInScope=Array.prototype.slice.call(document.querySelectorAll('#scopeFrameworks input:checked')).map(function(c){return c.value;});
     var seatNames={};document.querySelectorAll('.seatname').forEach(function(i){if(i.value.trim())seatNames[i.dataset.seat]=i.value.trim();});
     var seatEmails={};document.querySelectorAll('.seatemail').forEach(function(i){var e=i.value.trim();if(e&&/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e))seatEmails[i.dataset.seat]=e;});
     var payload={
       org_name:org,org_id:orgId,industry:v('industry'),org_structure:collectOrgStructure(),security_model:currentSecModel(),currency:CUR_CODE,
-      processes:PROC.map(function(p){return {name:p.name,data:p.data,rev:p.revenue,revenue:p.revenue,rto:p.rto,criticality:p.criticality,txPerDay:p.tx,tolerance:p.tolerance,function:p.func||null,owner:(p.owner||'corporate'),
+      processes:allByScope(PROC_BY).map(function(p){return {name:p.name,data:p.data,rev:p.revenue,revenue:p.revenue,rto:p.rto,criticality:p.criticality,txPerDay:p.tx,tolerance:p.tolerance,function:p.func||null,owner:(p.owner||'corporate'),
         revenue_criticality_score:(p.revScore!=null?p.revScore:null),brings_money:(p.bringsMoney!=null?!!p.bringsMoney:null),criticality_confirmed:!!p.criticalityConfirmed,confirmed_financial_impact:(p.confirmedFinancialImpact||null)};}),
-      apps:APP.map(function(a){return {name:a.name,host:a.host,data:a.data,vendor:a.vendor,eol:a.eol,recovery:a.recovery,txPerDay:a.tx,valuePerDay:a.value,valuePerYear:a.valueYear,owner:(a.owner||'corporate'),processes:Array.isArray(a.processes)?a.processes:[]};}),
+      apps:allByScope(APP_BY).map(function(a){return {name:a.name,host:a.host,data:a.data,vendor:a.vendor,eol:a.eol,recovery:a.recovery,txPerDay:a.tx,valuePerDay:a.value,valuePerYear:a.valueYear,owner:(a.owner||'corporate'),processes:Array.isArray(a.processes)?a.processes:[]};}),
       governance:{
         committee:v('govCommittee'),cadence:v('govCadence'),ermIntegrated:v('govErm'),
         ir:{tested:v('govIrTested'),lastTabletop:v('govTabletop'),retainer:v('govRetainer'),ransomwarePolicy:v('govRansom')}
@@ -1471,7 +1515,7 @@
         // Posture (aiSpm · shadowAiMonitored · pipelineScanning · nhiMonitored · cbomStatus …)
         // is read live from the connected security tools, not self-reported here.
       },
-      bia:PROC.map(function(p){return {name:p.name,rto_hours:p.rto,impact_usd:p.revenue};}),
+      bia:allByScope(PROC_BY).map(function(p){return {name:p.name,rto_hours:p.rto,impact_usd:p.revenue,owner:(p.owner||'corporate')};}),
       seatNames:seatNames,seatEmails:seatEmails,
       compliance:{frameworksInScope:frameworksInScope}
     };
@@ -1636,6 +1680,9 @@
       +'<div style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5">'+hint+'</div></div>';
     var sel=document.getElementById('entityCtxSel');
     if(sel)sel.addEventListener('change',function(){OB_ACTIVE_ENTITY=sel.value;renderEntityCtx(key);
+      // Switch the working set to the newly-selected scope and re-render its own systems / processes /
+      // crown jewels / risks — so the tab always shows exactly the Corporate or entity you picked.
+      try{obUseScope();if(key==='sys')obRenderScopeSections();if(key==='control'&&typeof obRenderDocList==='function')obRenderDocList();}catch(_){}
       try{if(typeof obSaveState==='function')obSaveState();}catch(_){}});
     host.querySelectorAll('[data-emode]').forEach(function(ch){ch.addEventListener('click',function(){
       OB_ENTITY_MODELS[OB_ACTIVE_ENTITY]=ch.getAttribute('data-emode');saveEntityModels();
@@ -1667,11 +1714,15 @@
     document.querySelectorAll('.obtab').forEach(function(b){b.classList.toggle('done',obTabDone(b.dataset.k));});
   }
   function obShow(key){OB_ACTIVE=key;renderSpine(key);renderEntityCtx(key);
+    // Point the working set at the active scope before deciding visibility / rendering, so PROC/APP
+    // reflect the selected Corporate or entity.
+    try{obUseScope();}catch(_){}
     obSecs().forEach(function(sec){var tk=obTabOf(sec);var vis=(tk===key);
       if(sec.id==='mapSec')vis=vis&&PROC.length&&APP.length; // map only when built
       if(sec.id==='revSec')vis=vis&&PROC.length;             // revenue confirm only when processes exist
       sec.style.display=vis?'':'none';});
-    if(key==='sys'){try{renderRevConfirm();}catch(_){}}
+    if(key==='sys'){try{obRenderScopeSections();}catch(_){}}
+    if(key==='control'){try{if(typeof obRenderDocList==='function')obRenderDocList();}catch(_){}}
     document.querySelectorAll('.obtab').forEach(function(b){b.classList.toggle('on',b.dataset.k===key);});
     // Per-page "Next" button — advances to the next tab, hidden on the last tab.
     var tabs=obPresentTabs(),idx=-1;for(var i=0;i<tabs.length;i++){if(tabs[i].k===key)idx=i;}
@@ -1717,7 +1768,7 @@
     // regulatory, materiality, benchmark, …) so typed/uploaded rows survive reload.
     var registers={};try{Object.keys(OB_REGISTERS).forEach(function(k){try{registers[k]=OB_REGISTERS[k].collect();}catch(_){}});}catch(_){}
     return {v:2,ts:Date.now(),fields:f,seatN:seatN,seatE:seatE,certs:certs,
-      proc:PROC,app:APP,risk:RISK,
+      procBy:PROC_BY,appBy:APP_BY,impBy:IMP_BY,risk:RISK,
       init:(typeof INIT!=='undefined'?INIT:null),
       aiInv:(typeof AI_INV!=='undefined'?AI_INV:null),
       registers:registers,
@@ -1736,8 +1787,15 @@
       if(Array.isArray(s.certs))document.querySelectorAll('#growthCerts input[type=checkbox]').forEach(function(c){c.checked=s.certs.indexOf(c.value)>=0;});
       try{var cur=document.getElementById('currency');if(cur&&cur.value){var p=cur.value.split('|');CUR_SYM=p[0]||CUR_SYM;CUR_CODE=p[1]||CUR_CODE;document.querySelectorAll('.mcur').forEach(function(c){c.textContent=CUR_SYM;});}}catch(_){}
       try{document.querySelectorAll('.money').forEach(function(i){if(typeof updateEq==='function')updateEq(i.id);});}catch(_){}
-      if(Array.isArray(s.proc)&&s.proc.length){PROC=s.proc;showRows(document.getElementById('resProc'),PROC,(typeof procRowHtml==='function'?procRowHtml:function(x){return '<div class="xrow"><span class="nm">'+x.name+'</span></div>';}));var b4=document.getElementById('b4');if(b4){b4.dataset.n=PROC.length;badgeDone('b4');}}
-      if(Array.isArray(s.app)&&s.app.length){APP=s.app;showRows(document.getElementById('resApp'),APP,function(x){return '<div class="xrow"><span class="nm">'+x.name+'</span><span class="mt">'+(x.host||'')+(x.vendor?(' · '+x.vendor):'')+'</span></div>';});var b5=document.getElementById('b5');if(b5){b5.dataset.n=APP.length;badgeDone('b5');}}
+      // Per-scope inventory restore (back-compat: an older single-list snapshot lands under Corporate).
+      if(s.procBy&&typeof s.procBy==='object')PROC_BY=s.procBy;
+      else if(Array.isArray(s.proc)&&s.proc.length){PROC_BY={};s.proc.forEach(function(r){var o=r.owner||'corporate';(PROC_BY[o]=PROC_BY[o]||[]).push(r);});}
+      if(s.appBy&&typeof s.appBy==='object')APP_BY=s.appBy;
+      else if(Array.isArray(s.app)&&s.app.length){APP_BY={};s.app.forEach(function(r){var o=r.owner||'corporate';(APP_BY[o]=APP_BY[o]||[]).push(r);});}
+      if(s.impBy&&typeof s.impBy==='object')IMP_BY=s.impBy;
+      obUseScope();
+      if(scopeTotals().proc){var b4=document.getElementById('b4');if(b4){b4.dataset.n=scopeTotals().proc;badgeDone('b4');}}
+      if(scopeTotals().app){var b5=document.getElementById('b5');if(b5){b5.dataset.n=scopeTotals().app;badgeDone('b5');}}
       if(typeof INIT!=='undefined'&&Array.isArray(s.init)&&s.init.length){INIT=s.init;try{showRows(document.getElementById('resInit'),INIT,function(x){return '<div class="xrow"><span class="nm">'+x.name+'</span><span class="mt">'+(x.owner||'')+(x.cost?(' · '+x.cost):'')+' · '+(x.status||'')+'</span></div>';});var bi=document.getElementById('binit');if(bi){bi.textContent='✓ '+INIT.length+' loaded';bi.classList.add('done');}}catch(_){}}
       if(s.aiInv&&typeof AI_INV!=='undefined'){AI_INV=s.aiInv;try{renderAiInv();}catch(_){}
         // Bring back the visible "loaded" affordances (badge + message) so the restored
