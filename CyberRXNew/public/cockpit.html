@@ -3408,15 +3408,16 @@ function scopeNav(){
     // Logical grouping: at Enterprise you compare regions; once you're inside a region (or an
     // entity within it) you compare that region's entities — you do not see the regions again.
     var out='';
+    var _snT=(typeof nt==='function')?nt:function(k,p){var s=String(k);if(p)for(var x in p)s=s.split('{'+x+'}').join(p[x]);return s;};
     if(SCOPE==='enterprise'){
       var entScore=scopeAggScore('enterprise');
-      out=drillCards('Enterprise & its regions · '+fwLbl+' · Enterprise is the equal-weighted average of the regions · weakest first',
+      out=drillCards(_snT('scope.hdr.ent',{fw:fwLbl}),
         REGIONS.filter(function(r){return r.kind==='region';}),
         function(r){return r.id;},function(r){return r.label;},function(r){return r.regime;},'region',
         (entScore!=null?{id:'enterprise',label:'Enterprise',sub:'consolidated · all regions',csf:entScore,tier:'★ Enterprise'}:null));
     } else if(reg&&reg.entities&&reg.entities.length){
       var regScore=scopeAggScore(reg.id);
-      out=drillCards(reg.label+' & its entities · '+fwLbl+' · '+reg.label+' is the average of its entities · weakest first',
+      out=drillCards(_snT('scope.hdr.reg',{region:reg.label,fw:fwLbl}),
         reg.entities,function(e){return e.id;},function(e){return e.label;},
         function(e){return (typeof scopeMeta==='function'&&scopeMeta(e.id)&&scopeMeta(e.id).regime)||'';},'entity',
         (regScore!=null?{id:reg.id,label:'All '+reg.label,sub:'consolidated · all entities',csf:regScore,tier:'◆ Region'}:null));

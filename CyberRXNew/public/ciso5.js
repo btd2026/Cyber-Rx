@@ -6294,7 +6294,7 @@ function c5ContinuousAssessment(host){
     paHero+
     subBar+
     subBody+
-    '<div class="c5foot">Method: <b style="color:var(--good)">live</b> = a sensor observes it (re-scored on every refresh) · <b style="color:var(--blue)">hybrid</b> = telemetry pulled, a human confirms · <b style="color:var(--warn)">attestation</b> = owner-assigned, LLM pre-screened, freshness-tracked · <b>awaiting</b> = connect a source to light it up. Freshness decays past the TTL, so an old attestation reads <b style="color:var(--warn)">expiring</b>, not passing — which is what makes "continuous" true across all '+s.total+'.</div>';
+    '<div class="c5foot">Method: <b style="color:var(--good)">live</b> = a sensor observes it (re-scored on every refresh) · <b style="color:var(--blue)">hybrid</b> = telemetry pulled, a human confirms · <b style="color:var(--warn)">attestation</b> = owner-assigned, LLM pre-screened, freshness-tracked · <b>awaiting</b> = connect a source to light it up. Freshness decays past the TTL, so an old attestation reads <b style="color:var(--warn)">expiring</b>, not passing — which is what makes "continuous" true across all '+s.total+' controls.</div>';
   // Wiring — scope switcher, cadence overrides, confirm actions, expand/collapse, control select, detail close.
   // Picking a region/entity shows THAT scope's summary (the finding + instrument), so you can
   // read Enterprise → Region → Entity the same way. Click a function to drill into its controls.
@@ -7078,8 +7078,8 @@ function c5FwLens(host,fwKey,label){
   var profileItems=groups.map(function(g){return {id:g.id,name:g.name,s:g.score||0,key:g.id};});
   var profileInner=c5paBars(profileItems,{clickable:true});
   var scopeNavHtml='';try{if(typeof scopeNav==='function'){var _sn=scopeNav();if(_sn)scopeNavHtml='<div style="margin-bottom:6px">'+_sn+'</div>';}}catch(_){}
-  var footer='<div class="c5foot">Crosswalk mapping: '+esc(label)+' controls inherit the maturity of the NIST CSF 2.0 controls they map to (public crosswalk). Where a tool evidences a control directly, that telemetry is used instead. This is a readiness indicator — your certification body issues the audit opinion.'
-    +'<div style="margin-top:6px;font-size:10px;color:var(--muted)">'+esc(label)+' controls are referenced by identifier only, with Nerion-authored plain-English labels; the licensed standard text is not reproduced. ISO and CIS are trademarks of their respective owners (ISO; the Center for Internet Security). Nerion is independent and not affiliated with or endorsed by them.</div></div>';
+  var footer='<div class="c5foot">'+c5osT('fw.foot.cross',{label:esc(label)})
+    +'<div style="margin-top:6px;font-size:10px;color:var(--muted)">'+c5osT('fw.foot.attr',{label:esc(label)})+'</div></div>';
   var srcExplain={system:'scored directly from connected telemetry evidencing this control',document:'scored from a reviewed policy / document',mapped:'a readiness score crosswalked from the NIST CSF 2.0 controls it maps to',native:'natively tested by the assessment engine','native-pending':'mapped, but not yet tested',none:'not yet evidenced — connect a source or map a policy'};
   c5FwUnifiedView(host,{
     fwKey:fwKey,label:label,eyebrowName:label,scopeLbl:scLbl,
