@@ -19,6 +19,8 @@ by any of them.
 | Asset | Author / Owner | License |
 |---|---|---|
 | Inter (`public/fonts/inter-var.woff2`) | The Inter Project Authors | SIL Open Font License 1.1 — see `public/fonts/LICENSE-Inter.txt` |
+| PptxGenJS (`public/vendor/pptxgen.bundle.js`) — client-side board-deck (.pptx) export | Brent Ely and contributors | MIT License |
+| JSZip (bundled inside `pptxgen.bundle.js`) | Stuart Knightley and contributors | MIT / GPLv3 (dual) — used under MIT |
 
 Other font families named in CSS (`Public Sans`, `Space Grotesk`, `JetBrains
 Mono`, `Iowan Old Style`, `SF Mono`, system fonts) are **referenced as

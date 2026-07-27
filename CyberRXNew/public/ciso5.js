@@ -6279,6 +6279,7 @@ function c5ContinuousAssessment(host){
   var _fnLbl={};(FN||[]).forEach(function(F){_fnLbl[F.k]=F.l;});
   var vBarItems=(vFns||[]).map(function(f){return {id:f.n,name:(_fnLbl[f.n]||f.n),s:f.s,key:f.n};});
   var paHero='<div class="c5pa">'
+    +((typeof c5DeckBtnHtml==='function')?c5DeckBtnHtml(C5_ASSESS_FW):'')
     +'<div class="c5pa-eyebrow">'+paEyebrow+'</div>'
     +scopeNavHtml   // "Regions / entities at a glance" sits ABOVE the finding — pick a scope, then read it
     +'<h1 class="c5pa-finding">'+paFinding+'</h1>'
@@ -6918,6 +6919,7 @@ function c5FwUnifiedView(host,cfg){
     +'</div>';
   host.innerHTML=(typeof c5header==='function'?c5header():'')
     +'<div class="c5pa">'
+    +((typeof c5DeckBtnHtml==='function')?c5DeckBtnHtml(cfg.fwKey):'')
     +'<div class="c5pa-eyebrow">Program health · '+esc(cfg.eyebrowName)+(cfg.scopeLbl?(' · '+esc(cfg.scopeLbl)):'')+' · as of '+new Date().toLocaleDateString()+'</div>'
     +(cfg.scopeNavHtml||'')
     +'<h1 class="c5pa-finding">'+cfg.finding+'</h1>'
