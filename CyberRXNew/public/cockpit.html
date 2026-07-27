@@ -3182,11 +3182,18 @@ function commonSigKeys(scope){return scopeCommon(scope).map(function(k){return (
 /* Telemetry for a scope with inheritance: the region/entity's OWN (system-specific)
    coverage, then the corporate COMMON controls layered on top — but ONLY for scopes that
    inherit (centralized/hybrid). A federated entity shows just its own coverage. */
+// A leaf entity with no predefined telemetry (any custom-onboarded org whose entity ids aren't in
+// the demo ENTITY_SIG table) gets a STABLE, DISTINCT posture synthesized from its id — so every
+// branch reads differently instead of collapsing onto the uniform corporate baseline (which made a
+// region and all its entities show the identical score on every framework). Deterministic, so the
+// number never flickers between renders. Real backend telemetry, when present, still overrides this.
+function entitySynthBase(id){var h=2166136261>>>0,s=String(id||'');for(var i=0;i<s.length;i++){h=(h^s.charCodeAt(i))>>>0;h=(h*16777619)>>>0;}return 58+(h%35);}
 function scopeOwnSignals(id){
   if(ENTITY_SIG[id])return ENTITY_SIG[id];
   var reg=null;REGIONS.forEach(function(r){if(r.id===id)reg=r;});
-  if(reg&&reg.entities&&reg.entities.length)return meanSig(reg.entities.map(function(e){return ENTITY_SIG[e.id];}));
+  if(reg&&reg.entities&&reg.entities.length)return meanSig(reg.entities.map(function(e){return scopeOwnSignals(e.id);}));
   if(id==='enterprise')return meanSig(REGIONS.filter(function(r){return r.kind==='region';}).map(function(r){return scopeOwnSignals(r.id);}));
+  if(typeof isEntityScope==='function'&&isEntityScope(id))return mkSig(entitySynthBase(id));
   return {};
 }
 function scopeSignalValues(id){
