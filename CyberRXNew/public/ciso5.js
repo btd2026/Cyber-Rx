@@ -6129,9 +6129,11 @@ function c5ContinuousAssessment(host){
   function pvClr(k){return k==='sky'?'color-mix(in srgb,var(--blue) 45%,var(--surface-2))':'var(--'+k+')';}
   var pvBar=pvSegs.map(function(x){var w=s.total?(x[1]/s.total*100):0;return w>0?('<div title="'+esc(x[0]+': '+x[1])+'" style="width:'+w+'%;background:'+pvClr(x[2])+'"></div>'):'';}).join('');
   var pvLegend=pvSegs.filter(function(x){return x[1]>0;}).map(function(x){return '<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--ink-2)"><i style="width:9px;height:9px;border-radius:2px;background:'+pvClr(x[2])+';display:inline-block"></i><b style="color:var(--ink)">'+x[1]+'</b> '+x[0]+'</span>';}).join('');
+  // Full-sentence nt() templates — the assurance paragraph is number-interleaved, so translating it
+  // as a unit keeps it from rendering half-English (the runtime DOM translator only reaches text nodes).
   var pvLine=isAiFw
-    ?('You operate <b>'+s.total+'</b> AI-governance controls. <b>None are machine-verified</b> — AI governance has no runtime security sensor wired yet — so today’s assurance is <b>human-reviewed</b> ('+pvTele+') or <b>attested</b> ('+pvAsserted+'), with <b>'+pvUnproven+'</b> awaiting an AI-monitoring connector. Governance is not assurance: this is the gap between “we have a policy” and “we can prove it.”')
-    :('<b style="color:var(--good)">'+pvDefPct+'%</b> of your '+s.total+' controls are <b>defensible today</b> — observed by a live sensor'+(pvConfirmed>0?' or human-confirmed':'')+', the number you can put in front of a board, an auditor or a regulator right now. Another <b>'+pvPendPct+'%</b> is <b>telemetry-backed and one click from confirmed</b> (see the Confirm queue); the rest sit on a current attestation or await a connector to light up.');
+    ?c5osT('ca.prove.ai',{total:'<b>'+s.total+'</b>',tele:pvTele,assert:pvAsserted,unproven:'<b>'+pvUnproven+'</b>'})
+    :c5osT('ca.prove.line',{def:'<b style="color:var(--good)">'+pvDefPct+'%</b>',total:s.total,conf:(pvConfirmed>0?c5osT('ca.prove.conf'):''),pend:'<b>'+pvPendPct+'%</b>'});
   var provHero='<div style="border:1px solid var(--blue);border-radius:14px;padding:15px 17px;margin-top:14px;background:color-mix(in srgb,var(--blue) 4%,var(--surface))">'
     +'<div style="font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--blue)">'+(isAiFw?'The AI proof gap':'Can you prove it?')+'</div>'
     +'<div style="font-size:12px;color:var(--ink-2);line-height:1.55;margin:4px 0 10px;max-width:880px">'+pvLine+'</div>'
@@ -6174,16 +6176,20 @@ function c5ContinuousAssessment(host){
   var paScope=(typeof c5Scope==='function')?c5Scope():'enterprise';
   var paScopeLbl=(paScope==='enterprise')?'':((typeof scopeLabel==='function')?scopeLabel(paScope):paScope);
   var vWeakLbl=vWeakFn?(((typeof FNL!=='undefined'&&FNL[vWeakFn.k])||vWeakFn.k)):'';
-  var vLede=(s.notMet>0
-      ?('<b>'+s.notMet+'</b> control'+(s.notMet===1?' is':'s are')+' not met and <b>'+s.notAssessed+'</b> still await evidence')
-      :('No control is failing outright &mdash; <b>'+s.notAssessed+'</b> await a sensor or fresh attestation to prove'))
-    +(vWeakFn?(', with <b>'+vWeakLbl+'</b> the weakest function at '+vWeakFn.s.toFixed(1)+'.'):'.')
-    +' Below: what the score is built on, whether you can prove it, and the moves that raise it.';
+  // Built from full-sentence nt() templates so the whole dek localizes as a unit (the runtime DOM
+  // translator only reaches single text nodes, which left this number-interleaved sentence half-English).
+  var _vNa='<b>'+s.notAssessed+'</b>',_vNm='<b>'+s.notMet+'</b>';
+  var vLedeLead=(s.notMet>0)
+    ?c5osT(s.notMet===1?'ca.dek.def1':'ca.dek.defN',{nm:_vNm,na:_vNa})
+    :c5osT('ca.dek.clean',{na:_vNa});
+  var vLede=vLedeLead
+    +(vWeakFn?c5osT('ca.dek.weak',{lbl:'<b>'+vWeakLbl+'</b>',s:vWeakFn.s.toFixed(1)}):'.')
+    +' '+c5osT('ca.dek.tail');
   // ── Blend presentation: editorial finding → focal instrument → supporting detail ──
   c5paStyle();
   var paFwName=isAiFw?'AI-governance':(c5AssessFwCfg().label);
   var paReadCol=overall5>=3.5?'--good':overall5>=2?'--blue':overall5>=1?'--warn':'--crit';
-  var paFinding='Your '+paFwName+' program'+(paScopeLbl?(' for <b>'+esc(paScopeLbl)+'</b>'):'')+' sits at <em>'+(vLevel||'&mdash;')+'</em> (CMMI Level '+vCmmi+') &mdash; '+overall5.toFixed(1)+' of 5, '+(vBelow?'<span class="bad">below the 3.5 target</span>':'at the 3.5 target')+'.';
+  var paFinding=c5osFinding({fw:paFwName,kind:'prog',scopeLbl:paScopeLbl,level:vLevel,cmmi:vCmmi,score:overall5.toFixed(1),below:vBelow});
   var paEyebrow=(isAiFw?'Program health · NIST AI RMF':'Program health · '+(c5AssessFwCfg().label))+(paScopeLbl?(' · '+esc(paScopeLbl)):'')+' · as of '+new Date().toLocaleDateString();
   // Scope basis — state the hierarchy explicitly so Enterprise is never read as a place:
   // Enterprise = equal-weighted mean of regions; a region = mean of its entities; an entity
@@ -6192,18 +6198,20 @@ function c5ContinuousAssessment(host){
     var _bsc=(typeof c5Scope==='function')?c5Scope():'enterprise';
     if(_bsc==='enterprise'){
       var _nr=(typeof REGIONS!=='undefined')?REGIONS.filter(function(r){return r.kind==='region';}).length:0;
-      paBasis='<b>Enterprise</b> is the equal-weighted average of your '+_nr+' region'+(_nr===1?'':'s')+' &mdash; a consolidated roll-up, not any one region.';
+      paBasis=c5osT('ca.basis.ent',{n:_nr});
     } else {
       var _breg=(typeof scopeRegion==='function')?scopeRegion(_bsc):null,_ro=null;
       if(typeof REGIONS!=='undefined')REGIONS.forEach(function(r){if(r.id===_breg)_ro=r;});
       if(_ro&&_ro.id===_bsc){
-        paBasis='<b>'+esc(_ro.label)+'</b> is the equal-weighted average of its '+((_ro.entities||[]).length)+' entities &mdash; itself one of '+((typeof REGIONS!=='undefined')?REGIONS.filter(function(r){return r.kind==='region';}).length:'')+' regions rolling up to Enterprise.';
+        var _nrr=(typeof REGIONS!=='undefined')?REGIONS.filter(function(r){return r.kind==='region';}).length:'';
+        paBasis=c5osT('ca.basis.region',{label:esc(_ro.label),n:(_ro.entities||[]).length,nr:_nrr});
       } else {
-        paBasis='This is a single <b>entity</b>, scored directly from its own telemetry &amp; evidence'+(_ro?(' &mdash; one of '+((_ro.entities||[]).length)+' in <b>'+esc(_ro.label)+'</b>'):'')+'.';
+        var _more=_ro?c5osT('ca.basis.entity.more',{n:(_ro.entities||[]).length,label:esc(_ro.label)}):'';
+        paBasis=c5osT('ca.basis.entity',{more:_more});
       }
     }
   }catch(_){}
-  var paBasisHtml=paBasis?('<div class="c5pa-basis"><span class="c5pa-basis-tag">Scope</span><span>'+paBasis+'</span></div>'):'';
+  var paBasisHtml=paBasis?('<div class="c5pa-basis"><span class="c5pa-basis-tag">'+c5osT('ca.basis.tag')+'</span><span>'+paBasis+'</span></div>'):'';
   // Weakest-first bar ledger (id · name · bar · score), CSF by function / AI RMF by function —
   // replaces the spider chart, clickable to open each function's controls.
   var _fnLbl={};(FN||[]).forEach(function(F){_fnLbl[F.k]=F.l;});
@@ -6806,8 +6814,8 @@ function c5FwUnifiedView(host,cfg){
   var inCtrls=(C5_FWU_SUBTAB==='controls');
   var subBar='<div style="display:flex;align-items:center;gap:14px;margin-top:16px;flex-wrap:wrap">'
     +(inCtrls
-      ?'<span data-fwusub="summary" role="button" tabindex="0" style="cursor:pointer;font-size:12px;font-weight:600;color:var(--blue)">&lsaquo; Back to summary</span><span style="font-size:12px;color:var(--muted)">Controls'+(cfg.scopeLbl?(' · '+esc(cfg.scopeLbl)):'')+(C5_FWU_FILTER?(' · '+(C5_FWU_FILTER==='notmet'?'not met':'awaiting evidence')):'')+'</span>'
-      :'<span style="font-size:12px;font-weight:700;color:var(--ink)">Summary</span><span data-fwusub="controls" role="button" tabindex="0" style="cursor:pointer;font-size:12px;font-weight:600;color:var(--blue)">All controls &rsaquo;</span>')
+      ?'<span data-fwusub="summary" role="button" tabindex="0" style="cursor:pointer;font-size:12px;font-weight:600;color:var(--blue)">'+c5osT('ca.sub.back')+'</span><span style="font-size:12px;color:var(--muted)">'+c5osT('ca.sub.controls')+(cfg.scopeLbl?(' · '+esc(cfg.scopeLbl)):'')+(C5_FWU_FILTER?(' · '+(C5_FWU_FILTER==='notmet'?c5osT('ca.dek.notmetlabel'):c5osT('ca.dek.awaitlabel'))):'')+'</span>'
+      :'<span style="font-size:12px;font-weight:700;color:var(--ink)">'+c5osT('ca.sub.summary')+'</span><span data-fwusub="controls" role="button" tabindex="0" style="cursor:pointer;font-size:12px;font-weight:600;color:var(--blue)">'+c5osT('ca.sub.all')+'</span>')
     +'</div>';
   // ── Grouped Verdict / Score / Proof control table (CSF-identical columns) ──
   function scoreCell(c){if(!c.assessed)return '<b style="font-size:13px;color:var(--muted)">&mdash;</b>';
@@ -6934,7 +6942,7 @@ function c5AiFwView(host,fwKey){
   var vBelow=overall5<3.5;
   var notMet=allC.filter(function(c){return c.verdict==='not_met';}).length;
   var evidenced=allC.filter(function(c){return c.assessed;}).length;
-  var paFinding='Your <b>'+esc(label)+'</b> posture'+(_aiScLbl?(' for <b>'+esc(_aiScLbl)+'</b>'):'')+' sits at <em>'+(vLevel||'&mdash;')+'</em> (CMMI Level '+vCmmi+') &mdash; '+overall5.toFixed(1)+' of 5, '+(vBelow?'<span class="bad">below the 3.5 target</span>':'at the 3.5 target')+'.';
+  var paFinding=c5osFinding({fwRaw:'<b>'+esc(label)+'</b>',kind:'post',scopeLbl:_aiScLbl,level:vLevel,cmmi:vCmmi,score:overall5.toFixed(1),below:vBelow});
   // Weakest-first FUNCTION profile (by catalog group), clickable to open that group's controls.
   var profileItems=groups.map(function(gr){return {id:gr.id,name:gr.name,s:gr.score,key:gr.id};});
   var profileInner=(typeof c5paBars==='function')?c5paBars(profileItems,{clickable:true}):'';
@@ -6952,7 +6960,7 @@ function c5AiFwView(host,fwKey){
     fwKey:'ai:'+fwKey,label:label,eyebrowName:label,scopeLbl:_aiScLbl,
     overall5:overall5,vLevel:vLevel,vCmmi:vCmmi,readCol:readCol,
     finding:paFinding,
-    dek:'<b>'+esc(label)+'</b> is an <b>AI-governance</b> framework, evidenced by <b>attestation</b> from your onboarding intake — there is no runtime AI security sensor yet, so this is a documented-posture read, not machine-verified assurance. <b>Governance is not assurance</b>: the score is honest about that gap. Open any control for how it was assessed, the finding and the fix.',
+    dek:c5osT('ca.dek.aifw',{label:esc(label)}),
     scopeNavHtml:scopeNavHtml,
     profileTitle:'Function profile · '+label+' · weakest first',profileNoun:'function',profileClickable:true,profileInner:profileInner,
     groups:groups,notMet:notMet,evidenced:evidenced,total:allC.length,
@@ -7003,7 +7011,7 @@ function c5FwLens(host,fwKey,label){
   var allC=[];groups.forEach(function(gr){allC=allC.concat(gr.controls);});
   var notMet=allC.filter(function(c){return c.verdict==='not_met';}).length;
   var evidenced=allC.filter(function(c){return c.assessed;}).length;
-  var paFinding='Your <b>'+esc(label)+'</b> posture'+(scLbl?(' for <b>'+esc(scLbl)+'</b>'):'')+' sits at <em>'+(vLevel||'&mdash;')+'</em> (CMMI Level '+vCmmi+') &mdash; '+overall5.toFixed(1)+' of 5, '+(vBelow?'<span class="bad">below the 3.5 target</span>':'at the 3.5 target')+'.';
+  var paFinding=c5osFinding({fwRaw:'<b>'+esc(label)+'</b>',kind:'post',scopeLbl:scLbl,level:vLevel,cmmi:vCmmi,score:overall5.toFixed(1),below:vBelow});
   // Weakest-first DOMAIN profile (by ISO/CIS control domain), clickable to open that domain's controls.
   var profileItems=groups.map(function(g){return {id:g.id,name:g.name,s:g.score||0,key:g.id};});
   var profileInner=c5paBars(profileItems,{clickable:true});
@@ -7015,7 +7023,7 @@ function c5FwLens(host,fwKey,label){
     fwKey:fwKey,label:label,eyebrowName:label,scopeLbl:scLbl,
     overall5:overall5,vLevel:vLevel,vCmmi:vCmmi,readCol:readCol,
     finding:paFinding,
-    dek:'<b>'+esc(label)+'</b> maturity is <b>crosswalk-derived</b> — each control is scored from the NIST CSF 2.0 evidence and live telemetry it maps to, so it moves with your real posture (a defensible readiness read, not a certified audit opinion — your assessor issues that). Open a domain, then a control, for its control-by-control detail.',
+    dek:c5osT('ca.dek.lens',{label:esc(label)}),
     scopeNavHtml:scopeNavHtml,
     profileTitle:'Domain profile · '+label+' · weakest first',profileNoun:'domain',profileClickable:true,profileInner:profileInner,
     groups:groups,notMet:notMet,evidenced:evidenced,total:allC.length,
@@ -7970,6 +7978,17 @@ var C5OSBTN='background:var(--blue);color:#fff;border:none;border-radius:7px;pad
 function c5osApi(){return (typeof apiBase==='function')?apiBase():'';}
 function c5osOrg(){return (typeof orgId==='function')?orgId():'';}
 function c5osT(k,p){return (typeof nt==='function')?nt(k,p):k;}
+/* Build the localized verdict-first finding sentence used by EVERY framework headline (CSF / AI /
+   ISO / CIS), from nt() templates so it translates as one unit. The CMMI level word sits in its own
+   <em> so the runtime DICT pass localizes it independently; fw markup is caller-supplied (bold on the
+   lens, plain on CSF). o: {fw, kind:'prog'|'post', scopeLbl, level, cmmi, score, below}. */
+function c5osFinding(o){
+  var esc=(typeof c5esc==='function')?c5esc:function(x){return x;};
+  var scope=o.scopeLbl?c5osT('ca.finding.forscope',{s:'<b>'+esc(o.scopeLbl)+'</b>'}):'';
+  var subj=c5osT(o.kind==='prog'?'ca.subj.prog':'ca.subj.post',{fw:(o.fwRaw!=null?o.fwRaw:esc(o.fw||'')),scope:scope});
+  var target=c5osT(o.below?'ca.finding.below':'ca.finding.at');
+  return c5osT('ca.finding',{subj:subj,level:esc(o.level||'—'),cmmi:o.cmmi,score:o.score,target:target});
+}
 function c5osGet(path){var o=c5osOrg();return fetch(c5osApi()+path+(path.indexOf('?')>=0?'&':'?')+'org_id='+encodeURIComponent(o),{headers:{'Accept':'application/json','X-Org-Id':o}}).then(function(r){return r.ok?r.json():null;}).catch(function(){return null;});}
 function c5osPost(path,body){var o=c5osOrg();return fetch(c5osApi()+path,{method:'POST',headers:{'Content-Type':'application/json','X-Org-Id':o},body:JSON.stringify(Object.assign({org_id:o},body||{}))}).then(function(r){return r.ok?r.json():null;}).catch(function(){return null;});}
 function c5usd(v){var x=Number(v)||0;if(x>=1e9)return '$'+(x/1e9).toFixed(1)+'B';if(x>=1e6)return '$'+(x/1e6).toFixed(1)+'M';if(x>=1e3)return '$'+Math.round(x/1e3)+'K';return '$'+Math.round(x);}
