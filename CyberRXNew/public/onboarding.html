@@ -1086,7 +1086,13 @@
   var OB_DOC_TYPES=[{k:'d1',l:'Information Security Policy'},{k:'d2',l:'Risk Assessment / Register'},{k:'d3',l:'Third-Party / Supply-Chain Policy'},{k:'d4',l:'Access Control Policy'},{k:'d5',l:'Identity & Authentication Policy'},{k:'d6',l:'Incident Response Plan'},{k:'d7',l:'Business Continuity / DR Plan'},{k:'d8',l:'Change Management Policy'},{k:'d9',l:'Configuration Management Policy'},{k:'d10',l:'Data Protection Policy'}];
   var CMMI_LBL={0:'None',1:'Initial',2:'Managed',3:'Defined',4:'Quant. Managed',5:'Optimizing'};
   function obDocScores(){try{return JSON.parse(localStorage.getItem('cyberrx_doc_scores')||'{}')||{};}catch(_){return {};}}
-  function obSaveDocScore(id,o){var m=obDocScores();m[id]=o;try{localStorage.setItem('cyberrx_doc_scores',JSON.stringify(m));}catch(_){}}
+  function obDocScoresByScope(){try{return JSON.parse(localStorage.getItem('cyberrx_doc_scores_by_scope')||'{}')||{};}catch(_){return {};}}
+  // Document evidence is stored PER SCOPE (Corporate + each entity). A control's score for a scope
+  // is written under cyberrx_doc_scores_by_scope[scope]; the Corporate set is also mirrored to the
+  // flat cyberrx_doc_scores the cockpit reads as the enterprise baseline (inherited by every
+  // centralized / hybrid entity). A federated entity's scores stay under its own key only.
+  function obSaveDocScore(id,o){var s=obScope(),by=obDocScoresByScope();(by[s]=by[s]||{})[id]=o;try{localStorage.setItem('cyberrx_doc_scores_by_scope',JSON.stringify(by));}catch(_){}
+    if(s==='corporate'){var m=obDocScores();m[id]=o;try{localStorage.setItem('cyberrx_doc_scores',JSON.stringify(m));}catch(_){}}}
   function obDocDocs(){try{return JSON.parse(localStorage.getItem('cyberrx_docs')||'[]')||[];}catch(_){return [];}}
   function obSaveDocs(a){try{localStorage.setItem('cyberrx_docs',JSON.stringify(a.slice(0,20)));}catch(_){}}
   function updateDocBadge(){var n=obDocDocs().length,b=document.getElementById('bdoc');if(b){if(n){b.textContent='✓ '+n+' analyzed';b.classList.add('done');}else{b.textContent='optional';b.classList.remove('done');}}}
@@ -1111,7 +1117,7 @@
       '</div>'+
       '<div id="obDocRows" style="margin-top:8px;display:'+(collapsed?'none':'block')+'">'+rows+'</div>';
     var t=document.getElementById('obDocToggle');if(t)t.addEventListener('click',function(){window.__obDocCollapsed=!window.__obDocCollapsed;obRenderDocList();});
-    var c=document.getElementById('obDocClear');if(c)c.addEventListener('click',function(){try{localStorage.removeItem('cyberrx_doc_scores');localStorage.removeItem('cyberrx_docs');localStorage.removeItem('cyberrx_doc_text');}catch(_){}window.__obDocCollapsed=undefined;updateDocBadge();obRenderDocList();if(typeof renderAiGovDocList==='function')renderAiGovDocList();if(typeof computeAiGov==='function')computeAiGov();});}
+    var c=document.getElementById('obDocClear');if(c)c.addEventListener('click',function(){try{localStorage.removeItem('cyberrx_doc_scores');localStorage.removeItem('cyberrx_doc_scores_by_scope');localStorage.removeItem('cyberrx_docs');localStorage.removeItem('cyberrx_doc_text');}catch(_){}window.__obDocCollapsed=undefined;updateDocBadge();obRenderDocList();if(typeof renderAiGovDocList==='function')renderAiGovDocList();if(typeof computeAiGov==='function')computeAiGov();});}
   // The AI-governance document types (derived from OB_DOC_TYPES — single source of
   // truth), each kept and shown separately so a user can upload all of them and see
   // every one's analysis persist, not just the latest.

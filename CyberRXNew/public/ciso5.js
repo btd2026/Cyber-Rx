@@ -7429,19 +7429,76 @@ function c5DocChips(x){
   }).filter(Boolean);
   return parts.length?('<div style="display:flex;flex-wrap:wrap;gap:10px 14px;margin-top:8px">'+parts.join('')+'</div>'):'';
 }
+/* Scope banner for the Documents-reviewed panel — states whether the selected scope inherits
+   Corporate's policies (centralized / hybrid), provides its own (federated), or IS the Corporate
+   baseline. Reads docScopeModel() from the cockpit. */
+function c5DocScopeBanner(){
+  var m=(typeof docScopeModel==='function')?docScopeModel():null;if(!m)return '';
+  var lbl=(typeof scopeLabel==='function')?scopeLabel(m.scope):m.scope;
+  function box(cvar,pct,html){return '<div style="border:1px solid color-mix(in srgb,var(--'+cvar+') '+pct+'%,transparent);background:color-mix(in srgb,var(--'+cvar+') 6%,transparent);border-radius:10px;padding:11px 14px;margin:0 0 14px;font-size:12px;line-height:1.55;color:var(--ink)">'+html+'</div>';}
+  if(!m.isEntity)
+    return box('blue',30,'<b>◆ Corporate / enterprise policy set</b> — <b>'+m.corpControls+'</b> control'+(m.corpControls===1?'':'s')+' evidenced by document review, <b>inherited by every centralized / hybrid entity</b>. Select an entity in the scope bar to see whether it inherits these or provides its own.');
+  if(m.federated){
+    var need=m.ownControls===0;
+    return box(need?'crit':'good',need?34:30,'<b>▸ '+c5esc(lbl)+' is federated</b> — it runs its own controls and <b>inherits no Corporate policies</b>. '+(need?'<b style="color:var(--crit)">No policies provided for this entity yet</b> — provide them below so its policy controls are evidenced.':('<b>'+m.ownControls+'</b> control'+(m.ownControls===1?'':'s')+' evidenced by <b>this entity’s own</b> policies.')));
+  }
+  return box('blue',30,'<b>▸ '+c5esc(lbl)+' inherits Corporate policies</b> ('+c5esc(m.mode)+') — the <b>'+m.corpControls+'</b> enterprise document control'+(m.corpControls===1?'':'s')+' evidence its policy controls automatically. '+(m.ownControls?('It also has <b>'+m.ownControls+'</b> of its own overriding.'):'You may provide an entity-specific policy below to override an inherited one.'));
+}
+/* Per-entity policy provisioning — lets you PROVIDE this entity's policies from the cockpit (required
+   for a federated entity that inherits nothing; an optional override for a centralized / hybrid one).
+   Analyzed by the same document engine and stored under cyberrx_doc_scores_by_scope[SCOPE]. */
+function c5DocScopeUploader(){
+  var m=(typeof docScopeModel==='function')?docScopeModel():null;if(!m||!m.isEntity)return '';
+  var lbl=(typeof scopeLabel==='function')?scopeLabel(m.scope):m.scope;
+  var types=(typeof DOC_TYPES!=='undefined'&&DOC_TYPES)?DOC_TYPES:[{k:'d1',l:'Information Security Policy'}];
+  return '<div style="border:1px dashed color-mix(in srgb,var(--blue) 40%,var(--line));border-radius:10px;padding:12px 14px;margin:0 0 18px">'
+    +'<div style="font-size:12px;font-weight:700;color:var(--ink);margin-bottom:8px">'+(m.federated?('Provide '+c5esc(lbl)+'’s policies'):('Add an entity-specific policy for '+c5esc(lbl)+' <span style="font-weight:500;color:var(--muted)">(optional override)</span>'))+'</div>'
+    +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'
+      +'<select id="c5scDocType" style="min-width:220px;padding:8px 11px;border:1px solid var(--line);border-radius:8px;font-size:12px;background:var(--surface);color:var(--ink)">'+types.map(function(d){return '<option value="'+d.k+'">'+c5esc(d.l)+'</option>';}).join('')+'</select>'
+      +'<input type="file" id="c5scDocFile" accept=".pdf,.docx,.doc,.txt,.md,.csv" style="font-size:12px">'
+      +'<button type="button" id="c5scDocGo" style="border:none;background:var(--blue);color:#fff;font-weight:700;font-size:12px;padding:8px 14px;border-radius:8px;cursor:pointer">Analyze for this entity</button>'
+      +'<span id="c5scDocMsg" style="font-size:12px;color:var(--muted)"></span>'
+    +'</div></div>';
+}
+function c5AnalyzeScopedPolicy(){
+  var fi=document.getElementById('c5scDocFile'),ty=document.getElementById('c5scDocType'),msg=document.getElementById('c5scDocMsg');
+  if(!fi||!fi.files||!fi.files[0]){if(msg){msg.textContent='Choose a file first.';msg.style.color='var(--warn)';}return;}
+  var file=fi.files[0],dt=ty.value,scope=(typeof SCOPE!=='undefined'&&SCOPE)?SCOPE:'enterprise';
+  if(msg){msg.textContent='Analyzing '+file.name+'…';msg.style.color='var(--muted)';}
+  var base=(typeof apiBase==='function')?apiBase():'';var oid=(typeof orgId==='function')?orgId():'';
+  var fd=new FormData();fd.append('file',file);fd.append('doc_type',dt);
+  fetch(base+'/api/documents/analyze',{method:'POST',headers:oid?{'X-Org-Id':oid}:{},body:fd})
+    .then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.error||('HTTP '+r.status));return j;});})
+    .then(function(res){
+      var by={};try{by=JSON.parse(localStorage.getItem('cyberrx_doc_scores_by_scope')||'{}')||{};}catch(_){}
+      by[scope]=by[scope]||{};
+      (res.controls||[]).forEach(function(c){by[scope][c.id]={cmmi:c.cmmi,doc:file.name,matched:c.matched,total:c.total,attrs:c.attrs||[],narrative:c.narrative||'',gap:c.gap||''};});
+      try{localStorage.setItem('cyberrx_doc_scores_by_scope',JSON.stringify(by));}catch(_){}
+      try{var docs=(typeof docList==='function')?docList():[];var lbl=((typeof DOC_TYPES!=='undefined'?DOC_TYPES:[]).filter(function(d){return d.k===dt;})[0]||{}).l||dt;
+        docs.unshift({name:file.name,type:lbl,cmmi:res.cmmi,matched:res.matched||0,total:res.total||0,owner:scope});if(typeof saveDocList==='function')saveDocList(docs);}catch(_){}
+      if(msg){msg.textContent='✓ '+file.name+' analyzed for this entity';msg.style.color='var(--good)';}
+      try{c5OpenDocsReview();}catch(_){}
+      try{if(typeof c5Frameworks==='function')c5Frameworks();}catch(_){}
+    })
+    .catch(function(e){if(msg){msg.textContent='✗ '+e.message;msg.style.color='var(--warn)';}});
+}
 /* Build the full HTML for the Documents-reviewed panel. */
 function c5DocsReviewHtml(){
   var docs=c5DocListSafe(),scores=c5DocScoresSafe();
   var CMMI_LBL=(typeof CMMI_LABELS!=='undefined')?CMMI_LABELS:{0:'Non-existent',1:'Initial',2:'Repeatable',3:'Defined',4:'Managed',5:'Optimizing'};
-  if(!docs.length&&!Object.keys(scores).length){
-    return '<div style="padding:8px 2px"><div style="font-size:15px;font-weight:600;color:var(--ink)">No policies analyzed yet</div>'+
-      '<p style="color:var(--ink-2);font-size:13px;line-height:1.55;max-width:640px">Upload your security policies during onboarding and Nerion reads each one control-by-control against NIST CSF 2.0 and NIST SP 800-53, then carries every finding across CIS, SOC 2 and HIPAA. The full review appears here, mapped to the controls in this tab.</p>'+
-      '<button data-c5onb="document review" style="margin-top:6px;border:1px solid var(--line);background:var(--surface);color:var(--blue);font-weight:600;font-size:12px;padding:8px 14px;border-radius:8px;cursor:pointer">Go to document review →</button></div>';
-  }
-  // Index the per-control review by the document that produced it.
+  // Scope banner (inherit vs own) + per-entity provisioning — shown above the review for every scope.
+  var scopeTop=c5DocScopeBanner()+c5DocScopeUploader();
+  // Index the per-control review by the document that produced it — `scores` is already resolved for
+  // the active scope (Corporate baseline for enterprise / inheriting entities; own-only for federated).
   var byDoc={};Object.keys(scores).forEach(function(cid){var s=scores[cid]||{};var dn=s.doc||'Uploaded policy';(byDoc[dn]=byDoc[dn]||[]).push({id:cid,s:s});});
-  // Documents in list order; append any scored doc not in the list.
-  var order=docs.map(function(d){return d.name;});Object.keys(byDoc).forEach(function(dn){if(order.indexOf(dn)<0)order.push(dn);});
+  // Only documents that actually evidence THIS scope are shown (so a federated entity never shows
+  // Corporate's inherited docs, and an inheriting entity shows the enterprise set it inherits).
+  var order=Object.keys(byDoc);
+  if(!order.length){
+    return '<div style="padding:2px">'+scopeTop+
+      '<div style="font-size:13px;color:var(--ink-2);line-height:1.55;max-width:640px">No policy documents evidence this scope yet. '+
+      ((typeof docScopeModel==='function'&&docScopeModel().federated)?'This entity is federated — provide its own policies above.':'Upload policies for it above, or during onboarding.')+'</div></div>';
+  }
   var metaByName={};docs.forEach(function(d){metaByName[d.name]=d;});
   var fnOrder=['GV','ID','PR','DE','RS','RC'],fnName={GV:'Govern',ID:'Identify',PR:'Protect',DE:'Detect',RS:'Respond',RC:'Recover'};
   function stColor(c){return c>=4?'good':c>=3?'good':c>=2?'warn':'crit';}
@@ -7508,6 +7565,7 @@ function c5DocsReviewHtml(){
     '</section>';
   });
   return '<div>'+
+    scopeTop+
     '<p style="color:var(--ink-2);font-size:13px;line-height:1.55;max-width:760px;margin:0 0 20px">Every policy you uploaded, read control-by-control against <b>NIST CSF 2.0</b> and <b>NIST SP 800-53 Rev 5</b> — each expected attribute judged on whether the language satisfies the control’s intent, with the <b>verbatim evidence quoted</b> and the gap named where it doesn’t. Every finding is carried across <b>CIS Controls v8</b>, <b>SOC 2</b> and the <b>HIPAA Security Rule</b> through the public crosswalk. This is the evidence behind the scores in this tab.</p>'+
     html+
     '<div style="font-size:11px;color:var(--muted);line-height:1.5;border-top:1px solid var(--line);padding-top:12px">Documents marked <b>✦ AI-reviewed</b> are read by Nerion’s analyst-grade document engine — semantic control-intent matching with quoted evidence, to a standard at or above human review; others use deterministic sentence-level matching (the sentence carrying the most of a requirement’s terms, not a single keyword). CIS · SOC 2 · HIPAA are mapped by public crosswalk (NIST CSF 2.0 informative references · SP 800-66) — a readiness indicator, not an independent audit opinion; CIS/SOC 2 shown by number/criterion only.</div>'+
@@ -7518,6 +7576,7 @@ function c5OpenDocsReview(){
     var host=document.getElementById('docDoc');if(!host)return;
     host.innerHTML=c5DocsReviewHtml();
     host.querySelectorAll('[data-c5docview]').forEach(function(b){b.onclick=function(e){e.stopPropagation();c5ViewDoc(b.getAttribute('data-c5docview'));};});
+    var _scGo=document.getElementById('c5scDocGo');if(_scGo)_scGo.onclick=function(){c5AnalyzeScopedPolicy();};
     var sc=document.getElementById('docScrim'),md=document.getElementById('docModal');
     if(sc)sc.classList.add('open');if(md)md.classList.add('open');
   }catch(_){}

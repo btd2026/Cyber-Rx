@@ -1897,19 +1897,48 @@ var DOC_TYPES=[
 /* The globally-uploaded document scores (enterprise-level) — the raw store. */
 function docScoresBase(){try{return JSON.parse(localStorage.getItem('cyberrx_doc_scores')||'{}')||{};}catch(_){return {};}}
 function saveDocScore(id,o){var m=docScoresBase();m[id]=o;try{localStorage.setItem('cyberrx_doc_scores',JSON.stringify(m));}catch(_){}}
-/* Document evidence RESOLVED for the current scope, with inheritance: an entity inherits
-   its region's policies, which inherit the enterprise's globally-uploaded set — so you
-   upload a global policy once and override only where a region genuinely differs. This is
-   what wires the 📄 document side of every control down to the selected region. In
-   production these per-entity doc scores come from the backend (documents tagged by
-   entity); the demo carries illustrative per-region profiles (DEMO_DOC_REGION). */
+/* Per-scope document evidence store (cyberrx_doc_scores_by_scope): {scopeId:{controlId:scoreObj}}.
+   Corporate holds the enterprise baseline; each entity that provides its own policies has its own key. */
+function docScoresByScope(){try{return JSON.parse(localStorage.getItem('cyberrx_doc_scores_by_scope')||'{}')||{};}catch(_){return {};}}
+/* How the CURRENT scope's policy evidence is derived — powers the "Documents reviewed" banner and
+   the per-entity provisioning logic. The inheritance rule mirrors the security operating model:
+     • Enterprise / region  → the Corporate (enterprise) policy set.
+     • Centralized / hybrid entity → INHERITS the Corporate policies (+ any of its own overrides).
+     • Federated entity → provides its OWN policies and inherits NOTHING. */
+function docScopeModel(){
+  var scope=(typeof SCOPE!=='undefined'&&SCOPE)?SCOPE:'enterprise';
+  var isEnt=(typeof isEntityScope==='function')&&isEntityScope(scope);
+  var mode=isEnt?((typeof entityMode==='function')?entityMode(scope):'centralized'):null;
+  var by=docScoresByScope();
+  return {scope:scope,isEntity:isEnt,mode:mode,
+    inherits:(isEnt&&mode!=='federated'),federated:(isEnt&&mode==='federated'),
+    ownControls:Object.keys(by[scope]||{}).length,
+    corpControls:Object.keys(by['corporate']||docScoresBase()).length};
+}
+/* Document evidence RESOLVED for the current scope, WITH the inheritance rule above. A centralized /
+   hybrid entity inherits the Corporate set and may override individual controls with its own; a
+   federated entity sees ONLY its own policies (inherits nothing). Enterprise / region use the
+   Corporate baseline. This is what wires the 📄 document side of every control to the selected scope.
+   The demo carries illustrative per-region profiles (DEMO_DOC_REGION), applied on top except for a
+   federated entity (which by definition inherits nothing). */
 function docScores(){
-  var out=docScoresBase();
+  var by=docScoresByScope();
+  var corp=by['corporate']||docScoresBase();          // Corporate baseline = enterprise policy set
+  var scope=(typeof SCOPE!=='undefined'&&SCOPE)?SCOPE:'enterprise';
+  var federated=false,out;
+  if(typeof isEntityScope==='function'&&isEntityScope(scope)){
+    var mode=(typeof entityMode==='function')?entityMode(scope):'centralized';
+    var own=by[scope]||{};
+    if(mode==='federated'){out=Object.assign({},own);federated=true;}  // federated: own policies ONLY
+    else out=Object.assign({},corp,own);                               // centralized/hybrid: inherit + own overrides
+  } else {
+    out=Object.assign({},corp);                                        // enterprise / region: Corporate baseline
+  }
   try{
-    if(typeof demoActive==='function'&&demoActive()&&typeof SCOPE!=='undefined'&&typeof DEMO_DOC_REGION!=='undefined'){
-      var region=(typeof scopeRegion==='function')?scopeRegion(SCOPE):null;out=Object.assign({},out);
+    if(!federated&&typeof demoActive==='function'&&demoActive()&&typeof DEMO_DOC_REGION!=='undefined'){
+      var region=(typeof scopeRegion==='function')?scopeRegion(scope):null;
       if(region&&DEMO_DOC_REGION[region])Object.keys(DEMO_DOC_REGION[region]).forEach(function(id){out[id]=demoDocFromProfile(DEMO_DOC_REGION[region][id]);});
-      if(SCOPE!==region&&DEMO_DOC_REGION[SCOPE])Object.keys(DEMO_DOC_REGION[SCOPE]).forEach(function(id){out[id]=demoDocFromProfile(DEMO_DOC_REGION[SCOPE][id]);});
+      if(scope!==region&&DEMO_DOC_REGION[scope])Object.keys(DEMO_DOC_REGION[scope]).forEach(function(id){out[id]=demoDocFromProfile(DEMO_DOC_REGION[scope][id]);});
     }
   }catch(_){}
   return out;
