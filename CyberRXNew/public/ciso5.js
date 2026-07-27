@@ -4634,21 +4634,75 @@ function c5DecProj(){
   // Rank weakest-scope-function first (address the biggest gap here), then by control uplift.
   var _dpRanked=levers.slice().sort(function(a,b){var wa=_dpWeakFn(a),wb=_dpWeakFn(b);
     var sa=wa?wa.score:99,sb=wb?wb.score:99;return (sa-sb)||(b.gain-a.gain);});
-  // Standardized decision panel — one funding decision per lever, in the same
-  // c5dec / c5decisions format every other seat uses (was a bespoke 3-panel tool).
-  var list=_dpRanked.slice(0,4).map(function(l,i){
-    var n=l.proj.length;
+  // ── Board framing a Fortune-100 CISO expects. Nerion deliberately does NOT report a modeled ALE/VaR
+  //    (a single made-up loss dollar misleads); it frames decisions against the FACTUAL numbers a board
+  //    already governs by — risk appetite, the SEC Item-106 disclosure-materiality threshold, the cyber
+  //    insurance tower, and the crown-jewel estate — plus the maturity each decision moves. ──
+  var _usd=(typeof c5usd==='function')?c5usd:((typeof usd==='function')?usd:function(v){return '$'+Math.round(v||0).toLocaleString();});
+  var _lv=(typeof LIVE!=='undefined')?LIVE:null;var _ec=(_lv&&_lv.economics)||null;
+  var _appet=(_ec&&_ec.appetite&&Number(_ec.appetite.appetite))||0;
+  var _matr=(_ec&&_ec.materiality&&Number(_ec.materiality.value))||0;
+  var _insL=(_ec&&_ec.insurance&&Number(_ec.insurance.limit))||0;
+  var _insR=(_ec&&_ec.insurance&&Number(_ec.insurance.retention))||0;
+  var _cjArr=(_lv&&_lv.crown_jewels)||[];
+  var _cjN=(_lv&&_lv.counts&&Number(_lv.counts.crown_jewels))||_cjArr.length||0;
+  var _cjCrit=_cjArr.filter(function(c){return /crit/i.test(c.tier||'');}).length;
+  var _regime=(typeof scopeMeta==='function'&&scopeMeta(_dpScope)&&scopeMeta(_dpScope).regime)||'';
+  var _tr=(typeof trajInfo==='function')?trajInfo():{two:false,down:false};
+  var _matDir=_tr.two?(_tr.down?'improving':'slipping'):'holding';
+  // Rank the pending funding decisions by the maturity (control) uplift they add — the honest
+  // "where the next dollar works hardest" ordering when no modeled ROI dollar exists.
+  var _pending=_dpRanked.slice(0,4).map(function(l){return {l:l,wf:_dpWeakFn(l)};});
+  function _stat(v,l,color,sub){return '<div style="flex:1;min-width:150px;border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--surface)"><div style="font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1;color:var(--'+(color||'ink')+')">'+v+'</div><div style="font-size:11px;font-weight:600;color:var(--ink-2);margin-top:3px">'+l+'</div>'+(sub?('<div style="font-size:10px;color:var(--muted);margin-top:1px">'+sub+'</div>'):'')+'</div>';}
+  // Board-context band: the FACTUAL thresholds a cyber loss is measured against. Shown only when the
+  // org's economics are connected (never fabricated).
+  var _hasEcon=(_appet>0||_matr>0||_cjN>0);
+  var band=_hasEcon?('<div class="c5pa" style="margin:0 0 12px;padding:14px 16px">'
+    +'<div class="c5pa-eyebrow" style="margin:0 0 9px">Board context · enterprise · what a cyber loss is measured against</div>'
+    +'<div style="display:flex;gap:10px;flex-wrap:wrap">'
+      +(_appet>0?_stat(_usd(_appet),'Board risk appetite','ink','the ceiling the board has set'):'')
+      +(_matr>0?_stat(_usd(_matr),'Disclosure materiality','warn','SEC Item 106 — a loss above this is reportable'):'')
+      +(_insL>0?_stat(_usd(_insL),'Cyber insurance limit','blue',(_insR>0?('retention '+_usd(_insR)):'the transfer layer')):'')
+      +(_cjN>0?_stat(String(_cjN),'Crown jewels in scope','good',(_cjCrit>0?(_cjCrit+' rated critical · maturity '+_matDir):('the assets that matter · maturity '+_matDir))):'')
+    +'</div></div>'):'';
+  // Where the next dollar works hardest — pending decisions ranked by the control-maturity they add.
+  var _byGain=_pending.filter(function(x){return (x.l.gain||0)>0;}).slice().sort(function(a,b){return (b.l.gain||0)-(a.l.gain||0);});
+  var _maxG=_byGain.length?(_byGain[0].l.gain||1):1;
+  var strip=_byGain.length?('<div class="c5pa" style="margin:0 0 12px;padding:14px 16px">'
+    +'<div style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:9px">Where the next dollar works hardest · biggest posture lift first</div>'
+    +_byGain.map(function(x){var w=Math.max(5,Math.round((x.l.gain||0)/_maxG*100)),wf=x.wf;return '<div style="display:flex;align-items:center;gap:10px;margin:6px 0"><span style="width:158px;flex:none;font-size:12px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+c5esc(x.l.name||x.l.name)+'">'+c5esc(x.l.name)+'</span><div style="flex:1;height:12px;background:var(--line);border-radius:6px;overflow:hidden"><div style="width:'+w+'%;height:100%;background:var(--good);border-radius:6px"></div></div><span style="width:150px;flex:none;text-align:right;font-size:11px;color:var(--ink-2);font-variant-numeric:tabular-nums">'+(wf?(_dpFN[wf.fn]+' '+wf.score.toFixed(1)+'→3.5'):((x.l.proj||[]).length+' controls'))+'</span></div>';}).join('')
+    +'<div style="font-size:11px;color:var(--muted);margin-top:9px;line-height:1.5">Ranked by the control-maturity these decisions add. Implementation cost is scoped with your team — Nerion does not invent a cost, and the gain is proven against telemetry once funded.</div>'
+    +'</div>'):'';
+  // Each decision as an investment case: the finding, then the maturity it moves · control coverage ·
+  // risk-reduction weight · regulatory relevance, then the recommended call and its tradeoff.
+  var list=_pending.map(function(x,i){
+    var l=x.l,wf=x.wf,n=l.proj.length;
+    var isWeakest=(wf&&wf.fn===_dpGlobalWeak);
     var moves=n?(n+' mapped control'+(n>1?'s':'')+' toward target maturity'):'your posture in this area';
-    var wf=_dpWeakFn(l);
-    var isWeakest=(wf&&wf.fn===_dpGlobalWeak);   // is THIS the scope's actual lowest function?
-    // The scope-anchored finding line: names the scope and the exact function score the card shows.
-    var sit=wf?('At <b>'+c5esc(_dpScopeLbl)+'</b>, '+_dpFN[wf.fn]+' sits at '+wf.score.toFixed(1)+'/5'+(wf.score<3.5?' — below the 3.5 target':'')+(isWeakest?' — the weakest function here':'')+'. '+_dpCap(l.need)):_dpCap(l.need);
-    var rec={on:'Commit & fund',osum:'Raises control coverage · improves '+moves,
-      pros:['Improves '+moves+' at '+_dpScopeLbl+'.',(wf?('Lifts '+_dpFN[wf.fn]+' ('+wf.score.toFixed(1)+'/5)'+(isWeakest?(' — '+_dpScopeLbl+'’s weakest function'):(wf.score<3.5?', below the 3.5 target':''))+'.'):'Raises measured control coverage in this area.'),'Opens a tracked funding project.'],
-      cons:['Requires capital this cycle (scoped with your team).'],
-      consequence:'Opens a tracked funding project and begins control-improvement tracking.'};
-    var alt=[{on:'Defer to next cycle',osum:'Records the deferral; the gap stays open',pros:['No spend now.'],cons:['The coverage gap stays open until it is funded.'],req:true,consequence:'Records the decision as deferred; the gap remains open until the next cycle.'}];
-    return c5dec('cs',i+1,'Fund '+l.name+'?',sit,rec,alt);
+    var rrLbl=(isWeakest||(l.gain||0)>=2)?'High':((l.gain||0)>=1?'Medium':'Modest');
+    var rrCol=rrLbl==='High'?'crit':(rrLbl==='Medium'?'warn':'muted');
+    var sitLead=wf?('At <b>'+c5esc(_dpScopeLbl)+'</b>, '+_dpFN[wf.fn]+' sits at '+wf.score.toFixed(1)+'/5'+(wf.score<3.5?' — below the 3.5 target':'')+(isWeakest?' — the weakest function here':'')+'. '+_dpCap(l.need)):_dpCap(l.need);
+    var metrics='<div style="display:flex;flex-wrap:wrap;gap:6px 20px;margin:9px 0 2px;font-size:12px">'
+      +(wf?('<span style="color:var(--ink-2)">Lifts '+_dpFN[wf.fn]+' <b>'+wf.score.toFixed(1)+'/5</b> → target 3.5</span>'):'')
+      +'<span style="color:var(--ink-2)"><b>'+n+'</b> control'+(n===1?'':'s')+' mapped</span>'
+      +'<span style="color:var(--ink-2)">Risk reduction <b style="color:var(--'+rrCol+')">'+rrLbl+'</b></span>'
+      +(_regime?('<span style="color:var(--ink-2)">Supports <b>'+c5esc(_regime)+'</b></span>'):'')
+      +'</div>';
+    var boardTxt=(isWeakest?('Addresses '+_dpScopeLbl+'’s weakest function. '):'')
+      +(_cjN>0?('Hardens your crown-jewel estate'+(_cjCrit>0?(' ('+_cjCrit+' critical)'):'')+'. '):'')
+      +(_matr>0?('A lapse here is the kind of event that can cross the '+_usd(_matr)+' disclosure line.'):'The largest single posture improvement on the table.');
+    var board=(i===0)?('<div style="font-size:11px;color:var(--ink-2);margin-top:6px;display:flex;gap:8px;align-items:flex-start;max-width:660px"><span style="flex:none;font-size:9px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--blue);background:color-mix(in srgb,var(--blue) 10%,transparent);border:1px solid color-mix(in srgb,var(--blue) 30%,transparent);border-radius:20px;padding:2px 8px;margin-top:1px">Board relevant</span><span>'+boardTxt+'</span></div>'):'';
+    var sit=sitLead+metrics+board;
+    var rec={on:'Commit & fund',osum:'Lifts '+(wf?_dpFN[wf.fn]:'this function')+' · improves '+moves,
+      pros:[(wf?('Lifts '+_dpFN[wf.fn]+' ('+wf.score.toFixed(1)+'/5)'+(isWeakest?(' — '+_dpScopeLbl+'’s weakest function'):(wf.score<3.5?', below the 3.5 target':''))+'.'):'Raises measured control coverage in this area.'),(_cjN>0?'Strengthens protection of your crown-jewel estate.':'Improves '+moves+' at '+_dpScopeLbl+'.'),'Opens a tracked project with a measured before/after — the gain is proven against telemetry, not asserted.'],
+      cons:['Requires capital this cycle — cost is scoped with your team (Nerion does not invent it).'],
+      consequence:'Opens a tracked funding project and begins control-improvement tracking; the maturity gain is verified against telemetry as it lands.'};
+    var alt=[{on:'Defer to next cycle',osum:'Records the deferral; the gap stays open',pros:['No spend now.'],cons:['The coverage gap stays open until it is funded'+(isWeakest?' — and it is this scope’s weakest function':'')+'.','The gap remains until the next cycle.'],req:true,consequence:'Records the decision as deferred with your rationale; the gap remains until it is funded.'}];
+    var meta={recommendation:'Commit & fund',
+      evidenceConfidence:'Measured · continuous control assessment',
+      requestedBy:_dpScopeLbl,
+      exposureBasis:'Ranked by '+_dpScopeLbl+'’s weakest function; implementation cost is scoped with your team. Nerion verifies the maturity gain against telemetry once the project is funded.'};
+    return c5dec('cs',i+1,'Fund '+l.name+'?',sit,rec,alt,meta);
   });
   // Scope drill cards (Enterprise / region / entity) at the top — the scope switcher lives on
   // every section now, not in a separate top bar.
@@ -4657,9 +4711,11 @@ function c5DecProj(){
   host.innerHTML=c5header()+
     decScopeNav+
     _dpEyebrow+
-    c5shell('Decisions · '+_dpScopeLbl+' · what needs your sign-off?',(levers.length?(levers.length+' funding decision'+(levers.length>1?'s':'')+' waiting for <b>'+c5esc(_dpScopeLbl)+'</b> — each supported by '+_dpScopeLbl+'’s own findings. Commit or defer.'):'Connect your tools and the funded decisions that move your posture appear here.'),null,'These decisions are ranked by '+_dpScopeLbl+'’s weakest function, so they align with the maturity you see for this scope above. Choosing one stamps it with your name and time, keeps it editable for 24 hours, and opens a tracked project. Switch scope in the cards above to see another region or entity’s decisions.')+
-    (list.length?c5decisions(list):'<div class="c5note">◐ Connect your security tools and upload your policies, and the funded decisions that move your posture appear here — each with the exact controls it improves.</div>')+
-    '<div class="c5foot">Each decision is priced from your control model.</div>';
+    c5shell('Decisions · '+_dpScopeLbl+' · what needs your sign-off?',(levers.length?(levers.length+' funding decision'+(levers.length>1?'s':'')+' waiting for <b>'+c5esc(_dpScopeLbl)+'</b> — ordered so '+c5esc(_dpScopeLbl)+'’s weakest function is addressed first, each tied to the function it lifts and the crown jewels it protects. Commit or defer.'):'Connect your tools and the funded decisions that move your posture appear here.'),null,'The board-context band is the factual thresholds a cyber loss is judged against — risk appetite, the SEC disclosure line, insurance and your crown jewels (Nerion reports no made-up loss dollar). Each decision below is one investment case for <b>'+c5esc(_dpScopeLbl)+'</b> — the maturity it moves, the risk it reduces, and the tradeoff. Choosing one stamps it with your name and time, keeps it editable for 24 hours, and opens a tracked project. Switch scope in the cards above to see another region or entity.')+
+    band+
+    strip+
+    (list.length?c5decisions(list):'<div class="c5note">◐ Connect your security tools and upload your policies, and the funded decisions that move your posture appear here — each tied to the exact controls it improves and the crown jewels it protects.</div>')+
+    '<div class="c5foot">Nerion reports no modeled loss dollar — decisions are framed against your board’s factual thresholds (appetite, SEC materiality, insurance) and the maturity each one moves. Implementation cost is scoped with your team, and every choice is logged with who, when and why for the board record.</div>';
 }
 function c5dpMeterRow(p){
   var cap=(p.ceil!=null&&p.to>=p.ceil&&p.ceil<5)?('<span class="c5dp-cap">'+(p.auto==='manual'?'manual · caps at 3':'semi-automated · caps at 4')+'</span>'):'';
