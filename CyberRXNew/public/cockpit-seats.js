@@ -9,10 +9,9 @@ var SEATS = {
   brief:'Here’s what you can actually prove right now — and what is only asserted on a policy. Your posture is assessed control-by-control, continuously, and honest about method: proven by a sensor, human-confirmed, or attested. Where a crown-jewel control isn’t proven, you see it — which business services it would disrupt, for how long, and whether recovery is tested against the tolerance the board set. The goal isn’t a bigger number; it’s a defensible one — the difference between “we have a policy” and “we can prove it.”',
   body:function(){return (
    sec('01','Cyber-risk verdict','The answer first — is this entity at greater cyber risk? Its critical processes, the systems that support them, each system’s risks, the NIST CSF · CIS · ISO 27002 controls that mitigate them and their Program-Health scores, rolled into one verdict','<div id="c5-entityrisk"></div>')
-   +sec('02','Control map','The mirror image — each framework control, the processes it governs and the cyber risks it mitigates there','<div id="c5-controlmap"></div>')
-   +sec('03','Program health','','<div id="c5-frameworks"></div>')
-   +sec('04','Operational impact','','<div id="c5-resilience"></div>')
-   +sec('05','Decisions','What needs your sign-off — fund or defer, each priced from your control model','<div id="c5-decproj"></div>')
+   +sec('02','Program health','','<div id="c5-frameworks"></div>')
+   +sec('03','Operational impact','','<div id="c5-resilience"></div>')
+   +sec('04','Decisions','What needs your sign-off — fund or defer, each priced from your control model','<div id="c5-decproj"></div>')
   );}
  }
 };
