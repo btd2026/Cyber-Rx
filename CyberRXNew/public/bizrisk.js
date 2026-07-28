@@ -87,6 +87,23 @@
 
   function band3(x) { return x >= 0.8 ? 'hi' : (x >= 0.55 ? 'med' : 'lo'); }
 
+  // Evidence-driven loss-event likelihood ≈ adversary intent × reachability × target
+  // attractiveness — derived from the system's OWN attributes (risk type, internet exposure,
+  // asset class) instead of a fixed "adversarial→High, else Medium" constant. Returns
+  // {band, score, why} so the chip can defend itself in a tooltip. Control strength is
+  // deliberately NOT folded in here — that is the separate Mitigation lever, so the two
+  // numbers never double-count (FAIR terms: threat-event frequency vs vulnerability).
+  function riskLikelihood(adv, cls, internet) {
+    var score = adv ? 0.55 : 0.30, why = [];
+    why.push(adv ? 'actively targeted (adversarial threat)' : 'operational / non-adversarial');
+    if (internet) { score += 0.22; why.push('internet-facing — reachable attack surface'); }
+    else { why.push('internal-only exposure'); }
+    if (cls === 'identity' || cls === 'saas' || cls === 'data') { score += 0.12; why.push('high-value target class (' + cls + ')'); }
+    else if (cls === 'iaas' || cls === 'server') { score += 0.05; }
+    score = Math.max(0, Math.min(1, score));
+    return { band: band3(score), score: score, why: 'Likelihood ' + Math.round(score * 100) + '% — ' + why.join(' · ') };
+  }
+
   // The whole scope-aware model: processes → risks → controls, computed once.
   function c5BizRiskModel(scope) {
     var live = (typeof LIVE !== 'undefined') ? LIVE : null;
@@ -115,7 +132,7 @@
 
     // Build one risk from an ASSET_RISK_MODEL entry {r, adv, caps}, keeping ONLY the
     // controls that are real and relevant to this system's class (capAppliesTo).
-    function mkRisk(rdef, cls, impactFrac) {
+    function mkRisk(rdef, cls, impactFrac, internet) {
       var seen = {}, keys = [];
       (rdef.caps || []).forEach(function (k) { if (!seen[k] && byKey[k] && capApplies(k, cls)) { seen[k] = 1; keys.push(k); } });
       var ctrls = keys.map(ctrlObj).filter(Boolean);
@@ -123,9 +140,11 @@
       var weakest = null;
       measured.forEach(function (c) { if (weakest == null || c.maturity < weakest.maturity) weakest = c; });
       var mitigation = weakest ? weakest.maturity : null;
+      var lk = riskLikelihood(!!rdef.adv, cls, !!internet);
       return {
         key: brSlug(rdef.r), adversarial: !!rdef.adv, name: rdef.r,
-        likelihood: rdef.adv ? 'hi' : 'med', impact: band3(impactFrac),
+        likelihood: lk.band, likelihoodWhy: lk.why, likelihoodScore: lk.score,
+        impact: band3(impactFrac),
         controls: ctrls, mitigation: mitigation, weakest: weakest
       };
     }
@@ -138,7 +157,7 @@
       var impactFrac = resid && resid.impact != null ? Number(resid.impact) : (/crit/i.test(cj.tier || '') ? 0.9 : 0.68);
       // The cyber risks this system's CLASS actually carries, each with class-valid controls.
       var defs = arm[cls] || arm.server || [];
-      var risks = defs.map(function (rd) { return mkRisk(rd, cls, rd.adv ? impactFrac : impactFrac * 0.85); });
+      var risks = defs.map(function (rd) { return mkRisk(rd, cls, rd.adv ? impactFrac : impactFrac * 0.85, cj.internet_facing); });
       risks.forEach(function (r) { r.controls.forEach(function (c) { usedCaps[c.k] = 1; }); });
       totalRisks += risks.length;
       // Process residual = the weakest mitigating control across its risks (one gap opens the path).
@@ -173,9 +192,9 @@
     var w = p == null ? 0 : Math.max(0, Math.min(100, p));
     return '<div style="display:flex;align-items:center;gap:8px;min-width:120px"><div style="flex:1;height:6px;background:var(--line);border-radius:4px;overflow:hidden;min-width:56px"><i style="display:block;height:100%;width:' + w + '%;background:var(--' + col + ')"></i></div><span style="font-size:11px;font-weight:700;color:var(--' + col + ');font-variant-numeric:tabular-nums">' + (p == null ? '—' : p + '%') + '</span></div>';
   }
-  function llChip(level) {
+  function llChip(level, why) {
     var col = level === 'hi' ? 'crit' : (level === 'med' ? 'warn' : 'muted');
-    return '<b style="color:var(--' + col + ')">' + T('br.' + level) + '</b>';
+    return '<b style="color:var(--' + col + ')' + (why ? ';cursor:help;border-bottom:1px dotted currentColor' : '') + '"' + (why ? ' title="' + esc(why) + '"' : '') + '>' + T('br.' + level) + '</b>';
   }
   function fwids(arr, cls) {
     if (!arr || !arr.length) return '<span style="color:var(--muted)">—</span>';
@@ -216,7 +235,7 @@
     var mitCol = risk.mitigation == null ? 'muted' : (risk.mitigation >= 75 ? 'good' : (risk.mitigation >= 50 ? 'warn' : 'crit'));
     var head = '<div class="br-risk" data-risk="' + esc(risk.key) + '" data-proc="' + procIdx + '" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:11px 12px;cursor:pointer;border-radius:9px' + (open ? ';background:color-mix(in srgb,var(--blue) 5%,transparent)' : '') + '">'
       + '<span style="flex:1;min-width:180px;font-size:13px;font-weight:650;color:var(--ink)">' + (risk.adversarial ? '⚔ ' : '⚙ ') + esc(risk.name) + '</span>'
-      + '<span style="font-size:11px;color:var(--ink-2)">' + T('br.risk.likelihood') + ' ' + llChip(risk.likelihood) + '</span>'
+      + '<span style="font-size:11px;color:var(--ink-2)">' + T('br.risk.likelihood') + ' ' + llChip(risk.likelihood, risk.likelihoodWhy) + '</span>'
       + '<span style="font-size:11px;color:var(--ink-2)">' + T('br.risk.impact') + ' ' + llChip(risk.impact) + '</span>'
       + '<span style="font-size:11px;color:var(--ink-2);display:flex;align-items:center;gap:7px">' + T('br.risk.mitigation') + ' <b style="color:var(--' + mitCol + ');font-variant-numeric:tabular-nums">' + (risk.mitigation == null ? '—' : risk.mitigation + '%') + '</b></span>'
       + '<span style="font-size:11px;color:var(--blue);font-weight:700">' + T('br.risk.open') + '</span>'

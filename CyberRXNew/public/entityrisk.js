@@ -195,7 +195,7 @@
     var tag = ph ? '<span title="' + esc(T('er.ph.tip')) + '" style="font-size:8.5px;font-weight:800;letter-spacing:.04em;color:var(--blue);border:1px solid color-mix(in srgb,var(--blue) 40%,transparent);border-radius:4px;padding:0 3px;line-height:1.5">PH</span>' : '';
     return '<div style="display:flex;align-items:center;gap:7px;min-width:128px"><div style="flex:1;height:6px;background:var(--line);border-radius:4px;overflow:hidden;min-width:52px"><i style="display:block;height:100%;width:' + w + '%;background:var(--' + col + ')"></i></div><span style="font-size:11px;font-weight:700;color:var(--' + col + ');font-variant-numeric:tabular-nums">' + (p == null ? '—' : p + '%') + '</span>' + tag + '</div>';
   }
-  function llChip(level) { var col = level === 'hi' ? 'crit' : (level === 'med' ? 'warn' : 'muted'); return '<b style="color:var(--' + col + ')">' + T('br.' + level) + '</b>'; }
+  function llChip(level, why) { var col = level === 'hi' ? 'crit' : (level === 'med' ? 'warn' : 'muted'); return '<b style="color:var(--' + col + ')' + (why ? ';cursor:help;border-bottom:1px dotted currentColor' : '') + '"' + (why ? ' title="' + esc(why) + '"' : '') + '>' + T('br.' + level) + '</b>'; }
   function fwids(arr, cls) {
     if (!arr || !arr.length) return '<span style="color:var(--muted)">—</span>';
     return arr.map(function (id) { return '<span class="fwid ' + cls + '" style="margin:0 3px 3px 0">' + esc(id) + '</span>'; }).join('');
@@ -304,7 +304,7 @@
     var mitCol = risk.mitigation == null ? 'muted' : (risk.mitigation >= 75 ? 'good' : (risk.mitigation >= 50 ? 'warn' : 'crit'));
     var head = '<div class="er-risk" data-risk="' + esc(risk.key) + '" data-sys="' + sysIdx + '" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:11px 12px;cursor:pointer;border-radius:9px' + (open ? ';background:color-mix(in srgb,var(--blue) 5%,transparent)' : '') + '">'
       + '<span style="flex:1;min-width:180px;font-size:13px;font-weight:650;color:var(--ink)">' + (risk.adversarial ? '⚔ ' : '⚙ ') + esc(risk.name) + (under ? ' <span title="' + esc(T('er.under.tip')) + '" style="font-size:9px;color:var(--crit);font-weight:800">⚠</span>' : '') + '</span>'
-      + '<span style="font-size:11px;color:var(--ink-2)">' + T('br.risk.likelihood') + ' ' + llChip(risk.likelihood) + '</span>'
+      + '<span style="font-size:11px;color:var(--ink-2)">' + T('br.risk.likelihood') + ' ' + llChip(risk.likelihood, risk.likelihoodWhy) + '</span>'
       + '<span style="font-size:11px;color:var(--ink-2)">' + T('br.risk.impact') + ' ' + llChip(risk.impact) + '</span>'
       + '<span style="font-size:11px;color:var(--ink-2);display:flex;align-items:center;gap:7px">' + T('br.risk.mitigation') + ' <b style="color:var(--' + mitCol + ');font-variant-numeric:tabular-nums">' + (risk.mitigation == null ? '—' : risk.mitigation + '%') + '</b></span>'
       + '<span style="font-size:11px;color:var(--blue);font-weight:700">' + T('br.risk.open') + '</span>'
