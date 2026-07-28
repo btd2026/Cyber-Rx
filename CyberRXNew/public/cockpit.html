@@ -4482,7 +4482,7 @@ var CAPS=[
   {k:'seg',auto:'semi',name:'Network Segmentation / Zero-Trust',tool:'Illumio / firewall',proj:/segment|micro-?segment|zero.?trust|illumio|isolation|east-?west/i,need:'segment crown-jewel systems and enforce east-west controls.',connect:'connect your segmentation / NAC tooling.'},
   {k:'backup',auto:'auto',name:'Backup & Recovery Resilience',tool:'Rubrik / Veeam',proj:/backup|recover|immutable|rubrik|veeam|disaster|resilien|\bdr\b/i,need:'verify immutable backups and test restore for every crown jewel.',connect:'connect your backup platform (Rubrik, Veeam).'},
   {k:'cspm',auto:'auto',name:'Cloud Security Posture (CSPM)',tool:'Wiz / Prisma',proj:/cspm|cloud security|posture|misconfig|\bwiz\b|prisma|\borca\b/i,need:'baseline cloud misconfigurations and remediate public exposure.',connect:'connect a CSPM tool (Wiz, Prisma, Orca).'},
-  {k:'sspm',auto:'manual',name:'SaaS Security Posture (SSPM / CASB)',tool:'AppOmni / Adaptive Shield',proj:/sspm|saas security|casb|appomni|adaptive ?shield|obsidian|netskope|salesforce shield/i,need:'baseline SaaS misconfigurations and over-privileged access across your business apps.',connect:'connect an SSPM / CASB (AppOmni, Adaptive Shield, Netskope) or the app’s native security (Salesforce Shield).'} // classified 'manual' (attested) until an SSPM/CASB connector emits sspm_pct — no producer exists yet, so this must not claim live telemetry; restore to 'semi' when a connector is wired.
+  {k:'sspm',auto:'semi',name:'SaaS Security Posture (SSPM / CASB)',tool:'AppOmni / Adaptive Shield',proj:/sspm|saas security|casb|appomni|adaptive ?shield|obsidian|netskope|salesforce shield/i,need:'baseline SaaS misconfigurations and over-privileged access across your business apps.',connect:'connect an SSPM / CASB (AppOmni, Adaptive Shield, Netskope) or the app’s native security (Salesforce Shield).'} // 'semi': the AppOmni connector now emits sspm_pct (share of known SaaS apps under active posture management), so this is telemetry-backed, not attested. Validate against a real tenant before marketing as live.
 ];
 var CAP_BY_KEY={};CAPS.forEach(function(c){CAP_BY_KEY[c.k]=c;});
 /* ---- Asset-class applicability (telemetry provenance). A tool can only EVIDENCE an
@@ -4513,12 +4513,12 @@ var CAP_SIGKEY={edr:'edr_pct',mfa:'mfa_pct',pam:'pam_pct',vuln:'patch_pct',aware
 /* GROUND TRUTH — which capabilities have a LIVE, self-serve connector that emits the exact
    signal the control's deployment reads. Verified against cyberrx-api/src/services/connectors
    on main: 10 of the 11 controls have real API connectors (most with 4–6 vendor options); each
-   entry below names the canonical one. The ONLY gap is SSPM — no connector emits sspm_pct yet,
-   so it stays attested. (Connectors are built to vendor API docs and should be validated against
-   a production tenant before being marketed as live.) KEEP IN SYNC as connectors ship — the
-   drill copy must never tell a CISO to "connect" a tool with no working integration, nor call a
+   entry below names the canonical one. With the AppOmni SSPM connector added, all 11 controls now
+   have a producer. (Connectors are built to vendor API docs and should be validated against a
+   production tenant before being marketed as live.) KEEP IN SYNC as connectors ship — the drill
+   copy must never tell a CISO to "connect" a tool with no working integration, nor call a
    connected-capable control "roadmap". */
-var CAP_LIVE_CONNECTOR={edr:'CrowdStrike Falcon',mfa:'Microsoft Entra ID',pam:'CyberArk',vuln:'Tenable.io',aware:'KnowBe4',siem:'Microsoft Sentinel',cspm:'Wiz',backup:'Rubrik',dlp:'Microsoft Purview',seg:'Illumio'};
+var CAP_LIVE_CONNECTOR={edr:'CrowdStrike Falcon',mfa:'Microsoft Entra ID',pam:'CyberArk',vuln:'Tenable.io',aware:'KnowBe4',siem:'Microsoft Sentinel',cspm:'Wiz',backup:'Rubrik',dlp:'Microsoft Purview',seg:'Illumio',sspm:'AppOmni'};
 function capConnectPrompt(k){var v=CAP_LIVE_CONNECTOR[k];
   return v?('Connect '+v+' — a read-only connector exists and scores this control live from telemetry.')
           :'No native connector for this tool yet — record it as attested at onboarding (documented, not sensor-proven). A connector is on the roadmap.';}

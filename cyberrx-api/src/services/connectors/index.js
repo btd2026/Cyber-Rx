@@ -85,6 +85,7 @@ const RAW_REGISTRY = {
   paloalto_seg: require('./paloalto_seg'),
   cisco_workload: require('./cisco_workload'),
   guardicore: require('./guardicore'),
+  appomni: require('./appomni'),                  // SaaS Security Posture → sspm_pct (previously no producer)
 };
 
 // Per-connector demo mode state. Defaults to false (live).

@@ -24,9 +24,12 @@ registry:
 | Backup | `backup_immutable_pct` | Rubrik, Veeam, Cohesity, Commvault, Dell PowerProtect | ✅ |
 | DLP | `dlp_pct` | Purview, Forcepoint, Symantec, Zscaler, Netskope | ✅ |
 | Segmentation | `seg_pct` | Illumio, Zscaler ZPA, Palo Alto, Cisco, Guardicore | ✅ |
-| **SSPM** | `sspm_pct` | **none** | ❌ the one real gap |
+| SSPM | `sspm_pct` | **AppOmni** (built — closes the last gap) | ✅ |
 
-`CAP_LIVE_CONNECTOR` in `cockpit.html` mirrors this (SSPM omitted → stays attested).
+**Update:** the one gap (SSPM) is now closed — `appomni.js` emits `sspm_pct` (share of known
+SaaS apps under active AppOmni posture management), registered in `index.js`, unit-tested, and
+`CAP_BY_KEY.sspm` moved from `manual` (attested) to `semi`. **All 11 controls now have a producer.**
+`CAP_LIVE_CONNECTOR` in `cockpit.html` lists all 11.
 
 ## The actual remaining work (in priority order)
 
@@ -37,10 +40,11 @@ production tenant. This is the highest-value work: a validation pass (real creds
 confirm the derived % matches the vendor console) per vendor, starting with the canonical one per
 control (CrowdStrike, Entra, CyberArk, Tenable, Sentinel, Wiz, Rubrik, Purview, Illumio, KnowBe4).
 
-### 2. SSPM connector — the single missing producer
-Build one connector emitting `sspm_pct` (business-critical SaaS apps under posture management ÷ SaaS
-inventory). Candidates: AppOmni, Adaptive Shield, Obsidian, or Salesforce Shield for the SFDC case.
-Follows the proven `test()` + `fetchSignals()` shape (~80 lines). Until then SSPM is honestly attested.
+### 2. SSPM connector — DONE (AppOmni)
+`appomni.js` emits `sspm_pct` = SaaS apps under active AppOmni posture management ÷ the SaaS
+inventory AppOmni knows about; registered and unit-tested. Still carries the standard
+validate-against-a-real-tenant caveat. A second vendor (Adaptive Shield / Obsidian) can follow the
+same shape if needed.
 
 ### 3. The denominator (accuracy, not coverage)
 Several %'s are `covered ÷ in-scope total` and need a trusted asset count (EDR's `edr_pct` already
