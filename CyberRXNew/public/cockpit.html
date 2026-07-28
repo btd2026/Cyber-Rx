@@ -2133,80 +2133,123 @@ function capContrib(){var eff={},sum=0;CAPS.forEach(function(c){var p=capDeploy(
 function vcProtectedBy(k){var vc=(LIVE&&LIVE.value_chain);if(!vc||!vc.functions)return null;var fns={},procN=0,risks=0;
   vc.functions.forEach(function(f){var hit=false;(f.processes||[]).forEach(function(p){var ph=false;(p.assets||[]).forEach(function(a){(a.risks||[]).forEach(function(r){if(riskCaps(r.title,r.severity).indexOf(k)>=0){risks++;ph=true;hit=true;}});});if(ph)procN++;});if(hit)fns[f.name]=1;});
   return {fns:Object.keys(fns),procN:procN,risks:risks};}
-/* The drill: a board-grade control dossier — what the control is, how its number is
-   KNOWN (method, source, freshness), where it is valid evidence, what it protects, the
-   frameworks it satisfies, and the $ it removes when effective — with the full calc. */
+/* Business consequence of a control, from the value chain: the crown jewels it protects,
+   the revenue behind them, and the modeled $ exposure sitting behind its risks. Uses the
+   value-chain's own exposure_usd / process_stop_usd, so it shows REAL dollars before an
+   org-wide ALE is ever connected — the reason the old panel could only show $0. */
+function capConsequence(k){
+  var vc=(LIVE&&LIVE.value_chain); if(!vc||!vc.functions) return null;
+  var jewels=[],fns={},procSeen={},procDaily=0,exposure=0;
+  vc.functions.forEach(function(f){(f.processes||[]).forEach(function(p){var pHit=false;
+    (p.assets||[]).forEach(function(a){var aExp=0,aRisk=null,aSev=null;
+      (a.risks||[]).forEach(function(r){ if(riskCaps(r.title,r.severity).indexOf(k)>=0){ aExp+=Number(r.exposure_usd||r.process_stop_usd||0); if(!aRisk){aRisk=r.title;aSev=r.severity;} pHit=true; } });
+      if(aRisk){ jewels.push({name:a.name,internet:!!a.internet_facing,tier:a.tier,crit:(p.criticality||''),proc:p.name,procDaily:Number(p.daily_usd||0),risk:aRisk,sev:aSev,exposure:aExp}); exposure+=aExp; }
+    });
+    if(pHit){ fns[f.name]=1; if(!procSeen[p.name]){procSeen[p.name]=1;procDaily+=Number(p.daily_usd||0);} }
+  });});
+  if(!jewels.length) return null;
+  jewels.sort(function(a,b){return (b.exposure-a.exposure)||((b.internet?1:0)-(a.internet?1:0));});
+  return {jewels:jewels,fns:Object.keys(fns),procN:Object.keys(procSeen).length,procDaily:procDaily,exposure:exposure};
+}
+/* First-seen baseline per control+scope so coverage trends refresh-over-refresh. Honest:
+   it anchors to the FIRST real measurement (not a synthetic quarter) and reports movement
+   since. Connecting a continuous-monitoring history gives full quarter-over-quarter. */
+function capTrend(k,scope,cur){
+  if(cur==null) return null;
+  var key=scope+'|'+k,all={};
+  try{all=JSON.parse(localStorage.getItem('cyberrx_cap_trend')||'{}')||{};}catch(_){}
+  var b=all[key];
+  if(!b){ b={v:cur,ts:(new Date()).toISOString()}; all[key]=b; try{localStorage.setItem('cyberrx_cap_trend',JSON.stringify(all));}catch(_){} return {first:true,ts:b.ts}; }
+  return {first:false,base:b.v,delta:cur-b.v,ts:b.ts};
+}
+/* The drill: a DECISION instrument, not a fact sheet. It leads with what the CISO acts on —
+   business consequence ($), the named gap worst-first, the trend, the target/appetite, and
+   the fundable decision with its modeled risk-reduction — then keeps provenance + framework
+   crosswalk as a defensibility footer for the auditor. Every number is real or honestly
+   labelled as needing a data join; nothing is silently $0. */
 function drillControlValue(k){var c=CAP_BY_KEY[k];if(!c)return '';
   var scope=(typeof c5Scope==='function')?c5Scope():'enterprise';
   var fw=CAP_FRAMEWORK[k],x=(typeof NEURON_XWALK!=='undefined'&&NEURON_XWALK[k])||{};
-  // Scope-resolved, so this equals the "Program health" % in the control table you clicked from —
-  // NOT the global/enterprise figure. (Fixes table 77% vs drill 88% when a region/entity is in view.)
+  // Scope-resolved, so this equals the "Program health" % in the control table you clicked from.
   var p=withScopeSignals(scope,function(){return capDeploy(c);});
-  var ct=capContrib(),w=(fw&&fw.weight)||0,contrib=ct.eff[k]||0,share=ct.sum>0?contrib/ct.sum:0,saved=Math.round(ct.total*share);
-  var pr=capProject(c),prot=vcProtectedBy(k);
+  var col=(p==null?'muted':capColor(p)),gap=(p==null?null:(100-p));
   var src=(typeof c5capSrc==='function')?c5capSrc(k):{tool:c.tool,field:k,lastRefresh:''};
   var prov=(typeof capProvider==='function')?capProvider(k,scope):'specific';
-  var col=(p==null?'muted':capColor(p)),hasEcon=ct.total>0;
-  // Assurance method — the provable-vs-asserted split a board and an auditor defend on.
-  var METHOD={auto:['Sensor-proven','scored continuously from the connected tool’s live telemetry — the strongest evidence'],
-              semi:['Semi-automated','live telemetry confirmed by operational review'],
-              manual:['Attested','self-reported at onboarding — documented intent, not sensor-verified']};
+  var ROLE={prevent:'Preventive',detect:'Detective',both:'Preventive + detective'},roleLbl=ROLE[x.role]||'Control';
+  var METHOD={auto:['Sensor-proven','scored continuously from the connected tool’s live telemetry — the strongest evidence'],semi:['Semi-automated','live telemetry confirmed by operational review'],manual:['Attested','self-reported at onboarding — documented intent, not sensor-verified']};
   var mth=METHOD[c.auto]||METHOD.manual;
-  var ROLE={prevent:'Preventive',detect:'Detective',both:'Preventive + detective'};
-  var roleLbl=ROLE[x.role]||'Control';
+  var cons=capConsequence(k),trend=capTrend(k,scope,p),pr=capProject(c);
+  var behindGap=(cons&&gap!=null)?Math.round(cons.exposure*gap/100):null;
+
+  // Hero + one-line verdict (is it at par, and how big is the gap)
+  var verdict,vcol;
+  if(p==null){verdict='not yet measured';vcol='muted';}
+  else if(p>=90){verdict='strong — '+p+'%';vcol='good';}
+  else if(p>=75){verdict='healthy, at par — '+p+'%';vcol='good';}
+  else if(p>=50){verdict='below par — '+p+'%';vcol='warn';}
+  else{verdict='weak, well below par — '+p+'%';vcol='crit';}
+  var head='<div class="drill-hero '+col+'">'+(p==null?'—':p+'%')+' <span class="pill" style="font-size:10px;vertical-align:middle">Program health</span></div>'+capBar(p)+
+    '<div class="drill-p" style="border-left:3px solid var(--'+vcol+');padding-left:11px;margin-top:8px"><b>'+esc(c.name)+'</b> — '+esc(c.tool)+'. <b>'+roleLbl+'</b> control'+(x.domain?(' · '+esc(x.domain)):'')+'. It is <b style="color:var(--'+vcol+')">'+verdict+'</b>'+(gap!=null&&gap>0?(', with <b>'+gap+'%</b> of the in-scope estate still uncovered.'):'.')+'</div>';
+
+  // 1 — Business consequence ($) — from the value chain's own exposure figures
+  var consSec;
+  if(cons){
+    var revTxt=cons.procDaily>0?(' carrying <b>'+usd(cons.procDaily)+'/day</b> of revenue'):'';
+    var gapTxt=(behindGap!=null&&gap>0)?(', of which about <b style="color:var(--'+vcol+')">'+usd(behindGap)+'</b> is left uncovered by the '+gap+'% gap'):'';
+    consSec='<div class="ev-sec">1 · Business consequence</div><div class="drill-p">Protects <b>'+cons.jewels.length+'</b> crown jewel'+(cons.jewels.length===1?'':'s')+' across <b>'+cons.procN+'</b> process'+(cons.procN===1?'':'es')+' ('+esc(cons.fns.join(', '))+')'+revTxt+'. Behind these sits <b>'+usd(cons.exposure)+'</b> of modeled loss exposure'+gapTxt+'.</div>';
+  } else {
+    consSec='<div class="ev-sec">1 · Business consequence</div><div class="drill-p" style="color:var(--muted)">Connect your value chain (crown jewels → revenue → risks) so this control’s business consequence is quantified in dollars. Until then only its coverage is known.</div>';
+  }
+
+  // 2 — Where the gap sits (named crown jewels, worst-first)
+  var gapSec='';
+  if(cons){
+    var rows=cons.jewels.slice(0,8).map(function(j){
+      var flags=[]; if(j.internet)flags.push('<span style="color:var(--crit);font-weight:700">internet-facing</span>'); if(/crit/i.test(j.crit))flags.push('critical');
+      return '<div class="drow"><div class="drow-h"><b>'+esc(j.name)+'</b><span class="drow-tool">'+(j.exposure>0?(usd(j.exposure)+' exposure'):'')+'</span></div><div class="drill-p" style="margin:2px 0 0;color:var(--muted);font-size:11.5px">'+esc(j.proc)+(flags.length?(' · '+flags.join(' · ')):'')+(j.risk?(' · risk: '+esc(j.risk)):'')+'</div></div>';
+    }).join('');
+    var gapTitle=(gap!=null&&gap>0)?('2 · Where the '+gap+'% gap sits — worst first'):'2 · What it protects — ranked by exposure';
+    gapSec='<div class="ev-sec">'+gapTitle+'</div>'+rows+
+      '<div class="drill-p" style="color:var(--muted)">The crown jewels this control is responsible for, ranked by exposure. Coverage % is measured estate-wide from '+esc(src.tool)+'; naming the exact uncovered hosts needs '+esc(src.tool)+'’s asset-level feed.</div>';
+  } else {
+    gapSec='<div class="ev-sec">2 · Where the gap sits</div><div class="drill-p" style="color:var(--muted)">Map this control to your crown jewels (value chain) to see the specific systems its gap exposes, worst-first.</div>';
+  }
+
+  // 3 — Trend (honest: anchored to first real measurement)
+  var trendSec='<div class="ev-sec">3 · Trend</div>'+(p==null?'<div class="drill-p" style="color:var(--muted)">Not measured yet — connect '+esc(c.tool)+' to start trending.</div>':
+    (trend&&!trend.first?('<div class="drill-p">Since first measured, coverage has moved <b style="color:var(--'+(trend.delta>=0?'good':'crit')+')">'+(trend.delta>=0?'+':'')+trend.delta+' pts</b> (now '+p+'%). Connect continuous-monitoring history for full quarter-over-quarter trend.</div>'):
+      '<div class="drill-p" style="color:var(--muted)">First measurement recorded ('+p+'%) — trend accrues from here. Connect continuous-monitoring history for quarter-over-quarter movement.</div>'));
+
+  // 4 — Against target / appetite
+  var toHealthy=(p!=null&&p<75)?(75-p):0,toStrong=(p!=null&&p<90)?(90-p):0;
+  var appSec='<div class="ev-sec">4 · Against target</div>'+
+    gRow('Healthy line (≥75%)',p==null?'—':(p>=75?'✓ at or above':'+'+toHealthy+' pts to reach'))+
+    gRow('Best-practice line (≥90%)',p==null?'—':(p>=90?'✓ at or above':'+'+toStrong+' pts to reach'))+
+    '<div class="drill-p" style="color:var(--muted)">Set a coverage SLA for this control in risk appetite, and connect a sector benchmark (SecurityScorecard / BitSight) to compare against peers.</div>';
+
+  // 5 — The decision + modeled ROI
+  var roi=(cons&&gap!=null&&gap>0)?('Closing the '+gap+'% gap removes up to <b style="color:var(--good)">'+usd(Math.round(cons.exposure*gap/100))+'</b> of modeled exposure on the crown jewels above. '):'';
+  var decSec='<div class="ev-sec">5 · Decision</div>'+
+    (pr?('<div class="drill-p"><span class="tag '+(pr.done?'good':'')+'" style="font-size:10px">'+pr.status+'</span> <b>'+esc(pr.name)+'</b>'+progTxt(pr)+'</div>'):'')+
+    '<div class="drill-p">'+roi+'<b>Recommended:</b> '+esc(p==null?c.connect:c.need)+'</div>';
+
+  // Defensibility footer — provenance + scope guard + crosswalk, kept for the auditor
   var applies=(typeof CAP_ASSET_APPLIES!=='undefined'&&CAP_ASSET_APPLIES[k])||[];
   var CL=(typeof ASSET_CLASS_LABEL!=='undefined')?ASSET_CLASS_LABEL:{};
   var applyLbl=applies.map(function(a){return CL[a]||a;}),notLbl=Object.keys(CL).filter(function(a){return applies.indexOf(a)<0;}).map(function(a){return CL[a];});
-  var gapTxt=(p!=null&&p<100)?(' <span style="color:var(--muted)">· '+(100-p)+'% of in-scope assets not yet covered</span>'):'';
-
-  // 1 — What it is (deployment hero, type, domain, coverage gap, what "effective" means)
-  var head='<div class="drill-hero '+col+'">'+(p==null?'—':p+'%')+' <span class="pill" style="font-size:10px;vertical-align:middle">Program health</span></div>'+capBar(p)+
-    '<div class="drill-p"><b>'+c.name+'</b> — '+c.tool+'. <b>'+roleLbl+'</b> control'+(x.domain?(' · '+x.domain):'')+'.'+gapTxt+
-    '<br><span style="color:var(--muted)">Program health is this control’s live deployment coverage — the same % shown in the verdict table, resolved for the scope you’re viewing.</span>'+
-    '<br><span style="color:var(--muted)">What “effective” looks like: </span>'+c.need+'</div>';
-
-  // 2 — How the number is known (method · source · freshness · operating model)
-  var assurance='<div class="ev-sec">Assurance &amp; evidence</div>'+
+  var footer='<div class="ev-sec">Defensibility &amp; provenance</div>'+
     gRow('Method','<b>'+mth[0]+'</b> — '+mth[1])+
-    gRow('Measured from',(p!=null?(src.tool+' · signal <code>'+src.field+'</code>'):('not connected — '+c.connect)))+
-    (p!=null&&src.lastRefresh?gRow('Last refreshed',src.lastRefresh):'')+
-    gRow('Operating model',(prov==='common'?'⬡ Corporate-common — inherited across the estate':'◈ Entity-run — operated by this unit'));
-
-  // 3 — Valid evidence scope (the integrity guard: a control is only credited where its
-  //     telemetry is valid evidence — EDR proves endpoints/servers, never a SaaS app)
-  var scopeSec='<div class="ev-sec">Valid evidence scope</div>'+
-    (applies.length?(gRow('Credited on',applyLbl.join(' · '))+(notLbl.length?gRow('Not valid evidence for',notLbl.join(' · ')):'')):
-      gRow('Scope','Organization-level control — not scoped to a single asset class'))+
-    '<div class="drill-p" style="color:var(--muted)">A control is credited only where its telemetry is valid evidence for that asset class — so this number can’t be inflated by crediting the wrong tool for the wrong system.</div>';
-
-  // 4 — What it protects (crown-jewel value chain)
-  var protSec=prot&&prot.fns.length?('<div class="ev-sec">What it protects</div>'+gRow('Business functions',prot.fns.join(', '))+gRow('Processes guarded',String(prot.procN))+gRow('Cyber risks countered',String(prot.risks))):'';
-
-  // 5 — Framework coverage across the standards a Fortune-100 program is measured on
-  var fwSec=(fw||(x.cis&&x.cis.length)||(x.iso&&x.iso.length))?('<div class="ev-sec">Framework coverage</div>'+
+    gRow('Measured from',(p!=null?(esc(src.tool)+' · signal <code>'+esc(src.field)+'</code>'):('not connected — '+esc(c.connect))))+
+    (p!=null&&src.lastRefresh?gRow('Last refreshed',esc(src.lastRefresh)):'')+
+    gRow('Operating model',(prov==='common'?'⬡ Corporate-common — inherited across the estate':'◈ Entity-run — operated by this unit'))+
+    (applies.length?(gRow('Valid evidence for',applyLbl.join(' · '))+(notLbl.length?gRow('Not valid for',notLbl.join(' · ')):'')):'')+
     (fw?gRow('NIST CSF 2.0 · 800-53','<span style="line-height:2">'+fwIdChips(fw)+'</span>'):'')+
-    (x.cis&&x.cis.length?gRow('CIS Controls v8',x.cis.join(' · ')):'')+
-    (x.iso&&x.iso.length?gRow('ISO/IEC 27002',x.iso.join(' · ')):'')+
+    (x.cis&&x.cis.length?gRow('CIS v8',x.cis.join(' · ')):'')+
+    (x.iso&&x.iso.length?gRow('ISO 27002',x.iso.join(' · ')):'')+
     (x.soc2&&x.soc2.length?gRow('SOC 2',x.soc2.join(' · ')):'')+
-    (x.pci&&x.pci.length?gRow('PCI DSS',x.pci.join(' · ')):'')):'';
+    (x.pci&&x.pci.length?gRow('PCI DSS',x.pci.join(' · ')):'');
 
-  // 6 — Risk-reduction value ($), honest when organizational financials aren't connected
-  var calc=fw?('<div class="ev-sec">Risk-reduction value ($)</div>'+
-    gRow('Org expected-loss removed by controls',(hasEcon?usd(ct.total)+' modeled':'$0 — financials not connected'))+
-    gRow('This control’s framework weight',w.toFixed(1))+
-    gRow('Live deployment (effectiveness)',p!=null?p+'%':'not connected')+
-    gRow('Weighted contribution (weight × deployment)',w.toFixed(1)+' × '+(p!=null?p+'%':'0%')+' = '+contrib.toFixed(2))+
-    gRow('÷ Sum of all live controls’ contributions',ct.sum.toFixed(2))+
-    gRow('= This control’s share',(share*100).toFixed(1)+'%')+
-    gRow('× Org total = risk removed when effective',(hasEcon?('<b>'+usd(saved)+'</b> modeled'):'<b>$0</b> until financials connect'))+
-    '<div class="drill-p" style="color:var(--muted)">'+(hasEcon?'Each control’s $ is its framework weight scaled by how fully it is deployed, normalised so all controls sum to the org total — no double-counting. Fully deployed, its share and $ rise.':'The $ is $0 only because organizational financials (ALE) aren’t connected — the deployment, evidence and coverage above are live regardless. Connect financials to quantify the loss this control removes.')+'</div>'):'';
-
-  // 7 — Next action + how to make it audit-defensible
-  var fix=pr?('<div class="ev-sec">Funded fix</div><div class="drill-p"><span class="tag '+(pr.done?'good':'')+'" style="font-size:10px">'+pr.status+'</span> <b>'+pr.name+'</b>'+progTxt(pr)+'</div>'):
-    ('<div class="ev-sec">Recommended next action</div><div class="drill-p">'+(p==null?c.connect:c.need)+'</div>');
-  var audit='<div class="ev-sec">Make it audit-real</div><div class="drill-p">Connect your control catalog / GRC so each control’s inherent-vs-residual $ is measured from evidence rather than modeled — then it becomes audit-defensible and updates per control automatically.</div>';
-
-  return head+assurance+scopeSec+protSec+fwSec+calc+fix+audit;}
+  return head+consSec+gapSec+trendSec+appSec+decSec+footer;}
 function capChip(k,cv){var c=CAP_BY_KEY[k];if(!c)return '';var fw=CAP_FRAMEWORK[k],p=capDeploy(c),sv=(cv&&cv.now[k])||0;
   var ids=fw?fw.csf.slice(0,2).map(function(id){return '<span class="fwid csf">'+id+'</span>';}).join(''):'';
   var dep=p!=null?('<span style="color:var(--'+capColor(p)+');font-weight:700">'+p+'%</span>'):'<span style="color:var(--muted)">—</span>';
