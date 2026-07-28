@@ -21,7 +21,8 @@
     "test:health": "curl -s http://localhost:3001/health | node -e \"process.stdin.resume();process.stdin.setEncoding('utf8');process.stdin.on('data',d=>{const j=JSON.parse(d);console.log('Status:',j.status,'Version:',j.version);})\"",
     "native:build": "cd native/license_native && node-gyp rebuild",
     "obfuscate": "node tools/build/obfuscate.js --verify",
-    "build:appliance": "bash tools/build/build-appliance.sh"
+    "build:appliance": "bash tools/build/build-appliance.sh",
+    "validate:connectors": "node scripts/validate-connectors.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.70.0",

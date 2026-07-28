@@ -36,9 +36,20 @@ SaaS apps under active AppOmni posture management), registered in `index.js`, un
 ### 1. Tenant validation of the existing connectors — the real gap, not "build"
 Every control connector is **built to the vendor's API docs but carries a "validate against a real
 container/CID before relying on it" caveat**. None should be marketed as GA until run against a
-production tenant. This is the highest-value work: a validation pass (real creds in a sandbox tenant,
-confirm the derived % matches the vendor console) per vendor, starting with the canonical one per
-control (CrowdStrike, Entra, CyberArk, Tenable, Sentinel, Wiz, Rubrik, Purview, Illumio, KnowBe4).
+production tenant.
+
+**Harness delivered:** `scripts/validate-connectors.js` (`npm run validate:connectors`). Point it at
+read-only creds and it authenticates, pulls live signals, checks each against the declared catalog +
+sane ranges (pct 0-100, counts ≥ 0, freshness + raw provenance), maps them to the 11 control metrics,
+prints a **console-reconciliation checklist** (the exact vendor figure to eyeball each number against),
+writes a JSON report, and reports which controls got a live in-range number. `--self-test` verifies the
+harness itself with no creds. Never touches the DB, never prints secrets; creds files + reports are
+gitignored.
+
+**Remaining human step (needs real credentials — cannot be done from the repo):** run the harness
+against a sandbox tenant per vendor, canonical-connector-first (CrowdStrike, Entra, CyberArk, Tenable,
+Sentinel, Wiz, Rubrik, Purview, Illumio, KnowBe4, AppOmni), and sign off each derived number against
+the vendor console before it is marketed as live.
 
 ### 2. SSPM connector — DONE (AppOmni)
 `appomni.js` emits `sspm_pct` = SaaS apps under active AppOmni posture management ÷ the SaaS

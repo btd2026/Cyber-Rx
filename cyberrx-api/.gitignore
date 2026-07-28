@@ -55,3 +55,7 @@ dist-appliance/
 # ...but tools/build/ is source (build scripts), not build output
 !tools/build/
 !tools/build/**
+
+# Connector tenant-validation: never commit real creds or run reports
+*.creds.json
+connector-validation-report.json
