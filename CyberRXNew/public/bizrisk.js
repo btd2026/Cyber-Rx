@@ -132,7 +132,7 @@
 
     // Build one risk from an ASSET_RISK_MODEL entry {r, adv, caps}, keeping ONLY the
     // controls that are real and relevant to this system's class (capAppliesTo).
-    function mkRisk(rdef, cls, impactFrac, internet) {
+    function mkRisk(rdef, cls, impactFrac, internet, isCrit) {
       var seen = {}, keys = [];
       (rdef.caps || []).forEach(function (k) { if (!seen[k] && byKey[k] && capApplies(k, cls)) { seen[k] = 1; keys.push(k); } });
       var ctrls = keys.map(ctrlObj).filter(Boolean);
@@ -141,10 +141,20 @@
       measured.forEach(function (c) { if (weakest == null || c.maturity < weakest.maturity) weakest = c; });
       var mitigation = weakest ? weakest.maturity : null;
       var lk = riskLikelihood(!!rdef.adv, cls, !!internet);
+      // Impact = business consequence if the risk lands — the crown jewel's criticality and
+      // data sensitivity (non-adversarial risks carry a reduced consequence, already applied).
+      var impactWhy = 'Impact ' + Math.round(impactFrac * 100) + '% — ' + (isCrit ? 'critical business process' : 'standard business process')
+        + ((cls === 'data' || cls === 'identity' || cls === 'saas') ? ' · sensitive data / identity at stake' : '')
+        + (rdef.adv ? '' : ' · non-adversarial (reduced consequence)');
+      // Mitigation = the WEAKEST mitigating control's live deployment — one gap opens the
+      // path, so the weakest control caps how mitigated the risk can be.
+      var mitigationWhy = (mitigation == null)
+        ? 'No measured mitigating control is connected for this risk yet — connect the control tool to score it.'
+        : ('Mitigation ' + mitigation + '% — capped by the weakest mitigating control: ' + (weakest ? weakest.name : '—') + ' at ' + mitigation + '% deployed. Raise that control and this rises.');
       return {
         key: brSlug(rdef.r), adversarial: !!rdef.adv, name: rdef.r,
         likelihood: lk.band, likelihoodWhy: lk.why, likelihoodScore: lk.score,
-        impact: band3(impactFrac),
+        impact: band3(impactFrac), impactWhy: impactWhy, mitigationWhy: mitigationWhy,
         controls: ctrls, mitigation: mitigation, weakest: weakest
       };
     }
@@ -157,7 +167,8 @@
       var impactFrac = resid && resid.impact != null ? Number(resid.impact) : (/crit/i.test(cj.tier || '') ? 0.9 : 0.68);
       // The cyber risks this system's CLASS actually carries, each with class-valid controls.
       var defs = arm[cls] || arm.server || [];
-      var risks = defs.map(function (rd) { return mkRisk(rd, cls, rd.adv ? impactFrac : impactFrac * 0.85, cj.internet_facing); });
+      var cjCrit = /crit/i.test(String(cj.tier || ''));
+      var risks = defs.map(function (rd) { return mkRisk(rd, cls, rd.adv ? impactFrac : impactFrac * 0.85, cj.internet_facing, cjCrit); });
       risks.forEach(function (r) { r.controls.forEach(function (c) { usedCaps[c.k] = 1; }); });
       totalRisks += risks.length;
       // Process residual = the weakest mitigating control across its risks (one gap opens the path).
@@ -236,8 +247,8 @@
     var head = '<div class="br-risk" data-risk="' + esc(risk.key) + '" data-proc="' + procIdx + '" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:11px 12px;cursor:pointer;border-radius:9px' + (open ? ';background:color-mix(in srgb,var(--blue) 5%,transparent)' : '') + '">'
       + '<span style="flex:1;min-width:180px;font-size:13px;font-weight:650;color:var(--ink)">' + (risk.adversarial ? '⚔ ' : '⚙ ') + esc(risk.name) + '</span>'
       + '<span style="font-size:11px;color:var(--ink-2)">' + T('br.risk.likelihood') + ' ' + llChip(risk.likelihood, risk.likelihoodWhy) + '</span>'
-      + '<span style="font-size:11px;color:var(--ink-2)">' + T('br.risk.impact') + ' ' + llChip(risk.impact) + '</span>'
-      + '<span style="font-size:11px;color:var(--ink-2);display:flex;align-items:center;gap:7px">' + T('br.risk.mitigation') + ' <b style="color:var(--' + mitCol + ');font-variant-numeric:tabular-nums">' + (risk.mitigation == null ? '—' : risk.mitigation + '%') + '</b></span>'
+      + '<span style="font-size:11px;color:var(--ink-2)">' + T('br.risk.impact') + ' ' + llChip(risk.impact, risk.impactWhy) + '</span>'
+      + '<span style="font-size:11px;color:var(--ink-2);display:flex;align-items:center;gap:7px">' + T('br.risk.mitigation') + ' <b style="color:var(--' + mitCol + ');font-variant-numeric:tabular-nums;cursor:help;border-bottom:1px dotted currentColor" title="' + esc(risk.mitigationWhy) + '">' + (risk.mitigation == null ? '—' : risk.mitigation + '%') + '</b></span>'
       + '<span style="font-size:11px;color:var(--blue);font-weight:700">' + T('br.risk.open') + '</span>'
       + '</div>';
     return '<div style="border-bottom:1px solid var(--line)">' + head + (open ? ('<div style="padding:0 12px 12px">' + ctrlTable(risk) + '</div>') : '') + '</div>';
