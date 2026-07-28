@@ -179,6 +179,7 @@
   // ── Rendering ──────────────────────────────────────────────────────────────
   var C5_ER_SYS = null;   // open system index
   var C5_ER_RISK = null;  // open risk key within the open system
+  var C5_ER_CTRL = {};    // cap key → control object (for the per-framework drill)
 
   function bandChip(band) {
     var col = bandCol(band);
@@ -198,6 +199,48 @@
   function provBadge(provider) {
     var common = provider === 'common', col = common ? 'blue' : 'ink-2';
     return '<span style="font-size:10px;font-weight:700;color:var(--' + col + ');white-space:nowrap">' + (common ? '⬡ ' : '◈ ') + T(common ? 'br.ctrl.common' : 'br.ctrl.specific') + '</span>';
+  }
+
+  // ── Per-framework drill ──────────────────────────────────────────────────────
+  // Clicking a control's CIS cell must show CIS, its CSF cell CSF, its ISO cell ISO —
+  // not the capability's generic $-value drill. Each framework cell opens a drill
+  // scoped to THAT framework: the control's identifiers there (with names/descriptions
+  // for NIST CSF, which we hold; CIS and ISO are referenced by identifier only, as the
+  // licensed standard text is not reproduced), its Program-Health score, and the
+  // cross-framework mapping so the same control is legible across all three.
+  function fwLabel(fw) { return fw === 'csf' ? 'NIST CSF 2.0' : (fw === 'cis' ? 'CIS Controls v8' : 'ISO/IEC 27002:2022'); }
+  function erRow(k, v) { return '<div class="drow"><div class="drow-h"><b>' + k + '</b><span class="drow-tool">' + (v || '') + '</span></div></div>'; }
+
+  function fwCell(fw, ids, capKey) {
+    var cls = fw === 'cis' ? 'r53' : 'csf';
+    if (!ids || !ids.length) return '<span style="font-size:11px;color:var(--muted)">—</span>';
+    var chips = ids.map(function (id) { return '<span class="fwid ' + cls + '" style="margin:0 3px 3px 0">' + esc(id) + '</span>'; }).join('');
+    return '<span class="er-fw" data-fw="' + fw + '" data-cap="' + esc(capKey) + '" title="' + esc(fwLabel(fw)) + ' — details" style="font-size:11px;cursor:pointer;display:inline-block">' + chips + '</span>';
+  }
+
+  function fwDrill(fw, c) {
+    var ids = fw === 'csf' ? (c.csf || []) : (fw === 'cis' ? (c.cis || []) : (c.iso || []));
+    var ph = c.maturity, col = scoreCol(ph), phTxt = ph == null ? T('er.ph.none') : ph + '%';
+    var hero = '<div class="drill-hero" style="color:var(--' + col + ')">' + (ph == null ? '—' : ph + '%') + ' <span class="pill" style="font-size:10px;vertical-align:middle">' + esc(T('er.ctrl.col.ph')) + '</span></div>';
+    var intro = '<div class="drill-p"><b>' + esc(c.name) + '</b>' + (c.tool ? (' — ' + esc(c.tool)) : '') + '. ' + T('er.fw.intro', { fw: '<b>' + esc(fwLabel(fw)) + '</b>', ph: '<b style="color:var(--' + col + ')">' + phTxt + '</b>', model: T(c.provider === 'common' ? 'br.ctrl.common' : 'br.ctrl.specific') }) + '</div>';
+    var rows;
+    if (fw === 'csf') {
+      rows = ids.map(function (id) {
+        var meta = (typeof C5_CSF_META !== 'undefined') ? C5_CSF_META[id] : null;
+        var nm = (meta && meta.name) ? meta.name : ((typeof c5CsfName === 'function') ? c5CsfName(id) : '');
+        var desc = (meta && meta.desc) ? meta.desc : '';
+        return '<div class="drow"><div class="drow-h"><b>' + esc(id) + '</b><span class="drow-tool">' + esc(nm) + '</span></div>' + (desc ? ('<div class="drill-p" style="margin:3px 0 0;color:var(--muted);font-size:11.5px">' + esc(desc) + '</div>') : '') + '</div>';
+      }).join('');
+    } else {
+      rows = ids.map(function (id) { return erRow(id, T('er.fw.idonly')); }).join('');
+    }
+    var sec1 = '<div class="ev-sec">' + T('er.fw.inframework', { fw: esc(fwLabel(fw)) }) + '</div>' + rows;
+    var note = fw !== 'csf' ? ('<div class="drill-p" style="color:var(--muted)">' + T('er.fw.licensed', { fw: esc(fwLabel(fw)) }) + '</div>') : '';
+    var xw = '<div class="ev-sec">' + T('er.fw.xwalk') + '</div>'
+      + erRow('NIST CSF 2.0', (c.csf && c.csf.length) ? c.csf.join(' · ') : '—')
+      + erRow('CIS Controls v8', (c.cis && c.cis.length) ? c.cis.join(' · ') : '—')
+      + erRow('ISO/IEC 27002:2022', (c.iso && c.iso.length) ? c.iso.join(' · ') : '—');
+    return hero + intro + sec1 + note + xw;
   }
 
   // Semicircular verdict gauge — the answer, at a glance.
@@ -225,11 +268,12 @@
       + '<span>' + T('br.ctrl.col.cap') + '</span><span>' + T('br.ctrl.col.csf') + '</span><span>' + T('br.ctrl.col.cis') + '</span><span>' + T('br.ctrl.col.iso') + '</span><span>' + T('er.ctrl.col.ph') + '</span><span>' + T('br.ctrl.col.model') + '</span></div>';
     var rows = risk.controls.map(function (c) {
       var isWeak = risk.weakest && c.k === risk.weakest.k;
+      C5_ER_CTRL[c.k] = c;   // so a framework-cell click can resolve the control
       return '<div class="er-ctrl" data-cap="' + c.k + '" style="display:grid;grid-template-columns:1.6fr 1fr .7fr 1fr 1.15fr 1.1fr;gap:8px;align-items:center;padding:9px 10px;border-bottom:1px solid var(--line);cursor:pointer' + (isWeak ? ';background:color-mix(in srgb,var(--crit) 5%,transparent)' : '') + '">'
         + '<span style="font-size:12px;color:var(--ink);font-weight:600">' + esc(c.name) + (isWeak ? ' <span style="font-size:9px;color:var(--crit);font-weight:800">⚠</span>' : '') + '<span style="display:block;font-size:10px;color:var(--muted);font-weight:500">' + esc(c.tool) + '</span></span>'
-        + '<span style="font-size:11px">' + fwids(c.csf, 'csf') + '</span>'
-        + '<span style="font-size:11px">' + fwids(c.cis, 'r53') + '</span>'
-        + '<span style="font-size:11px">' + fwids(c.iso, 'csf') + '</span>'
+        + fwCell('csf', c.csf, c.k)
+        + fwCell('cis', c.cis, c.k)
+        + fwCell('iso', c.iso, c.k)
         + '<span>' + matBar(c.maturity, true) + '</span>'
         + '<span>' + provBadge(c.provider) + '</span>'
         + '</div>';
@@ -358,6 +402,15 @@
     });
     host.querySelectorAll('.er-risk[data-risk]').forEach(function (el) {
       el.onclick = function (ev) { ev.stopPropagation(); var k = el.dataset.risk; C5_ER_RISK = (C5_ER_RISK === k) ? null : k; c5EntityRisk(); };
+    });
+    // Framework cell → a drill scoped to THAT framework (CIS shows CIS, CSF shows CSF,
+    // ISO shows ISO). Must run before the row handler and stop it.
+    host.querySelectorAll('.er-fw[data-fw]').forEach(function (el) {
+      el.onclick = function (ev) {
+        ev.stopPropagation();
+        var fw = el.dataset.fw, c = C5_ER_CTRL[el.dataset.cap];
+        try { if (c && typeof openDrill === 'function') openDrill(fwLabel(fw) + ' — ' + c.name, fwDrill(fw, c)); } catch (_) {}
+      };
     });
     host.querySelectorAll('.er-ctrl[data-cap]').forEach(function (el) {
       el.onclick = function (ev) {
