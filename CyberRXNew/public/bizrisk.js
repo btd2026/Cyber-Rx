@@ -27,39 +27,44 @@
   function T(k, p) { return (typeof c5osT === 'function') ? c5osT(k, p) : ((typeof nt === 'function') ? nt(k, p) : k); }
   function esc(s) { return (typeof c5esc === 'function') ? c5esc(s) : String(s == null ? '' : s); }
 
-  // ── The real risk → control mapping. Adversarial risks map to the defensive
-  //    capabilities that counter them (the same CAPS the threat panel uses);
-  //    non-adversarial risks (lanes) map through NEURON_XWALK[].lanes, so the
-  //    relationship is the one already encoded in the platform, not a new one.
-  var BR_ADV_CAPS = {
-    ransomware: ['backup', 'edr', 'seg'],
-    bec:        ['aware', 'edr', 'mfa'],
-    ato:        ['mfa', 'pam', 'siem'],
-    supplychain:['vuln', 'cspm', 'sspm'],
-    vuln:       ['vuln', 'cspm', 'edr'],
-    datatheft:  ['dlp', 'edr', 'siem'],
-    misconfig:  ['cspm', 'sspm', 'seg'],
-    espionage:  ['siem', 'seg', 'edr']
-  };
-  // Base likelihood per risk type — qualitative, from public breach-frequency
-  // reporting; adversarial commodity risks (ransomware, BEC, ATO) run hot.
-  var BR_LIKELIHOOD = {
-    ransomware: 'hi', bec: 'hi', ato: 'hi', supplychain: 'med', vuln: 'med',
-    datatheft: 'med', misconfig: 'med', espionage: 'lo',
-    outage_dr: 'med', data_corruption: 'med', insider: 'med',
-    third_party_supply_chain: 'med', privacy_regulatory: 'lo'
-  };
-
+  // ── The risk → control mapping is ASSET-CLASS-AWARE, not one-size-fits-all. A system's
+  //    class (saas / iaas / server / endpoint / identity / data / network) determines the
+  //    cyber risks it actually carries AND the controls that can genuinely mitigate them —
+  //    from the platform's ASSET_RISK_MODEL (in ciso5.js). Every candidate control is then
+  //    filtered through capAppliesTo(cap, class), so a SaaS app never shows host EDR or
+  //    your-own-network segmentation, only SaaS-valid controls (SSPM, MFA, PAM, SIEM, DLP,
+  //    SaaS backup). This is what the CISO expects: controls real and relevant to the type
+  //    of system the risk affects.
   function CAPS_ARR() { return (typeof CAPS !== 'undefined' && CAPS) ? CAPS : []; }
   function XWALK() { return (typeof NEURON_XWALK !== 'undefined' && NEURON_XWALK) ? NEURON_XWALK : {}; }
   function CAPFW() { return (typeof CAP_FRAMEWORK !== 'undefined' && CAP_FRAMEWORK) ? CAP_FRAMEWORK : {}; }
+  function ARM() { return (typeof ASSET_RISK_MODEL !== 'undefined' && ASSET_RISK_MODEL) ? ASSET_RISK_MODEL : {}; }
+  function capApplies(k, cls) { return (typeof capAppliesTo === 'function') ? capAppliesTo(k, cls) : true; }
 
-  // Non-adversarial lane → the capabilities that defend it, derived from the
-  // registry's own lane tagging (never curated separately).
-  function brLaneCaps(lane) {
-    var out = [], xw = XWALK();
-    CAPS_ARR().forEach(function (c) { var x = xw[c.k]; if (x && x.lanes && x.lanes.indexOf(lane) >= 0) out.push(c.k); });
-    return out;
+  function brSlug(s) { return String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''); }
+  // Normalize an uploaded crown-jewel to one of the seven asset classes the risk model
+  // knows. Onboarding captures `class` per system, but real uploads are messy — a blank
+  // or free-text class must still land on the right controls, so when the class field
+  // isn't one of the seven we infer from the class text + system name + tool. This is
+  // what makes the class-aware correction apply to EVERY system an org uploads, not just
+  // cleanly-tagged ones. Order matters: SaaS/identity/cloud are checked before the
+  // generic "server" fallback so a Salesforce or Okta row is never mis-typed as a host.
+  function brNormClass(cj) {
+    var c = String((cj && cj.class) || '').toLowerCase().trim();
+    var known = ['saas', 'iaas', 'server', 'endpoint', 'identity', 'data', 'network'];
+    if (known.indexOf(c) >= 0) return c;
+    var s = (c + ' ' + ((cj && cj.name) || '') + ' ' + ((cj && cj.tool) || '')).toLowerCase();
+    // Most specific first: identity providers and data stores are checked BEFORE the
+    // generic saas/iaas keywords, so an Okta (identity, not just "SaaS") or an RDS Postgres
+    // (the crown is the data, not just "cloud") lands on the class whose controls fit best.
+    if (/identity|directory|\bidp\b|\bsso\b|\bokta\b|entra|active ?directory|azure ?ad\b|\bldap\b|ping ?(id|federate)|cyberark|sailpoint|forgerock/.test(s)) return 'identity';
+    if (/database|\bdb\b|postgres|oracle|mysql|mongo|snowflake|redshift|\brds\b|dynamo|warehouse|data ?lake|\bbucket\b|\bs3\b|blob ?storage/.test(s)) return 'data';
+    if (/\bsaas\b|salesforce|workday|servicenow|m365|office ?365|google ?workspace|zendesk|netsuite|\bzuora\b|successfactors|\bslack\b|\bbox\b|dropbox|hubspot|jira|confluence|coupa/.test(s)) return 'saas';
+    if (/\biaas\b|\bpaas\b|\bcloud\b|\baws\b|azure|\bgcp\b|kubernetes|container|\bec2\b|lambda|terraform|openshift/.test(s)) return 'iaas';
+    if (/endpoint|laptop|workstation|desktop|\bmobile\b|\bdevice/.test(s)) return 'endpoint';
+    if (/firewall|\bvpn\b|router|\bswitch\b|network|segment|load ?balanc|\bwaf\b|\bcdn\b/.test(s)) return 'network';
+    if (/server|\bhost\b|\bvm\b|linux|windows ?server|mainframe|on-?prem|\berp\b|\bsap\b/.test(s)) return 'server';
+    return 'server';  // last-resort default: treat an unclassifiable system as a host
   }
 
   // Run `fn` with SIGNALS temporarily set to this scope's telemetry (its own
@@ -78,21 +83,6 @@
       SIGNALS = s;
       return fn();
     } finally { SIGNALS = saved; if (savedSC !== undefined) SCOPE = savedSC; }
-  }
-
-  // Which adversarial risks a process carries, from its name / asset class / tool.
-  function brProcRiskKeys(cj, resid) {
-    var s = ((cj.name || '') + ' ' + (cj.class || '') + ' ' + (cj.tool || '')).toLowerCase(), adv = [];
-    function add(a) { a.forEach(function (k) { if (adv.indexOf(k) < 0) adv.push(k); }); }
-    if (/identity|access|okta|entra|credential|auth/.test(s)) add(['ato', 'bec', 'espionage']);
-    if (/bill|payment|pci|order|cash|financ|erp|sap|revenue/.test(s)) add(['ransomware', 'datatheft', 'bec']);
-    if (/supply|vendor|third/.test(s)) add(['supplychain', 'vuln']);
-    if (/cloud|saas|iaas|aws|azure|salesforce/.test(s)) add(['misconfig', 'ransomware']);
-    if (/server|host/.test(s)) add(['vuln', 'ransomware']);
-    if (!adv.length) adv = ['ransomware', 'vuln', 'datatheft'];
-    adv = adv.slice(0, 3);
-    var non = (resid && Array.isArray(resid.non_adversarial)) ? resid.non_adversarial.slice(0, 2) : [];
-    return { adv: adv, non: non };
   }
 
   function band3(x) { return x >= 0.8 ? 'hi' : (x >= 0.55 ? 'med' : 'lo'); }
@@ -123,30 +113,32 @@
       };
     }
 
-    function mkRisk(key, adversarial, impactFrac) {
-      var capKeys = adversarial ? (BR_ADV_CAPS[key] || []) : brLaneCaps(key);
-      // dedupe, keep order
+    // Build one risk from an ASSET_RISK_MODEL entry {r, adv, caps}, keeping ONLY the
+    // controls that are real and relevant to this system's class (capAppliesTo).
+    function mkRisk(rdef, cls, impactFrac) {
       var seen = {}, keys = [];
-      capKeys.forEach(function (k) { if (!seen[k] && byKey[k]) { seen[k] = 1; keys.push(k); } });
+      (rdef.caps || []).forEach(function (k) { if (!seen[k] && byKey[k] && capApplies(k, cls)) { seen[k] = 1; keys.push(k); } });
       var ctrls = keys.map(ctrlObj).filter(Boolean);
       var measured = ctrls.filter(function (c) { return c.maturity != null; });
       var weakest = null;
       measured.forEach(function (c) { if (weakest == null || c.maturity < weakest.maturity) weakest = c; });
       var mitigation = weakest ? weakest.maturity : null;
       return {
-        key: key, adversarial: adversarial, name: T('br.risk.' + key),
-        likelihood: BR_LIKELIHOOD[key] || 'med', impact: band3(impactFrac),
+        key: brSlug(rdef.r), adversarial: !!rdef.adv, name: rdef.r,
+        likelihood: rdef.adv ? 'hi' : 'med', impact: band3(impactFrac),
         controls: ctrls, mitigation: mitigation, weakest: weakest
       };
     }
 
+    var arm = ARM();
     var usedCaps = {}, totalRisks = 0;
     var processes = jewels.map(function (cj, i) {
+      var cls = brNormClass(cj);
       var resid = residByName[cj.name];
       var impactFrac = resid && resid.impact != null ? Number(resid.impact) : (/crit/i.test(cj.tier || '') ? 0.9 : 0.68);
-      var rk = brProcRiskKeys(cj, resid);
-      var risks = rk.adv.map(function (k) { return mkRisk(k, true, impactFrac); })
-        .concat(rk.non.map(function (k) { return mkRisk(k, false, impactFrac * 0.85); }));
+      // The cyber risks this system's CLASS actually carries, each with class-valid controls.
+      var defs = arm[cls] || arm.server || [];
+      var risks = defs.map(function (rd) { return mkRisk(rd, cls, rd.adv ? impactFrac : impactFrac * 0.85); });
       risks.forEach(function (r) { r.controls.forEach(function (c) { usedCaps[c.k] = 1; }); });
       totalRisks += risks.length;
       // Process residual = the weakest mitigating control across its risks (one gap opens the path).
