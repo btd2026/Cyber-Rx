@@ -2133,24 +2133,76 @@ function capContrib(){var eff={},sum=0;CAPS.forEach(function(c){var p=capDeploy(
 function vcProtectedBy(k){var vc=(LIVE&&LIVE.value_chain);if(!vc||!vc.functions)return null;var fns={},procN=0,risks=0;
   vc.functions.forEach(function(f){var hit=false;(f.processes||[]).forEach(function(p){var ph=false;(p.assets||[]).forEach(function(a){(a.risks||[]).forEach(function(r){if(riskCaps(r.title,r.severity).indexOf(k)>=0){risks++;ph=true;hit=true;}});});if(ph)procN++;});if(hit)fns[f.name]=1;});
   return {fns:Object.keys(fns),procN:procN,risks:risks};}
-/* The drill: the control's $ saved when effective, with the full calculation shown. */
+/* The drill: a board-grade control dossier — what the control is, how its number is
+   KNOWN (method, source, freshness), where it is valid evidence, what it protects, the
+   frameworks it satisfies, and the $ it removes when effective — with the full calc. */
 function drillControlValue(k){var c=CAP_BY_KEY[k];if(!c)return '';
-  var fw=CAP_FRAMEWORK[k],p=capDeploy(c),ct=capContrib(),w=(fw&&fw.weight)||0,contrib=ct.eff[k]||0,share=ct.sum>0?contrib/ct.sum:0,saved=Math.round(ct.total*share),pr=capProject(c),prot=vcProtectedBy(k);
-  var calc=fw?('<div class="ev-sec">How this $ is calculated</div>'+
-    gRow('Org expected-loss removed by controls',usd(ct.total)+' modeled')+
+  var scope=(typeof c5Scope==='function')?c5Scope():'enterprise';
+  var fw=CAP_FRAMEWORK[k],x=(typeof NEURON_XWALK!=='undefined'&&NEURON_XWALK[k])||{},p=capDeploy(c);
+  var ct=capContrib(),w=(fw&&fw.weight)||0,contrib=ct.eff[k]||0,share=ct.sum>0?contrib/ct.sum:0,saved=Math.round(ct.total*share);
+  var pr=capProject(c),prot=vcProtectedBy(k);
+  var src=(typeof c5capSrc==='function')?c5capSrc(k):{tool:c.tool,field:k,lastRefresh:''};
+  var prov=(typeof capProvider==='function')?capProvider(k,scope):'specific';
+  var col=(p==null?'muted':capColor(p)),hasEcon=ct.total>0;
+  // Assurance method — the provable-vs-asserted split a board and an auditor defend on.
+  var METHOD={auto:['Sensor-proven','scored continuously from the connected tool’s live telemetry — the strongest evidence'],
+              semi:['Semi-automated','live telemetry confirmed by operational review'],
+              manual:['Attested','self-reported at onboarding — documented intent, not sensor-verified']};
+  var mth=METHOD[c.auto]||METHOD.manual;
+  var ROLE={prevent:'Preventive',detect:'Detective',both:'Preventive + detective'};
+  var roleLbl=ROLE[x.role]||'Control';
+  var applies=(typeof CAP_ASSET_APPLIES!=='undefined'&&CAP_ASSET_APPLIES[k])||[];
+  var CL=(typeof ASSET_CLASS_LABEL!=='undefined')?ASSET_CLASS_LABEL:{};
+  var applyLbl=applies.map(function(a){return CL[a]||a;}),notLbl=Object.keys(CL).filter(function(a){return applies.indexOf(a)<0;}).map(function(a){return CL[a];});
+  var gapTxt=(p!=null&&p<100)?(' <span style="color:var(--muted)">· '+(100-p)+'% of in-scope assets not yet covered</span>'):'';
+
+  // 1 — What it is (deployment hero, type, domain, coverage gap, what "effective" means)
+  var head='<div class="drill-hero '+col+'">'+(p==null?'—':p+'%')+' <span class="pill" style="font-size:10px;vertical-align:middle">deployed</span></div>'+capBar(p)+
+    '<div class="drill-p"><b>'+c.name+'</b> — '+c.tool+'. <b>'+roleLbl+'</b> control'+(x.domain?(' · '+x.domain):'')+'.'+gapTxt+
+    '<br><span style="color:var(--muted)">What “effective” looks like: </span>'+c.need+'</div>';
+
+  // 2 — How the number is known (method · source · freshness · operating model)
+  var assurance='<div class="ev-sec">Assurance &amp; evidence</div>'+
+    gRow('Method','<b>'+mth[0]+'</b> — '+mth[1])+
+    gRow('Measured from',(p!=null?(src.tool+' · signal <code>'+src.field+'</code>'):('not connected — '+c.connect)))+
+    (p!=null&&src.lastRefresh?gRow('Last refreshed',src.lastRefresh):'')+
+    gRow('Operating model',(prov==='common'?'⬡ Corporate-common — inherited across the estate':'◈ Entity-run — operated by this unit'));
+
+  // 3 — Valid evidence scope (the integrity guard: a control is only credited where its
+  //     telemetry is valid evidence — EDR proves endpoints/servers, never a SaaS app)
+  var scopeSec='<div class="ev-sec">Valid evidence scope</div>'+
+    (applies.length?(gRow('Credited on',applyLbl.join(' · '))+(notLbl.length?gRow('Not valid evidence for',notLbl.join(' · ')):'')):
+      gRow('Scope','Organization-level control — not scoped to a single asset class'))+
+    '<div class="drill-p" style="color:var(--muted)">A control is credited only where its telemetry is valid evidence for that asset class — so this number can’t be inflated by crediting the wrong tool for the wrong system.</div>';
+
+  // 4 — What it protects (crown-jewel value chain)
+  var protSec=prot&&prot.fns.length?('<div class="ev-sec">What it protects</div>'+gRow('Business functions',prot.fns.join(', '))+gRow('Processes guarded',String(prot.procN))+gRow('Cyber risks countered',String(prot.risks))):'';
+
+  // 5 — Framework coverage across the standards a Fortune-100 program is measured on
+  var fwSec=(fw||(x.cis&&x.cis.length)||(x.iso&&x.iso.length))?('<div class="ev-sec">Framework coverage</div>'+
+    (fw?gRow('NIST CSF 2.0 · 800-53','<span style="line-height:2">'+fwIdChips(fw)+'</span>'):'')+
+    (x.cis&&x.cis.length?gRow('CIS Controls v8',x.cis.join(' · ')):'')+
+    (x.iso&&x.iso.length?gRow('ISO/IEC 27002',x.iso.join(' · ')):'')+
+    (x.soc2&&x.soc2.length?gRow('SOC 2',x.soc2.join(' · ')):'')+
+    (x.pci&&x.pci.length?gRow('PCI DSS',x.pci.join(' · ')):'')):'';
+
+  // 6 — Risk-reduction value ($), honest when organizational financials aren't connected
+  var calc=fw?('<div class="ev-sec">Risk-reduction value ($)</div>'+
+    gRow('Org expected-loss removed by controls',(hasEcon?usd(ct.total)+' modeled':'$0 — financials not connected'))+
     gRow('This control’s framework weight',w.toFixed(1))+
     gRow('Live deployment (effectiveness)',p!=null?p+'%':'not connected')+
     gRow('Weighted contribution (weight × deployment)',w.toFixed(1)+' × '+(p!=null?p+'%':'0%')+' = '+contrib.toFixed(2))+
     gRow('÷ Sum of all live controls’ contributions',ct.sum.toFixed(2))+
     gRow('= This control’s share',(share*100).toFixed(1)+'%')+
-    gRow('× Org total = risk removed when effective','<b>'+usd(saved)+'</b> modeled')+
-    '<div class="drill-p" style="color:var(--muted)">Each control’s $ is its framework weight scaled by how fully it is deployed, normalised so all controls sum to the org total — no double-counting. Fully deployed (effective), its share and $ rise.</div>'):'';
-  var protSec=prot&&prot.fns.length?('<div class="ev-sec">What it protects (value chain)</div>'+gRow('Business functions',prot.fns.join(', '))+gRow('Processes guarded',String(prot.procN))+gRow('Cyber risks countered',String(prot.risks))):'';
-  return '<div class="drill-hero good">'+usd(saved)+' <span class="pill mod" style="font-size:10px;vertical-align:middle">modeled</span></div>'+capBar(p)+
-    '<div class="drill-p"><b>'+c.name+'</b> — '+c.tool+'. The expected loss this control removes when it operates effectively — '+(p!=null?('<b>'+p+'%</b> deployed today'):'not yet connected')+'.</div>'+
-    (fw?('<div class="ev-sec">Frameworks it satisfies</div><div class="drill-p">'+fwIdChips(fw)+'</div>'):'')+calc+protSec+
-    '<div class="ev-sec">Make it audit-real</div><div class="drill-p">Connect your control catalog / GRC so each control’s inherent-vs-residual $ is measured from evidence rather than modeled — then it becomes audit-defensible and updates per control automatically.</div>'+
-    (pr?('<div class="ev-sec">Funded fix</div><div class="drill-p"><span class="tag '+(pr.done?'good':'')+'" style="font-size:10px">'+pr.status+'</span> <b>'+pr.name+'</b>'+progTxt(pr)+'</div>'):'');}
+    gRow('× Org total = risk removed when effective',(hasEcon?('<b>'+usd(saved)+'</b> modeled'):'<b>$0</b> until financials connect'))+
+    '<div class="drill-p" style="color:var(--muted)">'+(hasEcon?'Each control’s $ is its framework weight scaled by how fully it is deployed, normalised so all controls sum to the org total — no double-counting. Fully deployed, its share and $ rise.':'The $ is $0 only because organizational financials (ALE) aren’t connected — the deployment, evidence and coverage above are live regardless. Connect financials to quantify the loss this control removes.')+'</div>'):'';
+
+  // 7 — Next action + how to make it audit-defensible
+  var fix=pr?('<div class="ev-sec">Funded fix</div><div class="drill-p"><span class="tag '+(pr.done?'good':'')+'" style="font-size:10px">'+pr.status+'</span> <b>'+pr.name+'</b>'+progTxt(pr)+'</div>'):
+    ('<div class="ev-sec">Recommended next action</div><div class="drill-p">'+(p==null?c.connect:c.need)+'</div>');
+  var audit='<div class="ev-sec">Make it audit-real</div><div class="drill-p">Connect your control catalog / GRC so each control’s inherent-vs-residual $ is measured from evidence rather than modeled — then it becomes audit-defensible and updates per control automatically.</div>';
+
+  return head+assurance+scopeSec+protSec+fwSec+calc+fix+audit;}
 function capChip(k,cv){var c=CAP_BY_KEY[k];if(!c)return '';var fw=CAP_FRAMEWORK[k],p=capDeploy(c),sv=(cv&&cv.now[k])||0;
   var ids=fw?fw.csf.slice(0,2).map(function(id){return '<span class="fwid csf">'+id+'</span>';}).join(''):'';
   var dep=p!=null?('<span style="color:var(--'+capColor(p)+');font-weight:700">'+p+'%</span>'):'<span style="color:var(--muted)">—</span>';
