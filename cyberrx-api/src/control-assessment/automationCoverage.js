@@ -262,16 +262,32 @@ function tallyGroups(groups) {
   return t;
 }
 
+// IMPORTANT — what these numbers ARE and ARE NOT.
+// `basis: 'automatable-by-control-nature'` means: of a framework's full published catalog,
+// how many controls are the KIND a connector could assess end-to-end (auto), need a tool +
+// a document/human (partial), or can only be a document/human (manual). This is the
+// ADDRESSABLE-automatability denominator — NOT a count of controls Nerion assesses today.
+// Actual assessed-today coverage is far smaller and lives in the per-framework registries
+// (control-assessment/registries/*). Never surface these as "controls assessed/covered".
+// `estimated: true` marks a hand-curated tier table (CIS/HIPAA/SOC 2/800-53); CSF is derived
+// live from nistCsfControlLibrary — itself under separate review for over-tiering `auto`
+// against capabilities that have no wired connector, so treat even CSF `auto` as addressable,
+// not proven.
+const COVERAGE_NOTE = 'Automatability of the full catalog by control nature (addressable), NOT controls assessed today. Assessed-today coverage is smaller and comes from the per-framework registries.';
+function annotate(row, estimated) {
+  return Object.assign(row, { basis: 'automatable-by-control-nature', estimated: !!estimated, note: COVERAGE_NOTE });
+}
 function summary() {
   const out = {};
-  out.nist_csf_2_0 = Object.assign({ framework: NIST_CSF_2_0.name, granularity: NIST_CSF_2_0.granularity }, tallyControls(NIST_CSF_2_0.controls));
-  out.cis_v8_1 = Object.assign({ framework: CIS_V8_1.name, granularity: CIS_V8_1.granularity }, tallyGroups(CIS_V8_1.groups));
-  out.hipaa_164 = Object.assign({ framework: HIPAA_164.name, granularity: HIPAA_164.granularity }, tallyControls(HIPAA_164.controls));
-  out.soc2_2017_tsc = Object.assign({ framework: SOC2_2017_TSC.name, granularity: SOC2_2017_TSC.granularity }, tallyControls(SOC2_2017_TSC.controls));
-  out.nist_800_53_rev5 = Object.assign({ framework: NIST_800_53_REV5.name, granularity: NIST_800_53_REV5.granularity }, tallyGroups(NIST_800_53_REV5.families));
+  out.nist_csf_2_0 = annotate(Object.assign({ framework: NIST_CSF_2_0.name, granularity: NIST_CSF_2_0.granularity }, tallyControls(NIST_CSF_2_0.controls)), false);
+  out.cis_v8_1 = annotate(Object.assign({ framework: CIS_V8_1.name, granularity: CIS_V8_1.granularity }, tallyGroups(CIS_V8_1.groups)), true);
+  out.hipaa_164 = annotate(Object.assign({ framework: HIPAA_164.name, granularity: HIPAA_164.granularity }, tallyControls(HIPAA_164.controls)), true);
+  out.soc2_2017_tsc = annotate(Object.assign({ framework: SOC2_2017_TSC.name, granularity: SOC2_2017_TSC.granularity }, tallyControls(SOC2_2017_TSC.controls)), true);
+  out.nist_800_53_rev5 = annotate(Object.assign({ framework: NIST_800_53_REV5.name, granularity: NIST_800_53_REV5.granularity }, tallyGroups(NIST_800_53_REV5.families)), true);
   const grand = { auto: 0, partial: 0, manual: 0, total: 0 };
-  Object.values(out).forEach((r) => { grand.auto += r.auto; grand.partial += r.partial; grand.manual += r.manual; grand.total += r.total; });
-  out.all_frameworks = Object.assign({ framework: 'All frameworks (union of catalogs)' }, grand);
+  Object.keys(out).forEach((k) => { const r = out[k]; grand.auto += r.auto; grand.partial += r.partial; grand.manual += r.manual; grand.total += r.total; });
+  out.all_frameworks = annotate(Object.assign({ framework: 'All frameworks (union of catalogs)' }, grand), true);
+  out._meaning = COVERAGE_NOTE;
   return out;
 }
 

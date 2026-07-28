@@ -4420,7 +4420,7 @@ var CAPS=[
   {k:'seg',auto:'semi',name:'Network Segmentation / Zero-Trust',tool:'Illumio / firewall',proj:/segment|micro-?segment|zero.?trust|illumio|isolation|east-?west/i,need:'segment crown-jewel systems and enforce east-west controls.',connect:'connect your segmentation / NAC tooling.'},
   {k:'backup',auto:'auto',name:'Backup & Recovery Resilience',tool:'Rubrik / Veeam',proj:/backup|recover|immutable|rubrik|veeam|disaster|resilien|\bdr\b/i,need:'verify immutable backups and test restore for every crown jewel.',connect:'connect your backup platform (Rubrik, Veeam).'},
   {k:'cspm',auto:'auto',name:'Cloud Security Posture (CSPM)',tool:'Wiz / Prisma',proj:/cspm|cloud security|posture|misconfig|\bwiz\b|prisma|\borca\b/i,need:'baseline cloud misconfigurations and remediate public exposure.',connect:'connect a CSPM tool (Wiz, Prisma, Orca).'},
-  {k:'sspm',auto:'semi',name:'SaaS Security Posture (SSPM / CASB)',tool:'AppOmni / Adaptive Shield',proj:/sspm|saas security|casb|appomni|adaptive ?shield|obsidian|netskope|salesforce shield/i,need:'baseline SaaS misconfigurations and over-privileged access across your business apps.',connect:'connect an SSPM / CASB (AppOmni, Adaptive Shield, Netskope) or the app’s native security (Salesforce Shield).'}
+  {k:'sspm',auto:'manual',name:'SaaS Security Posture (SSPM / CASB)',tool:'AppOmni / Adaptive Shield',proj:/sspm|saas security|casb|appomni|adaptive ?shield|obsidian|netskope|salesforce shield/i,need:'baseline SaaS misconfigurations and over-privileged access across your business apps.',connect:'connect an SSPM / CASB (AppOmni, Adaptive Shield, Netskope) or the app’s native security (Salesforce Shield).'} // classified 'manual' (attested) until an SSPM/CASB connector emits sspm_pct — no producer exists yet, so this must not claim live telemetry; restore to 'semi' when a connector is wired.
 ];
 var CAP_BY_KEY={};CAPS.forEach(function(c){CAP_BY_KEY[c.k]=c;});
 /* ---- Asset-class applicability (telemetry provenance). A tool can only EVIDENCE an
@@ -4445,7 +4445,9 @@ var CAP_ASSET_APPLIES={
 function capAppliesTo(k,cls){var a=CAP_ASSET_APPLIES[k];return !!(a&&a.indexOf(cls)>=0);}
 /* The live signal that scores each capability + the connector keys that produce it —
    so the CISO detail can name the exact source of every number (no hardcoding). */
-var CAP_SIGKEY={edr:'edr_pct',mfa:'mfa_pct',pam:'pam_pct',vuln:'patch_pct',aware:'training_pct',siem:'siem_coverage_pct',cspm:'cspm_pct',backup:'backup_immutable_pct',dlp:'dlp_pct',seg:'seg_pct',sspm:'sspm_pct'};
+// Provenance signal key per capability — the REAL emitted signal capDeploy reads, so the drill names the true source.
+// siem: capDeploy uses siemCoverage() = siem_log_sources ÷ known assets (derived, honest); the raw 'siem_coverage_pct' is emitted by no connector, so we name the producing signal instead.
+var CAP_SIGKEY={edr:'edr_pct',mfa:'mfa_pct',pam:'pam_pct',vuln:'patch_pct',aware:'training_pct',siem:'siem_log_sources',cspm:'cspm_pct',backup:'backup_immutable_pct',dlp:'dlp_pct',seg:'seg_pct',sspm:'sspm_pct'};
 var CAP_TOOLKEYS={
   edr:['defender','crowdstrike','sentinelone','cortexxdr','trendmicro'],
   mfa:['okta','entra','ping','duo','onelogin'],

@@ -736,9 +736,21 @@ const TEXT_STORE_CAP = 200000;
 
 function extractText(buffer, filename) {
   const ext = (filename || '').split('.').pop().toLowerCase();
-  if (['txt', 'csv', 'md'].includes(ext)) {
+  if (['txt', 'csv', 'md', 'json'].includes(ext)) {
     return buffer.toString('utf8');
   }
+  // pdf/docx/xlsx are binary/zip containers — a printable-byte sweep of the COMPRESSED
+  // bytes is garbage (the LLM/keyword reviewer then scores noise). Use the real
+  // DocumentNormalizer (PDF text extractor + OOXML zip reader); only fall back to the
+  // byte sweep if it can't produce readable text.
+  try {
+    const Normalizer = require('../services/DocumentNormalizer');
+    if (Normalizer && typeof Normalizer.normalize === 'function') {
+      const out = Normalizer.normalize(buffer, filename || ('file.' + ext));
+      const t = out && typeof out.text === 'string' ? out.text : '';
+      if (t && t.trim().length) return t;
+    }
+  } catch (_) { /* fall through to the printable-byte sweep */ }
   let text = '';
   for (let i = 0; i < buffer.length; i++) {
     const c = buffer[i];
