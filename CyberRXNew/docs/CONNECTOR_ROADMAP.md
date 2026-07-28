@@ -1,76 +1,63 @@
 # Control-Signal Connector Roadmap
 
-**Why this exists.** The control cockpit scores each of the 11 defensive capabilities from a
-live telemetry signal (`CAP_SIGKEY` in `cockpit.html`). A control is only "sensor-proven" when
-a connector emits that exact signal. Today the drill copy is honest about this (`CAP_LIVE_CONNECTOR`
-/ `capConnectPrompt`), but honesty is a stopgap — the product value is in closing the coverage gap.
+**Correction (supersedes the first draft of this doc).** The first version claimed only 3 of 11
+controls were wired and 7 connectors had to be built. That was read off a **stale branch** whose
+`services/connectors/index.js` registered only 6 connectors. On `main` the registry has ~90
+connectors making real authenticated API calls, and **10 of the 11 controls already have live
+connectors** (most with 4–6 vendor options). The real gap is far smaller than first stated.
 
-## Current state (verified against `cyberrx-api/src/services/connectors/`)
+## Verified state on `main` (per `services/connectors/` + `index.js` registry)
 
-| Capability | Signal read (`CAP_SIGKEY`) | Connector today | Wired end-to-end? |
+Each control is scored from the signal in `CAP_SIGKEY` (cockpit.html). A control is "sensor-proven"
+when a registered connector emits that signal. Verified by grepping the emitted `key:` across the
+registry:
+
+| Capability | Signal | Registered connectors emitting it | Status |
 |---|---|---|---|
-| EDR | `edr_pct` | CrowdStrike Falcon | ✅ (needs asset-total denominator) |
-| MFA | `mfa_pct` | Microsoft Entra ID | ✅ |
-| Vuln & Patch | `patch_pct` | Tenable.io | ✅ |
-| SIEM | `siem_log_sources` | Splunk (registered) | ⚠️ emits MTTD/MTTR, **not** the coverage signal |
-| PAM | `pam_pct` | — | ❌ |
-| Awareness | `training_pct` | — | ❌ |
-| DLP | `dlp_pct` | — | ❌ |
-| Segmentation | `seg_pct` | — | ❌ |
-| Backup | `backup_immutable_pct` | — | ❌ |
-| CSPM | `cspm_pct` | — | ❌ |
-| SSPM | `sspm_pct` | — | ❌ |
+| EDR | `edr_pct` | CrowdStrike, Defender, SentinelOne, Cortex XDR, Trend Micro | ✅ |
+| MFA | `mfa_pct` | Entra, Okta, Ping, Duo, OneLogin | ✅ |
+| PAM | `pam_pct` | CyberArk, BeyondTrust, Delinea, HashiCorp Vault, One Identity | ✅ |
+| Vuln & Patch | `patch_pct` / `vuln_sla_pct` | Tenable, Qualys, Rapid7, Defender VM, Ivanti | ✅ |
+| Awareness | `training_pct` | KnowBe4 | ✅ (single vendor) |
+| SIEM | `siem_log_sources` | Splunk, Sentinel, Elastic, QRadar, Chronicle | ✅ |
+| CSPM | `cspm_pct` | Wiz, Prisma, AWS, Azure, GCP, Orca | ✅ |
+| Backup | `backup_immutable_pct` | Rubrik, Veeam, Cohesity, Commvault, Dell PowerProtect | ✅ |
+| DLP | `dlp_pct` | Purview, Forcepoint, Symantec, Zscaler, Netskope | ✅ |
+| Segmentation | `seg_pct` | Illumio, Zscaler ZPA, Palo Alto, Cisco, Guardicore | ✅ |
+| **SSPM** | `sspm_pct` | **none** | ❌ the one real gap |
 
-Every connector is ~50–120 lines following the proven `BaseConnector` shape (`test()` +
-`fetchSignals()` → normalized `{key,value,asOf,raw}`), the same pattern as `tenable.js`.
+`CAP_LIVE_CONNECTOR` in `cockpit.html` mirrors this (SSPM omitted → stays attested).
 
-## Cross-cutting prerequisite (do first) — the denominator
+## The actual remaining work (in priority order)
 
-Most coverage %'s are `covered ÷ in-scope total`. EDR already needs `assetTotal`; PAM, DLP, Seg,
-SSPM all do too. Without a trusted asset inventory these percentages are guesses.
-**Enabler: finish the CMDB/asset-inventory join** (`ServiceNow CmdbConnector` exists — wire its
-asset count as the denominator source). This unblocks accurate %'s across half the roadmap and
-also feeds the "name the specific uncovered hosts" gap the control drill flags as a data join.
+### 1. Tenant validation of the existing connectors — the real gap, not "build"
+Every control connector is **built to the vendor's API docs but carries a "validate against a real
+container/CID before relying on it" caveat**. None should be marketed as GA until run against a
+production tenant. This is the highest-value work: a validation pass (real creds in a sandbox tenant,
+confirm the derived % matches the vendor console) per vendor, starting with the canonical one per
+control (CrowdStrike, Entra, CyberArk, Tenable, Sentinel, Wiz, Rubrik, Purview, Illumio, KnowBe4).
 
-## Priority order
+### 2. SSPM connector — the single missing producer
+Build one connector emitting `sspm_pct` (business-critical SaaS apps under posture management ÷ SaaS
+inventory). Candidates: AppOmni, Adaptive Shield, Obsidian, or Salesforce Shield for the SFDC case.
+Follows the proven `test()` + `fetchSignals()` shape (~80 lines). Until then SSPM is honestly attested.
 
-### Tier 0 — fix/extend what's half-built (days, highest integrity-per-effort)
-1. **SIEM / Splunk signal reconciliation.** The connector exists but emits MTTD/MTTR. Either add a
-   `siem_log_sources` derivation (indexed sourcetypes ÷ expected) or redefine `capDeploy('siem')`
-   to score from what Splunk actually gives. Closes a control that *looks* connectable but isn't.
-2. **Second vendor for the 3 wired categories** — same pattern, big Fortune-100 coverage bump:
-   **Qualys** (vuln, mirrors Tenable's clean-asset-rate), **Okta** (MFA, mirrors Entra), **Microsoft
-   Defender** (EDR, mirrors CrowdStrike). Low risk, high hit-rate against real stacks.
+### 3. The denominator (accuracy, not coverage)
+Several %'s are `covered ÷ in-scope total` and need a trusted asset count (EDR's `edr_pct` already
+takes `assetTotal`). Wire the CMDB/asset-inventory join (ServiceNow connector exists) as the shared
+denominator so the percentages are exact and the drill can name the *specific* uncovered hosts.
 
-### Tier 1 — highest framework weight + ubiquity in F100
-3. **CSPM — Wiz** (`cspm_pct` = resources without a critical misconfig ÷ total). Modern GraphQL API,
-   clean metric, near-universal in cloud-first F100. Weight 1.1.
-4. **PAM — CyberArk** (`pam_pct` = privileged accounts vaulted ÷ discovered privileged accounts).
-   Highest-weight identity control (1.5); metric is well-defined via the CyberArk REST API.
-5. **Backup — Rubrik / Veeam** (`backup_immutable_pct` = crown-jewel workloads with a verified
-   immutable backup ÷ total). Board-critical for ransomware recovery; Rubrik API is clean.
+### 4. Signal-history store (real trend)
+Section 3 of the control drill uses a first-seen localStorage baseline. A
+`signal_history(org, scope, key, value, as_of)` table turns it into true quarter-over-quarter movement.
 
-### Tier 2 — valuable, more metric-definition work
-6. **DLP — Microsoft Purview** (`dlp_pct` = channels/endpoints under an enforced policy). Common in
-   the Microsoft estate; needs a coverage definition across email/web/endpoint.
-7. **SSPM — AppOmni / Adaptive Shield** (`sspm_pct` = business-critical SaaS apps under posture mgmt
-   ÷ SaaS inventory). Growing category; depends on the SaaS side of the asset inventory.
-8. **Awareness — KnowBe4** (`training_pct` = users current on training; `phishing_pct` fallback).
-   Easy REST API; low weight (0.9) so lower priority despite low effort.
-9. **Segmentation — Illumio** (`seg_pct` = workloads under enforced segmentation ÷ total). Hardest
-   metric to define honestly (enforcement vs visualization); do last so it isn't rushed.
+### 5. Peer-benchmark GA
+`/api/benchmark` exists as a consent-bounded, k-anonymized scaffold; the cockpit calls a stale
+`/api/peer/*` path. Reconcile the path and take it off the feature flag.
 
-## Definition of done per connector
-- `test(creds)` authenticates read-only and returns a clear ok/err.
-- `fetchSignals(creds)` returns the exact `CAP_SIGKEY` signal with `asOf` + `raw` provenance.
-- Registered in `services/connectors/index.js` **and** added to `CAP_LIVE_CONNECTOR` in `cockpit.html`
-  (so the drill flips from "attested / roadmap" to "connect <tool>" automatically).
-- Validated against a real tenant (the existing connectors are spec-built, not yet tenant-proven —
-  none should be marked live until run against a production instance).
-
-## Parallel infra (not a connector, but gates real value)
-- **Signal-history store** for per-control trend (today's drill uses a first-seen localStorage
-  baseline). A `signal_history(org, scope, key, value, as_of)` table turns section 3 (Trend) into
-  real quarter-over-quarter movement.
-- **Peer benchmark GA.** `/api/benchmark` exists as a consent-bounded, k-anonymized scaffold; the
-  cockpit currently calls a stale `/api/peer/*` path. Reconcile the path and take it off the flag.
+## Definition of done per connector (for the SSPM build and any new vendor)
+- `test(creds)` authenticates read-only; `fetchSignals(creds)` returns the exact `CAP_SIGKEY` signal
+  with `asOf` + `raw` provenance.
+- Registered in `services/connectors/index.js`; capability added to `CAP_LIVE_CONNECTOR` if it opens
+  a new control.
+- Validated against a real tenant before being called live.

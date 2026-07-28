@@ -4511,12 +4511,14 @@ function capAppliesTo(k,cls){var a=CAP_ASSET_APPLIES[k];return !!(a&&a.indexOf(c
 // siem: capDeploy uses siemCoverage() = siem_log_sources ÷ known assets (derived, honest); the raw 'siem_coverage_pct' is emitted by no connector, so we name the producing signal instead.
 var CAP_SIGKEY={edr:'edr_pct',mfa:'mfa_pct',pam:'pam_pct',vuln:'patch_pct',aware:'training_pct',siem:'siem_log_sources',cspm:'cspm_pct',backup:'backup_immutable_pct',dlp:'dlp_pct',seg:'seg_pct',sspm:'sspm_pct'};
 /* GROUND TRUTH — which capabilities have a LIVE, self-serve connector that emits the exact
-   signal the control's deployment reads. Mirrors cyberrx-api/src/services/connectors/index.js
-   (entra→mfa_pct · crowdstrike→edr_pct · tenable→patch_pct). Splunk is registered but emits
-   MTTD/MTTR, not siem_log_sources, so SIEM is NOT wired for coverage yet. Everything else has
-   no native connector and is attested. KEEP THIS IN SYNC as connectors ship — the drill copy
-   must never tell a CISO to "connect" a tool that has no working integration. */
-var CAP_LIVE_CONNECTOR={edr:'CrowdStrike Falcon',mfa:'Microsoft Entra ID',vuln:'Tenable.io'};
+   signal the control's deployment reads. Verified against cyberrx-api/src/services/connectors
+   on main: 10 of the 11 controls have real API connectors (most with 4–6 vendor options); each
+   entry below names the canonical one. The ONLY gap is SSPM — no connector emits sspm_pct yet,
+   so it stays attested. (Connectors are built to vendor API docs and should be validated against
+   a production tenant before being marketed as live.) KEEP IN SYNC as connectors ship — the
+   drill copy must never tell a CISO to "connect" a tool with no working integration, nor call a
+   connected-capable control "roadmap". */
+var CAP_LIVE_CONNECTOR={edr:'CrowdStrike Falcon',mfa:'Microsoft Entra ID',pam:'CyberArk',vuln:'Tenable.io',aware:'KnowBe4',siem:'Microsoft Sentinel',cspm:'Wiz',backup:'Rubrik',dlp:'Microsoft Purview',seg:'Illumio'};
 function capConnectPrompt(k){var v=CAP_LIVE_CONNECTOR[k];
   return v?('Connect '+v+' — a read-only connector exists and scores this control live from telemetry.')
           :'No native connector for this tool yet — record it as attested at onboarding (documented, not sensor-proven). A connector is on the roadmap.';}
