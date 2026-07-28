@@ -2225,13 +2225,13 @@ function drillControlValue(k){var c=CAP_BY_KEY[k];if(!c)return '';
   var appSec='<div class="ev-sec">4 · Against target</div>'+
     gRow('Healthy line (≥75%)',p==null?'—':(p>=75?'✓ at or above':'+'+toHealthy+' pts to reach'))+
     gRow('Best-practice line (≥90%)',p==null?'—':(p>=90?'✓ at or above':'+'+toStrong+' pts to reach'))+
-    '<div class="drill-p" style="color:var(--muted)">Set a coverage SLA for this control in risk appetite, and connect a sector benchmark (SecurityScorecard / BitSight) to compare against peers.</div>';
+    '<div class="drill-p" style="color:var(--muted)">Set a coverage SLA for this control in risk appetite to measure headroom against target. Sector-peer comparison runs through Nerion’s consent-based, k-anonymized peer network (currently flag-gated) — not a third-party rating feed.</div>';
 
   // 5 — The decision + modeled ROI
   var roi=(cons&&gap!=null&&gap>0)?('Closing the '+gap+'% gap removes up to <b style="color:var(--good)">'+usd(Math.round(cons.exposure*gap/100))+'</b> of modeled exposure on the crown jewels above. '):'';
   var decSec='<div class="ev-sec">5 · Decision</div>'+
     (pr?('<div class="drill-p"><span class="tag '+(pr.done?'good':'')+'" style="font-size:10px">'+pr.status+'</span> <b>'+esc(pr.name)+'</b>'+progTxt(pr)+'</div>'):'')+
-    '<div class="drill-p">'+roi+'<b>Recommended:</b> '+esc(p==null?c.connect:c.need)+'</div>';
+    '<div class="drill-p">'+roi+'<b>Recommended:</b> '+(p==null?capConnectPrompt(k):esc(c.need))+'</div>';
 
   // Defensibility footer — provenance + scope guard + crosswalk, kept for the auditor
   var applies=(typeof CAP_ASSET_APPLIES!=='undefined'&&CAP_ASSET_APPLIES[k])||[];
@@ -2239,7 +2239,7 @@ function drillControlValue(k){var c=CAP_BY_KEY[k];if(!c)return '';
   var applyLbl=applies.map(function(a){return CL[a]||a;}),notLbl=Object.keys(CL).filter(function(a){return applies.indexOf(a)<0;}).map(function(a){return CL[a];});
   var footer='<div class="ev-sec">Defensibility &amp; provenance</div>'+
     gRow('Method','<b>'+mth[0]+'</b> — '+mth[1])+
-    gRow('Measured from',(p!=null?(esc(src.tool)+' · signal <code>'+esc(src.field)+'</code>'):('not connected — '+esc(c.connect))))+
+    gRow('Measured from',(p!=null?(esc(src.tool)+' · signal <code>'+esc(src.field)+'</code>'):('not connected — '+capConnectPrompt(k))))+
     (p!=null&&src.lastRefresh?gRow('Last refreshed',esc(src.lastRefresh)):'')+
     gRow('Operating model',(prov==='common'?'⬡ Corporate-common — inherited across the estate':'◈ Entity-run — operated by this unit'))+
     (applies.length?(gRow('Valid evidence for',applyLbl.join(' · '))+(notLbl.length?gRow('Not valid for',notLbl.join(' · ')):'')):'')+
@@ -4510,6 +4510,16 @@ function capAppliesTo(k,cls){var a=CAP_ASSET_APPLIES[k];return !!(a&&a.indexOf(c
 // Provenance signal key per capability — the REAL emitted signal capDeploy reads, so the drill names the true source.
 // siem: capDeploy uses siemCoverage() = siem_log_sources ÷ known assets (derived, honest); the raw 'siem_coverage_pct' is emitted by no connector, so we name the producing signal instead.
 var CAP_SIGKEY={edr:'edr_pct',mfa:'mfa_pct',pam:'pam_pct',vuln:'patch_pct',aware:'training_pct',siem:'siem_log_sources',cspm:'cspm_pct',backup:'backup_immutable_pct',dlp:'dlp_pct',seg:'seg_pct',sspm:'sspm_pct'};
+/* GROUND TRUTH — which capabilities have a LIVE, self-serve connector that emits the exact
+   signal the control's deployment reads. Mirrors cyberrx-api/src/services/connectors/index.js
+   (entra→mfa_pct · crowdstrike→edr_pct · tenable→patch_pct). Splunk is registered but emits
+   MTTD/MTTR, not siem_log_sources, so SIEM is NOT wired for coverage yet. Everything else has
+   no native connector and is attested. KEEP THIS IN SYNC as connectors ship — the drill copy
+   must never tell a CISO to "connect" a tool that has no working integration. */
+var CAP_LIVE_CONNECTOR={edr:'CrowdStrike Falcon',mfa:'Microsoft Entra ID',vuln:'Tenable.io'};
+function capConnectPrompt(k){var v=CAP_LIVE_CONNECTOR[k];
+  return v?('Connect '+v+' — a read-only connector exists and scores this control live from telemetry.')
+          :'No native connector for this tool yet — record it as attested at onboarding (documented, not sensor-proven). A connector is on the roadmap.';}
 var CAP_TOOLKEYS={
   edr:['defender','crowdstrike','sentinelone','cortexxdr','trendmicro'],
   mfa:['okta','entra','ping','duo','onelogin'],

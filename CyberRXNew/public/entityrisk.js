@@ -279,7 +279,7 @@
     // 2 — How the score is known (measured HERE, not "the same as another tab")
     var assurance = story + '<div class="ev-sec">How this score is measured</div>'
       + erRow('Method', '<b>' + mth[0] + '</b> — ' + mth[1])
-      + erRow('Measured from', ph != null ? (esc(src.tool) + ' · signal <code>' + esc(src.field) + '</code>') : ('not connected — ' + esc(full.connect || 'connect the control tool')))
+      + erRow('Measured from', ph != null ? (esc(src.tool) + ' · signal <code>' + esc(src.field) + '</code>') : ('not connected — ' + ((typeof capConnectPrompt === 'function') ? capConnectPrompt(k) : ('connect ' + esc(c.tool)))))
       + (ph != null && src.lastRefresh ? erRow('Last refreshed', esc(src.lastRefresh)) : '')
       + erRow('Coverage', ph != null ? (ph + '% of in-scope assets · ' + (100 - ph) + '% gap') : '—')
       + erRow('Operating model', prov === 'common' ? '⬡ Corporate-common — inherited across the estate' : '◈ Entity-run — operated by this unit');
@@ -305,7 +305,7 @@
     // The evidence line: what proves these requirements, and to what degree.
     var trace = '<div class="drill-p">' + (ph != null
       ? ('<b>' + esc(c.tool) + '</b> is the live evidence for ' + (fw === 'csf' ? 'these subcategories' : 'these controls') + ' — currently <b style="color:var(--' + col + ')">' + ph + '% deployed</b> (signal <code>' + esc(src.field) + '</code>). ' + (ph < 100 ? ('Closing the remaining ' + (100 - ph) + '% raises this control across every framework it maps to.') : 'Fully deployed across the in-scope estate.'))
-      : ('No live evidence yet — ' + esc(full.connect || 'connect the control tool') + ' to score these requirements from telemetry instead of attestation.')) + '</div>';
+      : ('No live evidence yet. ' + ((typeof capConnectPrompt === 'function') ? capConnectPrompt(k) : ('Connect ' + esc(c.tool) + '.')))) + '</div>';
     var reqSec = '<div class="ev-sec">How it satisfies ' + esc(fwLabel(fw)) + '</div>' + reqRows + trace;
 
     // 4 — Valid-evidence-scope integrity guard (the anti-inflation control)
@@ -329,7 +329,7 @@
     var xwSec = cross.length ? ('<div class="ev-sec">Same control, other standards</div>' + cross.map(function (o) { return erRow(esc(o[0]), esc(o[1].join(' · '))); }).join('')) : '';
 
     // 6 — The action that moves it
-    var actSec = '<div class="ev-sec">' + (ph == null ? 'To start measuring' : 'What raising it looks like') + '</div><div class="drill-p">' + esc(ph == null ? (full.connect || '') : (full.need || '')) + '</div>';
+    var actSec = '<div class="ev-sec">' + (ph == null ? 'To start measuring' : 'What raising it looks like') + '</div><div class="drill-p">' + (ph == null ? ((typeof capConnectPrompt === 'function') ? capConnectPrompt(k) : esc(full.connect || '')) : esc(full.need || '')) + '</div>';
 
     return hero + assurance + reqSec + scopeSec + xwSec + actSec;
   }
