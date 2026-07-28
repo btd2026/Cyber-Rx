@@ -1490,7 +1490,7 @@
   document.getElementById('goLive').addEventListener('click',async function(){
     var btn=this,msg=document.getElementById('glmsg');
     var org=v('orgName');
-    if(!org){msg.textContent='Enter an organization name.';msg.style.color='var(--warn)';try{obShow('corp');}catch(_){}return;}
+    if(!org){msg.textContent='Enter an organization name.';msg.style.color='var(--warn)';try{obShow('org');}catch(_){}return;}
     if(!scopeTotals().proc&&!scopeTotals().app){msg.textContent='Upload your processes or systems first.';msg.style.color='var(--warn)';try{obShow('sys');}catch(_){}return;}
     var orgId='org_'+slug(org);
     var frameworksInScope=Array.prototype.slice.call(document.querySelectorAll('#scopeFrameworks input:checked')).map(function(c){return c.value;});
@@ -1567,14 +1567,16 @@
      field; we only toggle visibility. Sections are grouped by their title. ---- */
   // Tabs follow the platform chain: Corporate → Region/Entity → Process/System → Connect →
   // Risk → Control → Executive context. Display order + label only.
+  // Four core steps get you live — nothing else is required to produce the verdict. The engine
+  // derives each system's risks from its asset class and reads control health from connected
+  // telemetry, so risk registers, financials, ERM, SBOM, insurance, etc. are OPTIONAL enrichment
+  // gathered under one clearly-labelled step you can complete anytime, before or after go-live.
   var OB_TABS=[
-    {k:'corp',l:'Corporate'},
-    {k:'struct',l:'Regions & entities'},
-    {k:'sys',l:'Processes & systems'},
-    {k:'connect',l:'Connect'},
-    {k:'risk',l:'Risks'},
-    {k:'control',l:'Controls & evidence'},
-    {k:'exec',l:'Executive context'}
+    {k:'org',l:'Organization'},
+    {k:'sys',l:'Crown jewels'},
+    {k:'connect',l:'Connect tools'},
+    {k:'control',l:'Policies & evidence'},
+    {k:'more',l:'Optional · enrich later'}
   ];
   // Explicit, MOST-SPECIFIC-FIRST rules map each section title to a tab. Decoupled from the
   // display order above so a title like "Organizational structure" lands in Regions &
@@ -1582,25 +1584,30 @@
   // these and silently orphaned whole sections (operating model, per-entity connectors)
   // from every tab. First matching rule wins.
   var OB_TABRULES=[
-    {t:'struct',m:'organizational structure'},{t:'struct',m:'security operating model'},
-    {t:'corp',m:'organization'},
+    // 1 — Organization: who you are + how the program is structured/operated.
+    {t:'org',m:'organizational structure'},{t:'org',m:'security operating model'},{t:'org',m:'organization'},
+    // 2 — Crown jewels: the processes/systems that matter and how they map to revenue.
     {t:'sys',m:'business processes'},{t:'sys',m:'systems & applications'},{t:'sys',m:'map applications'},{t:'sys',m:'brings money'},{t:'sys',m:'systems'},
+    // 3 — Connect tools: the telemetry that makes control health live evidence.
     {t:'connect',m:'per-entity connectors'},{t:'connect',m:'connect your tools'},
-    {t:'control',m:'policy & document'},{t:'control',m:'continuous-monitoring cadence'},{t:'control',m:'board governance'},{t:'control',m:'ai risk'},{t:'control',m:'software supply-chain'},
-    {t:'exec',m:'enterprise risk portfolio'},{t:'exec',m:'financials'},{t:'exec',m:'growth engine'},{t:'exec',m:'insurance'},{t:'exec',m:'strategic initiatives'},{t:'exec',m:'strategic objectives'},
-    {t:'risk',m:'risk register'},{t:'risk',m:'business capability map'},{t:'risk',m:'software bill of materials'},{t:'risk',m:'risk appetite'},{t:'risk',m:'regulatory register'},{t:'risk',m:'materiality criteria'},{t:'risk',m:'benchmark data'},{t:'risk',m:'third-party vendors'},{t:'risk',m:'cyber projects'}
+    // 4 — Policies & evidence: documents + the assessment cadence.
+    {t:'control',m:'policy & document'},{t:'control',m:'continuous-monitoring cadence'},
+    // Optional — NONE of this is required to produce the verdict. Add anytime to sharpen the model.
+    {t:'more',m:'board governance'},{t:'more',m:'ai risk'},{t:'more',m:'software supply-chain'},
+    {t:'more',m:'enterprise risk portfolio'},{t:'more',m:'financials'},{t:'more',m:'growth engine'},{t:'more',m:'insurance'},{t:'more',m:'strategic initiatives'},{t:'more',m:'strategic objectives'},
+    {t:'more',m:'risk register'},{t:'more',m:'business capability map'},{t:'more',m:'software bill of materials'},{t:'more',m:'risk appetite'},{t:'more',m:'regulatory register'},{t:'more',m:'materiality criteria'},{t:'more',m:'benchmark data'},{t:'more',m:'third-party vendors'},{t:'more',m:'cyber projects'}
   ];
   // Continuous-monitoring cadence — the global floor the cockpit's control-aware scheduler reads.
   (function(){var sel=document.getElementById('obCadence');if(!sel)return;
     try{var ov=JSON.parse(localStorage.getItem('cyberrx_assessment_cadence')||'{}');if(ov&&ov.global)sel.value=ov.global;}catch(_){}
     sel.addEventListener('change',function(){try{var ov=JSON.parse(localStorage.getItem('cyberrx_assessment_cadence')||'{}')||{};if(sel.value)ov.global=sel.value;else delete ov.global;localStorage.setItem('cyberrx_assessment_cadence',JSON.stringify(ov));}catch(_){}var b=document.getElementById('bcad');if(b){if(sel.value){b.textContent='✓ '+sel.options[sel.selectedIndex].text;b.classList.add('done');}else{b.textContent='optional';b.classList.remove('done');}}try{if(typeof obSaveState==='function')obSaveState();}catch(_){}});
   })();
-  var OB_ACTIVE='corp';
+  var OB_ACTIVE='org';
   function obSecs(){return Array.prototype.slice.call(document.querySelectorAll('.wrap > .sec'));}
   function obTabOf(sec){var st=sec.querySelector('.st');var h=(st?st.textContent:'').toLowerCase();
     for(var i=0;i<OB_TABRULES.length;i++){if(h.indexOf(OB_TABRULES[i].m)>=0)return OB_TABRULES[i].t;}return null;}
   // The chain spine — 7 nodes; each tab lights the stage(s) it sits on.
-  var OB_SPINE=[{k:'Corporate',t:['corp']},{k:'Region',t:['struct']},{k:'Entity',t:['struct']},{k:'Process',t:['sys']},{k:'System',t:['sys','connect']},{k:'Risk',t:['risk']},{k:'Control',t:['control']}];
+  var OB_SPINE=[{k:'Corporate',t:['org']},{k:'Region',t:['org']},{k:'Entity',t:['org']},{k:'Process',t:['sys']},{k:'System',t:['sys','connect']},{k:'Risk',t:['sys']},{k:'Control',t:['control']}];
   function renderSpine(active){
     var host=document.getElementById('chainSpine');if(!host)return;
     host.innerHTML='<div style="display:flex;align-items:center;gap:2px;flex-wrap:wrap;font-size:11px;font-weight:700">'
@@ -1612,7 +1619,7 @@
   // ===== Entity context — the tabs after Regions & entities are configured PER ENTITY =====
   // Everything below the region level (systems, connectors, risks, controls, executive context)
   // belongs to a specific entity — or to Corporate, whose common controls every entity inherits.
-  var OB_ENTITY_TABS=['sys','connect','risk','control','exec'];
+  var OB_ENTITY_TABS=['sys','connect','control','more'];
   var OB_ACTIVE_ENTITY='corporate';
   // Per-entity operating model — each entity independently INHERITS the Corporate baseline
   // (centralized), inherits it AND runs some of its own (hybrid), or runs entirely its own
@@ -1703,11 +1710,11 @@
   // of its sections' badges has flipped to ".done" (badges go done on input/upload).
   // The Organization tab is complete once its required name is filled.
   function obTabDone(k){
-    if(k==='corp'){var on=document.getElementById('orgName');if(on&&on.value.trim())return true;}
+    if(k==='org'){var on=document.getElementById('orgName');if(on&&on.value.trim())return true;}
     var secs=obSecs().filter(function(s){return obTabOf(s)===k;});
     return secs.some(function(s){var b=s.querySelector('.badge');return b&&b.classList.contains('done');});
   }
-  function obCompletion(){var tabs=obPresentTabs();var done=tabs.filter(function(t){return obTabDone(t.k);}).length;return {done:done,total:tabs.length};}
+  function obCompletion(){var tabs=obPresentTabs().filter(function(t){return t.k!=='more';});var done=tabs.filter(function(t){return obTabDone(t.k);}).length;return {done:done,total:tabs.length};}
   // Progress bar reflects real COMPLETION (sections with data), not just which tab is
   // open — so "how far are you" answers the honest question. Runs on tab change and
   // live as fields are filled. Marks each done tab with a ✓ in the tab strip too.
@@ -1751,7 +1758,7 @@
     // Keep the completion bar live as the user fills fields / uploads / picks options —
     // badges flip on these same events, so we recompute right after they bubble up.
     ['input','change','click'].forEach(function(ev){document.addEventListener(ev,function(){try{obUpdateProgress();}catch(_){}},false);});
-    obShow('corp');
+    obShow('org');
   })();
 
   /* ================= persist onboarding · no re-entry =================
