@@ -167,7 +167,11 @@
       grouped: bg.grouped, groups: bg.groups,
       totalCrit: ps.totalCrit, procTree: ps.on,
       verdict: {
+        // score = 0–100 defence/coverage (higher is better). The verdict is stated as
+        // RISK, so the gauge reads risk = 100 − defence (higher is worse) on the same
+        // 0–5 scale the region strip now uses — one number per entity, everywhere.
         score: entityScore, band: entityBand, of5: (entityScore / 20).toFixed(1),
+        risk: 100 - entityScore, riskOf5: ((100 - entityScore) / 20).toFixed(1),
         nHigh: nHigh, nElev: nElev, pctExposed: pctExposed,
         driver: driver ? { name: driver.name, ctrl: driver.weakest ? driver.weakest.name : null, of5: driver.weakest ? (driver.weakest.maturity / 20).toFixed(1) : null } : null
       },
@@ -243,22 +247,32 @@
     return hero + intro + sec1 + note + xw;
   }
 
-  // Semicircular verdict gauge — the answer, at a glance.
-  function gauge(score, band) {
+  // Semicircular verdict gauge — a TRUE risk speedometer: the needle rises with cyber-risk
+  // (left = low, right = high) over fixed national-security RAG bands (GREEN 0–1.25 · AMBER
+  // 1.25–2.5 · RED 2.5–5 on the /5 scale, i.e. the ≥75 / ≥50 defence thresholds inverted).
+  // `risk` is 0–100 where higher is worse; the number shown is risk/20 and its colour is the
+  // band. Because every zone is always painted, the reader can see where the needle sits.
+  function gauge(risk, band) {
     var col = bandCol(band), R = 52, CX = 64, CY = 64;
-    var frac = Math.max(0, Math.min(100, score)) / 100;
-    // 180° sweep, left (empty/red edge) → right; needle at the score.
-    var ang = Math.PI * (1 - frac);
-    var nx = CX + R * Math.cos(ang), ny = CY - R * Math.sin(ang);
-    var C = Math.PI * R; // half-circumference
-    return '<svg viewBox="0 0 128 78" width="128" height="78" style="flex:none">'
-      + '<path d="M12 64 A52 52 0 0 1 116 64" fill="none" stroke="var(--line)" stroke-width="10" stroke-linecap="round"/>'
-      + '<path d="M12 64 A52 52 0 0 1 116 64" fill="none" stroke="var(--' + col + ')" stroke-width="10" stroke-linecap="round" stroke-dasharray="' + (frac * C).toFixed(1) + ' ' + C.toFixed(1) + '"/>'
-      + '<line x1="' + CX + '" y1="' + CY + '" x2="' + nx.toFixed(1) + '" y2="' + ny.toFixed(1) + '" stroke="var(--ink)" stroke-width="2.5" stroke-linecap="round"/>'
+    var frac = Math.max(0, Math.min(100, risk)) / 100;   // 0 = no risk (far left) … 1 = max risk (far right)
+    function pt(f) { var a = Math.PI * (1 - f); return [(CX + R * Math.cos(a)).toFixed(1), (CY - R * Math.sin(a)).toFixed(1)]; }
+    function arc(f0, f1) { var p0 = pt(f0), p1 = pt(f1); return 'M' + p0[0] + ' ' + p0[1] + ' A' + R + ' ' + R + ' 0 0 1 ' + p1[0] + ' ' + p1[1]; }
+    var np = pt(frac);
+    return '<svg viewBox="0 0 128 80" width="128" height="80" style="flex:none">'
+      // RAG zones — thresholds match bandOfScore (risk 25 / 50): green → amber → red, left to right.
+      + '<path d="' + arc(0, 0.25) + '" fill="none" stroke="var(--good)" stroke-width="10" stroke-linecap="round"/>'
+      + '<path d="' + arc(0.25, 0.5) + '" fill="none" stroke="var(--warn)" stroke-width="10"/>'
+      + '<path d="' + arc(0.5, 1) + '" fill="none" stroke="var(--crit)" stroke-width="10" stroke-linecap="round"/>'
+      + '<line x1="' + CX + '" y1="' + CY + '" x2="' + np[0] + '" y2="' + np[1] + '" stroke="var(--ink)" stroke-width="2.5" stroke-linecap="round"/>'
       + '<circle cx="' + CX + '" cy="' + CY + '" r="3.5" fill="var(--ink)"/>'
-      + '<text x="' + CX + '" y="58" text-anchor="middle" font-size="20" font-weight="800" fill="var(--' + col + ')" font-family="var(--mono,ui-monospace)">' + (score / 20).toFixed(1) + '</text>'
-      + '<text x="' + CX + '" y="72" text-anchor="middle" font-size="9" fill="var(--muted)">' + esc(T('er.gauge.of5')) + '</text>'
+      + '<text x="' + CX + '" y="58" text-anchor="middle" font-size="20" font-weight="800" fill="var(--' + col + ')" font-family="var(--mono,ui-monospace)">' + (risk / 20).toFixed(1) + '</text>'
+      + '<text x="' + CX + '" y="72" text-anchor="middle" font-size="8.5" fill="var(--muted)">' + esc(T('er.gauge.risk5')) + '</text>'
       + '</svg>';
+  }
+  // National-security RAG chip: GREEN (low risk) · AMBER (elevated) · RED (high).
+  function ragChip(band) {
+    var col = bandCol(band);
+    return '<span style="font-size:10px;font-weight:800;letter-spacing:.06em;color:var(--' + col + ');background:color-mix(in srgb,var(--' + col + ') 12%,transparent);border:1px solid color-mix(in srgb,var(--' + col + ') 40%,transparent);border-radius:20px;padding:2px 10px;white-space:nowrap">● ' + T('er.rag.' + band) + '</span>';
   }
 
   // The control table for one risk — every mitigating control across CSF · CIS · ISO,
@@ -349,14 +363,55 @@
     } else {
       reason = T('er.reason.min', { hi: v.nHigh, el: v.nElev, pct: v.pctExposed });
     }
+    // Band-specific headline so it always reads as clean English — the old single template
+    // slotted the band word into "is at {band} cyber risk", which produced the broken
+    // "is at well-defended cyber risk" on the green band.
+    var headKey = v.band === 'low' ? 'er.verdict.head.low' : (v.band === 'elevated' ? 'er.verdict.head.elevated' : 'er.verdict.head.high');
     return '<div class="c5pa" style="margin:0 0 14px;padding:18px 20px;border-left:4px solid var(--' + col + ')">'
       + '<div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap">'
-      + gauge(v.score, v.band)
+      + gauge(v.risk, v.band)
       + '<div style="flex:1;min-width:280px">'
-      + '<div style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">' + T('er.verdict.label') + '</div>'
-      + '<div style="font-size:21px;font-weight:800;color:var(--ink);line-height:1.25">' + T('er.verdict.headline', { scope: scB, band: '<span style="color:var(--' + col + ')">' + T('er.band.' + v.band) + '</span>' }) + '</div>'
+      + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:7px"><span style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">' + T('er.verdict.label') + '</span>' + ragChip(v.band) + '</div>'
+      + '<div style="font-size:21px;font-weight:800;color:var(--ink);line-height:1.25">' + T(headKey, { scope: scB }) + '</div>'
       + '<div style="font-size:13px;color:var(--ink-2);margin-top:9px;line-height:1.6;max-width:820px">' + reason + '</div>'
       + '</div></div></div>';
+  }
+
+  // Verdict-tab scope strip — scored on the SAME cyber-risk number the gauge shows, so an
+  // entity never displays two different /5 figures. (The shared scopeNav strip stays a
+  // program-MATURITY strip on the program-health tabs, where higher-is-better is correct;
+  // here the axis is risk, higher-is-worse, ranked most-exposed first.) Falls back silently.
+  function erRiskOf(id) { try { var m = c5EntityRiskModel(id); return (m && m.verdict) ? m.verdict.risk : null; } catch (_) { return null; } }
+  function erScopeCell(id, label, sub, rk, lead, curScope, weak) {
+    if (rk == null) return '';
+    var band = bandOfScore(100 - rk), c = bandCol(band), sel = (id === curScope);
+    var bd = sel ? 'var(--blue)' : (weak ? 'var(--crit)' : 'var(--line)');
+    return '<button data-scope="' + id + '" style="text-align:left;border:' + (lead ? '2px' : '1px') + ' solid ' + (lead ? 'var(--blue)' : bd) + ';border-radius:10px;padding:9px 12px;background:' + (sel ? 'color-mix(in srgb,var(--blue) 8%,var(--surface))' : 'var(--surface)') + ';cursor:pointer;min-width:150px">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><b style="font-size:12px;color:var(--ink)">' + esc(label) + '</b><span style="font-size:17px;font-weight:800;color:var(--' + c + ');font-variant-numeric:tabular-nums">' + (rk / 20).toFixed(1) + '</span></div>'
+      + '<div style="font-size:10px;color:var(--muted);margin-top:2px">' + (sub ? (esc(sub) + ' · ') : '') + T('er.rag.' + band) + '</div>'
+      + (sel ? '<div style="font-size:10px;font-weight:700;color:var(--blue);margin-top:4px">● ' + T('er.scope.now') + '</div>' : (weak ? '<div style="font-size:10px;font-weight:700;color:var(--crit);margin-top:4px">◆ ' + T('er.scope.weak') + '</div>' : '')) + '</button>';
+  }
+  function erScopeNav(scope) {
+    try {
+      if (typeof REGIONS === 'undefined' || !REGIONS || !REGIONS.length) return '';
+      var activeRegion = (typeof scopeRegion === 'function') ? scopeRegion(scope) : 'enterprise';
+      var lead = '', items = [], title;
+      if (scope === 'enterprise') {
+        lead = erScopeCell('enterprise', 'Enterprise', 'consolidated · all regions', erRiskOf('enterprise'), true, scope, false);
+        REGIONS.filter(function (r) { return r.kind === 'region'; }).forEach(function (r) { var rk = erRiskOf(r.id); if (rk != null) items.push({ id: r.id, label: r.label, sub: r.regime || '', rk: rk }); });
+        title = T('er.scope.regions');
+      } else {
+        var reg = null; REGIONS.forEach(function (r) { if (r.id === activeRegion) reg = r; });
+        if (!reg || !reg.entities || !reg.entities.length) return '';
+        lead = erScopeCell(reg.id, 'All ' + reg.label, 'consolidated · all entities', erRiskOf(reg.id), true, scope, false);
+        reg.entities.forEach(function (e) { var rk = erRiskOf(e.id); if (rk != null) items.push({ id: e.id, label: e.label, sub: '', rk: rk }); });
+        title = T('er.scope.entities');
+      }
+      if (!items.length && !lead) return '';
+      items.sort(function (a, b) { return b.rk - a.rk; });   // most-exposed first
+      var cards = items.map(function (x, i) { return erScopeCell(x.id, x.label, x.sub, x.rk, false, scope, i === 0 && x.id !== scope); }).join('');
+      return '<div class="c5pa" style="margin:0 0 6px;padding:12px 14px"><div style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">' + esc(title) + '</div><div style="display:flex;gap:10px;flex-wrap:wrap;align-items:stretch">' + lead + cards + '</div></div>';
+    } catch (_) { return ''; }
   }
 
   function c5EntityRisk() {
@@ -368,7 +423,12 @@
     var model; try { model = c5EntityRiskModel(scope); } catch (e) { model = null; }
 
     var header = (typeof c5header === 'function') ? c5header() : '';
-    var scopeNavHtml = ''; try { if (typeof scopeNav === 'function') { var sn = scopeNav(); if (sn) scopeNavHtml = '<div class="c5pa" style="margin:0 0 4px">' + sn + '</div>'; } } catch (_) {}
+    var scopeNavHtml = '';
+    try {
+      var ern = erScopeNav(scope);
+      if (ern) scopeNavHtml = ern;
+      else if (typeof scopeNav === 'function') { var sn = scopeNav(); if (sn) scopeNavHtml = '<div class="c5pa" style="margin:0 0 4px">' + sn + '</div>'; }
+    } catch (_) {}
     var deckBtn = (typeof c5DeckBtnHtml === 'function') ? c5DeckBtnHtml('csf') : '';
 
     if (!model) {
@@ -397,6 +457,7 @@
   window.c5EntityRisk = c5EntityRisk;
 
   function wire(host) {
+    try { if (typeof wireScopeNav === 'function') wireScopeNav(host); } catch (_) {}   // risk scope-strip clicks
     host.querySelectorAll('.er-sys[data-sys]').forEach(function (el) {
       el.onclick = function () { var i = +el.dataset.sys; C5_ER_SYS = (C5_ER_SYS === i) ? null : i; C5_ER_RISK = null; c5EntityRisk(); };
     });

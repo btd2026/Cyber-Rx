@@ -2138,7 +2138,10 @@ function vcProtectedBy(k){var vc=(LIVE&&LIVE.value_chain);if(!vc||!vc.functions)
    frameworks it satisfies, and the $ it removes when effective — with the full calc. */
 function drillControlValue(k){var c=CAP_BY_KEY[k];if(!c)return '';
   var scope=(typeof c5Scope==='function')?c5Scope():'enterprise';
-  var fw=CAP_FRAMEWORK[k],x=(typeof NEURON_XWALK!=='undefined'&&NEURON_XWALK[k])||{},p=capDeploy(c);
+  var fw=CAP_FRAMEWORK[k],x=(typeof NEURON_XWALK!=='undefined'&&NEURON_XWALK[k])||{};
+  // Scope-resolved, so this equals the "Program health" % in the control table you clicked from —
+  // NOT the global/enterprise figure. (Fixes table 77% vs drill 88% when a region/entity is in view.)
+  var p=withScopeSignals(scope,function(){return capDeploy(c);});
   var ct=capContrib(),w=(fw&&fw.weight)||0,contrib=ct.eff[k]||0,share=ct.sum>0?contrib/ct.sum:0,saved=Math.round(ct.total*share);
   var pr=capProject(c),prot=vcProtectedBy(k);
   var src=(typeof c5capSrc==='function')?c5capSrc(k):{tool:c.tool,field:k,lastRefresh:''};
@@ -2157,8 +2160,9 @@ function drillControlValue(k){var c=CAP_BY_KEY[k];if(!c)return '';
   var gapTxt=(p!=null&&p<100)?(' <span style="color:var(--muted)">· '+(100-p)+'% of in-scope assets not yet covered</span>'):'';
 
   // 1 — What it is (deployment hero, type, domain, coverage gap, what "effective" means)
-  var head='<div class="drill-hero '+col+'">'+(p==null?'—':p+'%')+' <span class="pill" style="font-size:10px;vertical-align:middle">deployed</span></div>'+capBar(p)+
+  var head='<div class="drill-hero '+col+'">'+(p==null?'—':p+'%')+' <span class="pill" style="font-size:10px;vertical-align:middle">Program health</span></div>'+capBar(p)+
     '<div class="drill-p"><b>'+c.name+'</b> — '+c.tool+'. <b>'+roleLbl+'</b> control'+(x.domain?(' · '+x.domain):'')+'.'+gapTxt+
+    '<br><span style="color:var(--muted)">Program health is this control’s live deployment coverage — the same % shown in the verdict table, resolved for the scope you’re viewing.</span>'+
     '<br><span style="color:var(--muted)">What “effective” looks like: </span>'+c.need+'</div>';
 
   // 2 — How the number is known (method · source · freshness · operating model)
@@ -3287,6 +3291,21 @@ function scopeSignalValues(id){
   // Inherit the corporate common controls for this scope's operating model (none if federated).
   commonSigKeys(id).forEach(function(sk){if(CORPORATE_SIG[sk]!=null)own[sk]=CORPORATE_SIG[sk];});
   return own;
+}
+/* Run fn with SIGNALS resolved to a scope's telemetry (its own coverage + inherited
+   corporate-common, none if federated), then restore — the SAME swap scopeAggTree and the
+   risk model use. Exposed so a drill opened from a scope-resolved table reconciles to the
+   number that table shows, instead of silently reading the global/enterprise signals. This
+   is what makes a control's "Program health" in the table and in its drill the SAME %. */
+function withScopeSignals(scope,fn){
+  var savedS=(typeof SIGNALS!=='undefined')?SIGNALS:null,savedSC=(typeof SCOPE!=='undefined')?SCOPE:undefined;
+  try{
+    if(typeof SCOPE!=='undefined')SCOPE=scope;
+    var vals=(typeof scopeSignalValues==='function')?scopeSignalValues(scope):{};
+    var base=(typeof SIGNALS_BASE!=='undefined'&&SIGNALS_BASE)?SIGNALS_BASE:(SIGNALS||{});
+    var s=JSON.parse(JSON.stringify(base));Object.keys(vals).forEach(function(k){s[k]={key:k,value:vals[k]};});
+    SIGNALS=s;return fn();
+  }finally{if(savedS!=null)SIGNALS=savedS;if(savedSC!==undefined)SCOPE=savedSC;}
 }
 /* Is a capability inherited from Corporate (common) or run by this scope itself (federated)? */
 function capProvider(capKey,scope){return (scopeCommon(scope).indexOf(capKey)>=0)?'common':'specific';}
