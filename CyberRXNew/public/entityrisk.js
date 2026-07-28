@@ -222,29 +222,116 @@
     return '<span class="er-fw" data-fw="' + fw + '" data-cap="' + esc(capKey) + '" title="' + esc(fwLabel(fw)) + ' — details" style="font-size:11px;cursor:pointer;display:inline-block">' + chips + '</span>';
   }
 
+  // A self-contained, audit-grade dossier for ONE control under ONE framework. Everything a
+  // Fortune-100 CISO (or their auditor) would ask is answered in-place — the live score and
+  // HOW it is measured (method · source signal · freshness · coverage), requirement-by-
+  // requirement traceability (what each framework line requires and what evidences it), the
+  // valid-evidence-scope integrity guard, and the cross-standard crosswalk. It never defers
+  // to "the other tab". Grounded entirely in real per-capability metadata (CAP_BY_KEY /
+  // CAP_FRAMEWORK / NEURON_XWALK / CAP_SIGKEY / C5_CSF_META), so it holds up to scrutiny.
   function fwDrill(fw, c) {
+    var k = c.k;
+    var full = (typeof CAP_BY_KEY !== 'undefined' && CAP_BY_KEY[k]) || {};
+    var fwm = (typeof CAP_FRAMEWORK !== 'undefined' && CAP_FRAMEWORK[k]) || {};
+    var xw = (typeof NEURON_XWALK !== 'undefined' && NEURON_XWALK[k]) || {};
     var ids = fw === 'csf' ? (c.csf || []) : (fw === 'cis' ? (c.cis || []) : (c.iso || []));
-    var ph = c.maturity, col = scoreCol(ph), phTxt = ph == null ? T('er.ph.none') : ph + '%';
-    var hero = '<div class="drill-hero" style="color:var(--' + col + ')">' + (ph == null ? '—' : ph + '%') + ' <span class="pill" style="font-size:10px;vertical-align:middle">' + esc(T('er.ctrl.col.ph')) + '</span></div>';
-    var intro = '<div class="drill-p"><b>' + esc(c.name) + '</b>' + (c.tool ? (' — ' + esc(c.tool)) : '') + '. ' + T('er.fw.intro', { fw: '<b>' + esc(fwLabel(fw)) + '</b>', ph: '<b style="color:var(--' + col + ')">' + phTxt + '</b>', model: T(c.provider === 'common' ? 'br.ctrl.common' : 'br.ctrl.specific') }) + '</div>';
-    var rows;
+    var ph = c.maturity, col = scoreCol(ph);
+    var scope = (typeof c5Scope === 'function') ? c5Scope() : 'enterprise';
+    var src = (typeof c5capSrc === 'function') ? c5capSrc(k) : { tool: c.tool, field: k, lastRefresh: '' };
+    var prov = (typeof capProvider === 'function') ? capProvider(k, scope) : (c.provider || 'specific');
+    var bar = (typeof capBar === 'function') ? capBar(ph) : '';
+    // Assurance method — the provable-vs-asserted split an auditor defends on.
+    var METHOD = { auto: ['Sensor-proven', 'scored continuously from the connected tool’s live telemetry — the strongest evidence'],
+                   semi: ['Semi-automated', 'live telemetry confirmed by operational review'],
+                   manual: ['Attested', 'self-reported at onboarding — documented intent, not sensor-verified'] };
+    var mth = METHOD[full.auto] || METHOD.manual;
+    var roleLbl = { prevent: 'Preventive', detect: 'Detective', both: 'Preventive + detective' }[xw.role] || 'Control';
+    var domain = xw.domain || '';
+
+    // 1 — Score + what it is
+    var hero = '<div class="drill-hero ' + col + '">' + (ph == null ? '—' : ph + '%') + ' <span class="pill" style="font-size:10px;vertical-align:middle">Program health</span></div>' + bar
+      + '<div class="drill-p"><b>' + esc(c.name) + '</b>' + (c.tool ? (' — ' + esc(c.tool)) : '') + '. <b>' + roleLbl + '</b> control' + (domain ? (' · ' + esc(domain)) : '') + '.'
+      + (ph != null && ph < 100 ? (' <span style="color:var(--muted)">' + (100 - ph) + '% of in-scope assets not yet covered.</span>') : '') + '</div>';
+
+    // 1b — The STORY: an analyst's verdict on whether this control is at par, WHY, what the
+    // gap means for the risk it mitigates, and how to close it. This is the value a CISO reads
+    // first — every clause is grounded in the live score and the assurance method, so it is
+    // both narrative and verifiable.
+    var verdict, vcol;
+    if (ph == null) { verdict = 'not yet measured'; vcol = 'muted'; }
+    else if (ph >= 90) { verdict = 'strong — at ' + ph + '%'; vcol = 'good'; }
+    else if (ph >= 75) { verdict = 'healthy, at par — ' + ph + '%'; vcol = 'good'; }
+    else if (ph >= 50) { verdict = 'below par — ' + ph + '%'; vcol = 'warn'; }
+    else { verdict = 'weak, well below par — ' + ph + '%'; vcol = 'crit'; }
+    var methodStory = full.auto === 'auto' ? ('proven continuously from ' + esc(c.tool) + '’s live sensor telemetry — the strongest, audit-grade evidence')
+      : full.auto === 'semi' ? ('read live from ' + esc(c.tool) + ' telemetry and confirmed by operational review')
+        : ('self-attested at onboarding — documented intent, not yet sensor-verified, so treat it as a control you have declared rather than proven');
+    var gapStory = ph == null ? ('Connect ' + esc(c.tool) + ' to measure it from evidence rather than assertion.')
+      : ph >= 90 ? ('At ' + ph + '% it covers nearly the whole in-scope estate; the last ' + (100 - ph) + '% is the residual surface to hold closed.')
+        : ph >= 75 ? ('It clears the 75% healthy line, but the remaining ' + (100 - ph) + '% of in-scope assets is still uncovered — the residual path this risk takes.')
+          : ('It needs +' + (75 - ph) + ' points to reach the 75% healthy line; until then roughly ' + (100 - ph) + '% of the in-scope estate is uncovered, and that gap is exactly where this risk gets through.');
+    var story = '<div class="drill-p" style="border-left:3px solid var(--' + vcol + ');padding-left:12px;margin:4px 0 2px">'
+      + '<b>' + esc(c.name) + '</b> is <b style="color:var(--' + vcol + ')">' + verdict + '</b>. '
+      + 'It is a <b>' + roleLbl.toLowerCase() + '</b> control' + (domain ? (' over your <b>' + esc(domain).toLowerCase() + '</b>') : '') + ', ' + methodStory + '. '
+      + gapStory + (full.need && ph != null && ph < 100 ? (' <span style="color:var(--muted)">To move it: ' + esc(full.need) + '</span>') : '')
+      + '</div>';
+
+    // 2 — How the score is known (measured HERE, not "the same as another tab")
+    var assurance = story + '<div class="ev-sec">How this score is measured</div>'
+      + erRow('Method', '<b>' + mth[0] + '</b> — ' + mth[1])
+      + erRow('Measured from', ph != null ? (esc(src.tool) + ' · signal <code>' + esc(src.field) + '</code>') : ('not connected — ' + esc(full.connect || 'connect the control tool')))
+      + (ph != null && src.lastRefresh ? erRow('Last refreshed', esc(src.lastRefresh)) : '')
+      + erRow('Coverage', ph != null ? (ph + '% of in-scope assets · ' + (100 - ph) + '% gap') : '—')
+      + erRow('Operating model', prov === 'common' ? '⬡ Corporate-common — inherited across the estate' : '◈ Entity-run — operated by this unit');
+
+    // 3 — Requirement-by-requirement traceability in THIS framework
+    var reqRows;
     if (fw === 'csf') {
-      rows = ids.map(function (id) {
+      reqRows = ids.map(function (id) {
         var meta = (typeof C5_CSF_META !== 'undefined') ? C5_CSF_META[id] : null;
         var nm = (meta && meta.name) ? meta.name : ((typeof c5CsfName === 'function') ? c5CsfName(id) : '');
-        var desc = (meta && meta.desc) ? meta.desc : '';
-        return '<div class="drow"><div class="drow-h"><b>' + esc(id) + '</b><span class="drow-tool">' + esc(nm) + '</span></div>' + (desc ? ('<div class="drill-p" style="margin:3px 0 0;color:var(--muted);font-size:11.5px">' + esc(desc) + '</div>') : '') + '</div>';
+        var cat = (meta && meta.cat) ? meta.cat : '';
+        // Full official NIST CSF 2.0 subcategory text for EVERY id (not just the curated
+        // C5_CSF_META subset), so every requirement row is authoritative and defensible.
+        var desc = (meta && meta.desc) ? meta.desc : ((typeof CSF_DESC !== 'undefined' && CSF_DESC[id]) ? CSF_DESC[id] : '');
+        return '<div class="drow"><div class="drow-h"><b>' + esc(id) + '</b><span class="drow-tool">' + esc(nm) + (cat ? (' · ' + esc(cat)) : '') + '</span></div>'
+          + (desc ? ('<div class="drill-p" style="margin:3px 0 0;color:var(--muted);font-size:11.5px">' + esc(desc) + '</div>') : '') + '</div>';
       }).join('');
+      var r53 = fwm.r53 || [];
+      if (r53.length) reqRows += '<div class="drill-p" style="color:var(--muted)">Anchored to NIST SP 800-53: <b>' + r53.map(esc).join(' · ') + '</b> — the authoritative controls these subcategories require.</div>';
     } else {
-      rows = ids.map(function (id) { return erRow(id, T('er.fw.idonly')); }).join('');
+      reqRows = ids.map(function (id) { return erRow(esc(id), 'mapped — licensed standard text not reproduced'); }).join('');
     }
-    var sec1 = '<div class="ev-sec">' + T('er.fw.inframework', { fw: esc(fwLabel(fw)) }) + '</div>' + rows;
-    var note = fw !== 'csf' ? ('<div class="drill-p" style="color:var(--muted)">' + T('er.fw.licensed', { fw: esc(fwLabel(fw)) }) + '</div>') : '';
-    var xw = '<div class="ev-sec">' + T('er.fw.xwalk') + '</div>'
-      + erRow('NIST CSF 2.0', (c.csf && c.csf.length) ? c.csf.join(' · ') : '—')
-      + erRow('CIS Controls v8', (c.cis && c.cis.length) ? c.cis.join(' · ') : '—')
-      + erRow('ISO/IEC 27002:2022', (c.iso && c.iso.length) ? c.iso.join(' · ') : '—');
-    return hero + intro + sec1 + note + xw;
+    // The evidence line: what proves these requirements, and to what degree.
+    var trace = '<div class="drill-p">' + (ph != null
+      ? ('<b>' + esc(c.tool) + '</b> is the live evidence for ' + (fw === 'csf' ? 'these subcategories' : 'these controls') + ' — currently <b style="color:var(--' + col + ')">' + ph + '% deployed</b> (signal <code>' + esc(src.field) + '</code>). ' + (ph < 100 ? ('Closing the remaining ' + (100 - ph) + '% raises this control across every framework it maps to.') : 'Fully deployed across the in-scope estate.'))
+      : ('No live evidence yet — ' + esc(full.connect || 'connect the control tool') + ' to score these requirements from telemetry instead of attestation.')) + '</div>';
+    var reqSec = '<div class="ev-sec">How it satisfies ' + esc(fwLabel(fw)) + '</div>' + reqRows + trace;
+
+    // 4 — Valid-evidence-scope integrity guard (the anti-inflation control)
+    var applies = (typeof CAP_ASSET_APPLIES !== 'undefined' && CAP_ASSET_APPLIES[k]) || [];
+    var CL = (typeof ASSET_CLASS_LABEL !== 'undefined') ? ASSET_CLASS_LABEL : {};
+    var scopeSec = '';
+    if (applies.length) {
+      var applyLbl = applies.map(function (a) { return CL[a] || a; });
+      var notLbl = Object.keys(CL).filter(function (a) { return applies.indexOf(a) < 0; }).map(function (a) { return CL[a]; });
+      scopeSec = '<div class="ev-sec">Valid evidence scope</div>' + erRow('Credited on', esc(applyLbl.join(' · '))) + (notLbl.length ? erRow('Not valid evidence for', esc(notLbl.join(' · '))) : '')
+        + '<div class="drill-p" style="color:var(--muted)">Credited only where its telemetry is valid evidence for that asset class — so the score can’t be inflated by crediting the wrong tool for the wrong system.</div>';
+    }
+
+    // 5 — Crosswalk to the OTHER standards (no redundant repeat of the one you are in)
+    var cross = [];
+    if (fw !== 'csf' && c.csf && c.csf.length) cross.push(['NIST CSF 2.0', c.csf]);
+    if (fw !== 'cis' && xw.cis && xw.cis.length) cross.push(['CIS Controls v8', xw.cis]);
+    if (fw !== 'iso' && xw.iso && xw.iso.length) cross.push(['ISO/IEC 27002:2022', xw.iso]);
+    if (xw.soc2 && xw.soc2.length) cross.push(['SOC 2', xw.soc2]);
+    if (xw.pci && xw.pci.length) cross.push(['PCI DSS', xw.pci]);
+    var xwSec = cross.length ? ('<div class="ev-sec">Same control, other standards</div>' + cross.map(function (o) { return erRow(esc(o[0]), esc(o[1].join(' · '))); }).join('')) : '';
+
+    // 6 — The action that moves it
+    var actSec = '<div class="ev-sec">' + (ph == null ? 'To start measuring' : 'What raising it looks like') + '</div><div class="drill-p">' + esc(ph == null ? (full.connect || '') : (full.need || '')) + '</div>';
+
+    return hero + assurance + reqSec + scopeSec + xwSec + actSec;
   }
 
   // Semicircular verdict gauge — a TRUE risk speedometer: the needle rises with cyber-risk
