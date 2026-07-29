@@ -7141,6 +7141,7 @@ function c5Frameworks(){
    self-re-render handlers call c5Frameworks(), which re-renders this panel). */
 function c5FrameworksClassic(host){
   if(!host)return;
+  try{window._C5_DIRECT=null;}catch(_){}   // rebuild the direct control→tool map for this scope/render
   if(typeof seedDemoDocScores==='function'){try{seedDemoDocScores();}catch(_){}}
   try{c5SetSnapshot();}catch(_){} // populate FW_SNAPSHOT for the community benchmark
   if(typeof FW_SEL==='undefined'){window.FW_SEL='csf';}
@@ -7233,7 +7234,7 @@ function c5FrameworksClassic(host){
   function _w(n){return (_tot>0?Math.max(0,Math.min(100,n/_tot*100)):0)+'%';}
   var evBox=(!T.total)?'':('<div style="display:grid;grid-template-columns:1fr 1fr;gap:22px;border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:14px">'+
     '<div>'+
-      '<div style="font-weight:600;font-size:13px;color:var(--ink);margin-bottom:4px">Continuous monitoring · all '+_tot+' NIST CSF 2.0 controls</div>'+
+      '<div style="font-weight:600;font-size:13px;color:var(--ink);margin-bottom:4px">Continuous monitoring · all '+_tot+' '+fwShort+' controls</div>'+
       // Continuous assessment = every control a connected tool pulls telemetry for (live + hybrid),
       // re-scored on each refresh — not point-in-time evidence collection.
       '<div style="font-size:11px;color:var(--muted);margin-bottom:11px"><b style="color:var(--good)">'+(_sc.sys+_sc.hybrid)+' of '+_tot+'</b> are continuously assessed from your connected tools — <b>'+_sc.sys+'</b> fully automated (re-scored on every telemetry refresh), <b>'+_sc.hybrid+'</b> hybrid (telemetry pulled, a human validates). <b>'+_sc.doc+'</b> are policy-governed — attested from an analyzed document, inherently not automatable'+(_sc.none?(', and <b>'+_sc.none+'</b> await a source (the plan is on the right)'):'')+'. Continuous, not a point-in-time audit.</div>'+
@@ -7276,7 +7277,7 @@ function c5FrameworksClassic(host){
     evBox+
     xnote+
     '<div class="c5fw-wrap"><div class="c5fw-right">'+tree+'</div><div class="c5fw-left" id="c5fw-detail">'+c5fwFinding(sel,selNode)+'</div></div>'+
-    '<div class="c5foot">CMMI 0 Non-existent · 1 Initial · 2 Repeatable · 3 Defined · 4 Managed · 5 Optimizing. Meets target ≥ '+C5FW_TARGET.toFixed(1)+' (green) · Observation ≥ '+C5FW_FLOOR+' (amber) · Deficiency &lt; '+C5FW_FLOOR+' (red).'+((sel==='cis'||sel==='soc2'||sel==='hipaa'||sel==='iso')?' '+((typeof FW_NAMES!=='undefined'&&FW_NAMES[sel])||'This framework')+' is scored by <b>crosswalk readiness</b> from the evidence you provided at onboarding: each control is mapped to the NIST CSF 2.0 subcategories it shares an objective with, and inherits their maturity — and those subcategories are themselves evidenced from your <b>connected tools + reviewed documents</b>. We reference the framework by ID and use our own plain-English labels, so no licensed control text is reproduced. This is a readiness estimate, <b>not</b> a certified assessment (your assessor issues that); a control whose mapped CSF evidence is missing shows “Not tested” until you connect the tool or upload the document it awaits.':'')+(sel==='r53'?' NIST SP 800-53 Rev 5 is assessed by crosswalk from your CSF 2.0 assessment (a readiness indicator, per-family): the ~20 controls Nerion scores directly show 📄/🔌; the rest inherit their family’s governing-policy maturity.':'')+'</div>';
+    '<div class="c5foot">CMMI 0 Non-existent · 1 Initial · 2 Repeatable · 3 Defined · 4 Managed · 5 Optimizing. Meets target ≥ '+C5FW_TARGET.toFixed(1)+' (green) · Observation ≥ '+C5FW_FLOOR+' (amber) · Deficiency &lt; '+C5FW_FLOOR+' (red).'+((sel==='cis'||sel==='soc2'||sel==='hipaa')?' '+((typeof FW_NAMES!=='undefined'&&FW_NAMES[sel])||'This framework')+' is scored by <b>crosswalk readiness</b> from the evidence you provided at onboarding: each control is mapped to the NIST CSF 2.0 subcategories it shares an objective with, and inherits their maturity — and those subcategories are themselves evidenced from your <b>connected tools + reviewed documents</b>. We reference the framework by ID and use our own plain-English labels, so no licensed control text is reproduced. This is a readiness estimate, <b>not</b> a certified assessment (your assessor issues that); a control whose mapped CSF evidence is missing shows “Not tested” until you connect the tool or upload the document it awaits.':'')+(sel==='iso'?' ISO/IEC 27001 Annex A is scored <b>telemetry-first</b>: every control a connected tool maps to directly is scored from that live sensor evidence (shown <b style="color:var(--good)">● live ← tool</b>) and graded sensor-proven / hybrid / attested exactly like CSF; controls no tool covers inherit maturity by crosswalk from the NIST CSF 2.0 subcategories they share an objective with, and those from your <b>connected tools + reviewed documents</b>. We reference controls by ID with our own plain-English labels (no licensed text reproduced). A readiness estimate, <b>not</b> a certified assessment — your assessor issues that.':'')+(sel==='r53'?' NIST SP 800-53 Rev 5 is assessed by crosswalk from your CSF 2.0 assessment (a readiness indicator, per-family): the ~20 controls Nerion scores directly show 📄/🔌; the rest inherit their family’s governing-policy maturity.':'')+'</div>';
   // record cadence snapshot
   if(typeof fwRecord==='function'){try{fwRecord(T.overall);}catch(_){}}
   var _pb=document.getElementById('c5fwPeerBox');if(_pb)_pb.onclick=function(){c5fwPeerOpen();};
@@ -8080,17 +8081,42 @@ function c5fwPeerRender(){
    inheriting the strongest class of the CSF controls a crosswalked (ISO) control maps to —
    the same logic c5fwSrcCounts totals. So a CISO scrolling the tree sees, per control,
    whether the score is sensor-proven or merely attested. No competitor shows this per-control. */
+/* ISO 27001 as a FIRST-CLASS telemetry citizen, not a CSF shadow. NEURON_XWALK maps each
+   connected control tool straight to the ISO Annex A controls it covers (vuln→A.8.8,
+   mfa→A.5.17/A.8.5, …) and to CSF subcategories. This inverts that into: control id → the
+   strongest live tool directly evidencing it. So an Annex A control a connected tool covers
+   is scored/graded from that sensor telemetry directly — the same standing CSF gets — rather
+   than only inheriting a crosswalk. Recomputed per call (scope-sensitive; ~11 tools). */
+function c5ctlDirectMap(){
+  try{if(typeof window!=='undefined'&&window._C5_DIRECT)return window._C5_DIRECT;}catch(_){}
+  var m={}, RANK={system:4,hybrid:3,document:2};
+  function cls(a){return a==='auto'?'system':(a==='semi'?'hybrid':'document');}
+  try{(typeof CAPS!=='undefined'?CAPS:[]).forEach(function(c){
+    var p=(typeof capDeploy==='function')?capDeploy(c):null; if(p==null)return;   // only a CONNECTED tool evidences
+    var cl=cls(c.auto), ids=[];
+    var fw=(typeof CAP_FRAMEWORK!=='undefined')?CAP_FRAMEWORK[c.k]:null; if(fw&&fw.csf)ids=ids.concat(fw.csf);
+    var x=(typeof NEURON_XWALK!=='undefined')?NEURON_XWALK[c.k]:null; if(x&&x.iso)ids=ids.concat(x.iso);
+    ids.forEach(function(id){ if(!m[id]||RANK[cl]>RANK[m[id].cls]) m[id]={cls:cl,tool:c.tool,cap:c.k}; });
+  });}catch(_){}
+  try{if(typeof window!=='undefined')window._C5_DIRECT=m;}catch(_){}
+  return m;
+}
 function c5fwEffSrc(node){
-  var _cov=(typeof fwDeployedIds==='function')?fwDeployedIds():{};
   var RANK={system:4,hybrid:3,document:2,none:1};
+  // First-class: a connected tool mapped directly to this control (CSF or ISO).
+  var direct=c5ctlDirectMap()[node.id];
+  var best=direct?direct.cls:'none';
+  var _cov=(typeof fwDeployedIds==='function')?fwDeployedIds():{};
+  // Plus crosswalk inheritance for mapped/native (ISO controls that map to CSF).
   if((node.src==='mapped'||node.src==='native')&&typeof controlCmmi==='function'){
     var ids=node.mapped||node.related||[];
-    if(ids.length){var best='none';ids.forEach(function(cid){var cc=controlCmmi(cid,_cov);if((RANK[cc.src]||0)>(RANK[best]||0))best=cc.src;});
-      if(best!=='none'||node.src!=='native')return best;}
+    ids.forEach(function(cid){var cc=controlCmmi(cid,_cov);if((RANK[cc.src]||0)>(RANK[best]||0))best=cc.src;});
+    if(best!=='none')return best;
     return node.src==='native'?'system':'none';
   }
-  if(node.src==='native-pending')return 'none';
-  return node.src;
+  if(node.src==='native-pending')return best!=='none'?best:'none';
+  // Direct-scored (CSF) control: keep the stronger of its own class vs a direct tool.
+  return (RANK[node.src]||0)>=(RANK[best]||0)?node.src:best;
 }
 function c5fwAssureBadge(node){
   var M={system:['● Sensor-proven','good','scored from live sensor telemetry — the strongest evidence'],
@@ -8111,8 +8137,12 @@ function c5fwCtlRow(c){var selc=(C5FW_CTRL===c.id)?' sel':'';
     return '<div class="c5fw-crow'+selc+'" data-c5fwctl="'+c.id+'"><span class="c5fw-tw"></span><span class="c5fw-dot" style="background:var(--'+dcol+')"></span><span class="c5fw-id">'+c.id+'</span><span class="c5fw-nm">'+c.name+c5fwAssureBadge(c)+rel+'</span>'+cmmiCell+' '+caStatusPill(c.status)+'</div>';
   }
   var col=c5fwCol(c.score);
-  var mapped=(c.mapped&&c.mapped.length)?('<div class="c5fw-map">mapped ← '+c.mapped.slice(0,6).map(function(id){return id;}).join(' · ')+'</div>'):'';
-  return '<div class="c5fw-crow'+selc+'" data-c5fwctl="'+c.id+'"><span class="c5fw-tw"></span><span class="c5fw-dot" style="background:var(--'+col+')"></span><span class="c5fw-id">'+c.id+'</span><span class="c5fw-nm">'+c.name+c5fwAssureBadge(c)+mapped+'</span><span class="c5fw-lvl">'+c5fwLvl(c.score)+'</span><span class="c5fw-sc" style="color:var(--'+col+')">'+c.score.toFixed(1)+'</span></div>';
+  // Direct telemetry line — the connected tool mapped straight to this control (makes ISO
+  // Annex A read as sensor-scored, not a CSF shadow). Falls back to the crosswalk line.
+  var _dir=c5ctlDirectMap()[c.id];
+  var evLine=_dir?('<div class="c5fw-map" style="color:var(--good)">● live ← '+c5esc(_dir.tool)+'</div>')
+    :((c.mapped&&c.mapped.length)?('<div class="c5fw-map">mapped ← '+c.mapped.slice(0,6).map(function(id){return id;}).join(' · ')+'</div>'):'');
+  return '<div class="c5fw-crow'+selc+'" data-c5fwctl="'+c.id+'"><span class="c5fw-tw"></span><span class="c5fw-dot" style="background:var(--'+col+')"></span><span class="c5fw-id">'+c.id+'</span><span class="c5fw-nm">'+c.name+c5fwAssureBadge(c)+evLine+'</span><span class="c5fw-lvl">'+c5fwLvl(c.score)+'</span><span class="c5fw-sc" style="color:var(--'+col+')">'+c.score.toFixed(1)+'</span></div>';
 }
 
 /* ============================================================================
