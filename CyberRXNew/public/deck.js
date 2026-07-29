@@ -240,6 +240,84 @@
   function hcell() { return { fill: { color: C.band }, color: C.white, bold: true, fontSize: 9.5, align: 'left', valign: 'middle' }; }
   function tcell(color, bold) { return { color: color || C.body, bold: !!bold, align: 'left', valign: 'middle', fill: { color: C.white } }; }
 
+  // ── Board read-out deck (tab 05) — the board metrics, pulled live, as 4 slides ──
+  function boardData() {
+    var scope = (typeof c5Scope === 'function') ? c5Scope() : 'enterprise';
+    var scopeLbl = (scope === 'enterprise') ? 'Enterprise' : ((typeof scopeLabel === 'function') ? scopeLabel(scope) : scope);
+    var client = (typeof orgName === 'function' && orgName()) || 'the organization';
+    var m = null; try { m = (typeof c5EntityRiskModel === 'function') ? c5EntityRiskModel(scope) : null; } catch (_) {}
+    var v = m && m.verdict;
+    var econ = (typeof LIVE !== 'undefined' && LIVE && LIVE.economics) || {};
+    var exposure = Number(econ.ale) || 0;
+    if (!exposure) { try { var vc = LIVE && LIVE.value_chain; if (vc && vc.functions) vc.functions.forEach(function (f) { (f.processes || []).forEach(function (p) { (p.assets || []).forEach(function (a) { (a.risks || []).forEach(function (r) { exposure += Number(r.exposure_usd || r.process_stop_usd || 0); }); }); }); }); } catch (_) {} }
+    var conn = 0, sum = 0, proven = 0, semi = 0, att = 0;
+    try { (typeof CAPS !== 'undefined' ? CAPS : []).forEach(function (c) { var p = (typeof capDeploy === 'function') ? capDeploy(c) : null; if (p != null) { conn++; sum += p; if (c.auto === 'auto') proven++; else if (c.auto === 'semi') semi++; else att++; } }); } catch (_) {}
+    function sg(k) { try { return (typeof sig === 'function') ? sig(k) : null; } catch (_) { return null; } }
+    var trend = null; try { var t = LIVE && LIVE.trend; if (Array.isArray(t) && t.length >= 2) { var a = Number(t[t.length - 2].ale), b = Number(t[t.length - 1].ale); if (a) trend = Math.round((b - a) / a * 100); } } catch (_) {}
+    return { scope: scope, scopeLbl: scopeLbl, client: client, label: 'Cybersecurity metrics', date: new Date().toLocaleDateString(),
+      v: v, exposure: exposure, appetite: Number(econ.appetite) || 0, coverage: conn ? Math.round(sum / conn) : null,
+      provenPct: conn ? Math.round(proven / conn * 100) : null, proven: proven, semi: semi, att: att, conn: conn,
+      mfa: sg('mfa_pct'), pam: sg('pam_pct'), bkp: sg('backup_immutable_pct'), mttd: sg('mttd_hrs'), trend: trend };
+  }
+  function buildBoard() {
+    if (typeof window.PptxGenJS !== 'function') { alert('PowerPoint engine not loaded.'); return; }
+    var b = boardData();
+    var money = function (n) { return (typeof usd === 'function') ? usd(n) : ('$' + Math.round(n)); };
+    var pptx = new window.PptxGenJS();
+    pptx.defineLayout({ name: 'NER', width: 13.333, height: 7.5 }); pptx.layout = 'NER';
+    pptx.author = 'Nerion'; pptx.company = b.client; pptx.title = 'Cybersecurity metrics — board read-out';
+    var band = b.v ? b.v.band : null;
+    var withinApp = (b.exposure && b.appetite) ? (b.exposure <= b.appetite) : null;
+    var d = { client: b.client, label: b.label, date: b.date };
+
+    // 1 — Cover
+    var s = pptx.addSlide(); s.background = { color: C.white };
+    s.addShape('rect', { x: 0, y: 0, w: 13.333, h: 2.25, fill: { color: C.band } });
+    s.addText('NERION', { x: 0.6, y: 0.5, w: 6, h: 0.4, fontSize: 13, bold: true, color: C.white, charSpacing: 3, fontFace: FONT });
+    s.addText('Cybersecurity metrics — board read-out', { x: 0.6, y: 1.15, w: 12, h: 0.5, fontSize: 15, color: C.white, fontFace: FONT });
+    s.addText(esc(b.client), { x: 0.6, y: 2.7, w: 12, h: 0.9, fontSize: 34, bold: true, color: C.ink, fontFace: SERIF });
+    s.addText([{ text: 'Scope:  ', options: { bold: true, color: C.ink } }, { text: esc(b.scopeLbl) + '\n', options: { color: C.body } }, { text: 'As of:  ', options: { bold: true, color: C.ink } }, { text: esc(b.date), options: { color: C.body } }], { x: 0.62, y: 3.95, w: 8, h: 1.2, fontSize: 12.5, fontFace: FONT, lineSpacingMultiple: 1.3, valign: 'top' });
+    footer(s, d, 1);
+
+    // 2 — The board answer: verdict + exposure + assurance
+    s = pptx.addSlide(); s.background = { color: C.white };
+    var vword = band === 'low' ? 'GREEN · low risk' : band === 'elevated' ? 'AMBER · elevated risk' : band === 'high' ? 'RED · high risk' : '—';
+    head(s, 'Enterprise cyber-risk — ' + b.scopeLbl, vword + (b.v ? ('  ·  ' + b.v.riskOf5 + '/5') : ''));
+    chip(s, 0.5, 1.7, 3.0, 'Loss exposure', b.exposure ? money(b.exposure) : '—', withinApp === false ? C.crit : C.ink, b.appetite ? ('Appetite ' + money(b.appetite)) : 'set appetite');
+    chip(s, 3.65, 1.7, 3.0, 'Within appetite', withinApp == null ? '—' : (withinApp ? 'YES' : 'NO'), withinApp == null ? C.muted : (withinApp ? C.good : C.crit), b.v ? ('processes exposed ' + b.v.pctExposed + '%') : '');
+    chip(s, 6.8, 1.7, 3.0, 'Defensive coverage', b.coverage != null ? b.coverage + '%' : '—', b.coverage != null ? scoreColor(b.coverage / 20) : C.muted, b.conn + ' controls');
+    chip(s, 9.95, 1.7, 2.88, 'Evidence quality', b.provenPct != null ? b.provenPct + '%' : '—', b.provenPct != null ? (b.provenPct >= 60 ? C.good : b.provenPct >= 30 ? C.warn : C.crit) : C.muted, b.proven + ' sensor-proven');
+    s.addText('What the board is looking at', { x: 0.5, y: 3.5, w: 12, h: 0.3, fontSize: 12, bold: true, color: C.ink, fontFace: FONT });
+    s.addText((b.v ? (b.v.nHigh + ' system(s) at high exposure, ' + b.v.nElev + ' elevated — ' + b.v.pctExposed + '% of critical processes' + (b.v.driver ? ('. Top driver: ' + b.v.driver.name) : '') + '. ') : '') + (b.provenPct != null ? (b.provenPct + '% of the posture is proven by a live sensor; the rest is human-confirmed or attested. ') : '') + 'Every number is pulled from connected tools and the value chain — none is re-typed.', { x: 0.5, y: 3.85, w: 12.3, h: 1.7, fontSize: 13, color: C.body, fontFace: FONT, lineSpacingMultiple: 1.3, valign: 'top' });
+    footer(s, d, 2);
+
+    // 3 — Resilience & response
+    s = pptx.addSlide(); s.background = { color: C.white };
+    head(s, 'Resilience & response', 'Can we recover, and how fast do we detect?');
+    chip(s, 0.5, 1.7, 4.0, 'Ransomware recovery', b.bkp != null ? b.bkp + '%' : '—', b.bkp != null ? scoreColor(b.bkp / 20) : C.muted, 'immutable, restore-tested backups');
+    chip(s, 4.65, 1.7, 4.0, 'Identity exposure', b.mfa != null ? b.mfa + '%' : '—', b.mfa != null ? scoreColor(b.mfa / 20) : C.muted, b.pam != null ? ('MFA ' + b.mfa + '% · PAM ' + b.pam + '%') : 'MFA coverage');
+    chip(s, 8.8, 1.7, 4.03, 'Detection speed', b.mttd != null ? b.mttd + ' hrs' : '—', b.mttd != null ? (b.mttd <= 24 ? C.good : b.mttd <= 72 ? C.warn : C.crit) : C.muted, 'mean time to detect');
+    s.addText('Trend: ' + (b.trend == null ? '—' : (b.trend < 0 ? ('improving — exposure down ' + Math.abs(b.trend) + '% vs last quarter') : b.trend > 0 ? ('worsening — exposure up ' + b.trend + '% vs last quarter') : 'flat vs last quarter')), { x: 0.5, y: 3.7, w: 12, h: 0.4, fontSize: 13, bold: true, color: b.trend < 0 ? C.good : b.trend > 0 ? C.crit : C.ink, fontFace: FONT });
+    footer(s, d, 3);
+
+    // 4 — Method & provenance (why the numbers hold up)
+    s = pptx.addSlide(); s.background = { color: C.white };
+    head(s, 'Method & provenance', 'Why these numbers hold up');
+    s.addText([
+      { text: 'Sensor-proven vs attested.  ', options: { bold: true, color: C.ink } }, { text: 'Every control says how it is known — scored from a live sensor, human-confirmed, or attested on a policy. ' + b.proven + ' of ' + b.conn + ' connected controls are sensor-proven.\n\n', options: { color: C.body } },
+      { text: 'Business-anchored.  ', options: { bold: true, color: C.ink } }, { text: 'Loss exposure is modelled from the crown-jewel value chain (process → revenue → risk), not a generic score.\n\n', options: { color: C.body } },
+      { text: 'Honest gaps.  ', options: { bold: true, color: C.ink } }, { text: 'Where a source is not connected, the board view shows a dash — never a guess.', options: { color: C.body } },
+    ], { x: 0.5, y: 1.8, w: 12.3, h: 4.6, fontSize: 14, fontFace: FONT, lineSpacingMultiple: 1.4, valign: 'top' });
+    footer(s, d, 4);
+
+    var fn = (esc(b.client).replace(/[^A-Za-z0-9]+/g, '_') || 'Nerion') + '_Cyber_Board_Readout.pptx';
+    return pptx.writeFile({ fileName: fn });
+  }
+  window.c5GenBoardDeck = function () {
+    try { return Promise.resolve(buildBoard()).catch(function (e) { console.error(e); alert('Board deck failed: ' + e.message); }); }
+    catch (e) { console.error(e); alert('Board deck failed: ' + e.message); }
+  };
+
   // Button HTML for an assessment view's header. Only the four primary frameworks generate a deck;
   // returns '' for AI sub-catalogs (owasp/atlas/…) or if the engine isn't loaded.
   window.c5DeckBtnHtml = function (fwKey) {

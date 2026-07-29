@@ -2228,11 +2228,20 @@ function drillControlValue(k){var c=CAP_BY_KEY[k];if(!c)return '';
     gRow('Best-practice line (≥90%)',p==null?'—':(p>=90?'✓ at or above':'+'+toStrong+' pts to reach'))+
     '<div class="drill-p" style="color:var(--muted)">Set a coverage SLA for this control in risk appetite to measure headroom against target. Sector-peer comparison runs through Nerion’s consent-based, k-anonymized peer network (currently flag-gated) — not a third-party rating feed.</div>';
 
-  // 5 — The decision + modeled ROI
-  var roi=(cons&&gap!=null&&gap>0)?('Closing the '+gap+'% gap removes up to <b style="color:var(--good)">'+usd(Math.round(cons.exposure*gap/100))+'</b> of modeled exposure on the crown jewels above. '):'';
-  var decSec='<div class="ev-sec">5 · Decision</div>'+
-    (pr?('<div class="drill-p"><span class="tag '+(pr.done?'good':'')+'" style="font-size:10px">'+pr.status+'</span> <b>'+esc(pr.name)+'</b>'+progTxt(pr)+'</div>'):'')+
-    '<div class="drill-p">'+roi+'<b>Recommended:</b> '+(p==null?capConnectPrompt(k):esc(c.need))+'</div>';
+  // 5 — The decision, framed as a Protection-Level Agreement (Gartner ODM/PLA): the
+  //     executive–CISO commitment to reach a defined protection level at a defined cost.
+  var decSec='<div class="ev-sec">5 · Decision — Protection-Level Agreement</div>';
+  if(p==null){
+    decSec+='<div class="drill-p"><b>Recommended:</b> '+capConnectPrompt(k)+'</div>';
+  } else {
+    var target=(p>=90)?100:(p>=75?90:75), tgtLbl=(target===75?'healthy line':target===90?'best-practice line':'full coverage');
+    var reduce=(cons&&target>p)?Math.round(cons.exposure*(target-p)/100):null;
+    decSec+='<div class="drill-p"><b>Proposed PLA:</b> raise <b>'+esc(c.name)+'</b> from <b>'+p+'%</b> to <b>≥'+target+'%</b> ('+tgtLbl+')'+
+      (reduce?(' → removes up to <b style="color:var(--good)">'+usd(reduce)+'</b> of modeled exposure on the crown jewels above'):'')+'. '+
+      (pr?('<b>Cost side funded now</b> via <span class="tag '+(pr.done?'good':'')+'" style="font-size:10px">'+pr.status+'</span> <b>'+esc(pr.name)+'</b>'+progTxt(pr)+'.'):'Price it as a funded initiative to lock the cost side of the agreement.')+
+      '<br><span style="color:var(--muted)">A PLA is the executive–CISO commitment to reach a defined protection level at a defined cost — the one sentence to take to the board.</span>'+
+      (c.need?('<br><span style="color:var(--muted)">How: '+esc(c.need)+'</span>'):'')+'</div>';
+  }
 
   // Defensibility footer — provenance + scope guard + crosswalk, kept for the auditor
   var applies=(typeof CAP_ASSET_APPLIES!=='undefined'&&CAP_ASSET_APPLIES[k])||[];

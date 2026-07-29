@@ -137,7 +137,8 @@
       + (post && post.connected ? (post.proven + ' of ' + post.connected + ' controls are sensor-proven from live telemetry; ' + post.attested + ' attested. ') : '')
       + 'Every number here is pulled from your connected tools and value chain — none is re-typed. Where a tile shows “—”, that source is not yet connected and the board view says so rather than guessing. As of ' + new Date().toLocaleDateString() + '.</div>';
 
-    host.innerHTML = '<div class="c5pa-eyebrow" style="margin:2px 0 10px">Cybersecurity metrics · board view · ' + esc(scopeLbl) + '</div>'
+    var deckBtn = (typeof window.c5GenBoardDeck === 'function') ? '<button onclick="try{c5GenBoardDeck()}catch(e){}" style="float:right;margin-top:-2px;font-size:11px;font-weight:700;color:#fff;background:var(--blue,#2D6CDF);border:none;border-radius:7px;padding:6px 12px;cursor:pointer" title="Export this board view as a PowerPoint">▤ Board deck (PPTX)</button>' : '';
+    host.innerHTML = '<div class="c5pa-eyebrow" style="margin:2px 0 10px">Cybersecurity metrics · board view · ' + esc(scopeLbl) + deckBtn + '</div>'
       + hero
       + group('Risk & financial exposure', risk)
       + group('Control effectiveness & assurance', ctrl)
