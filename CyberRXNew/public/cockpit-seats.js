@@ -12,6 +12,7 @@ var SEATS = {
    +sec('02','Program health','','<div id="c5-frameworks"></div>')
    +sec('03','Operational impact','','<div id="c5-resilience"></div>')
    +sec('04','Decisions','What needs your sign-off — fund or defer, each priced from your control model','<div id="c5-decproj"></div>')
+   +sec('05','Cybersecurity metrics','The board view — the metrics a Fortune-100 board governs cyber on, pulled live from telemetry and labelled by how each is known (sensor-proven vs attested)','<div id="c5-boardmetrics"></div>')
   );}
  }
 };
