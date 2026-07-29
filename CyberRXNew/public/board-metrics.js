@@ -58,6 +58,39 @@
       + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px">' + tiles.join('') + '</div>';
   }
 
+  // Where the risk sits — every entity scored on its OWN connected telemetry, ranked
+  // most-exposed first. This is the multi-entity board question (and Nerion's edge): not
+  // just the consolidated number, but which entity concentrates the cyber risk.
+  function boardByEntity(curScope) {
+    if (typeof REGIONS === 'undefined' || !REGIONS) return '';
+    var items = [];
+    REGIONS.filter(function (r) { return r.kind === 'region'; }).forEach(function (r) {
+      (r.entities || []).forEach(function (e) { items.push({ id: e.id, label: e.label, region: r.label }); });
+    });
+    if (items.length < 2) return '';   // single entity — no breakdown to show
+    items.forEach(function (it) {
+      var m = d(function () { return (typeof c5EntityRiskModel === 'function') ? c5EntityRiskModel(it.id) : null; }, null), v = m && m.verdict;
+      it.riskOf5 = v ? v.riskOf5 : null; it.risk = v ? v.risk : null; it.band = v ? v.band : null; it.pct = v ? v.pctExposed : null;
+      it.cov = d(function () { return (typeof withScopeSignals === 'function') ? withScopeSignals(it.id, function () { var n = 0, s = 0; (typeof CAPS !== 'undefined' ? CAPS : []).forEach(function (c) { var p = capDeploy(c); if (p != null) { n++; s += p; } }); return n ? Math.round(s / n) : null; }) : null; }, null);
+    });
+    items.sort(function (a, b) { return (b.risk || 0) - (a.risk || 0); });
+    var G = 'grid-template-columns:1.7fr 1.1fr .8fr .9fr .6fr;gap:8px';
+    var rows = items.map(function (it, i) {
+      var col = it.band === 'low' ? 'good' : it.band === 'elevated' ? 'warn' : it.band === 'high' ? 'crit' : 'muted';
+      var rag = it.riskOf5 != null ? ((it.band === 'low' ? 'GREEN' : it.band === 'elevated' ? 'AMBER' : 'RED') + ' · ' + it.riskOf5 + '/5') : '—';
+      return '<div style="display:grid;' + G + ';align-items:center;padding:9px 12px;border-bottom:1px solid var(--line);font-size:12px' + (i === 0 ? ';background:color-mix(in srgb,var(--' + col + ') 6%,transparent)' : '') + (it.id === curScope ? ';box-shadow:inset 3px 0 0 var(--blue)' : '') + '">'
+        + '<span style="font-weight:600;color:var(--ink)">' + esc(it.label) + (i === 0 ? ' <span style="font-size:9px;color:var(--' + col + ');font-weight:800">◆ most exposed</span>' : '') + '<span style="display:block;font-size:10px;color:var(--muted)">' + esc(it.region) + '</span></span>'
+        + '<span style="font-weight:800;color:var(--' + col + ')">' + rag + '</span>'
+        + '<span style="font-weight:700;color:var(--' + (it.pct >= 50 ? 'crit' : it.pct >= 25 ? 'warn' : 'good') + ')">' + (it.pct != null ? it.pct + '%' : '—') + '</span>'
+        + '<span style="font-weight:700;color:var(--' + (it.cov != null ? pctCol(it.cov) : 'muted') + ')">' + (it.cov != null ? it.cov + '%' : '—') + '</span>'
+        + '<span><button data-scope="' + it.id + '" style="font-size:10px;font-weight:700;color:var(--blue);background:none;border:none;cursor:pointer">open ›</button></span></div>';
+    }).join('');
+    var head = '<div style="display:grid;' + G + ';padding:6px 12px;font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line)"><span>Entity</span><span>Cyber-risk</span><span>Exposed</span><span>Coverage</span><span></span></div>';
+    return '<div style="margin:16px 0 2px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)">Where the risk sits · by entity</div>'
+      + '<div style="border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface)">' + head + rows + '</div>'
+      + '<div class="c5foot" style="margin-top:6px">Each entity scored on its own connected telemetry, ranked most-exposed first — so the board sees where cyber risk concentrates across the group, not just the consolidated number.</div>';
+  }
+
   function c5BoardMetrics() {
     var host = document.getElementById('c5-boardmetrics'); if (!host) return;
     var scope = (typeof c5Scope === 'function') ? c5Scope() : 'enterprise';
@@ -140,11 +173,13 @@
     var deckBtn = (typeof window.c5GenBoardDeck === 'function') ? '<button onclick="try{c5GenBoardDeck()}catch(e){}" style="float:right;margin-top:-2px;font-size:11px;font-weight:700;color:#fff;background:var(--blue,#2D6CDF);border:none;border-radius:7px;padding:6px 12px;cursor:pointer" title="Export this board view as a PowerPoint">▤ Board deck (PPTX)</button>' : '';
     host.innerHTML = '<div class="c5pa-eyebrow" style="margin:2px 0 10px">Cybersecurity metrics · board view · ' + esc(scopeLbl) + deckBtn + '</div>'
       + hero
+      + boardByEntity(scope)
       + group('Risk & financial exposure', risk)
       + group('Control effectiveness & assurance', ctrl)
       + group('Resilience & response', resil)
       + group('Trajectory & benchmark', ext)
       + foot;
+    try { if (typeof wireScopeNav === 'function') wireScopeNav(host); } catch (_) {}   // "open ›" per-entity → re-scope
   }
   window.c5BoardMetrics = c5BoardMetrics;
 })();
