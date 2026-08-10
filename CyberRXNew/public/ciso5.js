@@ -8101,21 +8101,6 @@ function c5ctlDirectMap(){
   try{if(typeof window!=='undefined')window._C5_DIRECT=m;}catch(_){}
   return m;
 }
-/* For a control no live tool covers (the ISMS / process / governance ones — most of ISO
-   Annex A's organizational clauses), name the governing DOCUMENT that evidences it and whether
-   it has been provided. Resolves via FW_CTRL_SRC (control → its document type) directly for a
-   CSF id, or through the CSF subcategories a crosswalked ISO control maps to. So an Annex A
-   policy control reads "attested ← Information Security Policy" (or "awaiting ←") instead of a
-   bare crosswalk — the attested half of ISO, made concrete. */
-function c5fwDocFor(node){
-  if(typeof FW_CTRL_SRC==='undefined')return null;
-  var ids=FW_CTRL_SRC[node.id]?[node.id]:((node.mapped&&node.mapped.length)?node.mapped:[]);
-  for(var i=0;i<ids.length;i++){var e=FW_CTRL_SRC[ids[i]];
-    if(e&&e.k==='d'){var lbl=(typeof FW_DOC_LABEL!=='undefined'&&FW_DOC_LABEL[e.s])||null; if(!lbl)continue;
-      var uploaded=false;try{var ds=(typeof docScores==='function')?docScores()[ids[i]]:null;uploaded=!!ds;}catch(_){}
-      return {label:lbl,uploaded:uploaded,ctl:ids[i]};}}
-  return null;
-}
 function c5fwEffSrc(node){
   var RANK={system:4,hybrid:3,document:2,none:1};
   // First-class: a connected tool mapped directly to this control (CSF or ISO).
@@ -8154,12 +8139,9 @@ function c5fwCtlRow(c){var selc=(C5FW_CTRL===c.id)?' sel':'';
   var col=c5fwCol(c.score);
   // Direct telemetry line — the connected tool mapped straight to this control (makes ISO
   // Annex A read as sensor-scored, not a CSF shadow). Falls back to the crosswalk line.
-  var _dir=c5ctlDirectMap()[c.id], evLine='';
-  if(_dir){ evLine='<div class="c5fw-map" style="color:var(--good)">● live ← '+c5esc(_dir.tool)+'</div>'; }
-  else { var _doc=c5fwDocFor(c);
-    if(_doc){ evLine='<div class="c5fw-map" style="color:var(--'+(_doc.uploaded?'blue':'muted')+')">▪ '+(_doc.uploaded?'attested ← ':'awaiting ← ')+c5esc(_doc.label)+'</div>'; }
-    else if(c.mapped&&c.mapped.length){ evLine='<div class="c5fw-map">mapped ← '+c.mapped.slice(0,6).map(function(id){return id;}).join(' · ')+'</div>'; }
-  }
+  var _dir=c5ctlDirectMap()[c.id];
+  var evLine=_dir?('<div class="c5fw-map" style="color:var(--good)">● live ← '+c5esc(_dir.tool)+'</div>')
+    :((c.mapped&&c.mapped.length)?('<div class="c5fw-map">mapped ← '+c.mapped.slice(0,6).map(function(id){return id;}).join(' · ')+'</div>'):'');
   return '<div class="c5fw-crow'+selc+'" data-c5fwctl="'+c.id+'"><span class="c5fw-tw"></span><span class="c5fw-dot" style="background:var(--'+col+')"></span><span class="c5fw-id">'+c.id+'</span><span class="c5fw-nm">'+c.name+c5fwAssureBadge(c)+evLine+'</span><span class="c5fw-lvl">'+c5fwLvl(c.score)+'</span><span class="c5fw-sc" style="color:var(--'+col+')">'+c.score.toFixed(1)+'</span></div>';
 }
 
