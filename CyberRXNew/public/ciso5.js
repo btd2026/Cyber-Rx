@@ -8075,31 +8075,6 @@ function c5fwPeerRender(){
   if(b=g('c5peerOptout'))b.onclick=function(){if(typeof peerSetOptin==='function')peerSetOptin(false);C5FW_PEER=null;C5PEER_PREVIEW=false;c5fwPeerRender();};
   host.querySelectorAll('[data-c5peercat]').forEach(function(x){x.onclick=function(){C5PEER_CAT=x.getAttribute('data-c5peercat');c5fwPeerFetch();};});
 }
-/* Per-control assurance grade — the differentiator, made granular. Resolves each CSF/ISO
-   control to how it is KNOWN (live sensor > hybrid > attested document > not evidenced),
-   inheriting the strongest class of the CSF controls a crosswalked (ISO) control maps to —
-   the same logic c5fwSrcCounts totals. So a CISO scrolling the tree sees, per control,
-   whether the score is sensor-proven or merely attested. No competitor shows this per-control. */
-function c5fwEffSrc(node){
-  var _cov=(typeof fwDeployedIds==='function')?fwDeployedIds():{};
-  var RANK={system:4,hybrid:3,document:2,none:1};
-  if((node.src==='mapped'||node.src==='native')&&typeof controlCmmi==='function'){
-    var ids=node.mapped||node.related||[];
-    if(ids.length){var best='none';ids.forEach(function(cid){var cc=controlCmmi(cid,_cov);if((RANK[cc.src]||0)>(RANK[best]||0))best=cc.src;});
-      if(best!=='none'||node.src!=='native')return best;}
-    return node.src==='native'?'system':'none';
-  }
-  if(node.src==='native-pending')return 'none';
-  return node.src;
-}
-function c5fwAssureBadge(node){
-  var M={system:['● Sensor-proven','good','scored from live sensor telemetry — the strongest evidence'],
-         hybrid:['◐ Hybrid','blue','telemetry pulled, a human validates'],
-         document:['▪ Attested','ink-2','asserted from an analyzed policy — documented, not sensor-verified'],
-         none:['○ Not evidenced','muted','no source yet — connect the tool or upload the policy']};
-  var b=M[c5fwEffSrc(node)]||M.none;
-  return '<span title="'+b[2]+'" style="font-size:8px;font-weight:800;letter-spacing:.02em;color:var(--'+b[1]+');border:1px solid color-mix(in srgb,var(--'+b[1]+') 34%,transparent);border-radius:4px;padding:0 4px;margin-left:6px;white-space:nowrap;vertical-align:middle">'+b[0]+'</span>';
-}
 function c5fwCtlRow(c){var selc=(C5FW_CTRL===c.id)?' sel':'';
   // Framework-native (CIS/SOC2/HIPAA): show the native assessment STATUS, and
   // the CSF ids only as "related" (informational), never as the score source.
@@ -8108,11 +8083,11 @@ function c5fwCtlRow(c){var selc=(C5FW_CTRL===c.id)?' sel':'';
     var dcol=c.tested?c5fwCol(c.score):'muted';
     // Show the CMMI score AND the native operating-effectiveness status side by side.
     var cmmiCell=c.tested?('<span class="c5fw-lvl">'+c5fwLvl(c.score)+'</span><span class="c5fw-sc" style="color:var(--'+dcol+')">'+c.score.toFixed(1)+'</span>'):('<span class="c5fw-sc" style="color:var(--muted)">—</span>');
-    return '<div class="c5fw-crow'+selc+'" data-c5fwctl="'+c.id+'"><span class="c5fw-tw"></span><span class="c5fw-dot" style="background:var(--'+dcol+')"></span><span class="c5fw-id">'+c.id+'</span><span class="c5fw-nm">'+c.name+c5fwAssureBadge(c)+rel+'</span>'+cmmiCell+' '+caStatusPill(c.status)+'</div>';
+    return '<div class="c5fw-crow'+selc+'" data-c5fwctl="'+c.id+'"><span class="c5fw-tw"></span><span class="c5fw-dot" style="background:var(--'+dcol+')"></span><span class="c5fw-id">'+c.id+'</span><span class="c5fw-nm">'+c.name+rel+'</span>'+cmmiCell+' '+caStatusPill(c.status)+'</div>';
   }
   var col=c5fwCol(c.score);
   var mapped=(c.mapped&&c.mapped.length)?('<div class="c5fw-map">mapped ← '+c.mapped.slice(0,6).map(function(id){return id;}).join(' · ')+'</div>'):'';
-  return '<div class="c5fw-crow'+selc+'" data-c5fwctl="'+c.id+'"><span class="c5fw-tw"></span><span class="c5fw-dot" style="background:var(--'+col+')"></span><span class="c5fw-id">'+c.id+'</span><span class="c5fw-nm">'+c.name+c5fwAssureBadge(c)+mapped+'</span><span class="c5fw-lvl">'+c5fwLvl(c.score)+'</span><span class="c5fw-sc" style="color:var(--'+col+')">'+c.score.toFixed(1)+'</span></div>';
+  return '<div class="c5fw-crow'+selc+'" data-c5fwctl="'+c.id+'"><span class="c5fw-tw"></span><span class="c5fw-dot" style="background:var(--'+col+')"></span><span class="c5fw-id">'+c.id+'</span><span class="c5fw-nm">'+c.name+mapped+'</span><span class="c5fw-lvl">'+c5fwLvl(c.score)+'</span><span class="c5fw-sc" style="color:var(--'+col+')">'+c.score.toFixed(1)+'</span></div>';
 }
 
 /* ============================================================================
