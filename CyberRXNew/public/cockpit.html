@@ -1869,15 +1869,38 @@ function capXwalkIds(c){
   return ids;
 }
 function fwDeployedIds(){var m={};CAPS.forEach(function(c){var p=capDeploy(c);if(p==null)return;capXwalkIds(c).forEach(function(id){if(m[id]==null||p>m[id])m[id]=p;});});return m;}
+/* The external frameworks (CIS / ISO / SOC 2 / PCI) use bare numeric control ids, so
+   "5.2" means a different control in each — and fwDeployedIds() flattens them onto one
+   key, which would leak PCI 5.2 (anti-malware, EDR-proven) onto ISO clause 5.2 (policy
+   approval). This returns tool coverage projected onto ONE external framework only,
+   keyed by that framework's own ids, so a control is only ever scored by telemetry that
+   actually crosswalks to IT. CSF / 800-53 are globally-unique (prefixed) ids, so they
+   keep the flat map. */
+var FW_NX_FIELD={cis:'cis',iso:'iso',soc2:'soc2',pci:'pci'};
+function fwDeployedIdsFor(fwKey){
+  var field=FW_NX_FIELD[fwKey];if(!field)return fwDeployedIds();
+  var m={};CAPS.forEach(function(c){var p=capDeploy(c);if(p==null)return;
+    var nx=(typeof NEURON_XWALK!=='undefined')?NEURON_XWALK[c.k]:null;var ids=(nx&&nx[field])||[];
+    ids.forEach(function(id){if(m[id]==null||p>m[id])m[id]=p;});});
+  return m;
+}
 /* Which capability (and therefore which connected tool) produced a control's live
    coverage — so the auditor evidence names the exact source (Splunk, CrowdStrike…),
    only from the tools the user selected and connected at onboarding. Returns the
    winning capability + its real connected vendor, or null if none scores it. Now spans
    all six frameworks via capXwalkIds, so the ceiling/source is named for external
    controls too. */
-function fwControlTool(id){
+function fwControlTool(id,fwKey){
+  // fwKey scopes the match to ONE external framework's crosswalk, so a bare numeric id
+  // shared across frameworks (ISO/CIS/PCI "5.2") never names a tool that only covers a
+  // different framework's "5.2". Omitted → the global (all-framework) match, unchanged.
+  var field=fwKey&&(typeof FW_NX_FIELD!=='undefined')?FW_NX_FIELD[fwKey]:null;
+  function covers(c){
+    if(field){var nx=(typeof NEURON_XWALK!=='undefined')?NEURON_XWALK[c.k]:null;return !!(nx&&(nx[field]||[]).indexOf(id)>=0);}
+    return capXwalkIds(c).indexOf(id)>=0;
+  }
   var best=null;
-  CAPS.forEach(function(c){if(capXwalkIds(c).indexOf(id)<0)return;
+  CAPS.forEach(function(c){if(!covers(c))return;
     var p=capDeploy(c);if(p==null)return;
     if(!best||p>best.p)best={cap:c,p:p,src:capSource(c)};});
   return best;

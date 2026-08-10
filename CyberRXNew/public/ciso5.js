@@ -4059,6 +4059,11 @@ function c5fwTree(sel,cov){
     // the node as `related` (informational) only. Controls the engine has not yet
     // natively assessed are Not Tested and excluded from the maturity roll-up.
     var caFw=(C5_CA_RESULTS&&C5_CA_FWKEY[sel])?C5_CA_RESULTS[C5_CA_FWKEY[sel]]:null;
+    // Score this framework only from telemetry that actually crosswalks to ITS ids —
+    // bare numeric ids ("5.2") mean different controls in ISO / CIS / PCI, so the global
+    // coverage map would leak one framework's tool onto another (e.g. PCI anti-malware
+    // onto ISO's "policy approved" clause). Falls back to the global map for CSF/800-53.
+    var xcov=(typeof fwDeployedIdsFor==='function')?fwDeployedIdsFor(sel):cov;
     fwXmap(sel).forEach(function(g){var gid=g[0],gname=g[1],items=g[2]||[];
       var ctls=items.map(function(it){
         catalogTotal++;
@@ -4072,7 +4077,7 @@ function c5fwTree(sel,cov){
           // (control presence, capped by the capability's maturity) — the same engine,
           // projected onto CIS / ISO / SOC 2 / PCI. Direct telemetry beats a CSF-average
           // crosswalk because it names a tool covering THIS control, not a related one.
-          var cc=(typeof controlCmmi==='function')?controlCmmi(it[0],cov):null;
+          var cc=(typeof controlCmmi==='function')?controlCmmi(it[0],xcov):null;
           if(cc&&cc.src&&cc.src!=='none'){sc=cc.score;src=cc.src;tested=true;toolPct=cc.toolPct;ncDoc=cc.doc;status='Telemetry (Neuron Controls)';readiness=true;}
           else { // fall back to a crosswalk READINESS score from the mapped CSF evidence
             var cw=caCrosswalkScore(it[2],cov);
@@ -7040,6 +7045,28 @@ function c5AiFwView(host,fwKey){
     rerender:function(){c5AiFwView(host,fwKey);}
   });
 }
+/* Trace WHERE an ISO/CIS control's assessment actually comes from, by name — so a
+   Fortune-100 auditor gets a verifiable evidence trail per control, not a generic
+   "reviewed policy". Returns the specific analysed document(s) that attest it, the
+   connected tool(s) proving it, and — for a control with no sensor of its own — the
+   governing document(s) / tool(s) of the NIST CSF 2.0 sub-categories it crosswalks
+   from (via the same FW_CTRL_SRC registry the CSF and 800-53 views use). */
+function c5fwEvidenceTrace(c,fwKey){
+  var out={docs:[],tools:[]};
+  function addDoc(l){if(l&&out.docs.indexOf(l)<0)out.docs.push(l);}
+  function addTool(t){if(t&&out.tools.indexOf(t)<0)out.tools.push(t);}
+  try{
+    if(c&&c.doc&&c.doc.doc)addDoc(String(c.doc.doc));                       // the actual analysed document
+    if(typeof fwControlTool==='function'){var t=fwControlTool(c.id,fwKey);   // a sensor covering THIS control (in THIS framework)
+      if(t&&t.cap)addTool((t.src&&t.src.vendor)||t.cap.tool||t.cap.name);}
+    var ids=(c&&(c.mapped||c.related))||[];                                  // the CSF sub-categories it crosswalks from
+    ids.forEach(function(id){var d=(typeof FW_CTRL_SRC!=='undefined')?FW_CTRL_SRC[id]:null;if(!d)return;
+      if(d.k==='d')addDoc((typeof FW_DOC_LABEL!=='undefined'&&FW_DOC_LABEL[d.s])||null);
+      else if(d.k==='t'){var cap=(typeof CAP_BY_KEY!=='undefined')?CAP_BY_KEY[d.s]:null;addTool(cap&&(cap.tool||cap.name));}
+    });
+  }catch(_){}
+  return out;
+}
 function c5FwLens(host,fwKey,label){
   if(!host)return;
   try{window.C5_SCOPE_FWKEY=fwKey;}catch(_){}
@@ -7082,7 +7109,6 @@ function c5FwLens(host,fwKey,label){
   var scopeNavHtml='';try{if(typeof scopeNav==='function'){var _sn=scopeNav();if(_sn)scopeNavHtml='<div style="margin-bottom:6px">'+_sn+'</div>';}}catch(_){}
   var footer='<div class="c5foot">'+c5osT('fw.foot.cross',{label:esc(label)})
     +'<div style="margin-top:6px;font-size:10px;color:var(--muted)">'+c5osT('fw.foot.attr',{label:esc(label)})+'</div></div>';
-  var srcExplain={system:'scored directly from connected telemetry evidencing this control',document:'scored from a reviewed policy / document',mapped:'a readiness score crosswalked from the NIST CSF 2.0 controls it maps to',native:'natively tested by the assessment engine','native-pending':'mapped, but not yet tested',none:'not yet evidenced — connect a source or map a policy'};
   c5FwUnifiedView(host,{
     fwKey:fwKey,label:label,eyebrowName:label,scopeLbl:scLbl,
     overall5:overall5,vLevel:vLevel,vCmmi:vCmmi,readCol:readCol,
@@ -7096,8 +7122,31 @@ function c5FwLens(host,fwKey,label){
     cadenceNote:'Re-evaluated continuously as the CSF 2.0 evidence and telemetry each control crosswalks from refreshes.',
     footer:footer,
     detail:function(c){
-      var how='This '+esc(label)+' control is '+(srcExplain[c.src]||'evidenced from your posture')+'.'+((c.mapped&&c.mapped.length)?(' It maps to NIST CSF 2.0 <b>'+c.mapped.slice(0,6).map(esc).join(', ')+'</b> and inherits their maturity.'):'');
-      return c5fwuDetail(c,label,{how:how,evidence:esc(label)+' is referenced by identifier with a Nerion-authored label; the licensed standard text is not reproduced. Maturity is a crosswalk readiness estimate, not a certified audit opinion.'});
+      var tr=(typeof c5fwEvidenceTrace==='function')?c5fwEvidenceTrace(c,fwKey):{docs:[],tools:[]};
+      var fmt=function(a){return a.slice(0,2).map(function(x){return '<b>'+esc(x)+'</b>';}).join(' and ');};
+      var mapTxt=(c.mapped&&c.mapped.length)?(' <b>'+c.mapped.slice(0,6).map(esc).join(', ')+'</b>'):'';
+      var attr=esc(label)+' is referenced by identifier with a Nerion-authored label; the licensed standard text is not reproduced. Maturity is a crosswalk readiness estimate, not a certified audit opinion.';
+      var how,ev=attr;
+      if(c.src==='document'){
+        // No sensor can prove it — name the specific policy that attests it.
+        how='No connected sensor can prove this '+esc(label)+' control automatically, so it is attested by document review'+(tr.docs.length?(' — scored from your '+fmt(tr.docs)):'')+'. Refresh that document to keep the attestation current.';
+        if(tr.docs.length)ev='Attesting document: '+fmt(tr.docs)+'. '+attr;
+      } else if(c.src==='system'||c.src==='hybrid'){
+        // A live sensor covers this control directly — name the tool proving it.
+        how='This '+esc(label)+' control is '+(c.src==='hybrid'?'evidenced by connected telemetry with human validation':'proven live by connected telemetry')+(tr.tools.length?(' from '+fmt(tr.tools)):'')+', crosswalked from NIST CSF 2.0'+mapTxt+'.';
+        if(tr.tools.length)ev='Proving sensor: '+fmt(tr.tools)+'. '+attr;
+      } else if(c.src==='native'){
+        how='This '+esc(label)+' control was tested directly by the assessment engine'+(mapTxt?(', and maps to NIST CSF 2.0'+mapTxt):'')+'.';
+      } else if(c.src==='mapped'){
+        // No sensor of its own — its readiness is inherited from the CSF controls it maps
+        // to. Name the governing document(s) (or tool) those controls are evidenced by.
+        var by=tr.docs.length?('your '+fmt(tr.docs)):(tr.tools.length?(fmt(tr.tools)+' telemetry'):'');
+        how='This '+esc(label)+' control has no sensor of its own; its readiness is crosswalked from the NIST CSF 2.0 sub-categor'+((c.mapped&&c.mapped.length>1)?'ies':'y')+' it maps to'+mapTxt+(by?(', which '+by+' governs'):'')+'.';
+        if(tr.docs.length)ev='Governing document'+(tr.docs.length>1?'s':'')+': '+fmt(tr.docs)+'. '+attr;
+      } else {
+        how='This '+esc(label)+' control is not yet evidenced — connect a source or map a policy to it.'+(mapTxt?(' It maps to NIST CSF 2.0'+mapTxt+'.'):'');
+      }
+      return c5fwuDetail(c,label,{how:how,evidence:ev});
     },
     rerender:function(){c5FwLens(host,fwKey,label);}
   });
