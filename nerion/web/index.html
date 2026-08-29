@@ -1,0 +1,837 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}</style></head><body>
+<title>Nerion Control View</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+
+<style>
+:root{
+  --ground:#F4F6F8;
+  --surface:#FFFFFF;
+  --surface-sunk:#EDF0F4;
+  --border:#DCE2E9;
+  --border-strong:#C3CCD7;
+  --ink:#101720;
+  --ink-2:#4E5A68;
+  --ink-3:#8993A1;
+  --accent:#0E6B75;
+  --accent-soft:#E0EFF1;
+  --good:#1D7A4C;
+  --warn:#B0761A;
+  --serious:#C0521C;
+  --critical:#A32029;
+  --unknown:#9AA4B1;
+  --good-soft:#E3F2EA;
+  --warn-soft:#FAF0DE;
+  --serious-soft:#FBEAE1;
+  --critical-soft:#F9E4E5;
+  --shadow:0 1px 2px rgba(16,23,32,.06), 0 4px 14px rgba(16,23,32,.05);
+  --mono:"IBM Plex Mono","SFMono-Regular",Menlo,Consolas,monospace;
+  --sans:"IBM Plex Sans","Segoe UI",Helvetica,Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#0D1219;
+    --surface:#141C25;
+    --surface-sunk:#0F161E;
+    --border:#25313D;
+    --border-strong:#384756;
+    --ink:#E8EDF3;
+    --ink-2:#A3AFBD;
+    --ink-3:#6F7D8C;
+    --accent:#4FBCC7;
+    --accent-soft:#12333A;
+    --good:#4CBB83;
+    --warn:#D9A344;
+    --serious:#E58150;
+    --critical:#E06A73;
+    --unknown:#65717F;
+    --good-soft:#123326;
+    --warn-soft:#33280F;
+    --serious-soft:#37200F;
+    --critical-soft:#361318;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 4px 16px rgba(0,0,0,.3);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0D1219;
+  --surface:#141C25;
+  --surface-sunk:#0F161E;
+  --border:#25313D;
+  --border-strong:#384756;
+  --ink:#E8EDF3;
+  --ink-2:#A3AFBD;
+  --ink-3:#6F7D8C;
+  --accent:#4FBCC7;
+  --accent-soft:#12333A;
+  --good:#4CBB83;
+  --warn:#D9A344;
+  --serious:#E58150;
+  --critical:#E06A73;
+  --unknown:#65717F;
+  --good-soft:#123326;
+  --warn-soft:#33280F;
+  --serious-soft:#37200F;
+  --critical-soft:#361318;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 4px 16px rgba(0,0,0,.3);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:var(--sans); font-size:14px; line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1280px;margin:0 auto;padding:0 20px 72px}
+
+/* ---------- top bar ---------- */
+.topbar{
+  position:sticky;top:0;z-index:40;background:var(--surface);
+  border-bottom:1px solid var(--border);
+}
+.topbar-in{
+  max-width:1280px;margin:0 auto;padding:12px 20px;
+  display:flex;align-items:center;gap:20px;flex-wrap:wrap;
+}
+.brand{display:flex;align-items:center;gap:9px;font-weight:600;letter-spacing:-.01em}
+.brand .dot{
+  width:11px;height:11px;border-radius:2px;background:var(--accent);
+  box-shadow:0 0 0 3px var(--accent-soft);
+}
+.scope{
+  display:flex;flex-direction:column;gap:1px;padding-left:20px;
+  border-left:1px solid var(--border);
+}
+.scope b{font-size:13px;font-weight:600}
+.scope span{font-size:11px;color:var(--ink-3);font-family:var(--mono)}
+.spacer{flex:1}
+.modes{display:flex;background:var(--surface-sunk);border-radius:7px;padding:3px;gap:2px}
+.modes button{
+  font:500 12.5px/1 var(--sans);color:var(--ink-2);background:none;border:0;
+  padding:7px 13px;border-radius:5px;cursor:pointer;
+}
+.modes button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.modes button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+
+/* ---------- as-of ---------- */
+.asof{
+  display:flex;align-items:center;gap:12px;padding:10px 20px;
+  background:var(--surface-sunk);border-bottom:1px solid var(--border);
+}
+.asof-in{max-width:1280px;margin:0 auto;width:100%;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.asof label{font:600 10.5px/1 var(--sans);letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3)}
+.asof input[type=range]{flex:1;min-width:200px;accent-color:var(--accent);height:20px}
+.asof-date{font:600 13px/1 var(--mono);color:var(--ink);min-width:96px}
+.asof-note{font-size:11.5px;color:var(--ink-3)}
+.live-chip{
+  font:600 10px/1 var(--mono);letter-spacing:.06em;padding:4px 7px;border-radius:4px;
+  background:var(--good-soft);color:var(--good);
+}
+.live-chip.past{background:var(--warn-soft);color:var(--warn)}
+
+/* ---------- framework tabs ---------- */
+.fw{display:flex;align-items:flex-end;gap:2px;margin:26px 0 0;flex-wrap:wrap}
+.fw button{
+  font:600 13px/1 var(--sans);background:none;border:1px solid transparent;border-bottom:0;
+  color:var(--ink-3);padding:11px 16px;cursor:pointer;border-radius:7px 7px 0 0;
+}
+.fw button[aria-pressed="true"]{
+  background:var(--surface);border-color:var(--border);color:var(--ink);
+}
+.fw button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.fw-note{margin-left:auto;font-size:11.5px;color:var(--ink-3);padding-bottom:12px}
+.fw-note b{color:var(--accent);font-weight:600}
+
+/* ---------- stat strip ---------- */
+.stats{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1px;
+  background:var(--border);border:1px solid var(--border);border-radius:0 8px 8px 8px;
+  overflow:hidden;
+}
+.stat{background:var(--surface);padding:16px 18px 14px}
+.stat .k{font:600 10.5px/1 var(--sans);letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3)}
+.stat .v{
+  font:600 27px/1.1 var(--mono);margin-top:9px;letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums;display:flex;align-items:baseline;gap:7px;
+}
+.stat .v small{font:500 12px/1 var(--mono);color:var(--ink-3)}
+.stat .d{font-size:11.5px;color:var(--ink-2);margin-top:7px;display:flex;align-items:center;gap:5px}
+.trend-dn{color:var(--serious);font-weight:600}
+.trend-up{color:var(--good);font-weight:600}
+
+/* ---------- table ---------- */
+.tablewrap{
+  margin-top:22px;background:var(--surface);border:1px solid var(--border);
+  border-radius:9px;overflow:hidden;box-shadow:var(--shadow);
+}
+.scroller{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:940px}
+thead th{
+  font:600 10.5px/1 var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);
+  text-align:left;padding:12px 14px;background:var(--surface-sunk);
+  border-bottom:1px solid var(--border);white-space:nowrap;
+}
+thead th.num{text-align:right}
+tbody td{padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle}
+tbody tr.grp td{
+  background:var(--surface-sunk);padding:8px 14px;
+  font:600 10.5px/1 var(--mono);letter-spacing:.13em;color:var(--ink-2);
+}
+tbody tr.ctl{cursor:pointer}
+tbody tr.ctl:hover{background:var(--surface-sunk)}
+tbody tr.ctl:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+tbody tr.ctl.open{background:var(--accent-soft)}
+.cid{font:600 12px/1 var(--mono);color:var(--ink);white-space:nowrap}
+.cname{font-size:13px;color:var(--ink-2);margin-top:3px;max-width:330px}
+.canon{font:500 10.5px/1 var(--mono);color:var(--ink-3);margin-top:4px}
+
+/* effectiveness bar */
+.ebar{display:flex;align-items:center;gap:9px;justify-content:flex-end}
+.ebar .track{width:74px;height:6px;border-radius:3px;background:var(--surface-sunk);overflow:hidden}
+.ebar .fill{height:100%;border-radius:3px}
+.ebar .n{font:600 13px/1 var(--mono);font-variant-numeric:tabular-nums;min-width:36px;text-align:right}
+.num{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.pct{font:600 13px/1 var(--mono);font-variant-numeric:tabular-nums}
+
+/* confidence */
+.conf{display:flex;align-items:center;gap:8px;justify-content:flex-end}
+.pips{display:flex;gap:2px}
+.pip{width:5px;height:13px;border-radius:1.5px;background:var(--surface-sunk)}
+.pip.on{background:var(--accent)}
+.conf .n{font:500 12px/1 var(--mono);color:var(--ink-2);min-width:30px;text-align:right}
+
+/* insufficient evidence */
+.insuf{
+  display:inline-flex;align-items:center;gap:7px;justify-content:flex-end;width:100%;
+}
+.hatch{
+  width:74px;height:16px;border-radius:3px;border:1px dashed var(--border-strong);
+  background-image:repeating-linear-gradient(135deg,var(--unknown) 0 1px,transparent 1px 5px);
+  opacity:.6;
+}
+.insuf span{font:500 10.5px/1 var(--sans);color:var(--ink-3);white-space:nowrap}
+
+.spark{display:block}
+
+/* ---------- detail panel ---------- */
+tr.detail td{padding:0;background:var(--surface-sunk);border-bottom:1px solid var(--border)}
+.panel{padding:22px 20px 26px;display:grid;gap:20px}
+.claim{
+  font-size:16px;line-height:1.45;font-weight:500;max-width:70ch;letter-spacing:-.01em;
+  padding-left:13px;border-left:3px solid var(--accent);
+}
+.claim em{font-style:normal;color:var(--accent);font-weight:600}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:15px 16px 16px}
+.card h4{
+  margin:0 0 12px;font:600 10.5px/1 var(--sans);letter-spacing:.09em;
+  text-transform:uppercase;color:var(--ink-3);
+}
+.kv{display:flex;justify-content:space-between;gap:14px;padding:5px 0;font-size:13px}
+.kv+.kv{border-top:1px solid var(--border)}
+.kv .k{color:var(--ink-2)}
+.kv .v{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:500}
+.flag{color:var(--serious);font-weight:600}
+
+/* uptime timeline */
+.tl-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px;gap:12px;flex-wrap:wrap}
+.tl-head .big{font:600 21px/1 var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.tl-head .sub{font-size:12px;color:var(--ink-2)}
+.timeline{display:flex;gap:1px;height:34px;align-items:stretch}
+.seg{flex:1;border-radius:1px;position:relative;cursor:default}
+.seg.up{background:var(--good);opacity:.82}
+.seg.deg{background:var(--warn)}
+.seg.down{background:var(--critical)}
+.seg.blind{
+  background-image:repeating-linear-gradient(135deg,var(--unknown) 0 1px,transparent 1px 4px);
+  border-top:1px dashed var(--border-strong);border-bottom:1px dashed var(--border-strong);
+}
+.seg:hover{outline:2px solid var(--ink);outline-offset:1px;z-index:2;border-radius:2px}
+.tl-axis{display:flex;justify-content:space-between;margin-top:7px;font:500 10.5px/1 var(--mono);color:var(--ink-3)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;font-size:11.5px;color:var(--ink-2)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+
+/* defense chain */
+.chain{display:grid;gap:9px}
+.link{display:grid;grid-template-columns:64px 1fr 40px;gap:10px;align-items:center}
+.link .lbl{font:600 10.5px/1 var(--sans);letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
+.link .track{height:8px;border-radius:4px;background:var(--surface-sunk);overflow:hidden}
+.link .fill{height:100%;border-radius:4px;background:var(--accent)}
+.link .n{font:600 12.5px/1 var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+.scen{
+  font:600 11px/1 var(--mono);color:var(--ink-2);margin-bottom:11px;
+  display:flex;gap:8px;align-items:center;flex-wrap:wrap;
+}
+.tag{
+  font:600 10px/1 var(--mono);padding:3px 6px;border-radius:3px;
+  background:var(--accent-soft);color:var(--accent);letter-spacing:.03em;
+}
+
+/* entity table */
+.ent{width:100%;border-collapse:collapse;min-width:0}
+.ent td{padding:7px 0;border-bottom:1px solid var(--border);font-size:12.5px}
+.ent tr:last-child td{border-bottom:0}
+.ent .cnt{
+  text-align:right;font-family:var(--mono);font-weight:600;font-variant-numeric:tabular-nums;
+  width:44px;
+}
+.ent .barcell{width:100px}
+.ent .minibar{height:7px;border-radius:3px;background:var(--surface-sunk);overflow:hidden}
+.ent .minibar i{display:block;height:100%;border-radius:3px}
+.st{display:inline-flex;align-items:center;gap:6px}
+.st i{width:8px;height:8px;border-radius:2px;flex:none}
+
+/* fixes */
+.fix{display:flex;gap:11px;padding:9px 0;font-size:13px;align-items:flex-start}
+.fix+.fix{border-top:1px solid var(--border)}
+.fix .rank{
+  font:600 10.5px/1 var(--mono);color:var(--accent);background:var(--accent-soft);
+  padding:4px 6px;border-radius:3px;flex:none;margin-top:1px;
+}
+.fix .gain{margin-left:auto;font:600 12px/1 var(--mono);color:var(--good);white-space:nowrap;flex:none}
+
+/* board mode */
+.board{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));margin-top:22px}
+.bcard{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:18px 19px 19px;box-shadow:var(--shadow)}
+.bcard .id{font:600 10.5px/1 var(--mono);color:var(--ink-3);letter-spacing:.08em}
+.bcard h3{margin:8px 0 4px;font-size:16.5px;letter-spacing:-.015em;text-wrap:balance}
+.bcard .where{font-size:12px;color:var(--ink-2);margin-bottom:15px}
+.bcard .verdict{
+  margin-top:15px;padding-top:13px;border-top:1px solid var(--border);
+  font-size:13px;line-height:1.5;color:var(--ink-2);
+}
+.bcard .verdict b{color:var(--ink)}
+
+.foot{margin-top:26px;font-size:11.5px;color:var(--ink-3);display:flex;gap:18px;flex-wrap:wrap}
+.foot code{font-family:var(--mono);color:var(--ink-2)}
+
+.tip{
+  position:fixed;z-index:90;pointer-events:none;opacity:0;transition:opacity .09s;
+  background:var(--ink);color:var(--ground);font:500 11.5px/1.45 var(--mono);
+  padding:7px 9px;border-radius:5px;max-width:230px;
+}
+.tip.on{opacity:1}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="topbar">
+  <div class="topbar-in">
+    <div class="brand"><span class="dot"></span>Nerion</div>
+    <div class="scope">
+      <b>Meridian Global Holdings</b>
+      <span>112 entities · 41 countries</span>
+    </div>
+    <div class="spacer"></div>
+    <div class="modes" role="group" aria-label="View mode">
+      <button data-mode="assessor" aria-pressed="false">Assessor</button>
+      <button data-mode="ciso" aria-pressed="true">CISO</button>
+      <button data-mode="board" aria-pressed="false">Board</button>
+    </div>
+  </div>
+</div>
+
+<div class="asof">
+  <div class="asof-in">
+    <label for="asof">Posture as of</label>
+    <span class="asof-date" id="asofDate">—</span>
+    <input type="range" id="asof" min="0" max="89" value="89" aria-label="Days before today">
+    <span class="live-chip" id="liveChip">LIVE</span>
+    <span class="asof-note">Drag to re-render every score against the ledger on that date.</span>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="fw" role="group" aria-label="Framework">
+    <button data-fw="csf" aria-pressed="true">NIST CSF 2.0</button>
+    <button data-fw="cis" aria-pressed="false">CIS v8.1</button>
+    <button data-fw="iso" aria-pressed="false">ISO 27001:2022</button>
+    <p class="fw-note">One measurement, three projections — <b>method 2026.1</b></p>
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="tablewrap" id="tableWrap">
+    <div class="scroller">
+      <table id="tbl">
+        <thead><tr id="thead"></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="board" id="board" hidden></div>
+
+  <div class="foot">
+    <span>Collector <code>0.4.2</code></span>
+    <span>Method <code>2026.1</code></span>
+    <span>Ledger entries <code>4,182,904</code></span>
+    <span>Last observation <code>4 min ago</code></span>
+  </div>
+</div>
+
+<div class="tip" id="tip" role="status"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------- deterministic noise ---------- */
+function rng(seed){let s=seed>>>0;return function(){s=(s*1664525+1013904223)>>>0;return s/4294967296;};}
+
+/* ---------- data ---------- */
+const C = [
+{fn:"GOVERN",csf:"GV.SC-04",cis:"15.1",iso:"A.5.19",name:"Suppliers are known and prioritized by criticality",
+ canon:["tprm.inventory","tprm.tiering"],eff:.44,conf:.38,seed:11,
+ pop:{den:1284,cov:561,label:"third parties",src:[["AP vendor master","1,284"],["SSO / IdP integrations","409"],["API gateway clients","208"]],delta:"723 suppliers have no recorded system linkage"},
+ ent:{claim:112,ver:38,never:61,drop:13},
+ pol:{name:"Third-Party Risk Policy v6",assert:14,enf:5,contra:3},
+ scen:"R-031",scenName:"Supplier compromise reaching production",
+ fixes:[["Link AP vendor master to SSO integration inventory","+0.19"],["Tier the 723 unlinked suppliers by data class","+0.11"]]},
+
+{fn:"IDENTIFY",csf:"ID.AM-01",cis:"1.1",iso:"A.5.9",name:"Hardware inventory is maintained",
+ canon:["asset.hw.inventory"],eff:.71,conf:.81,seed:23,
+ pop:{den:48920,cov:41402,label:"endpoints",src:[["Intune / Jamf enrolment","41,402"],["Cloud billing instances","5,109"],["HR-issued device records","46,880"]],delta:"7,518 devices in one source and not another"},
+ ent:{claim:112,ver:74,never:24,drop:14},
+ pol:{name:"Asset Management Standard v3",assert:9,enf:7,contra:1},
+ scen:"R-007",scenName:"Unmanaged endpoint as initial access",
+ fixes:[["Enrol 4,110 unmanaged LATAM devices","+0.08"],["Reconcile HR device records against MDM weekly","+0.05"]]},
+
+{fn:"IDENTIFY",csf:"ID.AM-02",cis:"2.1",iso:"A.5.9",name:"Software inventory is maintained",
+ canon:["asset.sw.inventory"],eff:.63,conf:.66,seed:31,
+ pop:{den:48920,cov:30819,label:"endpoints reporting software",src:[["EDR software inventory","30,819"],["MDM app catalogue","27,441"]],delta:"18,101 endpoints report no software inventory"},
+ ent:{claim:112,ver:61,never:36,drop:15},
+ pol:{name:"Asset Management Standard v3",assert:9,enf:4,contra:0},
+ scen:"R-007",scenName:"Unmanaged endpoint as initial access",
+ fixes:[["Enable software inventory module on EDR in EMEA","+0.14"]]},
+
+{fn:"IDENTIFY",csf:"ID.RA-01",cis:"7.1",iso:"A.8.8",name:"Vulnerabilities in assets are identified and recorded",
+ canon:["vuln.scan.coverage","vuln.sla"],eff:.58,conf:.72,seed:37,
+ pop:{den:48920,cov:28374,label:"assets in scan scope",src:[["Scanner authenticated targets","28,374"],["Asset inventory","48,920"]],delta:"20,546 assets never scanned authenticated"},
+ ent:{claim:112,ver:57,never:41,drop:14},
+ pol:{name:"Vulnerability Management Policy v4",assert:11,enf:6,contra:2},
+ scen:"R-014",scenName:"Credential intrusion into payment systems",
+ fixes:[["Deploy authenticated scanning to 3 unscanned regions","+0.17"]]},
+
+{fn:"PROTECT",csf:"PR.AA-01",cis:"5.1",iso:"A.5.16",name:"Identities and credentials are managed",
+ canon:["iam.joiner.mover.leaver"],eff:.69,conf:.77,seed:41,
+ pop:{den:6340,cov:5109,label:"human identities",src:[["Okta active users","5,109"],["Workday active workers","6,340"]],delta:"1,231 workers have no identity Nerion can see"},
+ ent:{claim:112,ver:69,never:29,drop:14},
+ pol:{name:"Identity & Access Policy v8",assert:17,enf:11,contra:2},
+ scen:"R-014",scenName:"Credential intrusion into payment systems",
+ fixes:[["Federate 9 standalone directories in APAC","+0.15"],["Automate leaver deprovisioning in 22 entities","+0.09"]]},
+
+{fn:"PROTECT",csf:"PR.AA-03",cis:"6.3",iso:"A.5.17",name:"Users and devices are authenticated with phishing-resistant MFA",
+ canon:["iam.mfa.human.interactive","iam.mfa.factor.strength"],eff:.74,conf:.86,seed:7,
+ pop:{den:5109,cov:4412,label:"active human identities",src:[["Okta enrolment","4,412 enrolled"],["Workday headcount","6,340 workers"],["Intune primary users","4,908"]],delta:"1,231 workers hold no Nerion-visible identity",
+   extra:[["Enrolled, phishing-resistant","2,572"],["Enrolled, SMS fallback permitted","1,840"],["Not enrolled","697"],["Break-glass, no conditional access","3"]]},
+ ent:{claim:112,ver:81,never:19,drop:12},
+ pol:{name:"Identity & Access Policy v8",assert:17,enf:12,contra:2},
+ scen:"R-014",scenName:"Credential intrusion into payment systems",
+ fixes:[["Remove SMS as a permitted factor for 1,840 identities","+0.21"],["Enrol the 697 unenrolled identities","+0.09"],["Bring 3 break-glass accounts under conditional access","+0.03"]]},
+
+{fn:"PROTECT",csf:"PR.AA-05",cis:"6.8",iso:"A.5.15",name:"Access permissions incorporate least privilege",
+ canon:["iam.privilege.review"],eff:0,conf:.19,seed:53,insufficient:true,
+ pop:{den:5109,cov:0,label:"identities under privilege review",src:[["PAM system","not connected"],["Entitlement review records","3 of 112 entities"]],delta:"No telemetry path — evidence is attestation only"},
+ ent:{claim:112,ver:3,never:106,drop:3},
+ pol:{name:"Identity & Access Policy v8",assert:17,enf:0,contra:0},
+ scen:"R-014",scenName:"Credential intrusion into payment systems",
+ fixes:[["Connect PAM in corporate tenant — unlocks 41 entities","+conf 0.34"],["Ingest entitlement review exports from top 20 entities","+conf 0.18"]]},
+
+{fn:"PROTECT",csf:"PR.DS-01",cis:"3.11",iso:"A.8.24",name:"Data at rest is protected",
+ canon:["data.encryption.rest"],eff:.88,conf:.79,seed:59,
+ pop:{den:41402,cov:37109,label:"managed endpoints + volumes",src:[["MDM disk encryption state","37,109"],["Cloud volume encryption","100%"]],delta:"4,293 managed endpoints report no encryption state"},
+ ent:{claim:112,ver:88,never:16,drop:8},
+ pol:{name:"Data Protection Standard v5",assert:12,enf:10,contra:0},
+ scen:"R-022",scenName:"Bulk data exfiltration from endpoint estate",
+ fixes:[["Resolve encryption reporting gap on 4,293 endpoints","+0.07"]]},
+
+{fn:"PROTECT",csf:"PR.PS-01",cis:"4.1",iso:"A.8.9",name:"Configuration management practices are established",
+ canon:["config.baseline.enforced"],eff:.51,conf:.61,seed:67,
+ pop:{den:48920,cov:24907,label:"assets against a baseline",src:[["MDM compliance policy","24,907"],["Cloud posture baseline","1,904 accounts"]],delta:"24,013 assets have no baseline assigned"},
+ ent:{claim:112,ver:52,never:47,drop:13},
+ pol:{name:"Secure Configuration Standard v2",assert:15,enf:6,contra:4},
+ scen:"R-007",scenName:"Unmanaged endpoint as initial access",
+ fixes:[["Assign a baseline to the 24,013 unbaselined assets","+0.22"]]},
+
+{fn:"PROTECT",csf:"PR.PS-05",cis:"10.1",iso:"A.8.7",name:"Malicious code execution is prevented",
+ canon:["edr.deployed","edr.mode.blocking"],eff:.67,conf:.83,seed:71,
+ pop:{den:48920,cov:38204,label:"endpoints",src:[["EDR agent check-in","38,204"],["Asset inventory","48,920"]],delta:"10,716 endpoints have no EDR agent",
+   extra:[["Agent present, blocking mode","29,881"],["Agent present, detect-only","8,323"],["No agent","10,716"]]},
+ ent:{claim:112,ver:76,never:22,drop:14},
+ pol:{name:"Endpoint Security Standard v7",assert:13,enf:8,contra:3},
+ scen:"R-019",scenName:"Ransomware detonation across regional estate",
+ fixes:[["Move 8,323 agents out of detect-only","+0.16"],["Deploy EDR to 10,716 uncovered endpoints","+0.19"]]},
+
+{fn:"DETECT",csf:"DE.CM-01",cis:"13.1",iso:"A.8.16",name:"Networks and network services are monitored",
+ canon:["log.ingest.coverage"],eff:.41,conf:.55,seed:83,
+ pop:{den:112,cov:57,label:"entities shipping logs",src:[["SIEM ingest by source entity","57"],["Entity register","112"]],delta:"55 entities ship no logs to the SIEM"},
+ ent:{claim:112,ver:57,never:48,drop:7},
+ pol:{name:"Logging & Monitoring Standard v4",assert:10,enf:3,contra:2},
+ scen:"R-019",scenName:"Ransomware detonation across regional estate",
+ fixes:[["Restore LATAM log ingestion (stopped Aug 12)","+0.11"],["Onboard 24 EMEA entities to central SIEM","+0.18"]]},
+
+{fn:"DETECT",csf:"DE.CM-03",cis:"8.5",iso:"A.8.15",name:"Personnel activity is monitored for adverse events",
+ canon:["log.identity.audit"],eff:.49,conf:.58,seed:89,
+ pop:{den:5109,cov:2604,label:"identities with audit log coverage",src:[["IdP system log forwarding","2,604"],["Active identities","5,109"]],delta:"2,505 identities produce no forwarded audit trail"},
+ ent:{claim:112,ver:49,never:52,drop:11},
+ pol:{name:"Logging & Monitoring Standard v4",assert:10,enf:4,contra:1},
+ scen:"R-014",scenName:"Credential intrusion into payment systems",
+ fixes:[["Forward IdP system logs from 9 standalone directories","+0.20"]]},
+
+{fn:"DETECT",csf:"DE.AE-02",cis:"13.6",iso:"A.8.16",name:"Adverse events are analysed to understand attack targets",
+ canon:["detect.rule.coverage"],eff:.36,conf:.44,seed:97,
+ pop:{den:184,cov:66,label:"ATT&CK techniques with a live rule",src:[["SIEM enabled detections","66"],["Sector technique set","184"]],delta:"118 sector-relevant techniques have no live rule"},
+ ent:{claim:112,ver:41,never:60,drop:11},
+ pol:{name:"Detection Engineering Standard v1",assert:7,enf:2,contra:1},
+ scen:"R-019",scenName:"Ransomware detonation across regional estate",
+ fixes:[["Enable 22 rules already licensed but disabled","+0.13"]]},
+
+{fn:"RESPOND",csf:"RS.MA-01",cis:"17.1",iso:"A.5.24",name:"The incident response plan is executed",
+ canon:["ir.plan.exercised"],eff:.30,conf:.27,seed:101,insufficient:true,
+ pop:{den:112,cov:9,label:"entities with an exercised plan",src:[["Exercise records","9 entities"],["Entity register","112"]],delta:"103 entities have a plan on paper, never exercised"},
+ ent:{claim:112,ver:9,never:98,drop:5},
+ pol:{name:"Incident Response Plan v9",assert:19,enf:4,contra:1},
+ scen:"R-019",scenName:"Ransomware detonation across regional estate",
+ fixes:[["Run a tabletop in the 12 highest-exposure entities","+conf 0.22"]]},
+
+{fn:"RECOVER",csf:"RC.RP-01",cis:"11.1",iso:"A.8.13",name:"The recovery portion of the plan is executed",
+ canon:["backup.verified","restore.tested"],eff:.72,conf:.64,seed:103,
+ pop:{den:1904,cov:1621,label:"protected workloads",src:[["Backup job success","1,621"],["Workload register","1,904"]],delta:"283 workloads have no successful backup in 30 days"},
+ ent:{claim:112,ver:71,never:30,drop:11},
+ pol:{name:"Business Continuity Standard v6",assert:16,enf:9,contra:2},
+ scen:"R-019",scenName:"Ransomware detonation across regional estate",
+ fixes:[["Restore-test at scale — never performed above 12 workloads","+0.14"]]}
+];
+
+const SCEN = {
+ "R-014":{name:"Credential intrusion into payment systems",where:"Corporate + 14 payment-handling entities",chain:{prevent:.61,detect:.44,respond:.30,recover:.72}},
+ "R-019":{name:"Ransomware detonation across regional estate",where:"LATAM + EMEA — 38 entities",chain:{prevent:.58,detect:.39,respond:.28,recover:.66}},
+ "R-031":{name:"Supplier compromise reaching production",where:"1,284 suppliers, 561 with mapped linkage",chain:{prevent:.44,detect:.31,respond:.35,recover:.58}},
+ "R-007":{name:"Unmanaged endpoint as initial access",where:"Group-wide — 48,920 endpoints",chain:{prevent:.63,detect:.47,respond:.41,recover:.70}},
+ "R-022":{name:"Bulk data exfiltration from endpoint estate",where:"Group-wide",chain:{prevent:.71,detect:.42,respond:.38,recover:.61}}
+};
+
+const FW = {csf:{k:"csf",label:"CSF 2.0 subcategory"},cis:{k:"cis",label:"CIS v8.1 safeguard"},iso:{k:"iso",label:"ISO 27001 Annex A"}};
+const FNORDER=["GOVERN","IDENTIFY","PROTECT","DETECT","RESPOND","RECOVER"];
+
+/* ---------- uptime timelines ---------- */
+const DAYS=90;
+C.forEach(c=>{
+  const r=rng(c.seed*7919);
+  const segs=[];let state="up";
+  for(let i=0;i<DAYS;i++){
+    const p=r();
+    if(state==="up"){ if(p<.035) state="deg"; else if(p<.045) state="blind"; }
+    else if(state==="deg"){ if(p<.30) state="up"; else if(p<.36) state="down"; }
+    else if(state==="down"){ if(p<.26) state="deg"; }
+    else if(state==="blind"){ if(p<.34) state="up"; }
+    if(c.insufficient && r()<.30) state="blind";
+    if(c.eff>.8 && r()<.35) state="up";
+    segs.push(state);
+  }
+  c.segs=segs;
+});
+
+function upTo(c,day){
+  const s=c.segs.slice(0,day+1);
+  const up=s.filter(x=>x==="up").length, blind=s.filter(x=>x==="blind").length;
+  return {uptime:up/s.length, blind:blind/s.length};
+}
+function effAt(c,day){
+  const {uptime,blind}=upTo(c,day);
+  const base=c.eff*(0.72+0.35*uptime);
+  return Math.max(0,Math.min(1,base));
+}
+function confAt(c,day){
+  const {blind}=upTo(c,day);
+  return Math.max(0.05,Math.min(1,c.conf*(1-blind*0.55)));
+}
+function statusOf(v){return v>=.75?"good":v>=.55?"warn":v>=.35?"serious":"critical";}
+function colorOf(v){return "var(--"+statusOf(v)+")";}
+
+/* ---------- state ---------- */
+let fw="csf", mode="ciso", day=DAYS-1, open=null;
+const $=s=>document.querySelector(s);
+const tbody=$("#tbody"), thead=$("#thead"), tip=$("#tip");
+
+function dateFor(d){
+  const t=new Date(2026,7,24); t.setDate(t.getDate()-(DAYS-1-d));
+  return t.toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});
+}
+
+/* ---------- tooltip ---------- */
+function bindTip(el,text){
+  el.addEventListener("mouseenter",e=>{tip.textContent=text;tip.classList.add("on");move(e);});
+  el.addEventListener("mousemove",move);
+  el.addEventListener("mouseleave",()=>tip.classList.remove("on"));
+  function move(e){
+    const x=Math.min(e.clientX+14,window.innerWidth-244);
+    tip.style.left=x+"px"; tip.style.top=(e.clientY+16)+"px";
+  }
+}
+
+/* ---------- renderers ---------- */
+function spark(c,w=64,h=18){
+  const pts=[];const step=Math.max(1,Math.floor((day+1)/22));
+  for(let i=0;i<=day;i+=step){const v=effAt(c,i);pts.push(v);}
+  if(pts.length<2)pts.push(pts[0]||0);
+  const mx=Math.max(...pts,.001),mn=Math.min(...pts);
+  const rg=Math.max(mx-mn,.06);
+  const d=pts.map((v,i)=>{
+    const x=(i/(pts.length-1))*w, y=h-2-((v-mn)/rg)*(h-5);
+    return (i?"L":"M")+x.toFixed(1)+" "+y.toFixed(1);
+  }).join(" ");
+  const last=pts[pts.length-1];
+  const ly=h-2-((last-mn)/rg)*(h-5);
+  const dir=pts[pts.length-1]-pts[0];
+  const col=dir<-0.02?"var(--serious)":dir>0.02?"var(--good)":"var(--ink-3)";
+  return '<svg class="spark" width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" aria-hidden="true">'+
+    '<path d="'+d+'" fill="none" stroke="'+col+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'+
+    '<circle cx="'+w+'" cy="'+ly.toFixed(1)+'" r="2.5" fill="'+col+'"/></svg>';
+}
+
+function pips(v){
+  const n=Math.round(v*5);
+  let s='<span class="pips" aria-hidden="true">';
+  for(let i=0;i<5;i++) s+='<span class="pip'+(i<n?" on":"")+'"></span>';
+  return s+'</span>';
+}
+
+function headerRow(){
+  const cols=['<th>'+FW[fw].label+'</th>'];
+  if(mode==="assessor") cols.push('<th>Canonical control</th>');
+  cols.push('<th class="num">Effectiveness</th>','<th class="num">Uptime</th>','<th class="num">Confidence</th>');
+  if(mode==="assessor") cols.push('<th class="num">Evidence</th>');
+  else cols.push('<th class="num">90-day trend</th>');
+  cols.push('<th class="num">Entities</th>');
+  thead.innerHTML=cols.join("");
+}
+
+function rowFor(c){
+  const e=effAt(c,day), u=upTo(c,day).uptime, cf=confAt(c,day);
+  const insuf=cf<0.35;
+  const tr=document.createElement("tr");
+  tr.className="ctl"+(open===c.csf?" open":"");
+  tr.tabIndex=0;
+  tr.setAttribute("role","button");
+  tr.setAttribute("aria-expanded",open===c.csf?"true":"false");
+
+  let html='<td><div class="cid">'+c[fw]+'</div><div class="cname">'+c.name+'</div>'+
+    (mode!=="assessor"?'<div class="canon">'+c.canon.join(" · ")+'</div>':'')+'</td>';
+
+  if(mode==="assessor") html+='<td><div class="canon" style="color:var(--ink-2)">'+c.canon.join("<br>")+'</div></td>';
+
+  html+='<td class="num">'+(insuf
+    ? '<span class="insuf"><span class="hatch"></span><span>insufficient evidence</span></span>'
+    : '<span class="ebar"><span class="track"><span class="fill" style="width:'+(e*100).toFixed(0)+'%;background:'+colorOf(e)+'"></span></span><span class="n">'+e.toFixed(2)+'</span></span>')+'</td>';
+
+  html+='<td class="num"><span class="pct" style="color:'+colorOf(u)+'">'+(u*100).toFixed(1)+'%</span></td>';
+  html+='<td class="num"><span class="conf">'+pips(cf)+'<span class="n">'+cf.toFixed(2)+'</span></span></td>';
+
+  if(mode==="assessor"){
+    const cls=cf>.6?"telemetry":cf>.35?"config export":"attestation";
+    html+='<td class="num"><span style="font:500 11px/1 var(--mono);color:var(--ink-2)">'+cls+'</span></td>';
+  } else {
+    html+='<td class="num">'+spark(c)+'</td>';
+  }
+
+  const pctEnt=c.ent.ver/c.ent.claim;
+  html+='<td class="num"><span class="pct" style="color:'+colorOf(pctEnt)+'">'+c.ent.ver+'<span style="color:var(--ink-3);font-weight:400">/'+c.ent.claim+'</span></span></td>';
+
+  tr.innerHTML=html;
+  const toggle=()=>{open=(open===c.csf?null:c.csf);render();};
+  tr.addEventListener("click",toggle);
+  tr.addEventListener("keydown",ev=>{if(ev.key==="Enter"||ev.key===" "){ev.preventDefault();toggle();}});
+  return tr;
+}
+
+function detailFor(c){
+  const e=effAt(c,day),u=upTo(c,day),cf=confAt(c,day);
+  const tr=document.createElement("tr");tr.className="detail";
+  const td=document.createElement("td");
+  td.colSpan=mode==="assessor"?7:6;
+
+  /* timeline */
+  let tl="";
+  for(let i=0;i<=day;i++) tl+='<span class="seg '+c.segs[i]+'" data-i="'+i+'"></span>';
+
+  const gaps=[];let run=null;
+  for(let i=0;i<=day;i++){
+    const s=c.segs[i];
+    if(s!=="up"){ if(!run||run.s!==s){ if(run)gaps.push(run); run={s:s,a:i,b:i}; } else run.b=i; }
+    else { if(run){gaps.push(run);run=null;} }
+  }
+  if(run)gaps.push(run);
+  const worst=gaps.sort((a,b)=>(b.b-b.a)-(a.b-a.a))[0];
+
+  const sc=SCEN[c.scen];
+
+  const src=c.pop.src.map(s=>'<div class="kv"><span class="k">'+s[0]+'</span><span class="v">'+s[1]+'</span></div>').join("");
+  const extra=(c.pop.extra||[]).map(s=>'<div class="kv"><span class="k">'+s[0]+'</span><span class="v">'+s[1]+'</span></div>').join("");
+
+  const entRows=[
+    ["Verified — corporate population contains their assets",c.ent.ver,"var(--good)"],
+    ["Claim false — never enrolled",c.ent.never,"var(--critical)"],
+    ["Dropped out — mean 94 days ago, post-acquisition",c.ent.drop,"var(--serious)"]
+  ].map(r=>'<tr><td><span class="st"><i style="background:'+r[2]+'"></i>'+r[0]+'</span></td>'+
+    '<td class="barcell"><span class="minibar"><i style="width:'+((r[1]/c.ent.claim)*100).toFixed(0)+'%;background:'+r[2]+'"></i></span></td>'+
+    '<td class="cnt">'+r[1]+'</td></tr>').join("");
+
+  const polPct=c.pol.enf/c.pol.assert;
+
+  td.innerHTML=
+  '<div class="panel">'+
+    '<p class="claim">'+c.name+' is operating at <em>'+(cf<0.35?"an unmeasurable level":e.toFixed(2))+'</em> across '+
+      c.ent.ver+' of '+c.ent.claim+' entities, with <em>'+(u.uptime*100).toFixed(1)+'% control uptime</em> over the last '+(day+1)+' days. '+
+      c.pop.delta+'.</p>'+
+
+    '<div class="card">'+
+      '<div class="tl-head"><div><h4 style="margin:0 0 4px">Control uptime — last '+(day+1)+' days</h4>'+
+      '<span class="big" style="color:'+colorOf(u.uptime)+'">'+(u.uptime*100).toFixed(1)+'%</span></div>'+
+      '<div class="sub">'+(worst?('Longest gap: <b>'+(worst.b-worst.a+1)+' days</b> ('+dateFor(worst.a)+' – '+dateFor(worst.b)+'), state <b>'+worst.s+'</b>'):'No gaps recorded')+'</div></div>'+
+      '<div class="timeline" id="tl">'+tl+'</div>'+
+      '<div class="tl-axis"><span>'+dateFor(0)+'</span><span>'+dateFor(Math.floor(day/2))+'</span><span>'+dateFor(day)+'</span></div>'+
+      '<div class="legend">'+
+        '<span><i style="background:var(--good)"></i>Operating</span>'+
+        '<span><i style="background:var(--warn)"></i>Degraded</span>'+
+        '<span><i style="background:var(--critical)"></i>Not operating</span>'+
+        '<span><i style="background-image:repeating-linear-gradient(135deg,var(--unknown) 0 1px,transparent 1px 4px);border:1px dashed var(--border-strong)"></i>Blind — no evidence received</span>'+
+      '</div>'+
+    '</div>'+
+
+    '<div class="grid2">'+
+      '<div class="card"><h4>Population &amp; reconciliation</h4>'+src+
+        (extra?'<div style="height:11px"></div>'+extra:'')+
+        '<div class="kv"><span class="k flag">Unreconciled</span><span class="v flag">'+c.pop.delta+'</span></div></div>'+
+
+      '<div class="card"><h4>Risk linkage</h4>'+
+        '<div class="scen"><span class="tag">'+c.scen+'</span>'+sc.name+'</div>'+
+        '<div class="chain">'+
+        ["prevent","detect","respond","recover"].map(k=>{
+          const v=sc.chain[k];
+          return '<div class="link"><span class="lbl">'+k+'</span><span class="track"><span class="fill" style="width:'+(v*100).toFixed(0)+'%;background:'+colorOf(v)+'"></span></span><span class="n">'+v.toFixed(2)+'</span></div>';
+        }).join("")+
+        '</div><div style="margin-top:12px;font-size:12px;color:var(--ink-2)">This control contributes to the <b>prevent</b> layer. '+sc.where+'.</div></div>'+
+
+      '<div class="card"><h4>Inheritance verification</h4>'+
+        '<div style="font-size:12.5px;color:var(--ink-2);margin-bottom:10px">'+c.ent.claim+' entities <b>claim</b> to inherit this control from corporate. Nerion tests the claim against the corporate control population.</div>'+
+        '<table class="ent"><tbody>'+entRows+'</tbody></table></div>'+
+
+      '<div class="card"><h4>Policy conformance</h4>'+
+        '<div style="font:600 13px/1.4 var(--sans);margin-bottom:10px">'+c.pol.name+'</div>'+
+        '<div class="kv"><span class="k">Testable assertions extracted</span><span class="v">'+c.pol.assert+'</span></div>'+
+        '<div class="kv"><span class="k">Enforced — telemetry agrees</span><span class="v" style="color:var(--good)">'+c.pol.enf+'</span></div>'+
+        '<div class="kv"><span class="k">Unenforced — telemetry contradicts</span><span class="v" style="color:var(--critical)">'+c.pol.contra+'</span></div>'+
+        '<div class="kv"><span class="k">Not testable as written</span><span class="v">'+(c.pol.assert-c.pol.enf-c.pol.contra)+'</span></div>'+
+        '<div style="margin-top:12px;padding-top:11px;border-top:1px solid var(--border);font-size:13px">This policy is <b style="color:'+colorOf(polPct)+'">'+Math.round(polPct*100)+'% enforced</b>.</div></div>'+
+    '</div>'+
+
+    '<div class="card"><h4>What would move this most</h4>'+
+      c.fixes.map((f,i)=>'<div class="fix"><span class="rank">'+(i+1)+'</span><span>'+f[0]+'</span><span class="gain">'+f[1]+'</span></div>').join("")+
+    '</div>'+
+
+    '<div class="card"><h4>Framework projection — one measurement, three views</h4>'+
+      '<div class="kv"><span class="k">NIST CSF 2.0</span><span class="v">'+c.csf+'</span></div>'+
+      '<div class="kv"><span class="k">CIS Controls v8.1</span><span class="v">'+c.cis+'</span></div>'+
+      '<div class="kv"><span class="k">ISO/IEC 27001:2022</span><span class="v">'+c.iso+'</span></div>'+
+      '<div class="kv"><span class="k">Canonical control</span><span class="v">'+c.canon.join(", ")+'</span></div>'+
+      '<div class="kv"><span class="k">Method version</span><span class="v">2026.1</span></div></div>'+
+  '</div>';
+
+  tr.appendChild(td);
+  requestAnimationFrame(()=>{
+    td.querySelectorAll(".seg").forEach(s=>{
+      const i=+s.dataset.i, st=c.segs[i];
+      const label={up:"Operating",deg:"Degraded",down:"Not operating",blind:"Blind — no evidence received"}[st];
+      bindTip(s,dateFor(i)+"\n"+label);
+    });
+  });
+  return tr;
+}
+
+function renderStats(){
+  const measured=C.filter(c=>confAt(c,day)>=0.35);
+  const avgE=measured.reduce((a,c)=>a+effAt(c,day),0)/measured.length;
+  const avgU=C.reduce((a,c)=>a+upTo(c,day).uptime,0)/C.length;
+  const avgC=C.reduce((a,c)=>a+confAt(c,day),0)/C.length;
+  const weakest=C.reduce((m,c)=>effAt(c,day)<effAt(m,day)?c:m,C[0]);
+  const prevE=(()=>{const d=Math.max(0,day-30);const m=C.filter(c=>confAt(c,d)>=0.35);return m.reduce((a,c)=>a+effAt(c,d),0)/m.length;})();
+  const delta=avgE-prevE;
+
+  $("#stats").innerHTML=
+   '<div class="stat"><div class="k">Group effectiveness</div><div class="v" style="color:'+colorOf(avgE)+'">'+avgE.toFixed(2)+'<small>weighted</small></div>'+
+     '<div class="d"><span class="'+(delta<0?"trend-dn":"trend-up")+'">'+(delta<0?"▼":"▲")+' '+Math.abs(delta).toFixed(2)+'</span> vs. 30 days ago</div></div>'+
+   '<div class="stat"><div class="k">Weakest entity</div><div class="v" style="color:var(--critical)">'+effAt(weakest,day).toFixed(2)+'</div>'+
+     '<div class="d">'+weakest[fw]+' — attackers don\'t experience your average</div></div>'+
+   '<div class="stat"><div class="k">Control uptime</div><div class="v" style="color:'+colorOf(avgU)+'">'+(avgU*100).toFixed(1)+'<small>%</small></div>'+
+     '<div class="d">across '+C.length+' measured controls</div></div>'+
+   '<div class="stat"><div class="k">Assurance confidence</div><div class="v">'+avgC.toFixed(2)+'</div>'+
+     '<div class="d">'+(C.length-measured.length)+' controls below evidence threshold</div></div>'+
+   '<div class="stat"><div class="k">Ghosts</div><div class="v" style="color:var(--serious)">1,231</div>'+
+     '<div class="d">workers with no identity Nerion can see</div></div>';
+}
+
+function renderBoard(){
+  const b=$("#board");
+  b.innerHTML=Object.keys(SCEN).map(id=>{
+    const s=SCEN[id];
+    const linked=C.filter(c=>c.scen===id);
+    const degraded=linked.filter(c=>effAt(c,day)<0.55).length;
+    const chain=["prevent","detect","respond","recover"].map(k=>{
+      const v=s.chain[k];
+      return '<div class="link"><span class="lbl">'+k+'</span><span class="track"><span class="fill" style="width:'+(v*100).toFixed(0)+'%;background:'+colorOf(v)+'"></span></span><span class="n">'+v.toFixed(2)+'</span></div>';
+    }).join("");
+    return '<div class="bcard"><div class="id">'+id+'</div><h3>'+s.name+'</h3>'+
+      '<div class="where">'+s.where+'</div><div class="chain">'+chain+'</div>'+
+      '<div class="verdict">Held down by <b>'+linked.length+'</b> measured controls, of which <b>'+degraded+'</b> are currently degraded. '+
+      'Weakest link is <b>'+(s.chain.respond<s.chain.detect?"respond":"detect")+'</b>.</div></div>';
+  }).join("");
+}
+
+function render(){
+  $("#asofDate").textContent=dateFor(day);
+  const chip=$("#liveChip");
+  chip.textContent=day===DAYS-1?"LIVE":(DAYS-1-day)+" DAYS BACK";
+  chip.className="live-chip"+(day===DAYS-1?"":" past");
+
+  renderStats();
+
+  if(mode==="board"){
+    $("#tableWrap").hidden=true; $("#board").hidden=false; renderBoard(); return;
+  }
+  $("#tableWrap").hidden=false; $("#board").hidden=true;
+
+  headerRow();
+  tbody.innerHTML="";
+  FNORDER.forEach(fn=>{
+    const rows=C.filter(c=>c.fn===fn);
+    if(!rows.length)return;
+    const g=document.createElement("tr");g.className="grp";
+    const gt=document.createElement("td");gt.colSpan=mode==="assessor"?7:6;gt.textContent=fn;
+    g.appendChild(gt);tbody.appendChild(g);
+    rows.forEach(c=>{
+      tbody.appendChild(rowFor(c));
+      if(open===c.csf) tbody.appendChild(detailFor(c));
+    });
+  });
+}
+
+/* ---------- events ---------- */
+document.querySelectorAll(".fw button").forEach(b=>b.addEventListener("click",()=>{
+  fw=b.dataset.fw;
+  document.querySelectorAll(".fw button").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));
+  render();
+}));
+document.querySelectorAll(".modes button").forEach(b=>b.addEventListener("click",()=>{
+  mode=b.dataset.mode;
+  document.querySelectorAll(".modes button").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));
+  render();
+}));
+$("#asof").addEventListener("input",e=>{day=+e.target.value;render();});
+
+open="PR.AA-03";
+render();
+})();
+</script>
+
+</body></html>
