@@ -1,0 +1,60 @@
+export const CTRL: any[] = [
+ {fn:"IDENTIFY",csf:"ID.AM-01",cis:"1.1",iso:"A.5.9",name:"Hardware inventory is maintained",
+  eff:.68,up:.913,conf:.82,ent:[147,101,31,15]},
+ {fn:"IDENTIFY",csf:"ID.RA-01",cis:"7.1",iso:"A.8.8",name:"Vulnerabilities are identified and recorded",
+  eff:.61,up:.884,conf:.76,ent:[147,94,38,15]},
+ {fn:"PROTECT",csf:"PR.AA-03",cis:"6.3",iso:"A.5.17",name:"Phishing-resistant MFA is enforced",
+  eff:.71,up:.897,conf:.85,ent:[147,108,26,13]},
+ {fn:"PROTECT",csf:"PR.AA-05",cis:"6.8",iso:"A.5.15",name:"Access permissions follow least privilege",
+  eff:0,up:.402,conf:.21,ent:[147,11,131,5],insuf:true},
+ {fn:"PROTECT",csf:"PR.PS-05",cis:"10.1",iso:"A.8.7",name:"Malicious code execution is prevented",
+  eff:.64,up:.871,conf:.84,ent:[147,96,34,17]},
+ {fn:"PROTECT",csf:"PR.DS-01",cis:"3.11",iso:"A.8.24",name:"Data at rest is protected",
+  eff:.86,up:.951,conf:.80,ent:[147,119,21,7]},
+ {fn:"DETECT",csf:"DE.CM-01",cis:"13.1",iso:"A.8.16",name:"Networks and services are monitored",
+  eff:.44,up:.762,conf:.57,ent:[147,79,60,8]},
+ {fn:"DETECT",csf:"DE.AE-02",cis:"13.6",iso:"A.8.16",name:"Adverse events are analysed",
+  eff:.38,up:.704,conf:.46,ent:[147,61,79,7]},
+ {fn:"RESPOND",csf:"RS.MA-01",cis:"17.1",iso:"A.5.24",name:"The incident response plan is executed",
+  eff:.31,up:.588,conf:.24,ent:[147,14,128,5],insuf:true},
+ {fn:"RECOVER",csf:"RC.RP-01",cis:"11.1",iso:"A.8.13",name:"Recovery is executed and tested",
+  eff:.69,up:.842,conf:.63,ent:[147,88,47,12]}
+];
+
+export const SCEN: any[] = [
+ {id:"R-023",name:"Acquired estate as an entry path to core corporate",
+  where:"23 entities acquired within 24 months · 11,400 endpoints",
+  c:{prevent:.34,detect:.22,respond:.19,recover:.41},pri:1,
+  note:"Acquired entities sit inside the corporate trust boundary but outside the corporate control set. Mean effectiveness across the cohort is <b>0.34</b> against <b>0.76</b> for the legacy estate, and 3,910 of the group's 4,812 ghosts live here."},
+ {id:"R-011",name:"Credential intrusion into the managed-service control plane",
+  where:"GreenLake platform & operations · customer-facing blast radius",
+  c:{prevent:.72,detect:.51,respond:.44,recover:.78},pri:2,
+  note:"The best-instrumented part of the estate, and still the one where a prevent-layer failure reaches customers rather than stopping at the perimeter. Detect is the binding constraint."},
+ {id:"R-018",name:"Ransomware across manufacturing and distribution",
+  where:"22 entities · 9 plants · OT segments partially visible",
+  c:{prevent:.58,detect:.31,respond:.28,recover:.62},pri:3,
+  note:"Detect at 0.31 because 14 of 22 manufacturing entities ship no logs to the central SIEM. Recovery is credible on paper; restore has never been tested above 40 workloads."},
+ {id:"R-004",name:"Firmware or supply-chain implant in shipped product",
+  where:"Build and signing infrastructure · 6 entities",
+  c:{prevent:.77,detect:.49,respond:.52,recover:.55},pri:4,
+  note:"Prevent is strong — signing controls are mature and well evidenced. Detect is where the exposure sits: build-pipeline telemetry reaches the SIEM from 4 of 6 entities."},
+ {id:"R-030",name:"Design IP exfiltration — silicon and networking",
+  where:"Engineering entities in 9 countries",
+  c:{prevent:.66,detect:.37,respond:.33,recover:.71},pri:5,
+  note:"Data-at-rest protection is the group's strongest control at 0.86. Egress monitoring is not: 2,505 engineering identities produce no forwarded audit trail."}
+];
+
+export const QA: any[] = [
+ {q:"Which entities would an attacker reach first?",
+  a:"The <b>23 entities acquired in the last 24 months</b>. They sit inside the corporate trust boundary but outside the corporate control set — mean effectiveness <b>0.34</b> against <b>0.76</b> for the legacy estate, and 8 of them have no endpoint detection at all.",
+  t:[["denominator sources","IdP · MDM · cloud billing · HRIS"],["entities evaluated","147"],["confidence","0.29 — acquired cohort"],["evidence class","telemetry (partial)"],["method","2026.1"]]},
+ {q:"Was MFA operating on the day of the March incident?",
+  a:"<b>No.</b> On 14 March 2026 the MFA control was in a <b>degraded</b> state and had been for 9 days. Conditional access policy had been disabled in 3 entities during a directory migration and was restored on 19 March.",
+  t:[["ledger range query","2026-03-14T00:00Z"],["control state","degraded (interval 03-05 → 03-19)"],["affected population","4,118 identities"],["observed_at vs recorded_at","aligned — no backfill"],["evidence class","telemetry"]]},
+ {q:"What breaks if we sever a compromised supplier?",
+  a:"<b>41 systems across 14 entities.</b> Of those, 6 carry customer data and 2 sit in the GreenLake billing path. Severing would halt 3 business processes, one of which has no documented manual fallback.",
+  t:[["dependency graph","supplier → integration → system → process"],["sources","AP vendor master · SSO · API gateway"],["mapped linkages","561 of 1,284 suppliers"],["confidence","0.44 — 723 suppliers unlinked"],["evidence class","telemetry + config export"]]},
+ {q:"Can we prove our ISO 27001 controls operated all year?",
+  a:"<b>For 6 of 10 measured controls, yes</b> — with full-population interval evidence rather than a sample. Three fall below the evidence threshold and are reported as unmeasured. One, A.5.15, has no telemetry path at all.",
+  t:[["controls in scope","10 (v1 scope)"],["full-population evidence","6"],["below evidence threshold","3"],["no telemetry path","1 — A.5.15"],["period","rolling 365 days"]]}
+];

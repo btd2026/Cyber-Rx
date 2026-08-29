@@ -1,0 +1,21 @@
+{
+  "name": "@nerion/api",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Nerion v2 API — a thin read layer over the domain engine. Credentials are write-only; no endpoint returns a secret.",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "start": "tsx src/server.ts",
+    "smoke": "tsx src/smoke.ts"
+  },
+  "dependencies": {
+    "@nerion/engine": "file:../engine",
+    "fastify": "^4.28.1",
+    "@fastify/cors": "^9.0.1"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.4"
+  }
+}

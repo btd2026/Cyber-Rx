@@ -1,0 +1,24 @@
+{
+  "name": "@nerion/engine",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Nerion v2 domain engine — one estate measured once, projected onto every framework.",
+  "main": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vitest": "^2.1.9"
+  },
+  "dependencies": {
+    "@types/node": "^22.20.1"
+  }
+}
